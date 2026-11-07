@@ -1309,6 +1309,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/klice/hlaseni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Telefon se ozve a dozví se, odkdy má nahrávat
+         * @description Režim *„hlásím se“* z nálezu R3: telefon pošle **jen** stav baterie, žádné souřadnice, a zpátky dostane **čas, odkdy si má sám zapnout nahrávání** — T−20, tedy patnáct minut před procedurou. Je to stažený čas, ne povel: telefon se jím řídí i bez signálu, protože na vodě by povel nedošel právě té lodi, které je potřeba nejvíc. Posádka u toho neklepe na nic; naposledy klepla v klubovně.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["JsonElement"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HlaseniDto"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/serie/{serie}/zavody/{zavod}/trat": {
         parameters: {
             query?: never;
@@ -7337,6 +7387,14 @@ export interface components {
          * @enum {unknown}
          */
         FormatClanku: "Text" | "Html" | "Bloky";
+        HlaseniDto: {
+            sleduje: boolean;
+            /** Format: date-time */
+            startV: null | string;
+            /** Format: date-time */
+            nahravatOd: null | string;
+            nahravatTed: boolean;
+        };
         HttpValidationProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -8931,6 +8989,8 @@ export interface components {
             stavRozjizdky: null | components["schemas"]["StavRozjizdky"];
             /** Format: date-time */
             startV: null | string;
+            /** Format: date-time */
+            nahravatOd: null | string;
             stavLodi: null | components["schemas"]["StavLodiDto"];
             pokyny: components["schemas"]["PokynDto"][];
         };

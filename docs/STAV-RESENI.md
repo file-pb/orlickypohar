@@ -56,7 +56,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Tabule se startovní listinou | **Běží** | Přepíná se sama podle fáze dne, nezapíná se ručně |
 | Do startovní listiny smí jen rozhodčí | **Běží** | R38, 7. 11. 2026. Filip: *„listina po rozpravě uzamčená pro všechny kromě rozhodčího.“* Je to **výměna**, ne přidání práva — po rozpravě pořadatel nesmí nic. Fronta návrhů z dřívější verze R38 odpadla: u vody to vyřídí věta přes molo. Příznak pomocníka (K8) listinu neotvírá, jak bylo rozhodnuto 28. 10. |
 | Mapa před startem | **Běží** | R4. Naskočí sama 10 minut před procedurou, ne až výstřelem (29. 10.) |
-| Odkdy se posádkám hlásí telefon | **Zadané** | R3. Rozhodnuto: **15 minut před procedurou** (T−20), appka si sledování zapne sama — musí žít dřív než mapa |
+| Odkdy se posádkám hlásí telefon | **Běží** | R3, 7. 11. 2026. Dva režimy: *hlásím se* od zápisu v klubovně (handshake a baterie, **žádné souřadnice**) a *nahrávám* od **T−20**, tedy patnáct minut před procedurou. Přepnutí není povel ze serveru, nýbrž **stažený čas** — na vodě by povel nedošel právě té lodi, které je potřeba nejvíc. Posádka klepne naposledy na břehu. Vedlejší zisk: baterie se tím **poprvé dostane na břeh**, dosud tekla jedině z dávky bodů, tedy až z vody, a přehled pořadatele v klubovně ukazoval prázdno. Je to **zpřísnění**: dnes se polohy brala od rozpravy klidně čtrnáct hodin |
 
 ## Start
 

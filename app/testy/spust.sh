@@ -21,6 +21,10 @@ echo "== Odesílání na server =="
 TEST_DB=":memory:" "${NODE[@]}" ./nahravani.test.ts
 
 echo
+echo "== Hlásím se a přepnutí v T-20 =="
+TEST_DB=":memory:" "${NODE[@]}" ./hlasim-se.test.ts
+
+echo
 echo "== Písmo na barevné výplni =="
 "${NODE[@]}" ./kontrast.test.ts
 

@@ -45,6 +45,7 @@ export type ZapisLod = S["ZapisLodDto"];
 // <b>Ručně psaný tvar tu byl jen do nasazení.</b> Dokud `/lod/dnes`
 // neběželo na produkci, nebylo z čeho generovat; teď je a platí schéma.
 export type ZavodnikDnes = S['ZavodnikDto'];
+export type HlaseniOdpoved = S['HlaseniDto'];
 export type ZapisRadekVstup = S["ZapisRadekVstup"];
 export type CilZTrasovaniOdpoved = S["CilZTrasovaniDto"];
 
@@ -496,6 +497,19 @@ export async function nactiDnesniRegatu(): Promise<ZavodnikDnes | null> {
   if (!odpoved.ok || odpoved.status === 204) return null;
 
   return (await odpoved.json()) as ZavodnikDnes;
+}
+
+/**
+ * <b>Telefon se ozve</b> (`POST /klice/hlaseni`, nález R3).
+ *
+ * Posílá **jen** stav baterie, žádné souřadnice — to je celý smysl režimu
+ * „hlásím se". Zpátky dostane čas, odkdy si má sám zapnout nahrávání (T−20).
+ *
+ * `null` znamená „nemám klíč" nebo chybu; volající se podle toho nezastaví,
+ * protože stažený čas z minula platí dál. Viz `tracker/hlasim-se.ts`.
+ */
+export async function ozviSe(baterieProcent: number | null): Promise<HlaseniOdpoved | null> {
+  return posliKlicem<HlaseniOdpoved>('/klice/hlaseni', { baterieProcent });
 }
 
 export async function posliKlicemPodrobne<T>(

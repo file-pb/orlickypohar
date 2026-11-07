@@ -1074,6 +1074,46 @@
                 }
             }
         },
+        "/klice/hlaseni": {
+            "post": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Telefon se ozve a dozv\u00ed se, odkdy m\u00e1 nahr\u00e1vat",
+                "description": "Re\u017eim *\u201ehl\u00e1s\u00edm se\u201c* z n\u00e1lezu R3: telefon po\u0161le **jen** stav baterie, \u017e\u00e1dn\u00e9 sou\u0159adnice, a zp\u00e1tky dostane **\u010das, odkdy si m\u00e1 s\u00e1m zapnout nahr\u00e1v\u00e1n\u00ed** \u2014 T\u221220, tedy patn\u00e1ct minut p\u0159ed procedurou. Je to sta\u017een\u00fd \u010das, ne povel: telefon se j\u00edm \u0159\u00edd\u00ed i bez sign\u00e1lu, proto\u017ee na vod\u011b by povel nedo\u0161el pr\u00e1v\u011b t\u00e9 lodi, kter\u00e9 je pot\u0159eba nejv\u00edc. Pos\u00e1dka u toho neklepe na nic; naposledy klepla v klubovn\u011b.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/JsonElement"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HlaseniDto"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/serie/{serie}/zavody/{zavod}/trat": {
             "get": {
                 "tags": [
@@ -8300,6 +8340,37 @@
                 ],
                 "default": "Text"
             },
+            "HlaseniDto": {
+                "required": [
+                    "sleduje",
+                    "startV",
+                    "nahravatOd",
+                    "nahravatTed"
+                ],
+                "type": "object",
+                "properties": {
+                    "sleduje": {
+                        "type": "boolean"
+                    },
+                    "startV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "nahravatOd": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "nahravatTed": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "HttpValidationProblemDetails": {
                 "type": "object",
                 "properties": {
@@ -14449,6 +14520,7 @@
                     "rozjizdka",
                     "stavRozjizdky",
                     "startV",
+                    "nahravatOd",
                     "stavLodi",
                     "pokyny"
                 ],
@@ -14490,6 +14562,13 @@
                         ]
                     },
                     "startV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "nahravatOd": {
                         "type": [
                             "null",
                             "string"

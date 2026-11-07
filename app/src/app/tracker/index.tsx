@@ -16,6 +16,12 @@ import {
 } from '@/lib/tracker/uloha';
 import { stavNahravani } from '@/lib/tracker/nahravani';
 import {
+  hlasim,
+  vypniHlaseni,
+  zapniHlaseni,
+  type Hlasim,
+} from '@/lib/tracker/hlasim-se';
+import {
   predJakDlouho,
   stavGps,
   stavOdesilani,
@@ -178,6 +184,9 @@ export default function Tracker() {
   const [lod, setLod] = useState('');
   const [regata, setRegata] = useState('');
   const [naPozadi, setNaPozadi] = useState(false);
+  const [hlas, setHlas] = useState<Hlasim>({
+    zapnuto: false, lod: null, regata: null, nahravatOd: null, posledniHlaseni: 0,
+  });
   // Simulace běží v tomhle kontextu, takže si na ni musíme podržet ruku.
   const simulace = useRef<{ stop: () => void } | null>(null);
 
@@ -187,6 +196,7 @@ export default function Tracker() {
     setSouhrn(z ? prehled(z.id) : null);
     if (z) setGps(stavGps(z.id));
     setTrasy(seznamZaznamu());
+    setHlas(hlasim());
   }, []);
 
   useEffect(() => {
@@ -298,6 +308,70 @@ export default function Tracker() {
     );
   }
 
+  /**
+   * <b>Zapnutí v klubovně</b> (R3). Odtud dál na to posádka nesahá: v T−20 si
+   * telefon záznam založí sám.
+   *
+   * Odběr polohy se drží i teď, slepě — jinak by se telefon neprobouzel a
+   * nebylo by co by si čas startu přečetlo. Souřadnice se zahazují, viz
+   * `lib/tracker/uloha.ts`.
+   */
+  async function zapniHlas() {
+    const jmeno = lod.trim();
+    if (!jmeno) {
+      Alert.alert('Chybí loď', 'Napiš jméno lodi, za kterou se telefon bude hlásit.');
+      return;
+    }
+
+    const stav = await zadejOpravneni();
+    if (stav !== 'ok') {
+      Alert.alert(
+        'Potřebuje polohu „Vždy"',
+        'Bez polohy na pozadí se telefon neprobudí a v čase startu nezačne nahrávat.',
+      );
+      return;
+    }
+
+    // Potvrzení jména je tu ze stejného důvodu jako u ručního spuštění
+    // (přejímací podmínka č. 6): telefon přiřazený ke špatné lodi.
+    Alert.alert(
+      'Hlásit se za tuhle loď?',
+      `Loď: ${jmeno}${regata.trim() ? `\nRegata: ${regata.trim()}` : ''}\n\n` +
+        'Nahrávání se zapne samo 20 minut před startem, který zapíše rozhodčí ' +
+        'po rozpravě. Do té doby telefon posílá jen to, že žije, a stav baterie.',
+      [
+        { text: 'Zrušit', style: 'cancel' },
+        {
+          text: 'Je to správná loď',
+          onPress: async () => {
+            zapniHlaseni({ lod: jmeno, regata: regata.trim() || null });
+            try {
+              await spustZaznamNaPozadi();
+            } catch (e) {
+              // Hlášení, které se tváří, že běží, a přitom se telefon
+              // neprobouzí, je horší než žádné — posádka by se na něj
+              // spoléhala celé dopoledne. Proto se po selhání zahodí.
+              vypniHlaseni();
+              obnov();
+              Alert.alert(
+                'Hlášení nezačalo',
+                `${e instanceof Error ? e.message : String(e)}\n\nV Expo Go poloha na pozadí není vůbec — tam to čekat nelze.`,
+              );
+              return;
+            }
+            obnov();
+          },
+        },
+      ],
+    );
+  }
+
+  function vypniHlas() {
+    vypniHlaseni();
+    void zastavZaznamNaPozadi().catch(() => {});
+    obnov();
+  }
+
   function ukonci(z: Zaznam) {
     Alert.alert(
       'Ukončit záznam?',
@@ -384,6 +458,48 @@ export default function Tracker() {
         </>
       ) : null}
 
+      {/* Hlášení je jiný stav než záznam: záznam je trasa, tohle je „telefon
+          je připravený a čeká na čas startu". Ukazuje se jen když záznam
+          neběží — po překlopení v T−20 se režim vypne sám. */}
+      {!bezi && hlas.zapnuto ? (
+        <>
+          <Sekce>Hlásím se</Sekce>
+          <Karta>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ color: t.text, fontWeight: '700', fontSize: 17 }}>{hlas.lod}</Text>
+              <Stitek text="čeká na start" barva={t.stavVypsany} />
+            </View>
+            {hlas.regata ? (
+              <Text style={{ color: t.tlumeny, marginTop: 2 }}>{hlas.regata}</Text>
+            ) : null}
+
+            <Text style={{ color: t.text, marginTop: 10 }}>
+              {hlas.nahravatOd === null
+                ? 'Čeká na čas startu — zapíše ho rozhodčí po rozpravě.'
+                : `Nahrávání se zapne samo v ${casAMinuty(hlas.nahravatOd)}.`}
+            </Text>
+            <Text style={{ color: t.tlumeny, marginTop: 2, fontSize: 13 }}>
+              {hlas.posledniHlaseni === 0
+                ? 'zatím se neozval'
+                : `naposledy se ozval ${predJakDlouho(Date.now() - hlas.posledniHlaseni)}`}
+            </Text>
+
+            {!naPozadi ? (
+              <Text style={{ color: t.stavZruseny, marginTop: 8, fontSize: 13 }}>
+                Úloha na pozadí neběží — se zhasnutým displejem se telefon neprobudí a
+                v čase startu nezačne nahrávat. Zkus to vypnout a zapnout znovu.
+              </Text>
+            ) : null}
+
+            <Text style={{ color: t.tlumeny, marginTop: 8, fontSize: 12 }}>
+              Posádka už na nic klepat nemusí. Souřadnice se do té chvíle nikam neposílají.
+            </Text>
+
+            <Akce text="Přestat se hlásit" barva={t.tlumeny} onPress={vypniHlas} />
+          </Karta>
+        </>
+      ) : null}
+
       {!bezi ? (
         <Karta>
           <Text style={{ color: t.tlumeny, fontSize: 13, marginBottom: 6 }}>Loď</Text>
@@ -423,6 +539,16 @@ export default function Tracker() {
               padding: 10,
             }}
           />
+
+          {!hlas.zapnuto ? (
+            <>
+              <Akce text="Hlásit se a nahrát v čase startu" onPress={() => void zapniHlas()} />
+              <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 4 }}>
+                Tohle je ta cesta pro regatu: zapne se v klubovně u zápisu a nahrávání
+                naskočí samo 20 minut před startem.
+              </Text>
+            </>
+          ) : null}
 
           <Akce text="Spustit záznam trasy" onPress={() => void spust('gps')} />
           <Akce
