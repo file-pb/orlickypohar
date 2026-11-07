@@ -203,7 +203,8 @@ def hlidej_duc(lock):
     if pusti is None:
         return [f"Rozsah `decode-uri-component` u `query-string` je `{rozsah}` a tomu tvaru nerozumím. Přečti ho ručně."]
     if pusti:
-        return [f"`query-string` už pouští `decode-uri-component` od 0.5 výš (`{rozsah}`). **Záplata je dosažitelná** — zvedni ji a otevři hlášení #2."]
+        prah = ".".join(str(c) for c in ZAPLATY["decode-uri-component"])
+        return [f"`query-string` už pouští `decode-uri-component` od {prah} výš (`{rozsah}`). **Záplata je dosažitelná** — zvedni ji a otevři hlášení #2."]
     return []
 
 
