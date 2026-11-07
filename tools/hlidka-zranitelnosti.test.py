@@ -10,6 +10,10 @@ CVE-2026-118664 (#27). Dvě vady, obě tiché:
 2. kontrola dopadu čítala jen `cvss.vector_string`, které je u hlášení
    ohodnocených jen CVSS 4.0 `null`, a regulár neznal předpony `VC:`/`VI:`.
 
+Třetí přibyla 7. 11. 2026: oprava prahu nechala v textu zprávy původní
+„od 0.5 výš“, tedy to číslo, které bylo špatně — a člověk čte zprávu, ne
+`ZAPLATY`.
+
 `zkouska` v `hlidka-zranitelnosti.yml` ověřuje **cestu hlášení**, ne úsudek —
 vynutí nález a podívá se, že vznikne issue. Že hlídka pozná, *co* hlásit,
 nekontrolovalo nic. Tohle to kontroluje: sabotáž, ne přečtení kódu.
@@ -89,12 +93,36 @@ def main():
             "to byla ta vada, kvůli které #27 prošlo jako „Klid“"
         )
 
+    # --- 4. zprava o dosazitelne zaplate jmenuje prah, ne pevne cislo ---
+    # Do 7. 11. 2026 v ní stálo „od 0.5 výš“, přestože prah už byl 0.5.1.
+    # Číslo ve zprávě je to jediné, co člověk uvidí, takže se **odvozuje**
+    # z `ZAPLATY`. Sabotáž: posuň prah a zpráva se musí posunout s ním.
+    lock = {"packages": {
+        "node_modules/expo-router": {"dependencies": {"query-string": "^7.1.3"}},
+        # Rozsah smí vyjít jen z `^0.6.0`: kdyby v něm stálo `0.5.1`, zpráva by
+        # prošla i s pevně zapsaným „0.5“, protože to číslo echuje rozsah.
+        "node_modules/query-string": {"dependencies": {"decode-uri-component": "^0.6.0"}},
+    }}
+    zpravy = h.hlidej_duc(lock)
+    if len(zpravy) != 1 or "0.5.1" not in zpravy[0]:
+        chyby.append(f"zpráva o dosažitelné záplatě nejmenuje prah 0.5.1: {zpravy}")
+    puvodni = h.ZAPLATY["decode-uri-component"]
+    try:
+        h.ZAPLATY["decode-uri-component"] = (9, 9, 9)
+        sabotovane = h.hlidej_duc(lock)
+    finally:
+        h.ZAPLATY["decode-uri-component"] = puvodni
+    if sabotovane:
+        chyby.append(
+            "po posunu prahu na 9.9.9 pořád tvrdí, že je záplata dosažitelná "
+            f"z `^0.6.0`: {sabotovane}")
+
     if chyby:
         print("Hlídka soudí špatně:\n")
         for c in chyby:
             print(f"- {c}")
         return 1
-    print(f"Hlídka soudí správně: prah i {len(pripady)} případů dopadu.")
+    print(f"Hlídka soudí správně: prah, {len(pripady)} případů dopadu i text zprávy.")
     return 0
 
 
