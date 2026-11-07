@@ -11,6 +11,29 @@ public record PokynDto(string Druh, string Veta, DateTimeOffset VyhlasenoV);
 public record StavLodiDto(string Veta, DateTimeOffset? Kdy);
 
 /// <summary>
+/// Jeden telefon na lodi.
+/// <para>
+/// <b>Baterie cizího telefonu tu je schválně.</b> V appce se vlastní
+/// nezobrazuje (*„to uživatel vidí na telefonu nativně"*, Filip,
+/// 26. 10. 2026), ale o <b>kolegově</b> telefonu se jinak nedozví nikdo —
+/// a otázka *„vydrží nám telefony do konce?"* se klade na břehu, kde se
+/// s odpovědí dá něco udělat. Posádku drží pohromadě kapitán, který ty
+/// klíče vydal.
+/// </para>
+/// </summary>
+public record ClenPosadkyDto(
+    string? Jmeno,
+    /// <summary>Je to tenhle telefon? Návrh to značí slovem „tvůj".</summary>
+    bool Ja,
+    int? BaterieProcent,
+    DateTimeOffset? OzvalSeV,
+    /// <summary>
+    /// Vysílá? Počítá server (<c>Klice.Hlaseni.Cerstve</c>), ne obrazovka —
+    /// posádka i pořadatel to musí vidět stejně.
+    /// </summary>
+    bool Vysila);
+
+/// <summary>
 /// Celá obrazovka posádky na jeden dotaz.
 ///
 /// <para>
@@ -42,15 +65,16 @@ public record ZavodnikDto(
     /// </summary>
     string? CisloPlachty,
     /// <summary>
-    /// <b>Kdo z posádky má klíč</b> (zbytek R34) — jména, jak je zadal
-    /// kapitán, protože víc o členech posádky nevíme a vědět nemáme.
+    /// <b>Telefony na lodi</b> (zbytek R34, podle návrhu <c>Zavodnik.dc.html</c>)
+    /// — jména, jak je zadal kapitán, protože víc o členech posádky nevíme
+    /// a vědět nemáme.
     /// <para>
-    /// Není to seznam posádky, je to seznam <b>telefonů</b>: kdo tu není,
-    /// loď má na palubě, jen se jeho telefon nehlásí. Posádka to kontroluje
-    /// na břehu, kde se s tím ještě dá něco udělat.
+    /// Není to seznam posádky, je to seznam <b>telefonů</b>: kdo tu nevysílá,
+    /// loď na palubě má, jen se jeho telefon nehlásí. Posádka to kontroluje
+    /// na břehu, kde se s tím ještě dá něco udělat — na vodě už ne.
     /// </para>
     /// </summary>
-    IReadOnlyList<string> Posadka,
+    IReadOnlyList<ClenPosadkyDto> Posadka,
     int? Rozjizdka,
     StavRozjizdky? StavRozjizdky,
     DateTimeOffset? StartV,
@@ -93,7 +117,7 @@ public class ZavodnikSprava(AppDbContext db, TimeProvider cas)
             ucast.Prihlaska!.Lod!.Nazev,
             ucast.Prihlaska.Kategorie?.Nazev,
             ucast.Prihlaska.Lod.CisloPlachty,
-            await PosadkaAsync(klic.LodId, ct),
+            await PosadkaAsync(klic, ct),
             rozjizdka?.Cislo,
             rozjizdka?.Stav,
             rozjizdka?.StartV,
@@ -141,19 +165,35 @@ public class ZavodnikSprava(AppDbContext db, TimeProvider cas)
     }
 
     /// <summary>
-    /// Jména z platných klíčů k lodi, v pořadí vydání.
+    /// Telefony na lodi, v pořadí vydání klíče.
     /// <para>
-    /// <b>Jen jména, nic víc.</b> Filip o posádce: *„posádka jen QR,
-    /// maximálně jméno, aby se vědělo"* — a klíč bez jména se vynechá,
-    /// protože prázdná řádka v seznamu nic neříká.
+    /// <b>Klíč bez jména zůstává</b>, jen bezejmenný: *„posádka jen QR,
+    /// maximálně jméno, aby se vědělo"* (Filip) — a telefon, který vysílá,
+    /// se v počtu musí objevit, i když mu kapitán jméno nenapsal. Vynechat
+    /// ho by znamenalo, že *„2 ze 3 vysílají"* sedí jen někdy.
+    /// </para>
+    /// <para>
+    /// <b>Odepnutý klíč tu není.</b> „Dneska nejedu" znamená, že ten telefon
+    /// do pole nepatří — a kdyby zůstal, hlásil by se jako chybějící.
     /// </para>
     /// </summary>
-    private async Task<IReadOnlyList<string>> PosadkaAsync(int lodId, CancellationToken ct) =>
-        await db.Klice
-            .Where(k => k.LodId == lodId && k.OdebranV == null && k.Jmeno != null)
+    private async Task<IReadOnlyList<ClenPosadkyDto>> PosadkaAsync(
+        KlicLodi muj, CancellationToken ct)
+    {
+        var ted = cas.GetUtcNow();
+
+        return await db.Klice
+            .Where(k => k.LodId == muj.LodId && k.OdebranV == null && k.Sleduje)
             .OrderBy(k => k.VydanV)
-            .Select(k => k.Jmeno!)
+            .Select(k => new ClenPosadkyDto(
+                k.Jmeno,
+                k.Id == muj.Id,
+                k.BaterieProcent,
+                k.PosledniPouzitiV,
+                k.PosledniPouzitiV != null
+                && ted - k.PosledniPouzitiV.Value <= Klice.Hlaseni.JesteCerstve))
             .ToListAsync(ct);
+    }
 
     /// <summary>
     /// <b>Jak loď eviduje rozhodčí</b>, jednou větou.

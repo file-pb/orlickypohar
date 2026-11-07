@@ -163,14 +163,58 @@ public class HlaseniSpravaTests(PostgresFixture fixture)
         {
             var obrazovka = await svet.Zavodnik.DnesAsync(svet.Klic, default);
             Assert.NotNull(obrazovka);
-            // `VeSveteAsync` vydal jeden klíč, na jméno Tonda.
-            Assert.Equal(["Tonda"], obrazovka!.Posadka);
+
+            // `VeSveteAsync` vydal jeden klíč, na jméno Tonda — a je to ten,
+            // kterým se tahle obrazovka ptá, takže „tvůj".
+            var tonda = Assert.Single(obrazovka!.Posadka);
+            Assert.Equal("Tonda", tonda.Jmeno);
+            Assert.True(tonda.Ja);
+
+            // Telefon se ještě neozval, takže nevysílá a baterii neříká.
+            // `false` tu znamená „komise ho nevidí", ne „ozval se dávno".
+            Assert.False(tonda.Vysila);
+            Assert.Null(tonda.OzvalSeV);
+            Assert.Null(tonda.BaterieProcent);
 
             // Číslo plachty loď v tomhle světě nemá — `null` je správná
             // odpověď, ne prázdný řetězec, který by se vykreslil jako mezera.
             Assert.Null(obrazovka.CisloPlachty);
             return true;
         });
+
+    /// <summary>
+    /// Po hlášení telefon <b>vysílá</b> a nese baterii — tohle je ta
+    /// polovina R34, která bez R3 nemohla fungovat: do 7. 11. 2026 se
+    /// <c>PosledniPouzitiV</c> plnilo jedině z dávky bodů trasy.
+    /// </summary>
+    [Fact]
+    public Task Po_hlaseni_telefon_vysila() => VeSveteAsync(null, async svet =>
+    {
+        await svet.Klice.HlasSeAsync(svet.Klic, 78, default);
+
+        var obrazovka = await svet.Zavodnik.DnesAsync(svet.Klic, default);
+        var tonda = Assert.Single(obrazovka!.Posadka);
+        Assert.True(tonda.Vysila);
+        Assert.Equal(78, tonda.BaterieProcent);
+        Assert.NotNull(tonda.OzvalSeV);
+        return true;
+    });
+
+    /// <summary>
+    /// <b>Odepnutý telefon v poli není.</b> „Dneska nejedu" znamená, že tam
+    /// nepatří — kdyby zůstal, hlásil by se jako chybějící a *„2 ze 3
+    /// vysílají"* by lhalo oběma čísly.
+    /// </summary>
+    [Fact]
+    public Task Odepnuty_telefon_se_v_poli_nepocita() => VeSveteAsync(null, async svet =>
+    {
+        await svet.Klice.SledujSamAsync(svet.Klic, false, default);
+
+        var obrazovka = await svet.Zavodnik.DnesAsync(svet.Klic, default);
+        Assert.NotNull(obrazovka);
+        Assert.Empty(obrazovka!.Posadka);
+        return true;
+    });
 
     /// <summary>
     /// Bez rozpravy není plánovaný start, a bez něj se nenahrává —

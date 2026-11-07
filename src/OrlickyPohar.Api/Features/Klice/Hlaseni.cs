@@ -77,6 +77,31 @@ public static class Hlaseni
     /// <summary>Patnáct minut před procedurou — Filipovo rozhodnutí u R3.</summary>
     public static readonly TimeSpan PredProcedurou = TimeSpan.FromMinutes(15);
 
+    /// <summary>
+    /// Jak dlouho se telefon počítá za <b>hlásící se</b>, když se neozval.
+    /// <para>
+    /// Deset minut, tedy dvakrát takt hlášení (appka tluče po pěti —
+    /// <c>tracker/hlasim-se.ts</c>, <c>JAK_CASTO_MS</c>). Jedno vynechané
+    /// kolo se stane a nic neznamená; dvě už znamenají, že se něco děje.
+    /// Táž úvaha jako u odesílání trasy (<c>stav.ts</c>: dvojnásobek
+    /// intervalu).
+    /// </para>
+    /// <para>
+    /// <b>Je to mez serveru, ne appky.</b> Posádka i pořadatel čtou „kdo se
+    /// hlásí" ze stejné odpovědi, takže kdyby si každý počítal čerstvost
+    /// po svém, jeden by viděl loď v poli a druhý ne.
+    /// </para>
+    /// </summary>
+    public static readonly TimeSpan JesteCerstve = TimeSpan.FromMinutes(10);
+
+    /// <summary>
+    /// Ozval se telefon tak nedávno, že se dá říct „vysílá"? <c>false</c>,
+    /// když se neozval nikdy — to není totéž jako „ozval se dávno", ale na
+    /// vodě z toho plyne totéž: komise ho nevidí.
+    /// </summary>
+    public static bool Cerstve(DateTimeOffset? ozvalSeV, DateTimeOffset ted) =>
+        ozvalSeV is { } kdy && ted - kdy <= JesteCerstve;
+
     /// <summary>Dohromady T−20.</summary>
     public static TimeSpan PredStartem => PredProcedurou + Procedura;
 
