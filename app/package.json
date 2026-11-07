@@ -56,6 +56,9 @@
   "overrides": {
     "expo-modules-core": {
       "react-native-worklets": "0.13.x"
-    }
+    },
+    "node-forge": "^1.4.3",
+    "decode-uri-component": "^0.5.1",
+    "glob": "^14.0.4"
   }
 }
