@@ -4130,7 +4130,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "P\u0159ihl\u00e1s\u00ed lo\u010f na regatu \u2014 z ro\u010dn\u00edku, nebo novou",
-                "description": "Po\u0159adatel regaty, od vyps\u00e1n\u00ed z\u00e1vodu. Nov\u00e1 lo\u010f se st\u00e1v\u00e1 \u00fa\u010dastn\u00edkem ro\u010dn\u00edku v zadan\u00e9 kategorii. Druh\u00e9 p\u0159ihl\u00e1\u0161en\u00ed t\u00e9\u017ee lodi vrac\u00ed 200.",
+                "description": "Po\u0159adatel regaty, od vyps\u00e1n\u00ed z\u00e1vodu; po rozprav\u011b m\u00edsto n\u011bj rozhod\u010d\u00ed. Nov\u00e1 lo\u010f se st\u00e1v\u00e1 \u00fa\u010dastn\u00edkem ro\u010dn\u00edku v zadan\u00e9 kategorii. Druh\u00e9 p\u0159ihl\u00e1\u0161en\u00ed t\u00e9\u017ee lodi vrac\u00ed 200.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4248,7 +4248,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Sma\u017ee nesmyslnou p\u0159ihl\u00e1\u0161ku z webu",
-                "description": "Jen po\u017eadavek, vr\u00e1cenou nebo odm\u00edtnutou p\u0159ihl\u00e1\u0161ku bez v\u00fdsledk\u016f. Uklid\u00ed i lo\u010f a osoby, kter\u00e9 vznikly jen kv\u016fli n\u00ed.",
+                "description": "Jen po\u017eadavek, vr\u00e1cenou nebo odm\u00edtnutou p\u0159ihl\u00e1\u0161ku bez v\u00fdsledk\u016f. Uklid\u00ed i lo\u010f a osoby, kter\u00e9 vznikly jen kv\u016fli n\u00ed. Po\u0159adatel, po rozprav\u011b rozhod\u010d\u00ed.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4290,7 +4290,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "P\u0159epne stav p\u0159ihl\u00e1\u0161ky lodi",
-                "description": "Po\u0159adatel zapisuje, potvrzuje, vrac\u00ed k dopln\u011bn\u00ed, odm\u00edt\u00e1, odhla\u0161uje a zna\u010d\u00ed nedostaven\u00ed; rozhod\u010d\u00ed vylu\u010duje. Vr\u00e1cen\u00ed, odm\u00edtnut\u00ed a vylou\u010den\u00ed cht\u011bj\u00ed d\u016fvod. Lo\u010f s v\u00fdsledky odhl\u00e1sit ani odm\u00edtnout nejde.",
+                "description": "Po\u0159adatel zapisuje, potvrzuje, vrac\u00ed k dopln\u011bn\u00ed, odm\u00edt\u00e1, odhla\u0161uje a zna\u010d\u00ed nedostaven\u00ed; rozhod\u010d\u00ed vylu\u010duje, a po rozprav\u011b p\u0159eb\u00edr\u00e1 i v\u0161echno ostatn\u00ed. Vr\u00e1cen\u00ed, odm\u00edtnut\u00ed a vylou\u010den\u00ed cht\u011bj\u00ed d\u016fvod. Lo\u010f s v\u00fdsledky odhl\u00e1sit ani odm\u00edtnout nejde.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4336,6 +4336,103 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/LodNaZastavceDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/pomocnici": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Po\u0159adatel\u00e9 ro\u010dn\u00edku a kdo z nich pom\u00e1h\u00e1 u startu a c\u00edle",
+                "description": "\u010cte rozhod\u010d\u00ed ro\u010dn\u00edku i po\u0159adatel regaty; za\u0161krt\u00e1vat sm\u00ed jen rozhod\u010d\u00ed, a odpov\u011b\u010f to \u0159\u00edk\u00e1 v `smiZaskrtavat`.\n\nKandid\u00e1ti jsou po\u0159adatel\u00e9 **kter\u00e9koliv zast\u00e1vky ro\u010dn\u00edku**, ne jen t\u00e9hle \u2014 o to jde: u c\u00edle stoj\u00ed \u010dasto po\u0159adatel odjinud, kter\u00fd by jinak musel dostat celou tuhle regatu. U koho je `jeZdejsi`, tomu za\u0161krtnut\u00ed nic nep\u0159id\u00e1.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PomocniciDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/pomocnici/{uzivatel}": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Rozhod\u010d\u00ed za\u0161krtne, nebo od\u0161krtne pomocn\u00edka u startu a c\u00edle",
+                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku, a jen u n\u011bkoho, kdo u\u017e je po\u0159adatelem n\u011bkter\u00e9 zast\u00e1vky ro\u010dn\u00edku \u2014 p\u0159\u00edznak se neud\u00edl\u00ed jako role.\n\n**Co otev\u00edr\u00e1:** p\u0159evzet\u00ed velen\u00ed, startovn\u00ed proceduru, z\u00e1pis startu a konce, z\u00e1pis dojezd\u016f a pap\u00edrov\u00fd z\u00e1pis. **Co neotev\u00edr\u00e1:** startovn\u00ed listinu, zakl\u00e1d\u00e1n\u00ed rozj\u00ed\u017ed\u011bk, posun v\u00fdsledk\u016f ve workflow, poh\u00e1r ani publikaci.\n\n**V\u00e1\u017ee se na jednu regatu**, ne na ro\u010dn\u00edk, a od\u0161krtnut\u00ed se zapisuje, nema\u017ee \u2014 po regat\u011b z\u016fst\u00e1v\u00e1 doklad, kdo toho dne u startu a u c\u00edle st\u00e1l a kdo ho tam pustil.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "uzivatel",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PomocVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PomocniciDto"
                                 }
                             }
                         }
@@ -9991,6 +10088,35 @@
                     }
                 }
             },
+            "PomocniciDto": {
+                "required": [
+                    "smiZaskrtavat",
+                    "poradatele"
+                ],
+                "type": "object",
+                "properties": {
+                    "smiZaskrtavat": {
+                        "type": "boolean"
+                    },
+                    "poradatele": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PoradatelRocnikuDto"
+                        }
+                    }
+                }
+            },
+            "PomocVstup": {
+                "required": [
+                    "pomaha"
+                ],
+                "type": "object",
+                "properties": {
+                    "pomaha": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "PoradatelDto": {
                 "required": [
                     "slug",
@@ -10070,6 +10196,45 @@
                             {
                                 "$ref": "#/components/schemas/ObrazekDto"
                             }
+                        ]
+                    }
+                }
+            },
+            "PoradatelRocnikuDto": {
+                "required": [
+                    "uzivatelId",
+                    "jmeno",
+                    "pomaha",
+                    "jeZdejsi",
+                    "odV",
+                    "zaskrtl"
+                ],
+                "type": "object",
+                "properties": {
+                    "uzivatelId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "jmeno": {
+                        "type": "string"
+                    },
+                    "pomaha": {
+                        "type": "boolean"
+                    },
+                    "jeZdejsi": {
+                        "type": "boolean"
+                    },
+                    "odV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "zaskrtl": {
+                        "type": [
+                            "null",
+                            "string"
                         ]
                     }
                 }

@@ -238,24 +238,24 @@ public static class VysledkyEndpoints
 
     private static async Task<IResult> ZastavkyAsync(
         string serie, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, VysledkySprava sprava, CancellationToken ct)
+        Rozsahy rozsahy, VysledkySprava sprava, PomocniciSprava pomocnici, CancellationToken ct)
     {
         if (await rozsahy.NajdiAsync(serie, null, ct) is not { } rozsah)
             return Results.NotFound();
 
-        if (await PohledAsync(kdo, rozsahy, rozsah.SerieId, ct) is null) return Results.Forbid();
+        if (await PohledAsync(kdo, rozsahy, pomocnici, rozsah.SerieId, ct) is null) return Results.Forbid();
 
         return Results.Ok(await sprava.ZastavkyAsync(rozsah.SerieId, ct));
     }
 
     private static async Task<IResult> PrehledAsync(
         string serie, string zavod, ClaimsPrincipal kdo, AppDbContext db,
-        Rozsahy rozsahy, VysledkySprava sprava, CancellationToken ct)
+        Rozsahy rozsahy, VysledkySprava sprava, PomocniciSprava pomocnici, CancellationToken ct)
     {
         if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
             return Results.NotFound();
 
-        if (await PohledAsync(kdo, rozsahy, rozsah.SerieId, ct) is not { } pohled)
+        if (await PohledAsync(kdo, rozsahy, pomocnici, rozsah.SerieId, ct) is not { } pohled)
             return Results.Forbid();
 
         var hlavicka = await db.Zavody
@@ -445,7 +445,7 @@ public static class VysledkyEndpoints
 
     private static async Task<IResult> PridejRozjizdkuAsync(
         string serie, string zavod, [FromBody] NovaRozjizdkaVstup? vstup, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, CancellationToken ct)
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, PomocniciSprava pomocnici, CancellationToken ct)
     {
         if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
             return Results.NotFound();
@@ -458,7 +458,7 @@ public static class VysledkyEndpoints
 
         return Results.Created(
             $"/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{rozjizdka!.Cislo}",
-            await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, ct));
+            await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, pomocnici, ct));
     }
 
     private static async Task<IResult> ZapisAsync(
@@ -472,7 +472,7 @@ public static class VysledkyEndpoints
 
         // Číst smí každý, kdo smí na výsledky ročníku — rozhodčí ověřuje
         // právě tenhle zápis, takže ho musí vidět, i když ho nemění.
-        if (await PohledAsync(kdo, rozsahy, rozsah.SerieId, ct) is null) return Results.Forbid();
+        if (await PohledAsync(kdo, rozsahy, pomocnici, rozsah.SerieId, ct) is null) return Results.Forbid();
 
         // `kdo` se předává kvůli velitelskému času: obrazovka musí vědět,
         // jestli velí ten, kdo se dívá (nález R19).
@@ -559,7 +559,7 @@ public static class VysledkyEndpoints
 
     private static async Task<IResult> StavAsync(
         string serie, string zavod, int cislo, StavVysledkuVstup vstup, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, VysledkySprava sprava, CancellationToken ct)
+        Rozsahy rozsahy, VysledkySprava sprava, PomocniciSprava pomocnici, CancellationToken ct)
     {
         if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
             return Results.NotFound();
@@ -579,12 +579,12 @@ public static class VysledkyEndpoints
         if (await sprava.PrepniStavAsync(rozjizdka, vstup.Stav, vstup.Duvod, spravce, ct) is { } chyba)
             return Results.BadRequest(new { error = chyba });
 
-        return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, ct));
+        return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, pomocnici, ct));
     }
 
     private static async Task<IResult> DoSerieAsync(
         string serie, string zavod, int cislo, DoSerieVstup vstup, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, VysledkySprava sprava, CancellationToken ct)
+        Rozsahy rozsahy, VysledkySprava sprava, PomocniciSprava pomocnici, CancellationToken ct)
     {
         if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
             return Results.NotFound();
@@ -597,13 +597,13 @@ public static class VysledkyEndpoints
         if (!await rozsahy.SmiAsync(kdo, pozadavek, ct)) return Results.Forbid();
 
         await sprava.DoSerieAsync(rozjizdka, vstup.DoSerie, ct);
-        return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, ct));
+        return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, pomocnici, ct));
     }
 
     private static async Task<IResult> PublikaceAsync(
         string serie, string zavod, int cislo, PublikaceVysledkuVstup vstup, ClaimsPrincipal kdo,
         Rozsahy rozsahy, VysledkySprava sprava, Upozorneni.UpozorneniSprava upozorneni,
-        CancellationToken ct)
+        PomocniciSprava pomocnici, CancellationToken ct)
     {
         if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
             return Results.NotFound();
@@ -618,7 +618,7 @@ public static class VysledkyEndpoints
             return Results.Forbid();
 
         await sprava.PublikujAsync(rozjizdka, vstup.Publikovano, ct, upozorneni);
-        return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, ct));
+        return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, pomocnici, ct));
     }
 
     /// <summary>
@@ -677,9 +677,19 @@ public static class VysledkyEndpoints
     /// čtyři cest do databáze za jedno zobrazení.
     /// </summary>
     private sealed record Pohled(
-        bool Rozhodci, bool Spravce, bool OrganizatorRocniku, IReadOnlyList<int> Zavody)
+        bool Rozhodci, bool Spravce, bool OrganizatorRocniku, IReadOnlyList<int> Zavody,
+        IReadOnlyList<int> KdePomaha)
     {
         public bool Poradatel(int zavodId) => Spravce || OrganizatorRocniku || Zavody.Contains(zavodId);
+
+        /// <summary>
+        /// Smí u vody — zapsat start, konec a dojezdy (nález K8). Je to
+        /// tatáž odpověď jako u <c>SmiUVodyAsync</c>, a <b>musí být</b>:
+        /// kdyby obrazovka nabídla méně, než zápis pustí, startér by
+        /// u vody viděl zamčenou rozjížďku, do které by přitom psát mohl.
+        /// </summary>
+        public bool UVody(int zavodId) =>
+            Pomocnici.SmiUVody(Poradatel(zavodId), KdePomaha.Contains(zavodId));
 
         public RozjizdkaSpravaRadek Radek(int zavodId, Rozjizdka r, int pocetVysledku)
         {
@@ -708,7 +718,7 @@ public static class VysledkyEndpoints
                     _ => Rozhodci,
                 },
                 MozneStavy: mozne,
-                SmiZapisovat: organizator && Zapis.Otevreny(r.StavVysledku),
+                SmiZapisovat: UVody(zavodId) && Zapis.Otevreny(r.StavVysledku),
                 SmiDoPoharu: Workflow.KdoSmiDoSerie(r.StavVysledku) switch
                 {
                     Role.Organizator => organizator,
@@ -724,7 +734,8 @@ public static class VysledkyEndpoints
     /// pohledávat — tedy není ani rozhodčí, ani pořadatel jediné zastávky.
     /// </summary>
     private static async Task<Pohled?> PohledAsync(
-        ClaimsPrincipal kdo, Rozsahy rozsahy, int serieId, CancellationToken ct)
+        ClaimsPrincipal kdo, Rozsahy rozsahy, PomocniciSprava pomocnici, int serieId,
+        CancellationToken ct)
     {
         var rozhodci = await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, serieId), ct);
         var spravce = await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, serieId), ct);
@@ -732,16 +743,22 @@ public static class VysledkyEndpoints
 
         if (!rozhodci && !celyRocnik && zavody.Count == 0) return null;
 
-        return new Pohled(rozhodci, spravce, celyRocnik, zavody);
+        // Zaškrtnutý pomocník je vždycky pořadatel některé zastávky ročníku,
+        // takže sítem výš projde — ptáme se až tady, co mu příznak otevřel
+        // na zastávkách, které jeho nejsou (K8).
+        return new Pohled(
+            rozhodci, spravce, celyRocnik, zavody,
+            await pomocnici.KdePomahaAsync(
+                serieId, await rozsahy.UzivatelIdAsync(kdo, ct), ct));
     }
 
     /// <summary>Jeden řádek po zápisu — aby si obrazovka nemusela nový stav domýšlet.</summary>
     private static async Task<RozjizdkaSpravaRadek> RadekAsync(
         ClaimsPrincipal kdo, Rozsahy rozsahy, VysledkySprava sprava,
-        Rozsahy.Rozsah rozsah, Rozjizdka rozjizdka, CancellationToken ct)
+        Rozsahy.Rozsah rozsah, Rozjizdka rozjizdka, PomocniciSprava pomocnici, CancellationToken ct)
     {
-        var pohled = await PohledAsync(kdo, rozsahy, rozsah.SerieId, ct)
-                     ?? new Pohled(false, false, false, []);
+        var pohled = await PohledAsync(kdo, rozsahy, pomocnici, rozsah.SerieId, ct)
+                     ?? new Pohled(false, false, false, [], []);
 
         var pocet = (await sprava.RozjizdkyAsync(rozsah.ZavodId!.Value, ct))
             .First(r => r.Rozjizdka.Cislo == rozjizdka.Cislo).PocetVysledku;

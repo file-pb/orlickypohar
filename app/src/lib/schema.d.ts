@@ -4095,7 +4095,7 @@ export interface paths {
         put?: never;
         /**
          * Přihlásí loď na regatu — z ročníku, nebo novou
-         * @description Pořadatel regaty, od vypsání závodu. Nová loď se stává účastníkem ročníku v zadané kategorii. Druhé přihlášení téže lodi vrací 200.
+         * @description Pořadatel regaty, od vypsání závodu; po rozpravě místo něj rozhodčí. Nová loď se stává účastníkem ročníku v zadané kategorii. Druhé přihlášení téže lodi vrací 200.
          */
         post: {
             parameters: {
@@ -4198,7 +4198,7 @@ export interface paths {
         post?: never;
         /**
          * Smaže nesmyslnou přihlášku z webu
-         * @description Jen požadavek, vrácenou nebo odmítnutou přihlášku bez výsledků. Uklidí i loď a osoby, které vznikly jen kvůli ní.
+         * @description Jen požadavek, vrácenou nebo odmítnutou přihlášku bez výsledků. Uklidí i loď a osoby, které vznikly jen kvůli ní. Pořadatel, po rozpravě rozhodčí.
          */
         delete: {
             parameters: {
@@ -4238,7 +4238,7 @@ export interface paths {
         put?: never;
         /**
          * Přepne stav přihlášky lodi
-         * @description Pořadatel zapisuje, potvrzuje, vrací k doplnění, odmítá, odhlašuje a značí nedostavení; rozhodčí vylučuje. Vrácení, odmítnutí a vyloučení chtějí důvod. Loď s výsledky odhlásit ani odmítnout nejde.
+         * @description Pořadatel zapisuje, potvrzuje, vrací k doplnění, odmítá, odhlašuje a značí nedostavení; rozhodčí vylučuje, a po rozpravě přebírá i všechno ostatní. Vrácení, odmítnutí a vyloučení chtějí důvod. Loď s výsledky odhlásit ani odmítnout nejde.
          */
         post: {
             parameters: {
@@ -4268,6 +4268,101 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/pomocnici": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pořadatelé ročníku a kdo z nich pomáhá u startu a cíle
+         * @description Čte rozhodčí ročníku i pořadatel regaty; zaškrtávat smí jen rozhodčí, a odpověď to říká v `smiZaskrtavat`.
+         *
+         *     Kandidáti jsou pořadatelé **kterékoliv zastávky ročníku**, ne jen téhle — o to jde: u cíle stojí často pořadatel odjinud, který by jinak musel dostat celou tuhle regatu. U koho je `jeZdejsi`, tomu zaškrtnutí nic nepřidá.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PomocniciDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/pomocnici/{uzivatel}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Rozhodčí zaškrtne, nebo odškrtne pomocníka u startu a cíle
+         * @description Jen rozhodčí ročníku, a jen u někoho, kdo už je pořadatelem některé zastávky ročníku — příznak se neudílí jako role.
+         *
+         *     **Co otevírá:** převzetí velení, startovní proceduru, zápis startu a konce, zápis dojezdů a papírový zápis. **Co neotevírá:** startovní listinu, zakládání rozjížděk, posun výsledků ve workflow, pohár ani publikaci.
+         *
+         *     **Váže se na jednu regatu**, ne na ročník, a odškrtnutí se zapisuje, nemaže — po regatě zůstává doklad, kdo toho dne u startu a u cíle stál a kdo ho tam pustil.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    uzivatel: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PomocVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PomocniciDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7691,6 +7786,13 @@ export interface components {
             stariMs: null | number;
             stav: components["schemas"]["StavPolohy"];
         };
+        PomocniciDto: {
+            smiZaskrtavat: boolean;
+            poradatele: components["schemas"]["PoradatelRocnikuDto"][];
+        };
+        PomocVstup: {
+            pomaha: boolean;
+        };
         PoradatelDto: {
             slug: string;
             nazev: string;
@@ -7705,6 +7807,16 @@ export interface components {
             /** Format: double */
             delka: null | number;
             obrazek?: null | components["schemas"]["ObrazekDto"];
+        };
+        PoradatelRocnikuDto: {
+            /** Format: uuid */
+            uzivatelId: string;
+            jmeno: string;
+            pomaha: boolean;
+            jeZdejsi: boolean;
+            /** Format: date-time */
+            odV: null | string;
+            zaskrtl: null | string;
         };
         PoradatelSpravaDto: {
             serie: string;

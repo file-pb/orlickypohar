@@ -65,6 +65,26 @@ public class PomocniciSprava(AppDbContext db, TimeProvider cas)
             : Task.FromResult(false);
 
     /// <summary>
+    /// Na kterých zastávkách ročníku tenhle člověk pomáhá.
+    ///
+    /// <para>
+    /// <b>Pro rozcestník, ne pro zápis.</b> Obrazovka s výčtem rozjížděk
+    /// se ptá jednou za požadavek a pak se rozhoduje po řádcích — ptát se
+    /// na každou zastávku zvlášť by byl dotaz za řádek. Je to tentýž důvod,
+    /// proč se jednou načítá i <c>Pohled</c>.
+    /// </para>
+    /// </summary>
+    public async Task<IReadOnlyList<int>> KdePomahaAsync(
+        int serieId, Guid? uzivatelId, CancellationToken ct) =>
+        uzivatelId is { } id
+            ? await db.Pomocnici
+                .Where(p => p.UzivatelId == id && p.DoV == null && p.Zavod!.SerieId == serieId)
+                .Select(p => p.ZavodId)
+                .Distinct()
+                .ToListAsync(ct)
+            : [];
+
+    /// <summary>
     /// Pořadatelé ročníku a jejich příznak — podklad pro obrazovku
     /// v klubovně.
     /// </summary>
