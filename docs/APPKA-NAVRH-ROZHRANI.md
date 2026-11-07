@@ -579,7 +579,7 @@ to stalo.
 
 ### Co z ukázky je ověřené na zařízení (7. 11. 2026)
 
-Proklikáno v simulátoru, na buildu, který už nesl posun kalendáře:
+Proklikáno v simulátoru na `5e48a27`:
 
 | Co | Jak to dopadlo |
 | --- | --- |
@@ -593,6 +593,14 @@ Proklikáno v simulátoru, na buildu, který už nesl posun kalendáře:
 *„Hlásí a troubí"*, ale stroj byl ztišený — víme tedy, že se appka tváří,
 že mluví, ne že je slyšet. Je to tentýž druh rozdílu, jaký projekt zná
 odjinud: zelená z prázdného výsledku není zelená.
+
+**Na čem se měřilo, se muselo dohledat.** Zkoušející si tu verzi nepullnul
+a chvíli ji hlásil o dva commity starší, než jaká doopravdy ležela na
+disku — druhé sezení ji do téhož checkoutu zapsalo a Metro ji vzalo odtud.
+Poznalo se to na nesrovnalosti v tom, co bylo vidět: kalendář nemohl
+ukazovat *vypsáno*, protože v hlášené verzi ten kód ještě nebyl. **Ve
+sdíleném pracovním adresáři tedy neplatí, co si člověk stáhl, ale co na
+disku leží** — a před měřením se to musí přečíst, ne předpokládat.
 
 **Ukázka nepřežije fast refresh.** Režim se drží v modulové proměnné
 (schválně — nemá přežít ani konec appky), a Metro ji při překladu změněného
