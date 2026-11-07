@@ -19,9 +19,12 @@ import {
   prepisCas,
   presnejsiCas,
   plula,
+  posun,
   prehod,
   radky,
   radkyPriUkonceni,
+  rozdel,
+  skupiny,
   vratPosledni,
   zbyva,
   zeZapisu,
@@ -363,6 +366,67 @@ zkus('přepsání času nechá pořadí i loď na pokoji', () => {
   assert.equal(po[1].prihlaskaId, 12);
   assert.equal(po[1].poradi, 2);
   assert.equal(po[1].dojezdV, '2027-05-15T12:30:09Z');
+});
+
+zkus('shodné lodě tvoří jednu řádku pořadí', () => {
+  const m = prepniShodu(klepni(klepni(klepni([], 11, T), 12, T + 5_000), 13, T + 9_000), 12);
+  const sk = skupiny(m);
+
+  assert.equal(sk.length, 2, 'ze tří lodí mají být dvě řádky');
+  assert.deepEqual(
+    sk.map((s) => s.mista.map((x) => x.prihlaskaId)),
+    [[11, 12], [13]],
+  );
+  // Číslo nese skupina, ne druhá loď v ní: dvě první a další třetí.
+  assert.deepEqual(sk.map((s) => s.poradi), [1, 3]);
+});
+
+zkus('posun řádky přehodí lodě, časy nechá místům', () => {
+  const m = klepni(klepni([], 11, T), 12, T + 5_000);
+  const casy = m.map((x) => x.dojezdV);
+
+  const dolu = posun(m, 11, 1);
+  assert.deepEqual(dolu.map((x) => x.prihlaskaId), [12, 11], 'loď má jít o místo níž');
+  assert.deepEqual(dolu.map((x) => x.dojezdV), casy, 'okamžiky průjezdu se hýbat nesmějí');
+  assert.deepEqual(dolu.map((x) => x.poradi), [1, 2]);
+
+  // Nahoru je to táž výměna z druhé strany.
+  assert.deepEqual(posun(m, 12, -1), dolu);
+});
+
+zkus('posun na kraji řady nedělá nic', () => {
+  const m = klepni(klepni([], 11, T), 12, T + 5_000);
+  assert.deepEqual(posun(m, 11, -1), m, 'nad první řádkou není kam');
+  assert.deepEqual(posun(m, 12, 1), m, 'pod poslední taky ne');
+  assert.deepEqual(posun(m, 99, -1), m, 'loď, která v cíli není, nemá co posouvat');
+});
+
+zkus('posune se celá shodná dvojice, ne jen jedna loď z ní', () => {
+  // 1. LUNA + AVENIR (shodně), 3. SIRIUS
+  const m = prepniShodu(klepni(klepni(klepni([], 11, T), 12, T + 5_000), 13, T + 9_000), 12);
+  const casy = m.map((x) => x.dojezdV);
+  const po = posun(m, 11, 1);
+
+  assert.deepEqual(po.map((x) => x.prihlaskaId), [13, 11, 12], 'SIRIUS má být první');
+  assert.deepEqual(po.map((x) => x.dojezdV), casy, 'časy zůstávají místům');
+  // Dvojice se cestou nerozpojila a čísla sedí: 1. SIRIUS, 2. LUNA + AVENIR.
+  assert.deepEqual(po.map((x) => x.poradi), [1, 2, 2]);
+  assert.deepEqual(po.map((x) => x.shodneSPredchozim), [false, false, true]);
+});
+
+zkus('rozdělit rozpojí celou shodu, i trojici', () => {
+  let m = klepni(klepni(klepni([], 11, T), 12, T + 2_000), 13, T + 3_000);
+  m = prepniShodu(prepniShodu(m, 12), 13);
+  assert.deepEqual(m.map((x) => x.poradi), [1, 1, 1], 'tři lodě shodně první');
+
+  const po = rozdel(m, 11);
+  assert.deepEqual(po.map((x) => x.poradi), [1, 2, 3]);
+  // `Boolean`, protože první místo příznak nikdy nedostalo — `klepni` ho
+  // nenastavuje a nenastavená shoda je totéž jako žádná.
+  assert.deepEqual(po.map((x) => Boolean(x.shodneSPredchozim)), [false, false, false]);
+
+  // Na řádce o jedné lodi není co dělit.
+  assert.deepEqual(rozdel(po, 12), po);
 });
 
 console.log(`  ${prosly} prošlo`);

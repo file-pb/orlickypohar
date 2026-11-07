@@ -218,6 +218,96 @@ export function prehod(mista: readonly Misto[], a: number, b: number): Misto[] {
   );
 }
 
+/**
+ * Jedna <b>řádka pořadí</b>: loď sama, nebo lodě, které dojely shodně.
+ *
+ * Proč to není jen pole míst: v návrhu (`Cil.dc.html`) je shoda
+ * <b>jedna řádka se dvěma jmény</b> a jedním číslem, ne dvě řádky, z nichž
+ * druhá má místo čísla rovnítko. Rovnítko řeklo, že číslo není překlep;
+ * neřeklo, že ty dvě lodě patří k sobě a že se jim dělí body.
+ */
+export type SkupinaVCili = {
+  /** Pořadí celé skupiny — shodné lodě mají totéž číslo (ZPJ A7). */
+  poradi: number;
+  /** Místa ve skupině, v pořadí zápisu. Nikdy prázdné. */
+  mista: Misto[];
+};
+
+/**
+ * Posbírá místa do řádek pořadí. Skupinu dělá {@link Misto.shodneSPredchozim}.
+ *
+ * <b>Příznak na prvním místě se ignoruje</b> — stejně jako v
+ * {@link precisluj}. Zbýt tam může po odebrání lodi, s níž se shoda
+ * vázala, a skupina „shodná s ničím" by neměla kam patřit.
+ */
+export function skupiny(mista: readonly Misto[]): SkupinaVCili[] {
+  const ven: SkupinaVCili[] = [];
+  for (const m of mista) {
+    const posledni = ven[ven.length - 1];
+    if (m.shodneSPredchozim && posledni) posledni.mista.push(m);
+    else ven.push({ poradi: m.poradi, mista: [m] });
+  }
+  return ven;
+}
+
+/**
+ * <b>Posun řádky o jednu výš nebo níž</b> — šipky z návrhu.
+ *
+ * Nahrazuje „prohodit s předchozí" ze starého dialogu, a to ve dvou
+ * ohledech: jde oběma směry, a posouvá <b>celou řádku</b>, takže shodná
+ * dvojice se posune jako dvojice a cestou se nerozpojí.
+ *
+ * <b>Časy zůstávají místům</b>, ne lodím (druhé pravidlo tohohle souboru).
+ * Proto se nepřesouvají místa, ale lodě přes ně: řada okamžiků, jak cílem
+ * něco projelo, se nehne, a mění se jen to, komu který okamžik patří.
+ *
+ * Vrací vstup nezměněný, když není kam posunout nebo loď v cíli není.
+ */
+export function posun(
+  mista: readonly Misto[],
+  prihlaskaId: number,
+  smer: -1 | 1,
+): Misto[] {
+  const sk = skupiny(mista);
+  const kde = sk.findIndex((s) => s.mista.some((m) => m.prihlaskaId === prihlaskaId));
+  const kam = kde + smer;
+  if (kde < 0 || kam < 0 || kam >= sk.length) return mista as Misto[];
+
+  const prehozene = [...sk];
+  prehozene[kde] = sk[kam];
+  prehozene[kam] = sk[kde];
+
+  const casy = mista.map((m) => m.dojezdV);
+  const ven: Misto[] = [];
+  for (const s of prehozene)
+    for (const [i, m] of s.mista.entries())
+      ven.push({ ...m, dojezdV: casy[ven.length], shodneSPredchozim: i > 0 });
+
+  return precisluj(ven);
+}
+
+/**
+ * <b>Rozdělí shodu</b> zpátky na jednotlivé lodě (odkaz *rozdělit*
+ * v návrhu).
+ *
+ * {@link prepniShodu} odpojí jedno místo; tohle rozpojí celou řádku, aby
+ * i trojice šla rozebrat jedním klepnutím. Na řádce o jedné lodi nedělá
+ * nic.
+ */
+export function rozdel(mista: readonly Misto[], prihlaskaId: number): Misto[] {
+  const skupina = skupiny(mista).find((s) =>
+    s.mista.some((m) => m.prihlaskaId === prihlaskaId),
+  );
+  if (!skupina || skupina.mista.length < 2) return mista as Misto[];
+
+  const rozpojit = new Set(skupina.mista.slice(1).map((m) => m.prihlaskaId));
+  return precisluj(
+    mista.map((m) =>
+      rozpojit.has(m.prihlaskaId) ? { ...m, shodneSPredchozim: false } : m,
+    ),
+  );
+}
+
 /** Lodě, které ještě nedojely — na ty se klepe. */
 export function zbyva(
   lode: readonly LodVCili[],

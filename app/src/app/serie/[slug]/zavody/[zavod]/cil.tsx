@@ -30,13 +30,14 @@ import {
   nactiRozepsany,
   navrhyKZobrazeni,
   odeber,
-  prehod,
-  plula,
+  posun,
   prepisCas,
   prepniShodu,
   presnejsiCas,
   radky,
   radkyPriUkonceni,
+  rozdel,
+  skupiny,
   ulozRozepsany,
   vratPosledni,
   zbyva,
@@ -196,6 +197,12 @@ function Zapisovani({
   const [navrhy, setNavrhy] = useState<PrujezdZTrasovani[]>([]);
   const [tedProNavrhy, setTedProNavrhy] = useState(() => Date.now());
 
+  // <b>Návrhy, které rozhodčí odmítl.</b> Drží se klíčem loď + okamžik,
+  // ne jen lodí: trasování může tutéž loď vidět u cíle znovu a to už je
+  // jiný průjezd, o kterém se nerozhodovalo. Je to paměť obrazovky, ne
+  // zápisu — odmítnutí nic neukládá, protože zapsáno nic nebylo.
+  const [odmitnute, setOdmitnute] = useState<string[]>([]);
+
   useEffect(() => {
     let zivy = true;
     const nacti = async () => {
@@ -290,6 +297,10 @@ function Zapisovani({
 
   const zbyvajici = zbyva(lode, mista);
   const posledni = mista[mista.length - 1];
+  const rady = skupiny(mista);
+  const kNabidnuti = navrhyKZobrazeni(navrhy, mista, tedProNavrhy).filter(
+    (n) => !odmitnute.includes(klicNavrhu(n)),
+  );
 
   return (
     <>
@@ -310,9 +321,7 @@ function Zapisovani({
           <Text style={[s.poslednText, { color: t.text }]}>
             {posledni.poradi}. {jmeno(lode, posledni.prihlaskaId)}
             {'  '}
-            <Text style={{ color: t.tlumeny }}>
-              {casMista(zapis.startV ?? null, posledni.dojezdV)}
-            </Text>
+            <Text style={{ color: t.tlumeny }}>{casMista(posledni.dojezdV)}</Text>
           </Text>
           <Pressable
             onPress={() => zmen(vratPosledni(mista))}
@@ -321,26 +330,6 @@ function Zapisovani({
           </Pressable>
         </View>
       ) : null}
-
-      {navrhyKZobrazeni(navrhy, mista, tedProNavrhy).map((n) => (
-        /* <b>Návrh vypadá jako návrh.</b> Čárkovaný okraj a tlumená
-           barva: dokud na něj rozhodčí neklepne, nic zapsaného není. */
-        <Pressable
-          key={n.prihlaskaId}
-          onPress={() => zmen(klepni(mista, n.prihlaskaId, Date.parse(n.kdy)))}
-          style={({ pressed }) => [
-            s.navrh,
-            { borderColor: t.jede, backgroundColor: t.zvyrazneni, opacity: pressed ? 0.6 : 1 },
-          ]}>
-          <View style={{ flex: 1 }}>
-            <Text style={[s.navrhLod, { color: t.text }]} numberOfLines={1}>{n.lod}</Text>
-            <Text style={[s.navrhVeta, { color: t.tlumeny }]}>
-              trasování vidí průjezd v {hodiny(n.kdy)}
-            </Text>
-          </View>
-          <Text style={[s.navrhZapsat, { color: t.jede }]}>Zapsat</Text>
-        </Pressable>
-      ))}
 
       {zbyvajici.length === 0 ? (
         <Prazdno text="Všechny lodě mají dojezd. Rozjížďku ukonči, až budeš chtít." />
@@ -369,31 +358,121 @@ function Zapisovani({
         </View>
       )}
 
-      {mista.length > 0 ? (
+      {mista.length > 0 || kNabidnuti.length > 0 ? (
         <View style={s.poradi}>
-          {mista.map((m) => (
-            <Pressable
-              // Klíč je loď, ne pořadí (K7): dvě shodná místa mají totéž
-              // číslo a React by je považoval za jednu řádku.
-              key={m.prihlaskaId}
-              onPress={() => setVybrane(m)}
-              style={({ pressed }) => [
+          {rady.map((sk, i) => (
+            <View
+              // Klíč je první loď řádky, ne pořadí (K7): shodná místa mají
+              // totéž číslo a React by dvě řádky považoval za jednu.
+              key={sk.mista[0].prihlaskaId}
+              style={[
                 s.mistoRadek,
-                { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
+                { borderColor: sk.mista.length > 1 ? t.voda : t.linka },
               ]}>
-              {/* Shodné místo číslo nepíše — píše rovnítko. Dvě trojky za
-                  sebou vypadají jako překlep; rovnítko říká, že to tak má
-                  být (K7, ZPJ A7). */}
-              <Text style={[s.mistoCislo, { color: t.tlumeny }]}>
-                {m.shodneSPredchozim ? '=' : `${m.poradi}.`}
-              </Text>
-              <Text style={[s.mistoLod, { color: t.text }]} numberOfLines={1}>
-                {jmeno(lode, m.prihlaskaId)}
-              </Text>
+              <Text style={[s.mistoCislo, { color: t.tlumeny }]}>{sk.poradi}.</Text>
+
+              <View style={s.mistoJmena}>
+                {sk.mista.map((m) => (
+                  /* Jméno otevírá opravy, které se nevejdou na řádku:
+                     smazat, vzít čas z trasování, spojit shodu. */
+                  <Pressable
+                    key={m.prihlaskaId}
+                    onPress={() => setVybrane(m)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${jmeno(lode, m.prihlaskaId)} — opravit místo`}
+                    style={({ pressed }) => [s.mistoJmeno, { opacity: pressed ? 0.6 : 1 }]}>
+                    <Text style={[s.mistoLod, { color: t.text }]} numberOfLines={1}>
+                      {jmeno(lode, m.prihlaskaId)}
+                    </Text>
+                  </Pressable>
+                ))}
+
+                {/* <b>Shoda je jedna řádka se dvěma jmény</b>, jak ji kreslí
+                    návrh — ne dvě řádky, z nichž druhá má místo čísla
+                    rovnítko. Rovnítko řeklo, že číslo není překlep;
+                    neřeklo, že ty lodě patří k sobě a že se jim body dělí
+                    (K7, ZPJ A7). */}
+                {sk.mista.length > 1 ? (
+                  <View style={s.shoda}>
+                    <Text style={[s.shodaVeta, { color: t.tlumeny }]}>
+                      dojely spolu · body se dělí (A7)
+                    </Text>
+                    <Pressable
+                      onPress={() => zmen(rozdel(mista, sk.mista[0].prihlaskaId))}
+                      style={({ pressed }) => [s.rozdelit, { opacity: pressed ? 0.6 : 1 }]}>
+                      <Text style={[s.shodaVeta, s.rozdelitText, { color: t.text }]}>
+                        rozdělit
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+              </View>
+
               <Text style={[s.mistoCas, { color: t.tlumeny }]}>
-                {casMista(zapis.startV ?? null, m.dojezdV)}
+                {casMista(sk.mista[0].dojezdV)}
               </Text>
-            </Pressable>
+
+              {/* <b>Šipky na řádce</b> místo „prohodit s předchozí"
+                  v dialogu. Oprava pořadí je to, co se u cíle dělá
+                  nejčastěji hned po klepnutí, a jde oběma směry —
+                  dialog uměl jen nahoru. */}
+              <View style={s.sipky}>
+                <Sipka
+                  t={t}
+                  smer={-1}
+                  lod={jmeno(lode, sk.mista[0].prihlaskaId)}
+                  jde={i > 0}
+                  stiskni={() => zmen(posun(mista, sk.mista[0].prihlaskaId, -1))}
+                />
+                <Sipka
+                  t={t}
+                  smer={1}
+                  lod={jmeno(lode, sk.mista[0].prihlaskaId)}
+                  jde={i < rady.length - 1}
+                  stiskni={() => zmen(posun(mista, sk.mista[0].prihlaskaId, 1))}
+                />
+              </View>
+            </View>
+          ))}
+
+          {/* <b>Návrh stojí v pořadí, na místě, které by loď zabrala</b>
+              (návrh `Cil.dc.html`). Dokud se nad seznamem tvářil jako
+              samostatná karta, neříkal to podstatné — kolikátá by ta loď
+              byla. Čárkovaný okraj drží rozdíl: zapsané to není, dokud
+              rozhodčí neřekne „beru". */}
+          {kNabidnuti.map((n, i) => (
+            <View
+              key={n.prihlaskaId}
+              style={[s.navrh, { borderColor: t.jede, backgroundColor: t.zvyrazneni }]}>
+              <Text style={[s.mistoCislo, { color: t.jede }]}>{mista.length + 1 + i}.</Text>
+              <View style={s.mistoJmena}>
+                <Text style={[s.navrhLod, { color: t.text }]} numberOfLines={1}>
+                  {n.lod}
+                </Text>
+                <Text style={[s.navrhVeta, { color: t.jede }]}>
+                  navrhuje trasování · {hodiny(n.kdy)}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => zmen(klepni(mista, n.prihlaskaId, Date.parse(n.kdy)))}
+                style={({ pressed }) => [
+                  s.beru,
+                  { backgroundColor: t.jede, opacity: pressed ? 0.6 : 1 },
+                ]}>
+                <Text style={[s.beruText, { color: pismoNaVyplni(t, t.jede) }]}>Beru</Text>
+              </Pressable>
+              {/* <b>Odmítnout jde taky.</b> Dokud šel návrh jen přijmout,
+                  mizel sám stářím a rozhodčí u něj nemohl udělat nic —
+                  a přitom je to on, kdo ví, že to byla jiná loď. */}
+              <Pressable
+                onPress={() => setOdmitnute((p) => [...p, klicNavrhu(n)])}
+                style={({ pressed }) => [
+                  s.odmitnout,
+                  { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
+                ]}>
+                <Text style={[s.beruText, { color: t.tlumeny }]}>Ne</Text>
+              </Pressable>
+            </View>
           ))}
         </View>
       ) : null}
@@ -419,14 +498,6 @@ function Zapisovani({
         zavri={() => setVybrane(null)}
         smaz={(m) => {
           zmen(odeber(mista, m.prihlaskaId));
-          setVybrane(null);
-        }}
-        prohod={(m) => {
-          // Loď před touhle v řadě. Hledá se podle řady, ne podle čísla
-          // o jedno nižšího: od K7 mají shodná místa totéž číslo.
-          const kde = mista.findIndex((x) => x.prihlaskaId === m.prihlaskaId);
-          const pred = kde > 0 ? mista[kde - 1] : null;
-          if (pred) zmen(prehod(mista, pred.prihlaskaId, m.prihlaskaId));
           setVybrane(null);
         }}
         shoda={(m) => {
@@ -490,7 +561,6 @@ function OpravaMista({
   vezmiCas,
   zavri,
   smaz,
-  prohod,
   shoda,
   prvniVRade,
 }: {
@@ -502,7 +572,6 @@ function OpravaMista({
   vezmiCas: (m: Misto, kdy: string) => void;
   zavri: () => void;
   smaz: (m: Misto) => void;
-  prohod: (m: Misto) => void;
   /** Spojí tuhle loď s předchozí do shody, nebo shodu zruší (K7). */
   shoda: (m: Misto) => void;
   /** Je to první loď v řadě? S ničím před sebou se spojit nedá. */
@@ -516,7 +585,7 @@ function OpravaMista({
             {misto ? `${misto.poradi}. ${jmeno(lode, misto.prihlaskaId)}` : ''}
           </Text>
           <Text style={[s.dialogVeta, { color: t.tlumeny }]}>
-            Čas patří místu, ne lodi: prohozením se vymění jména, časy zůstanou tam,
+            Čas patří místu, ne lodi: šipkami se vymění jména, časy zůstanou tam,
             kde cílem něco projelo.
           </Text>
 
@@ -529,14 +598,6 @@ function OpravaMista({
               <Text style={[s.volbaText, { color: t.jede }]}>
                 Vzít čas z trasování ({hodiny(zTrasovani)})
               </Text>
-            </Pressable>
-          ) : null}
-
-          {misto && !prvniVRade ? (
-            <Pressable
-              onPress={() => misto && prohod(misto)}
-              style={({ pressed }) => [s.volba, { borderColor: t.linka, opacity: pressed ? 0.6 : 1 }]}>
-              <Text style={[s.volbaText, { color: t.text }]}>Prohodit s předchozí</Text>
             </Pressable>
           ) : null}
 
@@ -677,13 +738,59 @@ function hodiny(iso: string): string {
     .join(':');
 }
 
-/** Čas, který loď plula; bez času startu aspoň hodina dojezdu. */
-function casMista(startV: string | null, dojezdV: string | null): string {
-  const s = plula(startV, dojezdV);
-  if (s !== null) return trvani(s);
-  if (!dojezdV) return '—';
-  const d = new Date(dojezdV);
-  return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+/**
+ * Kdy loď projela cílem.
+ *
+ * <b>Hodina průjezdu, ne doba jízdy</b> — jak to kreslí návrh
+ * (`Cil.dc.html`: *14:09:52*). Do 7. 11. 2026 tu stála doba od startu
+ * a byla to odpověď na otázku, kterou si u cíle nikdo neklade: jak dlouho
+ * se jede, říká řádek nad seznamem, a jak dlouho plula která loď, se
+ * počítá až ve výsledcích. Rozhodčí se u cíle domlouvá s ostatními,
+ * a to jde jedině podle hodin.
+ */
+function casMista(dojezdV: string | null): string {
+  return dojezdV ? hodiny(dojezdV) : '—';
+}
+
+/** Čím se pozná jeden návrh trasování: loď a okamžik, ne jen loď. */
+function klicNavrhu(n: PrujezdZTrasovani): string {
+  return `${n.prihlaskaId}@${n.kdy}`;
+}
+
+/**
+ * Šipka u řádky pořadí.
+ *
+ * <b>Co nejde, je ztlumené, ne schované</b> — tatáž úvaha jako u úkonů
+ * na startu. Mizející šipka u první řádky by seznamu měnila šířku a oko
+ * by pak hledalo tu druhou jinde, než ji nechalo.
+ */
+function Sipka({
+  t,
+  smer,
+  lod,
+  jde,
+  stiskni,
+}: {
+  t: Barvy;
+  smer: -1 | 1;
+  /** Jméno lodi — jen pro čtečku; na obrazovce je vidět vedle. */
+  lod: string;
+  jde: boolean;
+  stiskni: () => void;
+}) {
+  return (
+    <Pressable
+      disabled={!jde}
+      onPress={stiskni}
+      accessibilityRole="button"
+      accessibilityLabel={`${lod} — posunout ${smer === -1 ? 'výš' : 'níž'}`}
+      style={({ pressed }) => [
+        s.sipka,
+        { borderColor: t.linka, opacity: !jde ? 0.3 : pressed ? 0.6 : 1 },
+      ]}>
+      <Text style={[s.sipkaZnak, { color: t.text }]}>{smer === -1 ? '↑' : '↓'}</Text>
+    </Pressable>
+  );
 }
 
 const s = StyleSheet.create({
@@ -709,22 +816,49 @@ const s = StyleSheet.create({
   tlumeneNaVyplni: { opacity: 0.85 },
 
   navrh: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
     borderWidth: 2, borderStyle: 'dashed', borderRadius: 12,
-    paddingVertical: 12, paddingHorizontal: 14, marginBottom: 10,
+    paddingVertical: 8, paddingHorizontal: 10,
   },
-  navrhLod: { fontSize: 17, fontWeight: '700' },
-  navrhVeta: { fontSize: 13, marginTop: 2 },
-  navrhZapsat: { fontSize: 15, fontWeight: '800' },
+  navrhLod: { fontSize: 16, fontWeight: '700' },
+  navrhVeta: { fontSize: 12, marginTop: 1 },
+  beru: { minHeight: 44, minWidth: 44, borderRadius: 10, paddingHorizontal: 12, justifyContent: 'center', alignItems: 'center' },
+  odmitnout: { minHeight: 44, minWidth: 44, borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center' },
+  beruText: { fontSize: 15, fontWeight: '700' },
 
   poradi: { marginTop: 18, gap: 6 },
+  // <b>Shora, ne na střed.</b> Na řádce se dvěma jmény by číslo
+  // vycentrované na celou výšku stálo mezi nimi a vypadalo by, že patří
+  // tomu druhému. Číslo i čas proto sedí na prvním jméně — `lineHeight`
+  // je táž podlaha 44 pt, takže na řádce o jedné lodi se nic nemění.
   mistoRadek: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderWidth: 1, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 12,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    borderWidth: 1, borderRadius: 10, paddingVertical: 4, paddingHorizontal: 10,
   },
-  mistoCislo: { fontSize: 15, fontWeight: '700', minWidth: 26, fontVariant: ['tabular-nums'] },
-  mistoLod: { fontSize: 16, flex: 1 },
-  mistoCas: { fontSize: 15, fontVariant: ['tabular-nums'] },
+  mistoCislo: {
+    fontSize: 15, fontWeight: '700', minWidth: 26, lineHeight: 44,
+    fontVariant: ['tabular-nums'],
+  },
+  mistoJmena: { flex: 1 },
+  // Jméno je terč — otevírá opravy —, takže má svou podlahu 44 pt.
+  mistoJmeno: { minHeight: 44, justifyContent: 'center' },
+  mistoLod: { fontSize: 16 },
+  mistoCas: { fontSize: 15, lineHeight: 44, fontVariant: ['tabular-nums'] },
+
+  shoda: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingBottom: 6 },
+  shodaVeta: { fontSize: 12 },
+  rozdelit: { minHeight: 44, minWidth: 44, justifyContent: 'center' },
+  rozdelitText: { fontWeight: '700', textDecorationLine: 'underline' },
+
+  // <b>Vedle sebe, ne pod sebou.</b> Návrh je kreslí nad sebou po 22 pt;
+  // mez terče je 44, a dvě taková tlačítka ve sloupci by každé řádce
+  // seznamu daly 88 pt. Vedle sebe se řádka drží na výšce jména.
+  sipky: { flexDirection: 'row', gap: 4 },
+  sipka: {
+    minHeight: 44, minWidth: 44, borderWidth: 1, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  sipkaZnak: { fontSize: 17, fontWeight: '700' },
 
   ukoncit: { marginTop: 22, borderWidth: 1, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   ukoncitText: { fontSize: 16, fontWeight: '700' },
