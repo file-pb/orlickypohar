@@ -35,20 +35,27 @@ export default function Domu() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.pozadi, padding: 16 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Image
-          source={require('../../assets/images/icon.png')}
-          style={{ width: 44, height: 44, borderRadius: 10 }}
-          accessibilityIgnoresInvertColors
-        />
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={{ color: t.text, fontSize: 20, fontWeight: '800', letterSpacing: -0.4 }}>
-            Orlický pohár
-          </Text>
-          <Text style={{ color: t.tlumeny, fontSize: 13 }}>Plachetnice na Orlické přehradě</Text>
-        </View>
-        <Kebab />
-      </View>
+      {/* Nabídku otevírá celý řádek, ne jen tečky (Filip, 7. 11. 2026). */}
+      <Kebab
+        vedle={
+          <>
+            <Image
+              source={require('../../assets/images/icon.png')}
+              style={{ width: 44, height: 44, borderRadius: 10 }}
+              accessibilityIgnoresInvertColors
+            />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text
+                style={{ color: t.text, fontSize: 20, fontWeight: '800', letterSpacing: -0.4 }}>
+                Orlický pohár
+              </Text>
+              <Text style={{ color: t.tlumeny, fontSize: 13 }}>
+                Plachetnice na Orlické přehradě
+              </Text>
+            </View>
+          </>
+        }
+      />
 
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Znacka velikost={velikost} />
