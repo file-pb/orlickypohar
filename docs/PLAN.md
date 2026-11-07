@@ -8060,6 +8060,15 @@ namířit. Obě přitom běží jen při buildu: `braces` ve sledování soubor�
 `node-forge` v `@expo/cli` (dev server a podepisování `expo-updates`). Do
 telefonu ani na server se nedostanou.
 
+> **Opraveno 7. 11. 2026, oba řádky.** U `node-forge` ta věta platila do
+> **27. 10. 2026**: ten den vyšla 1.4.1 a opravila i CVE-2026-85393, tedy
+> #6. Overridovat nebylo kam a nebylo potřeba — rozsah `^1.3.3`, který si
+> `@expo/cli` žádá, novou verzi pouští sám. Doloženo v oddílu *Třináct
+> hlášení vedle #27*, včetně toho, proč o tom deset dní nikdo nevěděl.
+> U `braces` není co řešit jinak: hlášení #7 GitHub **stáhl**
+> (`gh api …/dependabot/alerts/7` vrací 7. 11. 2026 `410 has been
+> withdrawn`), stejně jako #11–#15.
+
 **U uuid vůbec nejde o nás.** Advisory GHSA-w5hq-g745-h8pq je *„missing buffer
 bounds check in v3/v5/v6 when `buf` is provided"*. `xcode` volá uuid na jednom
 jediném místě, `uuid.v4()` v `node_modules/xcode/lib/pbxProject.js:90`; v3, v5
@@ -9161,6 +9170,11 @@ rozumně opravit**, a jsou proto odmítnuté jako `tolerable_risk`:
 | `decode-uri-component` (medium) | `expo-router` → `query-string@7` | Opravená 0.5.1 je **ESM-only**, `query-string@7` ji volá přes `require`. Override by rozbil parsování deep linků — z teoretického DoS by se stal skutečný pád. Dopad je vyčerpání paměti na vlastním telefonu. |
 | `deepmerge` 4.3.1 (low, GHSA-gcqx-w48m-w2h4) | `expo` → `@expo/config`, `@expo/cli`, `@expo/prebuild-config` | **Záplata neexistuje** — hlášení platí na `>= 4.2.0, <= 4.3.1` a `first_patched_version` je prázdné, takže není kam jít. Na rozdíl od předchozích dvou tady odmítnutí nestojí na tom, že jde „jen o dostupnost": hlášení sahá na integritu (`I:L`, znečištění prototypu). Stojí na dosažitelnosti — `deepmerge` se tahá výhradně přes stavěcí nástroje Expa, které čtou `app.json` a `app.config.js` z tohohle repozitáře, a `app/src` ho neimportuje nikde. Útočník by musel umět změnit konfiguraci v repu, a pak už nepotřebuje znečišťovat prototyp. |
 
+> **Pozn. 7. 11. 2026:** odmítnutá hlášení jsou čtyři, ne tři — to čtvrté
+> je `node-forge` #6 z 10. 10. 2026 a hlídka ho **nikdy nehlídala**. Jeho
+> důvod odmítnutí padl 27. 10. 2026 a deset dní o tom nikdo nevěděl; proč,
+> stojí v oddílu *Třináct hlášení vedle #27*.
+
 **Odmítnuté hlášení GitHub sám neotevře**, a to je ta past: bez hlídky by
 „přijali jsme riziko" tiše přešlo v „nevíme, co se s tím stalo". Proto
 `tools/hlidka-zranitelnosti.py` a měsíční běh `hlidka-zranitelnosti`
@@ -9277,7 +9291,7 @@ a obě mají sabotáž:
    čtyřka používá. Sabotáž: vymyšlené v4 hlášení s `VC:H/VI:H`
    **neprošlo**, v3.1 s `C:H` prošlo. Hlídka tedy nepoznala ani hlášení,
    které by na důvěrnost sahalo — a přesně to má hlídat. Teď čte vektory
-   z `cvss` i `cvss_severities` a zná oba zápisy; sedm případů včetně
+   z `cvss` i `cvss_severities` a zná oba zápisy; deset případů včetně
    živého #27 vychází správně.
 
 To je ta past, na kterou hlídka sama v docstringu upozorňuje: *měřila sebe,
@@ -9298,7 +9312,7 @@ tím, že v něm čísla stála jako fakt bez data.
 
 | Hlášení | Balíček | Máme (6. 11. 2026) | Záplata |
 |---|---|---|---|
-| #28–#38 (10×, z toho 5 high) | `node-forge` | 1.4.0 | **1.4.1** |
+| #28–#38 (11×, z toho 5 high) | `node-forge` | 1.4.0 | **1.4.1** |
 | #39 (medium) | `glob` | 13.0.6 | 14.0.2 |
 | #40 (medium) | `minimatch` | 10.2.6 | 11.0.1 |
 
@@ -9311,6 +9325,160 @@ posoudit znovu. `node-forge` visí na `@expo/cli` a
 
 Je to **samostatný úkol**, ne součást #27: jiné balíčky, jiná cesta
 k opravě, a u `node-forge` se musí znovu projít deset advisory.
+
+## Třináct hlášení vedle #27: node-forge, glob, minimatch (7. 11. 2026)
+
+Filip, 7. 11. 2026: *„prověř je"* — o těch třinácti, co se našly při čtení
+#27. Zvedly se všechny tři balíčky, takže po příštím skenu Dependabota má
+zavřít všech třináct. Otevřený zůstává dál jen #27, schválně, jako
+připomínka k Expu 58.
+
+| Hlášení | Balíček | Bylo | Je | Čím |
+|---|---|---|---|---|
+| #28–#38 (11×, z toho 5 high) | `node-forge` | 1.4.0 | **1.4.3** | `npm update` — rozsah `^1.3.3` novou verzi pouští sám |
+| #39 (medium) | `glob` | 13.0.6 | **14.0.2** | `overrides` na `glob@^13` |
+| #40 (medium) | `minimatch` | 10.2.6 | **11.0.1** | `overrides` na `minimatch@^10` |
+
+**Naměřeno 7. 11. 2026**: sloupec *Bylo* z `app/package-lock.json` před
+změnou, *Je* z téhož souboru po ní, prahy z `first_patched_version`
+v advisory. Čísla jsou stav k tomu dni, ne „dnešní".
+
+### U node-forge nebyla překážka nikde
+
+`@expo/cli` i `@expo/code-signing-certificates` si žádají
+`node-forge ^1.3.3` a ten rozsah **1.4.3 pouští**. Nebylo tedy co
+overridovat ani co obcházet: `npm update node-forge --package-lock-only`
+změnil v lockfilu tři řádky a nic jiného se nepohnulo.
+
+Tím se potvrdilo, co #27 jen naznačilo: u `node-forge` nikdy nešlo
+o nedosažitelnou záplatu, ale o to, že **žádná neexistovala**. Jakmile
+vyšla, stačilo zvednout verzi.
+
+### Dependabot ukazuje prah 1.4.1, ale ta verze je taky zranitelná
+
+Prah u všech jedenácti hlášení je `1.4.1`. Zvedlo se přesto na **1.4.3**
+a je to rozdíl, který by z `first_patched_version` nikdo nepoznal.
+Changelog `digitalbazaar/forge` (čteno 7. 11. 2026 přes
+`gh api repos/digitalbazaar/forge/contents/CHANGELOG.md`):
+
+- **1.4.1** (27. 10. 2026) opravila všech jedenáct hlášení z #28–#38.
+- **1.4.2** (27. 10. 2026) existuje proto, že oprava ReDoS v `pem.decode`
+  (GHSA-7wch-p9px-956x, naše #35) rozbila `Buffer` na vstupu. Prah 1.4.1
+  je tedy u #35 verze, kterou museli hned opravit.
+- **1.4.3** (3. 11. 2026) opravuje **dalších pět** hlášení, jedno z nich
+  high (GHSA-3cc4-3294-vgjf, obcházení `nameConstraints` při ověřování
+  řetězce certifikátů). Dependabot je zatím nehlásí.
+
+Zvednout na prah, který hlášení uvádí, by znamenalo skončit na verzi, na
+kterou už visí šest známých hlášení. **Prah z advisory je dolní hranice,
+ne doporučení.**
+
+### Odmítnutí #6 přestalo platit 27. 10. 2026 a nikdo to nevěděl
+
+`node-forge` #6 (CVE-2026-85393) byl 10. 10. 2026 odmítnutý jako
+`tolerable_risk` s odůvodněním *„záplata neexistuje v žádné verzi"*. To
+tehdy platilo. **1.4.1 to CVE opravila** — v changelogu stojí pod
+`GHSA-2g46-22mc-6gwp` s týmž číslem CVE, protože GitHub má na jednu chybu
+dva záznamy: vlastní advisory projektu a globální `GHSA-86w9-cpqp-85rv`,
+u kterého `first_patched_version` zůstalo `null` (ověřeno 7. 11. 2026 přes
+`api.github.com/advisories/GHSA-86w9-cpqp-85rv`). Kdo se díval jen na prah
+v hlášení, viděl „záplata neexistuje" i deset dní poté, co vyšla.
+
+Takže: **důvod odmítnutí padl 27. 10. 2026 a deset dní o tom nikdo
+nevěděl.** Hlídka to zachytit nemohla — `node-forge` v ní nikdy nebyl.
+Hlídá tři odmítnutá hlášení ze čtyř (#25, #2, #26; #6 ne).
+
+To je horší vada než obě z 6. 11. 2026: ty se daly najít tím, že se hlídka
+pustí. **Chybějící hlídač nevypíše nic**, takže se nedá najít vůbec.
+Opravit by se to dalo jedině porovnáním se živým seznamem odmítnutých
+hlášení. To se nepřidalo, protože `GITHUB_TOKEN` v Actions na
+`dependabot/alerts` nejspíš nedosáhne — **tohle poslední tvrzení ověřené
+není**, je to důvod, proč se to neudělalo, ne doložený fakt. Po zvednutí na
+1.4.3 se #6 zavře samo (1.4.3 je mimo rozsah `<= 1.4.0`), takže hlídač na
+něj už nemá co hlídat; vada ale zůstává a příští odmítnutí na ni šlápne
+znovu.
+
+### glob a minimatch: zranitelná větev se opravdu volá
+
+Tady se odhad, který by šel čekat podle #27, **nepotvrdil**. U obojího se
+zranitelný kód v projektu skutečně provádí:
+
+| Hlášení | Podmínka z advisory | Kde se splňuje |
+|---|---|---|
+| #39 `glob` — přerušená procházka čte dál | někdo předá `signal` a přeruší | `@expo/cli/build/src/utils/glob.js`: `anyMatchAsync` si vyrobí `AbortController` a na prvním nálezu zavolá `controller.abort()` |
+| #40 `minimatch` — zesílení `globParts` | `optimizationLevel >= 2` | `glob/dist/commonjs/glob.js:154` a `ignore.js:37` posílají `optimizationLevel: 2` **samy**, tedy při každém volání globu |
+
+Ani v jednom případě ale **není čím útočit**: vzor i strom, nad kterým se
+hledá, jsou vlastní projekt. `@expo/cli` tím hledá `.ts` soubor
+(`TypeScriptProjectPrerequisite.js`), `@expo/fingerprint` staví vzory
+z `.gitignore` (`build/utils/Path.js:29,35,70`), `expo-updates` jimi hledá
+`**/.gitignore` (`utils/src/vcs.ts:95` — a `signal` tam nepředává). Všichni
+volající importují `fs` nebo `fs/promises`, takže v telefonu běžet nemohou.
+Oba vektory jsou navíc **jen dostupnost**: #39
+`CVSS:4.0/AV:N/AC:L/AT:P/…/VC:N/VI:N/VA:L`, #40 totéž s `AT:N`.
+
+**Zvedlo se to přesto**, protože to nic nestálo — a to je rozdíl proti #27,
+kde oprava rozbíjí `require`. Zjištění ale patří sem: kdyby se ten override
+někdy vracel zpátky, důvod nesmí být „ta větev se nevolá", protože se volá.
+Je to „není čím útočit", a to je slabší tvrzení.
+
+### Čím se ověřilo, že ten override nic nerozbil
+
+`glob` 13→14 a `minimatch` 10→11 jsou majory. Changelog globu 14 jmenuje
+přejmenované veřejné API (`isRegExp` → `isMatcher`), zrušenou volbu `debug`
+a `walk()`, které vrací pole místo množiny; minimatch 11 mění porovnávání
+*„closer to Bash in some edge cases"*. Že to Expo nepoužívá je čtení kódu,
+takže se změřilo tohle (7. 11. 2026, npm 11.13.0, Node 24.17.0):
+
+| Co | Výsledek |
+|---|---|
+| `npm ci` | kód 0 |
+| `npx tsc --noEmit` | kód 0 |
+| `npm run testy` | kód 0, všechny sady prošly |
+| **otisk appky** `npx expo-updates fingerprint:generate --platform android` | `afbd9b0c815edd9e…` **shodný** s overridem i bez něj, 134 zdrojů, nula rozdílů |
+| rozlišení pod npm 10.9.10 (`npm ci --dry-run`, `install --package-lock-only`) | `glob 14.0.2`, `minimatch 11.0.1`, `node-forge 1.4.3`; lockfile shodný až na příznaky `dev` a `libc` |
+
+**Otisk je ta podstatná řádka.** `minimatch` rozhoduje, které cesty
+`@expo/fingerprint` ignoruje, a otisk určuje `runtimeVersion`. Jiný
+`runtimeVersion` znamená, že se aktualizace starému APK **nedoručí a nic
+přitom neselže**. `tsc` ani testy by to nezachytily — proto se otisk změřil
+zvlášť, před a po, se stejným výsledkem.
+
+Rozlišení pod npm 10 se zkoušelo proto, že CI jede na Node 22 s npm 10,
+kdežto stroj na npm 11, a klíče `balíček@rozsah` v `overrides` jsou přesně
+to místo, kde by se verze npm mohly rozejít. Nerozešly se.
+
+### Lint appky je rozbitý a CI to nevidí
+
+`npm run lint` padá: `TypeError: Cannot read properties of undefined
+(reading 'Intrinsic')` v `ts-api-utils/lib/index.cjs:787`, při načítání
+`@typescript-eslint/typescript-estree`. **Není to tahle změna.** Diff se
+dotkl šesti balíčků (`node-forge`, `glob`, `minimatch`, `path-scurry`,
+`@isaacs/nonrecursive-glob-match` a `lru-cache` pod `path-scurry`) a verze
+celé lintovací vrstvy jsou shodné s `origin/main` (`ts-api-utils` 2.5.0,
+`typescript` 6.0.3 i 7.0.2, `typescript-estree` 8.72.0, `eslint` 10.13.0);
+a `node -e "require('ts-api-utils')"` spadne stejně, bez globu v obraze.
+Na `origin/main` se lint nepouštěl, takže „padá i tam" je **odvozené**
+z těch dvou pozorování, ne změřené.
+
+**CI to nezachytí**, protože úloha `appka` v `build-deploy.yml` pouští
+`npm ci`, `npx tsc --noEmit` a `npm run testy` — lint ne. Příčinou je
+nejspíš `eslint` 9→10 z PR #518, který se tím nikde neověřil. Je to
+samostatná věc.
+
+### Hlídka měla ještě třetí tichou vadu
+
+Oprava prahu z 6. 11. 2026 nechala v textu zprávy původní číslo: *„už
+pouští `decode-uri-component` od 0.5 výš"*, tedy přesně tu hodnotu, která
+byla špatně. Prah se opravil, zpráva lhala dál — a člověk čte zprávu, ne
+`ZAPLATY`. Teď se číslo ve zprávě odvozuje z prahu.
+
+Zkouška na to má případ a **první podoba toho případu sabotáž přežila**:
+tvrdila, že ve zprávě stojí „0.5.1", ale zpráva echuje i rozsah, který jí
+přišel na vstup — a ten `^0.5.1` byl. Kontrola tedy měřila vstup, ne
+výsledek, což je ta samá past, kterou hlídka hlídá u sebe. Opravený případ
+posílá `^0.6.0`, takže „0.5.1" může přijít jen z prahu: s pevně zapsaným
+„0.5" zkouška spadne (ověřeno sabotáží 7. 11. 2026, kód 1), bez něj projde.
 
 ## Fronta k 20. 10. 2026
 
