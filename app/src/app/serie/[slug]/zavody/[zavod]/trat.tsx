@@ -447,7 +447,10 @@ function Okno({
 
 const s = StyleSheet.create({
   prvek: { borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 10 },
-  dlazdice: { flex: 1, borderWidth: 1, borderRadius: 10, padding: 10 },
+  // `minHeight` kvůli meznímu rozměru klepacího místa (44 pt) — hlídá to
+  // `tools/kontrola-dotyku.py`. Na houpající se lodi je to ta mez, která
+  // rozhoduje, jestli se klepne na úkon, nebo vedle.
+  dlazdice: { flex: 1, minHeight: 44, borderWidth: 1, borderRadius: 10, padding: 10 },
   dlazdiceNadpis: { fontSize: 15, fontWeight: '700' },
   dlazdicePopis: { fontSize: 12, marginTop: 2 },
 
@@ -462,7 +465,13 @@ const s = StyleSheet.create({
   },
   // Písmeno vlajky velké: na vodě se o úkonu mluví jím.
   vlajka: { fontSize: 24, fontWeight: '700', width: 28, textAlign: 'center' },
-  odvolat: { borderWidth: 1, borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12 },
+  odvolat: {
+    minHeight: 44,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
 
   zastena: {
     flex: 1,
@@ -479,7 +488,14 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     fontSize: 20,
   },
-  volba: { flex: 1, borderWidth: 1, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  volba: {
+    flex: 1,
+    minHeight: 44,
+    borderWidth: 1,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   oknoTlacitko: {
     flex: 1,
     minHeight: 52,
