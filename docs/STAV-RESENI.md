@@ -52,7 +52,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
-| Po rozpravě nastavit předpokládaný čas startu | **Jen web** | K6, nasazeno. V appce to nejde |
+| Po rozpravě nastavit předpokládaný čas startu | **Běží** | K6, v appce od 7. 11. 2026. Tlačítko *Zapsat čas startu* v panelu rozjížďky bez času — hodina a minuta pražského času, velké číslice. Jde to **týmž endpointem** jako skutečný start: rozdíl je jedině v tom, jestli ten čas už přišel, a dvě cesty k témuž by se rozešly. Hodina, která minula, se nevezme a neposune se tiše na zítřek. Nabízí se jen u rozjížďky **bez** času — u té, která čas má, je na změnu odložení (vlajka AP), které si o nový čas řekne samo |
 | Tabule se startovní listinou | **Běží** | Přepíná se sama podle fáze dne, nezapíná se ručně |
 | Do startovní listiny smí jen rozhodčí | **Běží** | R38, 7. 11. 2026. Filip: *„listina po rozpravě uzamčená pro všechny kromě rozhodčího.“* Je to **výměna**, ne přidání práva — po rozpravě pořadatel nesmí nic. Fronta návrhů z dřívější verze R38 odpadla: u vody to vyřídí věta přes molo. Příznak pomocníka (K8) listinu neotvírá, jak bylo rozhodnuto 28. 10. |
 | Mapa před startem | **Běží** | R4. Naskočí sama 10 minut před procedurou, ne až výstřelem (29. 10.) |

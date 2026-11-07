@@ -9,6 +9,7 @@
 import assert from 'node:assert/strict';
 
 import {
+  casRozpravy,
   dusledekUkonu,
   fazeProcedury,
   kolikDoStartu,
@@ -380,6 +381,43 @@ zkus('bez času startu není od čeho měřit', () => {
   // partitura nemá kde začít.
   assert.equal(kolikDoStartu({ druh: 'bezCasu', cislo: 2 }), null);
   assert.equal(kolikDoStartu(null), null);
+});
+
+console.log('\nČas startu z rozpravy (K6)');
+
+// 26. 6. 2027 v 10:12 pražského letního času.
+const ROZPRAVA = Date.parse('2027-06-26T08:12:00Z');
+
+zkus('napsaná hodina je pražská, ne telefonova', () => {
+  // Test běží v `TZ=Europe/Prague`, ale vzorec se o zónu stroje nesmí
+  // opírat: regata se jede na Orlíku a „jedenáct" je jedenáct tam.
+  assert.equal(casRozpravy('11:00', ROZPRAVA), Date.parse('2027-06-26T09:00:00Z'));
+  assert.equal(casRozpravy('11.30', ROZPRAVA), Date.parse('2027-06-26T09:30:00Z'));
+});
+
+zkus('zimní čas posune start o hodinu jinam než letní', () => {
+  // Kdyby se posun bral napevno, jeden z těch dvou by sedět nemohl.
+  const zima = Date.parse('2027-01-10T09:00:00Z');
+  assert.equal(casRozpravy('14:00', zima), Date.parse('2027-01-10T13:00:00Z'));
+});
+
+zkus('hodina, která už minula, se nevezme', () => {
+  // Plánovaný start je ten, který ještě nenastal: server bere čas
+  // v minulosti jako skutečné odstartování a žádá přijatou trať. Tiché
+  // přesunutí na zítřek by bylo horší, protože by se o něm nikdo nedozvěděl.
+  assert.equal(casRozpravy('10:00', ROZPRAVA), null);
+  assert.equal(casRozpravy('10:12', ROZPRAVA), null);
+  assert.ok(casRozpravy('10:13', ROZPRAVA));
+});
+
+zkus('co není čas, se nevezme', () => {
+  for (const vstup of ['', ' ', 'teď', '11', '11:0', '25:00', '11:60', '-1:00', '11:00:00']) {
+    assert.equal(casRozpravy(vstup, ROZPRAVA), null, `mělo vyjít null pro „${vstup}"`);
+  }
+});
+
+zkus('mezery okolo nevadí', () => {
+  assert.equal(casRozpravy(' 11:00 ', ROZPRAVA), Date.parse('2027-06-26T09:00:00Z'));
 });
 
 console.log(`  ${prosly} prošlo`);

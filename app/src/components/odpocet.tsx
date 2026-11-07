@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
@@ -15,6 +16,7 @@ import { Pressable } from 'react-native';
 import type { TrestZaJizdy } from '@/lib/api';
 import { useDirigent } from '@/lib/dirigent';
 import { dalsiTroubeni, kolikPreskocit } from '@/lib/hlaseni';
+import { casRozpravy } from '@/lib/start';
 import { posunStartUkazky, ukazkaBezi } from '@/lib/ukazka';
 import { barvaNaVyplni, pismoNaVyplni, sPruhlednosti } from '@/lib/kontrast';
 import { useTheme } from '@/hooks/use-theme';
@@ -74,6 +76,7 @@ export function Odpocet({
   tresty,
   naVykonano,
   naZruseni,
+  naCasStartu,
   chyba,
   nedoslano,
 }: {
@@ -129,6 +132,11 @@ export function Odpocet({
   naVykonano?: (trest: number) => void | Promise<void>;
   /** Zrušení rozjížďky s důvodem (ZPJ 32.1). */
   naZruseni?: (cislo: number) => void;
+  /**
+   * <b>Čas startu z rozpravy</b> (nález K6). Chybí-li, se zadáváním se
+   * nikde nezačne — obrazovku regaty čte i ten, kdo nevelí.
+   */
+  naCasStartu?: (cislo: number, kdy: number) => void | Promise<void>;
 }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
@@ -214,7 +222,13 @@ export function Odpocet({
 
   const panel =
     stav.druh === 'ceka' || stav.druh === 'bezCasu' ? (
-      <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} />
+      <Ceka
+        stav={stav}
+        delkaS={delkaS}
+        t={t}
+        naSpusteni={naSpusteni}
+        naCasStartu={naCasStartu}
+      />
     ) : stav.druh === 'jede' ? (
       <Jede stav={stav} t={t} />
     ) : stav.druh === 'odstartovano' ? (
@@ -633,13 +647,22 @@ function Ceka({
   delkaS,
   t,
   naSpusteni,
+  naCasStartu,
 }: {
   stav: Extract<StavStartu, { druh: 'ceka' | 'bezCasu' }>;
   delkaS: number;
   t: Barvy;
   naSpusteni?: (cislo: number) => void | Promise<void>;
+  naCasStartu?: (cislo: number, kdy: number) => void | Promise<void>;
 }) {
   const [spousti, setSpousti] = useState(false);
+  const [zadava, setZadava] = useState(false);
+  const [napsano, setNapsano] = useState('');
+  const [posila, setPosila] = useState(false);
+
+  // Čas se přečte při každém překreslení, takže hláška o minulém času
+  // zmizí sama, jakmile se napíše použitelný.
+  const kdy = casRozpravy(napsano, Date.now());
 
   return (
     <View style={[s.panel, { backgroundColor: t.zvyrazneni, borderColor: t.linka, borderWidth: 1 }]}>
@@ -668,6 +691,112 @@ function Ceka({
           Nový čas se nedopočítává (ZPJ 27.3) — start padne na konci procedury,
           tedy {delkaS / 60} min po spuštění.
         </Text>
+      ) : null}
+
+      {/* <b>Tohle je v datech rozprava</b> (K6 a R39): zapsaný plánovaný čas
+          první rozjížďky. Do 7. 11. 2026 to šlo jen z webu, takže rozhodčí
+          musel po rozpravě k počítači — a rozprava je přitom to poslední,
+          co se dělá na břehu, kdy už má v ruce telefon.
+
+          Nabízí se jen u rozjížďky bez času: u té, která čas má, by se
+          druhým zadáním nenápadně přepsala domluvená hodina. Na změnu je
+          odložení (vlajka AP), které si o nový čas řekne samo. */}
+      {stav.druh === 'bezCasu' && naCasStartu ? (
+        <>
+          <Pressable
+            onPress={() => {
+              setNapsano('');
+              setZadava(true);
+            }}
+            style={({ pressed }) => [
+              s.spustit,
+              {
+                backgroundColor: t.papir,
+                borderWidth: 1,
+                borderColor: t.linka,
+                opacity: pressed ? 0.6 : 1,
+              },
+            ]}>
+            <Text style={[s.spustitText, { color: t.text }]}>Zapsat čas startu</Text>
+          </Pressable>
+          <Text style={[s.pripominka, { color: t.tlumeny }]}>
+            Co se domluvilo na rozpravě. Odpočet pak naskočí sám a telefony posádek
+            se rozjedou 20 minut předtím.
+          </Text>
+
+          <Modal visible={zadava} animationType="fade" transparent onRequestClose={() => setZadava(false)}>
+            <View style={s.zastena}>
+              <View style={[s.okno, { backgroundColor: t.papir, borderColor: t.linka }]}>
+                <Text style={[s.vetaVelka, { color: t.text }]}>Čas startu</Text>
+                <Text style={[s.pripominka, { color: t.tlumeny, marginTop: 4 }]}>
+                  Rozjížďka {stav.cislo} · hodina a minuta, pražského času
+                </Text>
+
+                <TextInput
+                  value={napsano}
+                  onChangeText={setNapsano}
+                  placeholder="11:00"
+                  placeholderTextColor={t.tlumeny}
+                  keyboardType="numbers-and-punctuation"
+                  autoFocus
+                  maxLength={5}
+                  style={[
+                    s.poleCasu,
+                    { color: t.text, borderColor: t.linka, backgroundColor: t.zvyrazneni },
+                  ]}
+                />
+
+                {/* Napsané, ale nepoužitelné, se musí vysvětlit. Nejčastější
+                    omyl je hodina, která už minula — a tiché přesunutí na
+                    zítřek by bylo horší než odmítnutí. */}
+                {napsano.trim() !== '' && kdy === null ? (
+                  <Text style={[s.pripominka, { color: t.stavZruseny }]}>
+                    Tohle není čas, který ještě přijde. Napiš hodinu dneška, třeba 11:00.
+                  </Text>
+                ) : null}
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                  <Pressable
+                    onPress={() => setZadava(false)}
+                    style={({ pressed }) => [
+                      s.oknoTlacitko,
+                      { borderColor: t.linka, borderWidth: 1, opacity: pressed ? 0.6 : 1 },
+                    ]}>
+                    <Text style={[s.spustitText, { color: t.tlumeny }]}>Zrušit</Text>
+                  </Pressable>
+
+                  <Pressable
+                    disabled={kdy === null || posila}
+                    onPress={async () => {
+                      if (kdy === null || posila) return;
+                      setPosila(true);
+                      try {
+                        await naCasStartu(stav.cislo, kdy);
+                        setZadava(false);
+                      } finally {
+                        setPosila(false);
+                      }
+                    }}
+                    style={({ pressed }) => [
+                      s.oknoTlacitko,
+                      {
+                        backgroundColor: t.voda,
+                        opacity: pressed || posila ? 0.6 : kdy === null ? 0.45 : 1,
+                      },
+                    ]}>
+                    {posila ? (
+                      <ActivityIndicator color={pismoNaVyplni(t, t.voda)} />
+                    ) : (
+                      <Text style={[s.spustitText, { color: pismoNaVyplni(t, t.voda) }]}>
+                        Zapsat
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        </>
       ) : null}
 
       {naSpusteni ? (
@@ -1046,4 +1175,33 @@ const s = StyleSheet.create({
   spustitObsah: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   spustitText: { fontSize: 17, fontWeight: '700' },
   pripominka: { fontSize: 12, marginTop: 8, lineHeight: 16 },
+
+  // Okno na čas startu (K6). Zástěna je tmavá, ne jen průhledná: na vodě
+  // je displej v protisvětle a slabý závoj nerozdělí okno od panelu.
+  zastena: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  okno: { borderRadius: 14, borderWidth: 1, padding: 18 },
+  // Velké číslice: zadává se to v rukavicích a na houpající se lodi.
+  poleCasu: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    fontSize: 34,
+    fontWeight: '700',
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+  },
+  oknoTlacitko: {
+    flex: 1,
+    minHeight: 52,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

@@ -198,6 +198,73 @@ export function casStartu(startV: string): string {
   return hodina(Date.parse(startV));
 }
 
+/**
+ * <b>Čas startu z rozpravy</b> (nález K6) — „11:00" na dnešek, v ms.
+ *
+ * Tohle je ten úkon, kterým rozprava v datech existuje: zapsaný plánovaný
+ * čas první rozjížďky. Vlastní kolonku nemá schválně, aby nevznikl druhý
+ * úkon o tomtéž, který jde zapomenout (R39).
+ *
+ * <b>Zóna je pražská, ne telefonova</b>, stejně jako u {@link casStartu}
+ * a na tabuli: regata se jede na Orlíku a „jedenáct" znamená jedenáct tam,
+ * i když má někdo v telefonu jinou zónu.
+ *
+ * Vrací `null` u tvaru, který není čas, u hodiny mimo rozsah a u času,
+ * který už <b>minul</b>. To poslední je podstatné: plánovaný start je ten,
+ * který ještě nenastal — čas v minulosti by server vzal jako skutečné
+ * odstartování (`ZapisSprava`: `planovany = kdy > ted`), tedy by pustil
+ * lodě na trať, kterou nikdo nepotvrdil.
+ *
+ * <b>Den se nepřeklápí na zítřek.</b> Kdo ve dvě odpoledne napíše „10:00",
+ * se nejspíš přepsal — a tiché přesunutí startu na zítřek je horší odpověď
+ * než odmítnutí, protože by se o něm nikdo nedozvěděl.
+ */
+export function casRozpravy(zadano: string, ted: number): number | null {
+  const m = /^(\d{1,2})[:.](\d{2})$/.exec(zadano.trim());
+  if (!m) return null;
+
+  const hh = Number(m[1]);
+  const mm = Number(m[2]);
+  if (hh > 23 || mm > 59) return null;
+
+  const dnes = castiPrahy(ted);
+  // První odhad: ten den a čas, jako kdyby byla zóna UTC. Pak se dvakrát
+  // opraví podle toho, jakou hodinu odhad v Praze opravdu dává — dvě
+  // kola stačí, protože posun se během dne mění nejvýš o hodinu a druhé
+  // kolo chytá i tu hodinu, kdy se přechází na letní čas.
+  let kdy = Date.UTC(dnes.rok, dnes.mesic - 1, dnes.den, hh, mm, 0, 0);
+  for (let i = 0; i < 2; i += 1) {
+    const vidi = castiPrahy(kdy);
+    const rozdil = (vidi.hodina - hh) * 60 + (vidi.minuta - mm);
+    if (rozdil === 0) break;
+    kdy -= rozdil * 60_000;
+  }
+
+  return kdy > ted ? kdy : null;
+}
+
+/** Na co se okamžik rozpadne v pražské zóně. */
+function castiPrahy(kdy: number): {
+  rok: number; mesic: number; den: number; hodina: number; minuta: number;
+} {
+  const casti = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Prague',
+    hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  }).formatToParts(new Date(kdy));
+
+  const kus = (druh: string) => Number(casti.find((c) => c.type === druh)?.value ?? '0');
+  return {
+    rok: kus('year'),
+    mesic: kus('month'),
+    den: kus('day'),
+    // `hour12: false` dává v některých prostředích „24" místo „00".
+    hodina: kus('hour') % 24,
+    minuta: kus('minute'),
+  };
+}
+
 function hodina(kdy: number): string {
   return new Intl.DateTimeFormat('cs-CZ', {
     hour: '2-digit',

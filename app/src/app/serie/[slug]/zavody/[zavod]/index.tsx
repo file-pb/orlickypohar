@@ -169,6 +169,26 @@ export default function Zastavka() {
       }
     : undefined;
 
+  // <b>Čas startu z rozpravy</b> (K6). Jde to tou samou cestou jako
+  // skutečný start — jedním endpointem, protože rozdíl mezi plánovaným
+  // a padlým startem je jedině v tom, jestli ten čas už přišel
+  // (`ZapisSprava`). Dvě cesty k témuž by se rozešly.
+  const zapisCasStartu = veliNekde(ja ?? null)
+    ? async (cislo: number, kdy: number) => {
+        setChybaStartu(null);
+        try {
+          await ohlasStart(slug, zavod, cislo, new Date(kdy).toISOString());
+          obnov();
+        } catch (e) {
+          setChybaStartu(
+            e instanceof OdmitnutoServerem
+              ? (e.duvod ?? 'Server čas startu odmítl.')
+              : 'Nepovedlo se zapsat — zkus to znovu.',
+          );
+        }
+      }
+    : undefined;
+
   // <b>Ohlášení další rozjížďky.</b> Jediný úkon startu, který nejde
   // podržet ve frontě: číslo rozjížďky určuje server, takže bez odpovědi
   // není co očíslovat. Proto se odmítnutí i nedoručení ukazují stejně —
@@ -295,6 +315,7 @@ export default function Zastavka() {
             naStartu={ohlas}
             naUkon={ukon}
             naOhlaseni={ohlasit}
+            naCasStartu={zapisCasStartu}
             naPredcasnyStart={veliNekde(ja ?? null) ? (c) => otevriVyber(c, 'Ocs') : undefined}
             naTrest={veliNekde(ja ?? null) ? otevriVyber : undefined}
             tresty={tresty ?? undefined}
