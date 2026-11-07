@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, useColorScheme } from 'react-native';
 import Svg, { Defs, G, LinearGradient, Mask, Path, Rect, Stop } from 'react-native-svg';
 
 import { ZNACKA } from '@/lib/znacka';
@@ -46,6 +46,12 @@ export function Znacka({
 }) {
   const [, , w, h] = ZNACKA.viewBox.split(' ').map(Number);
   const posun = useRef(new Animated.Value(0)).current;
+
+  // <b>Značka má dvě barvy, ne jednu</b> — stejně jako na webu. Tmavě
+  // modrý kruh na tmavém pozadí appky dával 1,5:1; světlejší modrá
+  // z tmavého vzhledu webu z toho dělá 5,3:1. Není to barva vybraná tady,
+  // je to `--logo-oys` z `globals.css`.
+  const barva = useColorScheme() === 'dark' ? ZNACKA.barvaTmava : ZNACKA.barva;
 
   useEffect(() => {
     if (!odlesk) return;
@@ -97,8 +103,8 @@ export function Znacka({
         </Mask>
       </Defs>
 
-      <Path d={ZNACKA.nonzero} fill={ZNACKA.barva} fillRule="nonzero" />
-      <Path d={ZNACKA.evenodd} fill={ZNACKA.barva} fillRule="evenodd" />
+      <Path d={ZNACKA.nonzero} fill={barva} fillRule="nonzero" />
+      <Path d={ZNACKA.evenodd} fill={barva} fillRule="evenodd" />
 
       {odlesk ? (
         <AnimovanyG x={x} mask="url(#tvar)">

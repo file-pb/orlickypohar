@@ -24,6 +24,7 @@ Vyrábí:
     web/public/logo/orlik-yacht-series/*.png    PNG s průhledným pozadím
     web/public/logo.png                         512 px, výchozí adresa loga
     web/app/icon.png                            favicon na světlé podložce
+    app/assets/images/*.png                     ikony appky, světlé i tmavé
 
     python3 web/scripts/logo.py
 """
@@ -39,6 +40,8 @@ CIL = f"{WEB}/public/logo/orlik-yacht-series"
 MODRA = "#113b59"          # změřeno z PDF, viz výše
 SVETLA = "#7fa7c9"         # tmavý vzhled webu, stejná jako u znaků tříd
 PAPIR = (252, 252, 251)    # podložka faviconu, stejná jako u staré ikony
+TMA = (20, 23, 26)         # `pozadi` tmavého vzhledu appky (constants/theme.ts)
+APP = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "app"))
 CMYK = "0.96 0.63 0.20 0.36"
 
 
@@ -176,6 +179,70 @@ def uloz_png(obraz, cesta, barva=None):
         obraz.quantize(256).save(cesta, optimize=True)
 
 
+def ctverec_se_znakem(alfa, podil, barva, pozadi=None, strana=1024):
+    """Značka doprostřed čtverce. `podil` je, jakou část strany zabere její
+    šířka — u ikony skoro celou, u androidí popředí míň, protože adaptivní
+    ikona si z ní vyřízne kruh."""
+    sirka = round(strana * podil)
+    znak = obarvi(alfa.resize((sirka, round(sirka * alfa.height / alfa.width)), Image.LANCZOS), barva)
+    plat = Image.new("RGBA", (strana, strana), (pozadi or (0, 0, 0)) + (255 if pozadi else 0,))
+    plat.alpha_composite(znak, ((strana - znak.width) // 2, (strana - znak.height) // 2))
+    return plat
+
+
+def uloz_ikonu(obraz, cesta):
+    """Ikony se ukládají jako obyčejné RGBA nebo RGB, ne do palety: prochází
+    nástroji Expa, Xcode i Androidu a tam je paleta s plnou průhledností
+    riziko, které za ušetřené kilobajty nestojí.
+
+    <b>Neprůhledná ikona nesmí mít alfa kanál vůbec.</b> App Store odmítne
+    ikonu s průhledností i tehdy, když je celá krycí — a „celá krycí alfa"
+    je přesně to, co z `alpha_composite` vyjde. Proto se obrázek bez
+    průhledných bodů ukládá jako RGB."""
+    if obraz.mode == "RGBA" and obraz.getchannel("A").getextrema() == (255, 255):
+        obraz = obraz.convert("RGB")
+    obraz.save(cesta, optimize=True)
+    print(f"  {cesta}")
+
+
+def ikony_appky(alfa):
+    """Ikona appky, její tmavá a tónovaná varianta, androidí vrstvy a splash.
+
+    <b>Tohle hýbe otiskem appky.</b> `assets/images` čte `@expo/fingerprint`,
+    takže po každé změně tady musí ven nový build — vydané APK přestane
+    dostávat aktualizace po síti. Proto se to nemění pro nic za nic.
+    """
+    cil = f"{APP}/assets/images"
+
+    # <b>Ikona je neprůhledná.</b> iOS průhlednost v ikoně nepřipouští
+    # a Android by pod ní nechal prosvítat téma. Světlá verze stojí na
+    # papíru, tmavá na pozadí tmavého vzhledu appky — tytéž dvě barvy,
+    # mezi kterými se přepíná celá appka.
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.86, MODRA, PAPIR), f"{cil}/icon.png")
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.86, SVETLA, TMA), f"{cil}/icon-tmava.png")
+
+    # <b>Tónovaná ikona</b> (iOS 18). Systém si ji obarví sám podle
+    # plochy, takže se dodává v šedi na průhledném — jediné, co z ní
+    # bere, je jas.
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.86, "#ffffff"), f"{cil}/icon-tonovana.png")
+
+    # <b>Androidí adaptivní ikona</b> je tři vrstvy. Popředí musí počítat
+    # s tím, že si z něj launcher vyřízne kruh nebo čtverec se zaoblením:
+    # bezpečná zóna je 72 ze 108 dílů, tedy dvě třetiny strany.
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.64, MODRA), f"{cil}/android-icon-foreground.png")
+    uloz_ikonu(Image.new("RGBA", (1024, 1024), PAPIR + (255,)), f"{cil}/android-icon-background.png")
+    # Monochromatická vrstva pro motivované ikony: systém si ji obarví,
+    # takže nese jen tvar.
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.64, "#ffffff"), f"{cil}/android-icon-monochrome.png")
+
+    # Splash: značka na průhledném, podložku kreslí expo-splash-screen.
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.92, MODRA), f"{cil}/splash-icon.png")
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.92, SVETLA), f"{cil}/splash-icon-tmava.png")
+
+    # Favicon webové verze appky.
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.92, MODRA, PAPIR, 196), f"{cil}/favicon.png")
+
+
 def main():
     plochy, ramecek = nacti_plochy(ZDROJ)
     prevod, rozmer = transformace(ramecek)
@@ -222,6 +289,8 @@ def main():
     znak = obarvi(alfa.resize((960, round(960 * h / w)), Image.LANCZOS), MODRA)
     ikona.paste(znak, ((1024 - znak.width) // 2, (1024 - znak.height) // 2), znak)
     uloz_png(ikona.resize((512, 512), Image.LANCZOS), f"{WEB}/app/icon.png")
+
+    ikony_appky(alfa)
 
     for jmeno in sorted(os.listdir(CIL)):
         print(f"  {CIL}/{jmeno}")

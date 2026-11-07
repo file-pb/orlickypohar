@@ -1,4 +1,4 @@
-import { Image, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Text, useColorScheme, useWindowDimensions, View } from 'react-native';
 
 import { Znacka } from '@/components/znacka';
 import { useTheme } from '@/hooks/use-theme';
@@ -25,6 +25,7 @@ import { useTheme } from '@/hooks/use-theme';
  */
 export default function Domu() {
   const t = useTheme();
+  const tmave = useColorScheme() === 'dark';
   const { width: sirka, height: vyska } = useWindowDimensions();
 
   // Přes celou obrazovku, ale ať se vejde i na výšku: značka je skoro
@@ -35,8 +36,16 @@ export default function Domu() {
   return (
     <View style={{ flex: 1, backgroundColor: t.pozadi, padding: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingRight: 44 }}>
+        {/* <b>Ikona má dvě verze, stejně jako na ploše telefonu.</b>
+            Světlá stojí na papíru, tmavá na pozadí tmavého vzhledu — bez
+            toho by v tmavém režimu svítila na černé bílá dlaždice.
+            `require` nejde volat podmíněně, takže se vybírá z obou. */}
         <Image
-          source={require('../../assets/images/icon.png')}
+          source={
+            tmave
+              ? require('../../assets/images/icon-tmava.png')
+              : require('../../assets/images/icon.png')
+          }
           style={{ width: 44, height: 44, borderRadius: 10 }}
           accessibilityIgnoresInvertColors
         />

@@ -28,7 +28,12 @@
         {
           "backgroundColor": "#FCFCFB",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 150
+          "imageWidth": 150,
+          "dark": {
+            "backgroundColor": "#14171A",
+            "image": "./assets/images/splash-icon-tmava.png",
+            "imageWidth": 150
+          }
         }
       ],
       "expo-secure-store",
@@ -83,7 +88,12 @@
     "owner": "file75",
     "ios": {
       "bundleIdentifier": "cz.klihovka.orlickypohar",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": {
+        "light": "./assets/images/icon.png",
+        "dark": "./assets/images/icon-tmava.png",
+        "tinted": "./assets/images/icon-tonovana.png"
+      }
     },
     "updates": {
       "url": "https://u.expo.dev/247c0516-53e2-4457-bcbd-dc7b1cd6025a",
