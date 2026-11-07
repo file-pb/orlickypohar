@@ -326,6 +326,11 @@ export default function Zastavka() {
                 ? () => router.push(`/serie/${slug}/zavody/${zavod}/cil`)
                 : undefined
             }
+            naTrat={
+              veliNekde(ja ?? null)
+                ? () => router.push(`/serie/${slug}/zavody/${zavod}/trat`)
+                : undefined
+            }
             chyba={chybaStartu}
             nedoslano={ceka !== null}
           />

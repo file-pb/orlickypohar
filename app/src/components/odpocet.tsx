@@ -70,6 +70,7 @@ export function Odpocet({
   naStartu,
   naUkon,
   naCil,
+  naTrat,
   naOhlaseni,
   naPredcasnyStart,
   naTrest,
@@ -112,6 +113,12 @@ export function Odpocet({
    * drží on.
    */
   naCil?: () => void;
+  /**
+   * Kam na úkony za jízdy (změna úseku, chybějící značka). Ukazuje se jen
+   * u rozjížďky na vodě — před startem se staví rovnou jiná trať, po
+   * dojetí se už nemění, kudy se jelo.
+   */
+  naTrat?: () => void;
   /**
    * Co udělat, když rozhodčí ohlásí další rozjížďku. Chybí-li, nabídka
    * se neukáže — obrazovku regaty čte i ten, kdo nevelí.
@@ -303,6 +310,20 @@ export function Odpocet({
             { borderColor: t.jede, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
           ]}>
           <Text style={[s.cilText, { color: t.jede }]}>Cíl — zapisovat dojezdy</Text>
+        </Pressable>
+      ) : null}
+
+      {/* Třetí karta pod jménem regaty, vedle startu a cíle: značka chybí
+          tady a teď, a dosud se to dalo vyhlásit jedině z webu. Jen za
+          jízdy — tutéž mez drží server. */}
+      {naTrat && stav.druh === 'jede' ? (
+        <Pressable
+          onPress={naTrat}
+          style={({ pressed }) => [
+            s.cil,
+            { borderColor: t.linka, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
+          ]}>
+          <Text style={[s.cilText, { color: t.text }]}>Trať — změna úseku, značka chybí</Text>
         </Pressable>
       ) : null}
 

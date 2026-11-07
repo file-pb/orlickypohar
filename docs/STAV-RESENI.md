@@ -76,7 +76,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
-| Úprava tratě za jízdy | **Jen web** | Změna úseku a chybějící značka. Nově zadáno: pípání a focení bójí z appky v módu stavby, trať ale schvaluje rozhodčí |
+| Úprava tratě za jízdy | **Běží** | 7. 11. 2026 **i v appce**: třetí karta pod jménem regaty vedle startu a cíle (`app/src/app/serie/[slug]/zavody/[zavod]/trat.tsx`). Prvky trati v pořadí, u každého *Změna úseku* (C, ZPJ 33) a *Značka chybí* (M, ZPJ 34), nad nimi vyhlášené s odvoláním. Trať se čte **veřejnou cestou**, touž jako web a tabule — zvláštní endpoint pro telefon by znamenal, že rozhodčí vidí jinou trať než ta, podle které se pluje. Jen za jízdy, tutéž mez drží server. **Zbývá** pípání a focení bójí z appky v módu stavby, trať ale schvaluje rozhodčí |
 | Dlaždice **360°** za dotek bóje | **Běží** | R36, 7. 11. 2026. Vlastní tabulka `TrestyZaJizdy` — otáčka pořadí nemění, takže to není kód výsledku |
 | Dlaždice **720°** za dotek s lodí soupeře | **Běží** | R36, 7. 11. 2026. Totéž co 360°, jen dvě otáčky |
 | Trest dostupný **celou** rozjížďku, ne jako krok | **Běží** | 7. 11. 2026. Úkony jsou v panelu od chvíle, kdy je nastavený čas startu |

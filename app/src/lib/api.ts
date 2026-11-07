@@ -127,20 +127,27 @@ export class OdmitnutoServerem extends Error {
 export async function posliZaSebe<T>(
   cesta: string,
   telo: unknown,
-  /** `PUT` u sad, které se přepisují celé — jinak `POST`. */
-  metoda: 'POST' | 'PUT' = 'POST',
+  /**
+   * `PUT` u sad, které se přepisují celé, `DELETE` u odvolání — jinak
+   * `POST`. U `DELETE` se tělo neposílá: některé servery ho u téhle
+   * metody zahazují a volající by si myslel, že něco předal.
+   */
+  metoda: 'POST' | 'PUT' | 'DELETE' = 'POST',
 ): Promise<T | null> {
   const t = await klicNeboUkazka();
   if (!t) return null;
 
   const odpoved = await sit(cesta, {
     method: metoda,
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      authorization: `Bearer ${t}`,
-    },
-    body: JSON.stringify(telo),
+    headers:
+      metoda === 'DELETE'
+        ? { accept: 'application/json', authorization: `Bearer ${t}` }
+        : {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            authorization: `Bearer ${t}`,
+          },
+    body: metoda === 'DELETE' ? undefined : JSON.stringify(telo),
   });
 
   if (odpoved.status === 401) return null;
@@ -361,6 +368,83 @@ export async function oznacTrestVykonan(
   const v = await posliZaSebe<unknown>(
     `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/tresty/${trest}/vykonan`,
     {},
+  );
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
+ * <b>Trať rozjížďky, veřejně.</b> Appka ji čte touž cestou jako web a
+ * tabule — žádný zvláštní endpoint pro telefon: trať, kterou vidí
+ * rozhodčí, musí být tatáž, podle které pluje pole.
+ *
+ * `null` znamená, že rozjížďka přijatou trať nemá (nebo se zrovna
+ * přestavuje). Na vodě je to zpráva, ne chyba.
+ */
+export type VerejnaTrat = S['VerejnaTratDto'];
+export type PrvekTrati = S['VerejnyPrvekDto'];
+
+export const nactiTrat = (serie: string, zavod: string, rozjizdka: number) =>
+  nacti<VerejnaTrat>(
+    `/serie/${serie}/zavody/${zavod}/trat?rozjizdka=${rozjizdka}`,
+  );
+
+/**
+ * <b>Co komise za jízdy vyhlásila</b> — změna úseku (ZPJ 33) a chybějící
+ * značka (34).
+ */
+export type UkonZaJizdy = S['UkonDto'];
+
+export const nactiUkony = (serie: string, zavod: string, cislo: number) =>
+  nactiZaSebe<UkonZaJizdy[]>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/ukony`,
+  );
+
+/**
+ * <b>Vyhlášení úkonu za jízdy z telefonu.</b>
+ *
+ * <b>Posílá se čas z hodin telefonu</b>, stejně jako u trestů a startu:
+ * mezi klepnutím a doručením je u vody výpadek, a vyhlášení zapsané
+ * později je jiné vyhlášení, než jaké posádky viděly. Server čas bere,
+ * leží-li v okně (`CasKlienta`); jinak platí jeho vlastní.
+ *
+ * <b>Trať se tím nemění</b> (Filip, 28. 10. 2026) — je to rozhodnutí nad
+ * přijatou tratí, které platí pro rozjížďku, co se zrovna jede.
+ */
+export async function vyhlasUkon(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  vstup: {
+    druh: 'ZmenaUseku' | 'ChybejiciZnacka';
+    prvek: number;
+    kurz?: number | null;
+    delka?: 'Beze' | 'Prodlouzeno' | 'Zkraceno';
+    poznamka?: string | null;
+  },
+) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/ukony`,
+    { ...vstup, vyhlasenoV: new Date().toISOString() },
+  );
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
+ * <b>Odvolání úkonu.</b> Vlajka se stáhla — a to se stává: rozhodčí
+ * vyhlásí změnu a než pole dopluje, ukáže se, že značka stojí.
+ */
+export async function odvolejUkon(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  ukon: number,
+) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/ukony/${ukon}`,
+    null,
+    'DELETE',
   );
   if (v === null) throw new Error('neprihlasen');
   return v;
