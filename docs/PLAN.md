@@ -9367,6 +9367,15 @@ Je to poučení o tvaru, ne o globu: *„zvednutím A spadne i B"* je tvrzení
 o jednom uzlu stromu, ne o celém stromu. Ověřit se dá jedině tak, že se po
 instalaci vypíšou **všechny** instance B, ne jen ta, co visí pod A.
 
+**A hned se to zopakovalo.** Squash commit `35a348a`, kterým se tahle
+větev slila, nese zprávu z doby *před* sloučením — tvrdí *„glob 13.0.6 →
+14.0.2, minimatch 10.2.6 → 11.0.1 přes `overrides`"*, zatímco jeho diff
+sahá na `glob` nulakrát: v `app/package.json` přibyl **jediný řádek**,
+`minimatch@^10`. `gh pr merge --squash` si zprávu bere z jediného commitu
+větve, ne z přepsaného titulku ani popisu PR, a nikdo to nepřečetl.
+Historie `main` tedy obsahuje tu samou vadu, kvůli které tenhle oddíl
+vznikl. Přepisovat ji za to nestojí; platí, co je v diffu a tady.
+
 ### U node-forge nebyla překážka nikde
 
 `@expo/cli` i `@expo/code-signing-certificates` si žádají
