@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import {
   DO_STARTU_MIN,
   kamVUkazce,
+  posunStartUkazky,
   ukazkaBezi,
   ukazkaOdpovez,
   vypniUkazku,
@@ -291,6 +292,40 @@ zkus('fetch je jen v `lib/sit.ts` a v přihlašování', () => {
     .filter((c) => !povolene.some((p) => c.endsWith(p)));
   assert.deepEqual(hrisnici, [], `fetch mimo šev: ${hrisnici.join(', ')}`);
 });
+
+testyAsync.push(['posun startu vezme s sebou i pohled posádky', async () => {
+  // <b>Proč to má test.</b> `/lod/dnes` se skládá při zapnutí ukázky
+  // a nemá v sobě `rozjizdky`, takže smyčka v `posunStartUkazky` ho
+  // mine. Dokud přeskok uměl jen rozhodčí, nevadilo to; od 7. 11. 2026
+  // ho má i posádka a bez posunu by obrazovky tvrdily každá něco jiného
+  // o témž startu. Z obrazovky se to pozná špatně: oba časy vypadají
+  // věrohodně, jen se liší.
+  zapniUkazku();
+  const pred = (await odpoved('/lod/dnes')).telo;
+  assert.ok(pred.startV, 'ukázka nemá posádce co ukázat');
+  // <b>Opsat, ne podržet.</b> Ukázka vrací tělo odkazem do svého stavu,
+  // takže po posunu by `pred` ukazoval tutéž, už posunutou hodnotu —
+  // a test by porovnával čas sám se sebou a prošel vždycky. Na tohle se
+  // přišlo tím, že spadl: hlásil nulový posun i nad funkčním kódem.
+  const predStart = String(pred.startV);
+
+  const oS = 120;
+  posunStartUkazky(oS);
+  const po = (await odpoved('/lod/dnes')).telo;
+  assert.equal(
+    Date.parse(predStart) - Date.parse(po.startV),
+    oS * 1000,
+    'start posádky se neposunul o tolik, o kolik se posunul rozhodčímu',
+  );
+  // T−20 je odvozená hodnota, ne druhý údaj — musí se vézt s ním.
+  assert.ok(po.nahravatOd, 'ukázka ztratila čas, odkdy se nahrává');
+  assert.equal(
+    Date.parse(po.startV) - Date.parse(po.nahravatOd),
+    20 * 60_000,
+    'odstup T−20 se posunem rozjel',
+  );
+  vypniUkazku();
+}]);
 
 zkus('ukázka vede na závod, kde je přihlášený jako organizátor', () => {
   // <b>Proč to má test.</b> Přepínač v kebabu posílá člověka na tuhle

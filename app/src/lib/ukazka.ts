@@ -92,13 +92,30 @@ export const DO_STARTU_MIN = 10;
 export function posunStartUkazky(oS: number): void {
   if (!stav || oS <= 0) return;
 
+  const driv = (kdy: string) => new Date(Date.parse(kdy) - oS * 1000).toISOString();
+
   for (const telo of Object.values(stav)) {
     const z = telo as S['ZavodDetailDto'] | undefined;
     if (!z || !Array.isArray(z.rozjizdky)) continue;
     for (const r of z.rozjizdky) {
       if (!r.startV || r.stav === 'Dokoncena' || r.stav === 'Zrusena') continue;
-      r.startV = new Date(Date.parse(r.startV) - oS * 1000).toISOString();
+      r.startV = driv(r.startV);
     }
+  }
+
+  // <b>Pohled posádky má vlastní kopii času</b>, protože `/lod/dnes` se
+  // skládá při zapnutí ukázky a `rozjizdky` v sobě nemá — smyčka výš ho
+  // tedy mine. Dokud přeskok uměl jen rozhodčí, nevadilo to; od 7. 11.
+  // 2026 ho umí i posádka a bez tohohle by si obrazovky odporovaly:
+  // rozhodčí by odpočítával k posunutému startu a posádka by nad týmž
+  // startem četla ten původní.
+  const dnes = stav['/lod/dnes'] as
+    | { startV?: string | null; nahravatOd?: string | null }
+    | undefined;
+  if (dnes?.startV) {
+    dnes.startV = driv(dnes.startV);
+    // T−20 se veze s ním: je to odvozená hodnota, ne druhý údaj.
+    if (dnes.nahravatOd) dnes.nahravatOd = driv(dnes.nahravatOd);
   }
 }
 

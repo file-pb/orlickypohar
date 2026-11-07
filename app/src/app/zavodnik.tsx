@@ -5,11 +5,13 @@ import { ScrollView, Text, View } from 'react-native';
 import { ActivityIndicator, Alert, AppState, Pressable } from 'react-native';
 
 import { Baterie } from '@/components/baterie';
+import { Preskok } from '@/components/preskok';
 import { Karta, Nacitani, Nadpis, Prazdno } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiDnesniRegatu, type ClenPosadky, type ZavodnikDnes } from '@/lib/api';
 import { pismoNaVyplni } from '@/lib/kontrast';
+import { ukazkaBezi } from '@/lib/ukazka';
 import { nastavSledovani } from '@/lib/klic';
 import { hlasim, obnovHlaseni, vypniHlaseni, type Hlasim } from '@/lib/tracker/hlasim-se';
 import { predJakDlouho } from '@/lib/tracker/stav';
@@ -48,7 +50,22 @@ function vetaStavu(d: ZavodnikDnes): string {
 
 export default function Zavodnik() {
   const t = useTheme();
-  const { data, nacita, chyba } = useData(nactiDnesniRegatu, []);
+  const { data, nacita, chyba, obnov } = useData(nactiDnesniRegatu, []);
+
+  // <b>Vteřinový tik jen kvůli ukázce.</b> Nabídka přeskoku se musí
+  // přepočítat, jak se blíží další troubení, a obrazovka posádky jinak
+  // běží bez taktu — hodiny v hlavičce si tikají samy. U vody by
+  // překreslování celé obrazovky každou vteřinu bylo placení za nic,
+  // takže tiká jen v ukázce a jen dokud je na co čekat.
+  const [tik, setTik] = useState(Date.now());
+  const vUkazce = ukazkaBezi();
+  const doStartuS = data?.startV ? (Date.parse(data.startV) - tik) / 1000 : null;
+  const tikat = vUkazce && doStartuS !== null && doStartuS > 0;
+  useEffect(() => {
+    if (!tikat) return;
+    const id = setInterval(() => setTik(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [tikat]);
 
   if (nacita && !data) {
     return (
@@ -241,6 +258,13 @@ export default function Zavodnik() {
           ) : null}
         </View>
       ) : null}
+
+      {/* <b>Přeskok čekání</b> (Filip, 7. 11. 2026: *„ukázku pro závodníka
+          vybav také modalem pro přeskočení času"*). Táž součástka jako na
+          obrazovce rozhodčího — posádka čeká na týž start a v ukázce je to
+          totéž čekání. `obnov` je tu navíc: `/lod/dnes` se načítá jednou,
+          takže po posunu startu by obrazovka ukazovala starý čas. */}
+      <Preskok doStartuS={doStartuS} poPreskoku={obnov} />
     </ScrollView>
   );
 }

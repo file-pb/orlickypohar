@@ -13,11 +13,10 @@ import {
 
 import { Pressable } from 'react-native';
 
+import { Preskok } from '@/components/preskok';
 import type { TrestZaJizdy } from '@/lib/api';
 import { useDirigent } from '@/lib/dirigent';
-import { dalsiTroubeni, kolikPreskocit } from '@/lib/hlaseni';
 import { casRozpravy } from '@/lib/start';
-import { posunStartUkazky, ukazkaBezi } from '@/lib/ukazka';
 import { barvaNaVyplni, pismoNaVyplni, sPruhlednosti } from '@/lib/kontrast';
 import { useTheme } from '@/hooks/use-theme';
 import type { Barvy } from '@/constants/theme';
@@ -172,23 +171,10 @@ export function Odpocet({
   const dirigent = useDirigent(stav, ted, delkaS, veli);
 
   // <b>Zkratka jen pro ukázku</b> (Filip, 7. 11. 2026): dlouhé čekání se
-  // dá přeskočit, aby se simulace dala ladit rychleji. Mimo ukázku se
-  // nenabízí vůbec — u vody se nepřeskakuje nic.
-  const vUkazce = ukazkaBezi();
+  // dá přeskočit, aby se simulace dala ladit rychleji. Rozhodování i
+  // bublina bydlí v `components/preskok.tsx`, protože od 7. 11. 2026 je
+  // má i obrazovka posádky — tady zbývá jen říct, kolik zbývá do startu.
   const doStartu = kolikDoStartu(stav, ted);
-  const preskocitO =
-    vUkazce && doStartu !== null ? kolikPreskocit(doStartu, delkaS) : null;
-  // <b>Hrana, ne hodnota.</b> `preskocitO` se každou vteřinu zmenší,
-  // takže klíč z něj je pokaždé jiný: „ne" platilo jedinou vteřinu
-  // a bublina se hned vracela. Klíč je proto <b>nejbližší troubení</b>,
-  // které se během čekání nemění — jednou na hranu, jak to stojí
-  // v návrhu. Současně to zaručuje, že se zeptá u každé hrany, kde se
-  // čeká dýl než dvě minuty: před procedurou i mezi přípravným
-  // znamením a poslední minutou (Filip, 7. 11. 2026: *„čtyři minuty do
-  // startu taky"*).
-  const hrana = vUkazce && doStartu !== null ? dalsiTroubeni(doStartu, delkaS) : null;
-  const [nabidnuto, setNabidnuto] = useState<number | null>(null);
-  const ptatSe = preskocitO !== null && hrana !== null && nabidnuto !== hrana;
 
   // <b>Start se neklepe, start padne.</b> Rozhodčí spustil proceduru,
   // odpočet doběhl — tím rozjížďka odstartovala a appka to serveru řekne
@@ -376,39 +362,7 @@ export function Odpocet({
           nezajímá a pruh by se do konce rozjížďky zanesl. */}
       <TrestyNaTrati t={t} tresty={tresty} ted={ted} naVykonano={naVykonano} />
 
-      {/* <b>Bublina je ladicí zkratka, ne vlastnost startu.</b> Ukáže se
-          jen v ukázce, a u každého čekání, kde se dá ušetřit víc než
-          dvacet vteřin — před procedurou, mezi výzvou a přípravou,
-          v přípravě i v poslední minutě. Po „ano" se posune
-          čas startu, ne odpočet: tím projde celá partitura stejně jako
-          u vody, jen bez čekání. */}
-      <Modal visible={ptatSe} transparent animationType="fade">
-        <View style={s.bublinaStin}>
-          <View style={[s.bublina, { backgroundColor: t.papir, borderColor: t.linka }]}>
-            <Text style={[s.bublinaNadpis, { color: t.text }]}>Přeskočit čekání?</Text>
-            <Text style={[s.bublinaText, { color: t.tlumeny }]}>
-              Do dalšího znamení zbývá{' '}
-              {trvani(doStartu !== null && hrana !== null ? doStartu - hrana : 0)}. V ukázce se
-              dá skočit patnáct vteřin před něj, aby stihlo začít hlášení.
-            </Text>
-            <View style={s.bublinaVolby}>
-              <Pressable
-                onPress={() => setNabidnuto(hrana)}
-                style={({ pressed }) => [s.bublinaVolba, { opacity: pressed ? 0.6 : 1 }]}>
-                <Text style={[s.bublinaVolbaText, { color: t.tlumeny }]}>Ne, jeď normálně</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  if (preskocitO !== null) posunStartUkazky(preskocitO);
-                  setNabidnuto(hrana);
-                }}
-                style={({ pressed }) => [s.bublinaVolba, { opacity: pressed ? 0.6 : 1 }]}>
-                <Text style={[s.bublinaVolbaText, { color: t.voda }]}>Ano, přeskoč</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <Preskok doStartuS={doStartu} delkaS={delkaS} />
     </>
   );
 }
@@ -1119,13 +1073,6 @@ const s = StyleSheet.create({
   dlazdiceNadpis: { fontSize: 16, fontWeight: '700' },
   dlazdiceCislo: { fontSize: 20, fontWeight: '800' },
   dlazdicePopis: { fontSize: 11, marginTop: 3, lineHeight: 15 },
-  bublinaStin: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 24 },
-  bublina: { borderWidth: 1, borderRadius: 16, padding: 20, maxWidth: 340 },
-  bublinaNadpis: { fontSize: 18, fontWeight: '800' },
-  bublinaText: { fontSize: 15, lineHeight: 21, marginTop: 6 },
-  bublinaVolby: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16 },
-  bublinaVolba: { minHeight: 44, minWidth: 44, paddingHorizontal: 12, justifyContent: 'center' },
-  bublinaVolbaText: { fontSize: 16, fontWeight: '700' },
   tresty: { flexDirection: 'row', gap: 10, marginTop: 10 },
   // Dlaždice, ne řádek: na vodě se do nich klepe palcem a 80 pt je
   // tolik, aby se netrefil vedle.
