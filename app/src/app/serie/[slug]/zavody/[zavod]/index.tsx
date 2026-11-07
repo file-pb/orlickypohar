@@ -23,6 +23,7 @@ import {
   type ZapisLod,
   ohlasRozjizdku,
   ulozTrest,
+  zrusRozjizdku,
   ohlasStart,
   OdmitnutoServerem,
   provedProceduru,
@@ -40,7 +41,7 @@ import {
   type CekajiciUkon,
   type UkonProcedury,
 } from '@/lib/cekajici-start';
-import { PROCEDURA_S } from '@/lib/start';
+import { PROCEDURA_S, DUVODY_ZRUSENI } from '@/lib/start';
 import { rozsah } from '@/lib/datum';
 import { body } from '@/lib/body';
 
@@ -176,6 +177,30 @@ export default function Zastavka() {
   const [vyberLode, setVyberLode] = useState<ZapisLod[] | null>(null);
   const [vyberPosila, setVyberPosila] = useState<number | null>(null);
 
+  // <b>Zrušení má vlastní vrstvu, ne tutéž jako výběr lodi.</b> Vybírá se
+  // z důvodů, ne z lodí — sdílet jeden seznam by znamenalo rozhodovat
+  // uvnitř něj, co vlastně zobrazuje.
+  const [ruseni, setRuseni] = useState<number | null>(null);
+  const [rusi, setRusi] = useState(false);
+
+  const zrus = async (duvod: string) => {
+    if (ruseni === null || rusi) return;
+    setRusi(true);
+    try {
+      await zrusRozjizdku(slug, zavod, ruseni, duvod);
+      setRuseni(null);
+      obnov();
+    } catch (e) {
+      setChybaStartu(
+        e instanceof OdmitnutoServerem
+          ? (e.duvod ?? 'Server zrušení odmítl.')
+          : 'Nepovedlo se zrušit — zkus to znovu.',
+      );
+    } finally {
+      setRusi(false);
+    }
+  };
+
   const otevriVyber = async (cislo: number, ukon: ProCo['ukon']) => {
     setVyber({ cislo, ukon });
     setVyberLode(null);
@@ -251,6 +276,7 @@ export default function Zastavka() {
             naOhlaseni={ohlasit}
             naPredcasnyStart={veliNekde(ja ?? null) ? (c) => otevriVyber(c, 'Ocs') : undefined}
             naTrest={veliNekde(ja ?? null) ? otevriVyber : undefined}
+            naZruseni={veliNekde(ja ?? null) ? setRuseni : undefined}
             naCil={
               veliNekde(ja ?? null)
                 ? () => router.push(`/serie/${slug}/zavody/${zavod}/cil`)
@@ -365,6 +391,52 @@ export default function Zastavka() {
               ))}
             </ScrollView>
           )}
+        </View>
+      </Modal>
+      <Modal
+        visible={ruseni !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRuseni(null)}>
+        <Pressable
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+          }}
+          onPress={() => setRuseni(null)}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: t.papir,
+            borderTopWidth: 1,
+            borderColor: t.linka,
+            paddingBottom: 24,
+          }}>
+          <Text
+            style={{
+              color: t.text,
+              fontSize: 17,
+              fontWeight: '700',
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 4,
+            }}>
+            Zrušit rozjížďku — proč?
+          </Text>
+          <Text style={{ color: t.tlumeny, paddingHorizontal: 16, paddingBottom: 8 }}>
+            Rozjížďka přestane platit a nejede se. Důvod uvidí i posádky.
+          </Text>
+          {DUVODY_ZRUSENI.map((d) => (
+            <Radek key={d} text={d} onPress={() => void zrus(d)} />
+          ))}
         </View>
       </Modal>
     </ScrollView>

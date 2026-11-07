@@ -381,6 +381,23 @@ export function ukonyStartu(stav: StavStartu | null): UkonStartu[] {
   return ['Odvolat'];
 }
 
+/**
+ * <b>Proč se rozjížďka ruší</b> — nabídka, ne volné pole (nález R17:
+ * rozhodnuto doplnit nejčastější důvody na výběr, *„aby to nemusel
+ * psát"*).
+ *
+ * Není to vymyšlený seznam: ZPJ 32.1 vyjmenovává, kdy komise smí
+ * rozjížďku přerušit, a tyhle čtyři jsou jeho body. Páté *„jiný důvod"*
+ * tam je taky — a tady zůstává jako možnost napsat vlastní větu, aby
+ * nabídka nenutila vybrat něco, co se nestalo.
+ */
+export const DUVODY_ZRUSENI = [
+  'Nedostatek větru',
+  'Počasí',
+  'Chybějící nebo posunutá značka',
+  'Bezpečnost',
+] as const;
+
 /** Jak se ten úkon jmenuje na tlačítku — termínem, který rozhodčí zná. */
 export function nazevUkonu(ukon: UkonStartu): string {
   return ukon === 'Odlozit' ? 'Odložit start' : 'Všeobecné odvolání';

@@ -267,6 +267,32 @@ export async function ulozVysledky(
 }
 
 /**
+ * <b>Zruší rozjížďku s důvodem</b> (nález R17, ZPJ 32.1).
+ *
+ * <b>Jde to přes stav výsledků, ne přes vlastní úkon.</b> Zrušení
+ * a eliminace jsou dvě strany téhož: rozjížďka, která neplatí v zápisu,
+ * se nejede — a server to drží u jediného přechodu stavu schválně, aby
+ * se druhá cesta k témuž s touhle nerozešla. Přechod do `Eliminovano`
+ * je povolený z jakéhokoliv stavu, takže se dá zrušit i rozjížďka,
+ * která se zrovna jede.
+ *
+ * <b>Důvod je povinný</b> a server to hlídá sám.
+ */
+export async function zrusRozjizdku(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  duvod: string,
+) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}/stav`,
+    { stav: 'Eliminovano', duvod },
+  );
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
  * <b>Otáčkový trest</b> (nález R36, ZPJ 44.2).
  *
  * <b>Není to kód výsledku.</b> Otáčka pořadí nemění — loď ji odkrouží

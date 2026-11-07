@@ -65,6 +65,7 @@ export function Odpocet({
   naOhlaseni,
   naPredcasnyStart,
   naTrest,
+  naZruseni,
   chyba,
   nedoslano,
 }: {
@@ -114,6 +115,8 @@ export function Odpocet({
    * Otáčkový trest (ZPJ 44.2). Chybí-li, dlaždice se neukážou.
    */
   naTrest?: (cislo: number, druh: 'Otacka360' | 'Otacka720') => void;
+  /** Zrušení rozjížďky s důvodem (ZPJ 32.1). */
+  naZruseni?: (cislo: number) => void;
 }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
@@ -298,6 +301,20 @@ export function Odpocet({
             <Text style={[s.trestPopis, { color: t.tlumeny }]}>dotek s lodí · ZPJ 44.1</Text>
           </Pressable>
         </View>
+      ) : null}
+
+      {/* <b>Zrušení je nevratné, proto na konci a červeně.</b> Je to
+          jediný úkon panelu, po kterém se rozjížďka nejede ani nejede
+          znovu — odvolání vrací na start, tohle ne. */}
+      {naZruseni && stav.druh !== 'bezCasu' ? (
+        <Pressable
+          onPress={() => naZruseni(stav.cislo)}
+          style={({ pressed }) => [
+            s.cil,
+            { borderColor: t.stavZruseny, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
+          ]}>
+          <Text style={[s.cilText, { color: t.stavZruseny }]}>Zrušit rozjížďku</Text>
+        </Pressable>
       ) : null}
 
       {naUkon ? <Zastaveni stav={stav} t={t} naUkon={naUkon} /> : null}
