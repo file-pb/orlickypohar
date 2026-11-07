@@ -533,11 +533,21 @@ s mockem ještě sedí.
 někde velí (`Bearer milos`). Jinak by ukázka neukázala start ani cíl, tedy
 to, kvůli čemu appka vznikla.
 
-**Ukázka začíná pět minut před startem** (Filip, 7. 11. 2026: *„ukázka
-simuluje 5 minut do startu a pak prostě různé stavy a užití"*). Bez toho
-by prohlížející zapnul režim a našel klidnou obrazovku — to, kvůli čemu
-appka vznikla, by si musel napřed sám rozjet dvěma klepnutími a pak pět
-minut čekat. Takhle spadne rovnou doprostřed odpočtu. Rozjížďka se
+**Ukázka začíná deset minut před startem** (Filip, 7. 11. 2026: *„ukázka
+simuluje obrazovku dejme tomu 10 minut do startu regaty a pak podle pokynu
+a užití"*). Bez toho by prohlížející zapnul režim a našel klidnou
+obrazovku: ve snímku jsou **všechny regaty odjeté a každá rozjížďka
+dokončená**, nejnovější start 19. 9. 2026 — ukázka by tedy ukázala
+historii, ale odpočet, hlas, klakson ani cíl by si v ní nikdo nezkusil.
+
+**Deset, ne pět, a je v tom rozdíl.** Procedura trvá pět minut, takže
+v desáté minutě ještě neběží: panel nabízí *Spustit startovní proceduru*
+a prohlížející si pustí celou věc od začátku i s hlasem a klaksonem.
+Otevřít ukázku uprostřed odpočtu by znamenalo přijít o tu půlku. Hlídá to
+test — náskok musí být delší než procedura.
+
+**Scéna se staví při zapnutí, ne ve snímku.** Čas ve snímku je absolutní
+a za týden by zestaral; `teď + 10 minut` platí vždycky. Rozjížďka se
 **přidává**, odjeté zůstávají: ty jsou ty *různé stavy*, dokončená
 s výsledky vedle čerstvé, která se teprve rozbíhá.
 

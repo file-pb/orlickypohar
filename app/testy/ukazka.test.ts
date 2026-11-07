@@ -146,7 +146,7 @@ const testyAsync: [string, () => Promise<void>][] = [
 
 // --- ukázka začíná uprostřed odpočtu ----------------------------------
 
-testyAsync.push(['po zapnutí čeká rozjížďka, která startuje za pět minut', async () => {
+testyAsync.push(['po zapnutí čeká rozjížďka, která startuje za deset minut', async () => {
   zapniUkazku();
   const z = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo;
   const cerstva = z.rozjizdky[z.rozjizdky.length - 1];
@@ -156,6 +156,18 @@ testyAsync.push(['po zapnutí čeká rozjížďka, která startuje za pět minut
     `do startu vyšlo ${doStartu.toFixed(2)} min místo ${DO_STARTU_MIN}`,
   );
   assert.equal(cerstva.stav, 'Planovana');
+}]);
+
+testyAsync.push(['procedura v tu chvíli ještě neběží — dá se spustit celá', async () => {
+  // Deset minut do startu a procedura dlouhá pět: panel tedy nabízí
+  // „Spustit startovní proceduru". Kdyby byl náskok kratší než procedura,
+  // otevřela by se ukázka uprostřed odpočtu a o půlku věci by přišla.
+  zapniUkazku();
+  const z = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo;
+  assert.ok(
+    DO_STARTU_MIN > (z.delkaProceduryMin ?? 5),
+    `náskok ${DO_STARTU_MIN} min není delší než procedura ${z.delkaProceduryMin} min`,
+  );
 }]);
 
 testyAsync.push(['odjeté rozjížďky v ukázce zůstávají — jsou to ty různé stavy', async () => {

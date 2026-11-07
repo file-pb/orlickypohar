@@ -17,13 +17,17 @@
  * a vypadala by rozbitě. Mění se jen kopie v paměti; po vypnutí režimu
  * se zahodí a soubor zůstává, jaký byl.
  *
- * <b>Ukázka začíná pět minut před startem</b> (Filip, 7. 11. 2026:
- * *„ukázka simuluje 5 minut do startu a pak prostě různé stavy
- * a užití"*). Bez toho by prohlížející zapnul režim a našel klidnou
- * obrazovku — to, kvůli čemu appka vznikla, by musel napřed sám
- * rozjet dvěma klepnutími a pak pět minut čekat. Takhle spadne rovnou
- * doprostřed odpočtu a odsud si může zkusit cokoliv: odložit, odvolat,
- * nechat start padnout, zapisovat cíl.
+ * <b>Ukázka začíná deset minut před startem</b> (Filip, 7. 11. 2026:
+ * *„ukázka simuluje obrazovku dejme tomu 10 minut do startu regaty
+ * a pak podle pokynu a užití"*). Bez toho by prohlížející zapnul režim
+ * a našel klidnou obrazovku — ve snímku jsou všechny regaty odjeté
+ * a každá rozjížďka dokončená, takže odpočet, hlas ani cíl by si
+ * nezkusil.
+ *
+ * <b>Deset, ne pět, a je v tom rozdíl.</b> Procedura trvá pět minut,
+ * takže v desáté minutě ještě neběží: panel nabízí *Spustit startovní
+ * proceduru* a prohlížející si pustí celou věc od začátku, i s hlasem
+ * a klaksonem. Kdyby se otevřel uprostřed odpočtu, o tu půlku by přišel.
  *
  * <b>Režim se nepamatuje mezi spuštěními.</b> Zapnout ho jde jen klepnutím
  * v nabídce; po zabití appky je zase pryč. Je to pojistka proti tomu
@@ -55,11 +59,17 @@ export function ukazkaBezi(): boolean {
   return stav !== null;
 }
 
-/** Kolik minut do startu ukázka nachystá. Tolik, kolik trvá procedura. */
-export const DO_STARTU_MIN = 5;
+/**
+ * Kolik minut do startu ukázka nachystá. Dvojnásobek procedury, aby se
+ * dala spustit celá, ne jen dokoukat.
+ */
+export const DO_STARTU_MIN = 10;
 
 /**
- * Nachystá rozjížďku, která startuje za pět minut.
+ * Nachystá rozjížďku, která startuje za deset minut.
+ *
+ * <b>Scéna se staví při zapnutí, ne ve snímku.</b> Čas ve snímku je
+ * absolutní a za týden by zestaral; `teď + 10 minut` platí vždycky.
  *
  * <b>Přidává se nová, ne přepisuje stará.</b> Odjeté rozjížďky v ukázce
  * zůstávají, protože jsou to ty „různé stavy" — dokončená s výsledky
