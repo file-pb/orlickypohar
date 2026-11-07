@@ -37,6 +37,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     /// (Filip, 28. 10. 2026).
     /// </summary>
     public DbSet<UkonZaJizdy> UkonyZaJizdy => Set<UkonZaJizdy>();
+    public DbSet<TrestZaJizdy> TrestyZaJizdy => Set<TrestZaJizdy>();
     public DbSet<Vysledek> Vysledky => Set<Vysledek>();
     public DbSet<ZapisNavrh> ZapisyNavrhu => Set<ZapisNavrh>();
     public DbSet<Clanek> Clanky => Set<Clanek>();
@@ -395,6 +396,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         ukon.Property(x => x.Poznamka).HasMaxLength(200);
         // Čte se vždycky „co platí pro tuhle rozjížďku, v pořadí vyhlášení".
         ukon.HasIndex(x => new { x.RozjizdkaId, x.VyhlasenoV });
+
+        var trest = b.Entity<TrestZaJizdy>();
+        trest.HasOne(x => x.Rozjizdka).WithMany().HasForeignKey(x => x.RozjizdkaId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Účast se nemaže, dokud na ní visí výsledky; trest je doklad
+        // téhož druhu — kdyby ho odnesla, zmizel by záznam, kvůli kterému
+        // se o pořadí vede spor.
+        trest.HasOne(x => x.Ucast).WithMany().HasForeignKey(x => x.UcastId)
+            .OnDelete(DeleteBehavior.Restrict);
+        trest.HasOne(x => x.Ulozil).WithMany().HasForeignKey(x => x.UlozilId)
+            .OnDelete(DeleteBehavior.Restrict);
+        // Čte se „co platí pro tuhle rozjížďku, v pořadí uložení".
+        trest.HasIndex(x => new { x.RozjizdkaId, x.UlozenoV });
 
         var vysledek = b.Entity<Vysledek>();
         vysledek.HasOne(x => x.Rozjizdka).WithMany().HasForeignKey(x => x.RozjizdkaId)
