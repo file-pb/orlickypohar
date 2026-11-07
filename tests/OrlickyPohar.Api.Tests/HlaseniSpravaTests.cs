@@ -153,6 +153,26 @@ public class HlaseniSpravaTests(PostgresFixture fixture)
     }
 
     /// <summary>
+    /// Zbytek R34: posádka na břehu kontroluje, že telefon visí u správné
+    /// lodi — a <b>jméno lodi na to nestačí</b>, dvě Luny na Orlíku nejsou
+    /// nic divného. Posádka je seznam <b>telefonů</b>, ne lidí na palubě.
+    /// </summary>
+    [Fact]
+    public Task Obrazovka_nese_plachetni_cislo_i_jmena_z_klicu() =>
+        VeSveteAsync(null, async svet =>
+        {
+            var obrazovka = await svet.Zavodnik.DnesAsync(svet.Klic, default);
+            Assert.NotNull(obrazovka);
+            // `VeSveteAsync` vydal jeden klíč, na jméno Tonda.
+            Assert.Equal(["Tonda"], obrazovka!.Posadka);
+
+            // Číslo plachty loď v tomhle světě nemá — `null` je správná
+            // odpověď, ne prázdný řetězec, který by se vykreslil jako mezera.
+            Assert.Null(obrazovka.CisloPlachty);
+            return true;
+        });
+
+    /// <summary>
     /// Bez rozpravy není plánovaný start, a bez něj se nenahrává —
     /// nahrávání nemá proti čemu měřit. Je to ta tichá polovina řetězu:
     /// rozprava udá čas, teprve pak se telefon rozjede.

@@ -33,6 +33,24 @@ public record ZavodnikDto(
     /// klienta z nasazeného API, kde se ten tvar poprvé ukázal.
     /// </summary>
     string? Kategorie,
+    /// <summary>
+    /// <b>Plachetní číslo</b> (zbytek R34). Posádka na břehu kontroluje
+    /// jedno: že telefon visí u správné lodi — a jméno lodi na to nestačí,
+    /// protože dvě *Luny* na Orlíku nejsou nic divného. Číslo na plachtě je
+    /// to, čím se loď na vodě pozná, a je to i to, čím se o ní mluví
+    /// v zápisu.
+    /// </summary>
+    string? CisloPlachty,
+    /// <summary>
+    /// <b>Kdo z posádky má klíč</b> (zbytek R34) — jména, jak je zadal
+    /// kapitán, protože víc o členech posádky nevíme a vědět nemáme.
+    /// <para>
+    /// Není to seznam posádky, je to seznam <b>telefonů</b>: kdo tu není,
+    /// loď má na palubě, jen se jeho telefon nehlásí. Posádka to kontroluje
+    /// na břehu, kde se s tím ještě dá něco udělat.
+    /// </para>
+    /// </summary>
+    IReadOnlyList<string> Posadka,
     int? Rozjizdka,
     StavRozjizdky? StavRozjizdky,
     DateTimeOffset? StartV,
@@ -74,6 +92,8 @@ public class ZavodnikSprava(AppDbContext db, TimeProvider cas)
             zavod.Nazev,
             ucast.Prihlaska!.Lod!.Nazev,
             ucast.Prihlaska.Kategorie?.Nazev,
+            ucast.Prihlaska.Lod.CisloPlachty,
+            await PosadkaAsync(klic.LodId, ct),
             rozjizdka?.Cislo,
             rozjizdka?.Stav,
             rozjizdka?.StartV,
@@ -119,6 +139,21 @@ public class ZavodnikSprava(AppDbContext db, TimeProvider cas)
 
         return (ucast, zavod, rozjizdka);
     }
+
+    /// <summary>
+    /// Jména z platných klíčů k lodi, v pořadí vydání.
+    /// <para>
+    /// <b>Jen jména, nic víc.</b> Filip o posádce: *„posádka jen QR,
+    /// maximálně jméno, aby se vědělo"* — a klíč bez jména se vynechá,
+    /// protože prázdná řádka v seznamu nic neříká.
+    /// </para>
+    /// </summary>
+    private async Task<IReadOnlyList<string>> PosadkaAsync(int lodId, CancellationToken ct) =>
+        await db.Klice
+            .Where(k => k.LodId == lodId && k.OdebranV == null && k.Jmeno != null)
+            .OrderBy(k => k.VydanV)
+            .Select(k => k.Jmeno!)
+            .ToListAsync(ct);
 
     /// <summary>
     /// <b>Jak loď eviduje rozhodčí</b>, jednou větou.
