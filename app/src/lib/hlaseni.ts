@@ -261,6 +261,52 @@ export function dalsiTroubeni(doStartuS: number, delkaS: number = PROCEDURA_S): 
 }
 
 /**
+ * <b>Znamení, která posádka slyší</b> — jméno a kolik vteřin před startem
+ * padne (ZPJ 26). Odshora dolů, tedy od vyzývacího ke startovnímu.
+ *
+ * <b>Proč zvlášť od {@link partitura}.</b> Partitura je scénář pro hlas:
+ * jméno znamení v ní stojí deset vteřin <i>před</i> troubením, protože se
+ * rozhodčímu ohlašuje dopředu („Vyzývací znamení, krátce"), a na samotném
+ * troubení je prázdný řetězec. Kdo se ptá „co padlo naposledy", potřebuje
+ * dvojici jméno + okamžik, a tu partitura nenese ani v jednom řádku.
+ *
+ * Jména jsou krátká, jak je kreslí návrh (`Zavodnik-svetly.dc.html`:
+ * *„Poslední znamení · Příprava"*). Hlas říká celá — *„přípravné
+ * znamení"* —, protože mluví k rozhodčímu; tohle čte posádka na vodě,
+ * kde se text do pruhu musí vejít vedle hodiny.
+ */
+export function znameniStartu(
+  delkaS: number = PROCEDURA_S,
+): { jmeno: string; vterinDoStartu: number }[] {
+  const ven = [{ jmeno: 'Vyzývací', vterinDoStartu: delkaS }];
+  // Tytéž dvě podmínky jako v partituře: u procedury kratší než čtyři
+  // minuty by přípravné padlo dřív než vyzývací, a pod minutu nezbývá
+  // ani minutové znamení.
+  if (delkaS > PRIPRAVNE_S) ven.push({ jmeno: 'Příprava', vterinDoStartu: PRIPRAVNE_S });
+  if (delkaS > MINUTA_S) ven.push({ jmeno: 'Jedna minuta', vterinDoStartu: MINUTA_S });
+  ven.push({ jmeno: 'Start', vterinDoStartu: 0 });
+  return ven;
+}
+
+/**
+ * <b>Které znamení padlo naposledy</b>, nebo `null`, když procedura ještě
+ * nezačala.
+ *
+ * Tohle je ta informace, podle které se posádka na vodě orientuje, když
+ * houkačku neslyšela — ne čas, který teprve přijde. Počítá se z času
+ * startu, takže nestojí žádný dotaz na server.
+ */
+export function posledniZnameni(
+  doStartuS: number,
+  delkaS: number = PROCEDURA_S,
+): { jmeno: string; vterinDoStartu: number } | null {
+  // Znamení padlo, když už je odpočet za ním; na vteřině samotné se
+  // troubí, takže se počítá taky.
+  const bylo = znameniStartu(delkaS).filter((z) => z.vterinDoStartu >= doStartuS);
+  return bylo.length > 0 ? bylo[bylo.length - 1] : null;
+}
+
+/**
  * <b>O kolik vteřin posunout start</b>, aby do nejbližšího troubení
  * zbývalo <see cref="NASKOK_PRED_HRANOU_S"/>. `null`, když není co
  * přeskočit — buď už žádné troubení nezbývá, nebo je blíž než mez.

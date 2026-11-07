@@ -10,7 +10,8 @@ import { Karta, Nacitani, Nadpis, Prazdno } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiDnesniRegatu, type ClenPosadky, type ZavodnikDnes } from '@/lib/api';
-import { pismoNaVyplni } from '@/lib/kontrast';
+import { posledniZnameni } from '@/lib/hlaseni';
+import { pismoNaVyplni, sPruhlednosti } from '@/lib/kontrast';
 import { ukazkaBezi } from '@/lib/ukazka';
 import { nastavSledovani } from '@/lib/klic';
 import { hlasim, obnovHlaseni, vypniHlaseni, type Hlasim } from '@/lib/tracker/hlasim-se';
@@ -153,6 +154,20 @@ export default function Zavodnik() {
               minute: '2-digit',
             })}
           </Text>
+        ) : null}
+
+        {/* <b>Poslední znamení</b> (návrh `Zavodnik-svetly.dc.html`:
+            *„Poslední znamení · Příprava · 14:33"*). Čas startu nad tím
+            je okamžik, který teprve přijde; tohle je ten, který už byl
+            slyšet — a podle něj se posádka orientuje, když houkačku
+            přeslechla. Počítá se z času startu, takže nestojí dotaz.
+
+            Po skončení rozjížďky mizí: *„poslední znamení: Start"* tři
+            hodiny po dojezdu už nikomu nic neříká. */}
+        {data.startV
+          && data.stavRozjizdky !== 'Dokoncena'
+          && data.stavRozjizdky !== 'Zrusena' ? (
+          <PosledniZnameni startV={data.startV} barva={naVyplni} />
         ) : null}
 
         {/* <b>Běžící hodiny</b>, jak je kreslí návrh (`Zavodnik.dc.html`:
@@ -500,6 +515,72 @@ function StavTelefonu({
         </Pressable>
       ) : null}
     </Karta>
+  );
+}
+
+/**
+ * <b>Které znamení padlo naposledy</b> — řádek z návrhu
+ * (`Zavodnik-svetly.dc.html`: *„Poslední znamení · Příprava · 14:33"*).
+ *
+ * <b>Proč vlastní součástka s vlastním tikem.</b> Obrazovka posádky se
+ * překresluje jen při načtení dat; kdyby se znamení počítalo tam, zůstalo
+ * by stát na tom, co platilo ve chvíli otevření. Tiká proto sama, stejně
+ * jako {@link Hodiny} vedle ní — a při návratu z pozadí si čas přečte,
+ * aby po zhasnutém displeji neukazovala starou minutu.
+ *
+ * <b>Mez, kterou nelze z dat odstranit.</b> `GET /lod/dnes` nenese délku
+ * startovní procedury, takže se počítá s výchozími pěti minutami
+ * (`PROCEDURA_S`). Přípravné znamení, poslední minuta i start leží podle
+ * ZPJ 26 pevně — čtyři minuty, minuta, nula —, takže jsou správně vždy.
+ * Chybně může vyjít jedině <b>vyzývací</b>, a jedině u regaty, které
+ * pořadatel délku procedury změnil. Napravit to jde přidáním
+ * `delkaProceduryMin` do `ZavodnikDto`, ne tady.
+ */
+function PosledniZnameni({ startV, barva }: { startV: string; barva: string }) {
+  const [ted, setTed] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setTed(Date.now()), 1000);
+    const posluchac = AppState.addEventListener('change', (stav) => {
+      if (stav === 'active') setTed(Date.now());
+    });
+    return () => {
+      clearInterval(id);
+      posluchac.remove();
+    };
+  }, []);
+
+  const start = Date.parse(startV);
+  const znameni = posledniZnameni((start - ted) / 1000);
+  if (!znameni) return null;
+
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: 8,
+        marginTop: 14,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderColor: sPruhlednosti(barva, 0.3),
+      }}>
+      <Text style={{ color: sPruhlednosti(barva, 0.85), fontSize: 14 }}>Poslední znamení</Text>
+      <Text style={{ color: barva, fontSize: 20, fontWeight: '700' }}>{znameni.jmeno}</Text>
+      <Text
+        style={{
+          color: barva,
+          fontSize: 20,
+          fontWeight: '700',
+          marginLeft: 'auto',
+          fontVariant: ['tabular-nums'],
+        }}>
+        {new Date(start - znameni.vterinDoStartu * 1000).toLocaleTimeString('cs-CZ', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })}
+      </Text>
+    </View>
   );
 }
 

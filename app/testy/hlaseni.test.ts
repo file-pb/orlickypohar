@@ -13,7 +13,9 @@ import {
   coPrehrat,
   nejblizsiOkamzik,
   partitura,
+  posledniZnameni,
   stiha,
+  znameniStartu,
   type Znameni,
 } from '../src/lib/hlaseni.ts';
 
@@ -268,6 +270,42 @@ zkus('to, co právě nastalo, se dopředu nenajde', () => {
   // kdyby to uměly obě, zaznělo by to dvakrát.
   assert.deepEqual(nejblizsiOkamzik(60, 1.5), []);
   assert.deepEqual(coOkamzik(60.4, 59.9).map((z) => z.vterinDoStartu), [60, 60]);
+});
+
+zkus('znamení startu jsou čtyři a jdou odshora', () => {
+  assert.deepEqual(znameniStartu(300), [
+    { jmeno: 'Vyzývací', vterinDoStartu: 300 },
+    { jmeno: 'Příprava', vterinDoStartu: 240 },
+    { jmeno: 'Jedna minuta', vterinDoStartu: 60 },
+    { jmeno: 'Start', vterinDoStartu: 0 },
+  ]);
+
+  // Krátká procedura: přípravné by padlo dřív než vyzývací, takže odpadá
+  // — tatáž podmínka, jakou má partitura.
+  assert.deepEqual(
+    znameniStartu(180).map((z) => z.jmeno),
+    ['Vyzývací', 'Jedna minuta', 'Start'],
+  );
+  assert.deepEqual(znameniStartu(30).map((z) => z.jmeno), ['Vyzývací', 'Start']);
+
+  // Co se jmenuje v partituře, se musí jmenovat i tady — jinak by hlas
+  // říkal jedno a obrazovka druhé.
+  const troubi = partitura(300).filter((z) => z.troubi !== null).map((z) => z.vterinDoStartu);
+  assert.deepEqual(troubi.sort((a, b) => b - a), znameniStartu(300).map((z) => z.vterinDoStartu));
+});
+
+zkus('poslední znamení je to, které už padlo', () => {
+  // Před vyzývacím ještě žádné nebylo.
+  assert.equal(posledniZnameni(301, 300), null);
+  // Na vteřině samotné se troubí, takže se počítá.
+  assert.equal(posledniZnameni(300, 300)?.jmeno, 'Vyzývací');
+  assert.equal(posledniZnameni(241, 300)?.jmeno, 'Vyzývací');
+  assert.equal(posledniZnameni(240, 300)?.jmeno, 'Příprava');
+  assert.equal(posledniZnameni(61, 300)?.jmeno, 'Příprava');
+  assert.equal(posledniZnameni(60, 300)?.jmeno, 'Jedna minuta');
+  assert.equal(posledniZnameni(0, 300)?.jmeno, 'Start');
+  // Po startu zůstává start — po něm už žádné znamení není.
+  assert.equal(posledniZnameni(-600, 300)?.jmeno, 'Start');
 });
 
 console.log(`  ${prosly} prošlo`);
