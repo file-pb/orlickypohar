@@ -28,6 +28,10 @@ const KAM: { text: string; cil: string; popis?: string }[] = [
   // jediná cesta zpátky bylo gesto — a z cíle rozjížďky je to gest
   // několik. Nabídka je na každé obrazovce, tak ať vede i domů.
   { text: 'Domů', cil: '/', popis: 'úvodní obrazovka' },
+  // <b>Moje regata je nad ročníky.</b> Posádka na vodě se neptá „jaké
+  // byly výsledky v červnu", ptá se „co se děje teď" — a ročníky jsou
+  // cesta dovnitř pro zkoušení, ne obrazovka produktu.
+  { text: 'Moje regata', cil: '/zavodnik', popis: 'co se dnes jede a jak tě vidí rozhodčí' },
   { text: 'Ročníky', cil: '/rocniky', popis: 'kalendář, výsledky, pořadí' },
   { text: 'Moje lodě a posádka', cil: '/lode' },
   { text: 'Klíč k lodi', cil: '/klic' },

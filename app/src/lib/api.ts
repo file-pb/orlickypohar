@@ -36,6 +36,24 @@ export type PoradiSerie = S["PoradiSerieDto"];
 export type Ja = S["JaDto"];
 export type ZapisRozjizdky = S["ZapisRozjizdkyDto"];
 export type ZapisLod = S["ZapisLodDto"];
+
+/**
+ * Co vidí posádka. <b>Psané ručně, ne ze schématu</b> — snímek API se
+ * generuje z běžícího serveru a ten tenhle endpoint dostane až po
+ * nasazení. Až se přegeneruje, tenhle typ zmizí ve prospěch `S[…]`.
+ */
+export type ZavodnikDnes = {
+  serie: string;
+  zavod: string;
+  zavodNazev: string;
+  lod: string;
+  kategorie: string | null;
+  rozjizdka: number | null;
+  stavRozjizdky: 'Planovana' | 'Probiha' | 'Dokoncena' | 'Zrusena' | null;
+  startV: string | null;
+  stavLodi: { veta: string; kdy: string | null } | null;
+  pokyny: { druh: string; veta: string; vyhlasenoV: string }[];
+};
 export type ZapisRadekVstup = S["ZapisRadekVstup"];
 export type CilZTrasovaniOdpoved = S["CilZTrasovaniDto"];
 
@@ -424,6 +442,34 @@ export type OdpovedKlicem<T> =
   | { stav: 'ok'; data: T }
   | { stav: 'bez-klice' }
   | { stav: 'mimo-okno'; duvod: string };
+
+/**
+ * <b>Co se dnes týká mojí lodi</b> (`GET /lod/dnes`).
+ *
+ * Klíčem, ne přihlášením: telefon posádky je spárovaný s lodí, a účet
+ * by znamenal, že ho musí mít každý člen posádky zvlášť.
+ *
+ * Vrací `null` ve dvou různých případech, které se tu schválně
+ * neodlišují: telefon nemá klíč, nebo dnes loď nikde nejede (204).
+ * Obrazovka se v obou zachová stejně — nemá co ukázat — a rozlišovat
+ * je by znamenalo dva prázdné stavy tam, kde stačí jeden.
+ */
+export async function nactiDnesniRegatu(): Promise<ZavodnikDnes | null> {
+  // <b>Bez klíče se neodchází předčasně.</b> Dotaz se pošle tak jako
+  // tak: v ukázce ho obslouží přibalený snímek, kde žádný klíč není,
+  // a mimo ni odpoví server 401 — což je tentýž prázdný stav. Kdyby se
+  // tu couvlo dřív, ukázka by zůstala prázdná a vypadalo by to jako
+  // chybějící data.
+  const k = await tajemstvi();
+  const odpoved = await sit('/lod/dnes', {
+    headers: k
+      ? { accept: 'application/json', 'x-klic-lodi': k }
+      : { accept: 'application/json' },
+  });
+  if (!odpoved.ok || odpoved.status === 204) return null;
+
+  return (await odpoved.json()) as ZavodnikDnes;
+}
 
 export async function posliKlicemPodrobne<T>(
   cesta: string,

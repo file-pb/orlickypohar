@@ -102,6 +102,39 @@ export function posunStartUkazky(oS: number): void {
   }
 }
 
+/**
+ * <b>Pohled posádky do ukázky.</b> `/lod/dnes` nemá ve snímku co hledat —
+ * snímek se bere z mocku pod přihlášením, kdežto tahle cesta jde klíčem.
+ * Skládá se proto z téhož, co ukázka už má: z velené regaty a její
+ * nachystané rozjížďky.
+ *
+ * <b>Loď je vymyšlená, a je to vidět.</b> Ukázkový účet žádnou nemá —
+ * tvářit se, že ano, by znamenalo tvrdit o datech něco, co v nich není.
+ */
+function nachystejZavodnika(data: Record<string, unknown>): void {
+  const ja = data['/ja'] as S['JaDto'] | undefined;
+  const kde = (ja?.opravneni ?? []).find((o) => o.zavod);
+  if (!kde?.zavod) return;
+
+  const z = data[`/serie/${kde.serie}/zavody/${kde.zavod}`] as S['ZavodDetailDto'] | undefined;
+  if (!z) return;
+
+  const r = z.rozjizdky.find((x) => x.stav === 'Planovana' || x.stav === 'Probiha');
+
+  data['/lod/dnes'] = {
+    serie: kde.serie,
+    zavod: kde.zavod,
+    zavodNazev: z.nazev,
+    lod: z.lode?.[0]?.lod ?? 'JOY',
+    kategorie: z.lode?.[0]?.kategorie ?? null,
+    rozjizdka: r?.cislo ?? null,
+    stavRozjizdky: r?.stav ?? null,
+    startV: r?.startV ?? null,
+    stavLodi: null,
+    pokyny: [],
+  };
+}
+
 function nachystejStart(data: Record<string, unknown>): void {
   const ja = data['/ja'] as S['JaDto'] | undefined;
   const kde = (ja?.opravneni ?? []).find((o) => o.zavod);
@@ -145,6 +178,7 @@ export function zapniUkazku(): void {
   // ta první.
   stav = JSON.parse(JSON.stringify(snimek)) as Record<string, unknown>;
   nachystejStart(stav);
+  nachystejZavodnika(stav);
 }
 
 export function vypniUkazku(): void {
