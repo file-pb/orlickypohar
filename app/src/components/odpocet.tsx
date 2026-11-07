@@ -12,7 +12,7 @@ import {
 import { Pressable } from 'react-native';
 
 import { useDirigent } from '@/lib/dirigent';
-import { kolikPreskocit } from '@/lib/hlaseni';
+import { dalsiTroubeni, kolikPreskocit } from '@/lib/hlaseni';
 import { posunStartUkazky, ukazkaBezi } from '@/lib/ukazka';
 import { barvaNaVyplni, pismoNaVyplni, sPruhlednosti } from '@/lib/kontrast';
 import { useTheme } from '@/hooks/use-theme';
@@ -154,11 +154,17 @@ export function Odpocet({
   const doStartu = kolikDoStartu(stav, ted);
   const preskocitO =
     vUkazce && doStartu !== null ? kolikPreskocit(doStartu, delkaS) : null;
+  // <b>Hrana, ne hodnota.</b> `preskocitO` se každou vteřinu zmenší,
+  // takže klíč z něj je pokaždé jiný: „ne" platilo jedinou vteřinu
+  // a bublina se hned vracela. Klíč je proto <b>nejbližší troubení</b>,
+  // které se během čekání nemění — jednou na hranu, jak to stojí
+  // v návrhu. Současně to zaručuje, že se zeptá u každé hrany, kde se
+  // čeká dýl než dvě minuty: před procedurou i mezi přípravným
+  // znamením a poslední minutou (Filip, 7. 11. 2026: *„čtyři minuty do
+  // startu taky"*).
+  const hrana = vUkazce && doStartu !== null ? dalsiTroubeni(doStartu, delkaS) : null;
   const [nabidnuto, setNabidnuto] = useState<number | null>(null);
-
-  // Nabídne se jednou pro každou hranu, ne každou vteřinu: bublina, která
-  // vyskočí pořád, se přestane číst a zavírá se omylem.
-  const ptatSe = preskocitO !== null && nabidnuto !== preskocitO;
+  const ptatSe = preskocitO !== null && hrana !== null && nabidnuto !== hrana;
 
   // <b>Start se neklepe, start padne.</b> Rozhodčí spustil proceduru,
   // odpočet doběhl — tím rozjížďka odstartovala a appka to serveru řekne
@@ -320,8 +326,9 @@ export function Odpocet({
 
 
       {/* <b>Bublina je ladicí zkratka, ne vlastnost startu.</b> Ukáže se
-          jen v ukázce a jen když se čeká déle než dvě minuty — tedy před
-          procedurou a v přípravě, kde partitura mlčí. Po „ano" se posune
+          jen v ukázce, a u každého čekání, kde se dá ušetřit víc než
+          dvacet vteřin — před procedurou, mezi výzvou a přípravou,
+          v přípravě i v poslední minutě. Po „ano" se posune
           čas startu, ne odpočet: tím projde celá partitura stejně jako
           u vody, jen bez čekání. */}
       <Modal visible={ptatSe} transparent animationType="fade">
@@ -329,19 +336,20 @@ export function Odpocet({
           <View style={[s.bublina, { backgroundColor: t.papir, borderColor: t.linka }]}>
             <Text style={[s.bublinaNadpis, { color: t.text }]}>Přeskočit čekání?</Text>
             <Text style={[s.bublinaText, { color: t.tlumeny }]}>
-              Do dalšího znamení zbývá {trvani(preskocitO ?? 0)}. V ukázce se dá skočit
-              patnáct vteřin před něj, aby stihlo začít hlášení.
+              Do dalšího znamení zbývá{' '}
+              {trvani(doStartu !== null && hrana !== null ? doStartu - hrana : 0)}. V ukázce se
+              dá skočit patnáct vteřin před něj, aby stihlo začít hlášení.
             </Text>
             <View style={s.bublinaVolby}>
               <Pressable
-                onPress={() => setNabidnuto(preskocitO)}
+                onPress={() => setNabidnuto(hrana)}
                 style={({ pressed }) => [s.bublinaVolba, { opacity: pressed ? 0.6 : 1 }]}>
                 <Text style={[s.bublinaVolbaText, { color: t.tlumeny }]}>Ne, jeď normálně</Text>
               </Pressable>
               <Pressable
                 onPress={() => {
                   if (preskocitO !== null) posunStartUkazky(preskocitO);
-                  setNabidnuto(preskocitO);
+                  setNabidnuto(hrana);
                 }}
                 style={({ pressed }) => [s.bublinaVolba, { opacity: pressed ? 0.6 : 1 }]}>
                 <Text style={[s.bublinaVolbaText, { color: t.voda }]}>Ano, přeskoč</Text>

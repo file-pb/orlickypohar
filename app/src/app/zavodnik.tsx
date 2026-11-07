@@ -14,6 +14,9 @@ import { pismoNaVyplni } from '@/lib/kontrast';
  * *„odpočet u posádek není v prvních verzích potřeba, navíc je to zdroj
  * problémů."* Zpožděný odpočet na lodi lže; barva stavu se zpožděním
  * nelže, jen zestárne. Řídit se má znameními komise, ne telefonem.
+ * <b>Ale na obrazovce to nestojí.</b> 7. 11. 2026: *„tohle tam nedávej,
+ * co je závodníkům do toho."* Proč tu odpočet není, je naše věc; posádce
+ * se ukazuje stav, ne omluva za to, co chybí.
  *
  * <b>Není to na klepání.</b> Všechno tady zapsal někdo jiný — rozhodčí
  * nebo komise. Posádka to jen vidí; potvrzovat vykonání trestu si Miloš
@@ -102,9 +105,20 @@ export default function Zavodnik() {
           {vetaStavu(data)}
         </Text>
 
-        <Text style={{ color: naVyplni, fontSize: 13, lineHeight: 18, marginTop: 10, opacity: 0.85 }}>
-          Řiď se znameními závodní komise, ne telefonem. Odpočet tu schválně není.
-        </Text>
+        {/* <b>Kdy to nastane</b> (Filip, 7. 11. 2026: *„nerozumím téhle
+            obrazovce — kdy nastane"*). Hodina, ne odpočet: hodina se
+            zpožděním zestárne, odpočet lže. Po startu se ukazuje, kdy
+            se odstartovalo — posádka podle toho pozná, jestli vidí svou
+            rozjížďku, nebo tu předí. */}
+        {data.startV ? (
+          <Text style={{ color: naVyplni, fontSize: 20, fontWeight: '700', marginTop: 8 }}>
+            {data.stavRozjizdky === 'Probiha' ? 'Odstartováno v ' : 'Start v '}
+            {new Date(data.startV).toLocaleTimeString('cs-CZ', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </Text>
+        ) : null}
       </View>
 
       {/* Pokyn komise je tu, jen když nějaký je — a nezmizí sám. */}
@@ -179,10 +193,6 @@ export default function Zavodnik() {
           ) : null}
         </View>
       ) : null}
-
-      <Text style={{ color: t.tlumeny, fontSize: 13, lineHeight: 18, marginTop: 16 }}>
-        Víc tahle obrazovka nedělá. Všechno ostatní se nastavuje na břehu.
-      </Text>
     </ScrollView>
   );
 }

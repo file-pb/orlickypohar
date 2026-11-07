@@ -66,9 +66,15 @@ export function Kebab() {
         accessibilityRole="button"
         accessibilityLabel="Nabídka"
         style={({ pressed }) => [s.terc, pressed && { opacity: 0.5 }]}>
-        <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
-        <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
-        <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
+        {/* <b>Tečky potřebují podklad.</b> Nabídka visí nad vším, takže
+            pod ní může být cokoliv — na tmavě tyrkysovém pruhu stavu
+            z nich 7. 11. 2026 v simulátoru nebylo vidět nic. Podklad má
+            barvu papíru a 34 pt; terč zůstává 44. */}
+        <View style={[s.podklad, { backgroundColor: t.papir, borderColor: t.linka }]}>
+          <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
+          <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
+          <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
+        </View>
       </Pressable>
 
       <Modal
@@ -136,7 +142,16 @@ export function Kebab() {
 
 const s = StyleSheet.create({
   // Terč je 44 pt, tečky uvnitř mají dohromady 16.
-  terc: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', gap: 3 },
+  terc: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  podklad: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+  },
   tecka: { width: 4, height: 4, borderRadius: 2 },
 
   stin: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.45)' },

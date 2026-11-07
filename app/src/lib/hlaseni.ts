@@ -281,9 +281,16 @@ export function kolikPreskocit(
 }
 
 /**
- * Od kolika vteřin čekání se přeskočení nabízí. Dvě minuty (Filip).
+ * <b>Nejdelší čekání, které se ještě nenabídne přeskočit.</b>
+ *
+ * Původně dvě minuty, což vynechalo tři ze čtyř čekání v pětiminutové
+ * proceduře: výzva→příprava i minuta→start trvají shodou okolností
+ * přesně minutu. Filip, 7. 11. 2026: *„do ukázky doplň ty zkracující
+ * modaly a to i tam, kde je minuta."* Mez je proto 35 s — nad náskokem
+ * (15 s) s rezervou, takže se nabízí jen tam, kde se dá ušetřit aspoň
+ * dvacet vteřin, a nevyskakuje u zbytků, které stejně utečou.
  */
-export const NEJDELSI_CEKANI_S = 120;
+export const NEJDELSI_CEKANI_S = 35;
 
 /**
  * Kolik vteřin před troubením se po přeskočení stojí. Patnáct, aby

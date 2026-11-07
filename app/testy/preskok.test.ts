@@ -47,6 +47,25 @@ zkus('krátké čekání se nenabízí', () => {
   assert.ok((kolikPreskocit(61 + NEJDELSI_CEKANI_S, PROCEDURA_S) ?? 0) > 0);
 });
 
+zkus('nabízí se u každé hrany, poslední minutu včetně', () => {
+  // Filip, 7. 11. 2026: *„do ukázky doplň ty zkracující modaly a to
+  // i tam, kde je minuta."* V pětiminutové proceduře jsou čtyři čekání
+  // a tři z nich kratší než původní dvouminutová mez — ta je proto
+  // vynechávala. Projdeme všechna a každé musí něco nabídnout.
+  const hrany = [PROCEDURA_S, 240, 60, 0];
+  for (let i = 0; i < hrany.length - 1; i += 1) {
+    // Vteřinu po znamení: do dalšího zbývá celý úsek bez jedné.
+    const doStartu = hrany[i] - 1;
+    const o = kolikPreskocit(doStartu, PROCEDURA_S);
+    assert.ok(
+      o !== null && o > 0,
+      `u hrany ${hrany[i]} → ${hrany[i + 1]} se nenabídlo nic (doStartu ${doStartu})`,
+    );
+    // A po přeskoku zbývá přesně náskok, ať je úsek jakkoli dlouhý.
+    assert.equal(doStartu - o - hrany[i + 1], NASKOK_PRED_HRANOU_S);
+  }
+});
+
 zkus('po přeskoku zbývá právě náskok před hranou', () => {
   const doStartu = 600;
   const o = kolikPreskocit(doStartu, PROCEDURA_S);

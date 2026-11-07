@@ -130,8 +130,22 @@ function nachystejZavodnika(data: Record<string, unknown>): void {
     rozjizdka: r?.cislo ?? null,
     stavRozjizdky: r?.stav ?? null,
     startV: r?.startV ?? null,
-    stavLodi: null,
-    pokyny: [],
+    // <b>Ukázka musí obrazovku ukázat celou.</b> S prázdným `stavLodi`
+    // a `pokyny` zbyl na obrazovce pruh a jméno lodi, a nebylo z čeho
+    // poznat, k čemu je (Filip, 7. 11. 2026: *„nerozumím téhle
+    // obrazovce"*). Dva záznamy stačí: pokyn komise a to, co o lodi
+    // zapsal rozhodčí.
+    stavLodi: {
+      veta: 'Trest 720° — nevykonán',
+      kdy: new Date(Date.now() - 4 * 60_000).toISOString(),
+    },
+    pokyny: [
+      {
+        druh: 'Odlozeni',
+        veta: 'Start odložen, nový čas dostanete megafonem.',
+        vyhlasenoV: new Date(Date.now() - 9 * 60_000).toISOString(),
+      },
+    ],
   };
 }
 
