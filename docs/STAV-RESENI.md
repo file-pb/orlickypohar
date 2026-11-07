@@ -1,6 +1,6 @@
 # Stav řešení: co chce Miloš × co z toho stojí
 
-**Stav k 30. 10. 2026.** Tenhle dokument je **přehled pro Filipa**, aby
+**Stav k 7. 11. 2026.** Tenhle dokument je **přehled pro Filipa**, aby
 měl kontrolu nad stavem: každý Milošův požadavek na jednom řádku, u něj v jakém
 je stavu, **kde se to dá vidět** a co zbývá. Je seřazený **podle dne závodu**,
 protože tak o tom Miloš mluví — od vypsání po výsledky.
@@ -66,10 +66,10 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Odpočet s intervaly 5 / 4 / 1 / 0 na obrazovce | **Běží** | `app/src/components/odpocet.tsx` (29. 10.). Fáze se lámou podle ZPJ 26, ne po minutách; posledních deset vteřin panel tepe. Od 30. 10. k tomu **mluví a troubí** (`app/src/lib/dirigent.ts`) a umí si vyžádat Nerušit — na Androidu z appky, na iPhonu ne |
 | Dlaždice **Odklad startu** s novým časem | **Běží** | R37. Start se neklepe — zastavuje se odložením nebo odvoláním, a po odložení zůstane panel, ze kterého jde spustit znovu (29. 10.) |
 | Dlaždice **Zrušit rozjížďku / neplatný start** | **Běží** | `Odvolat` (ZPJ 29.2) — přidá minutu a jede znovu; v appce od 29. 10. vedle odložení |
-| Dlaždice **OCS** → loď → odčinila / neodčinila | **Zadané** | R35. Rozhodnuto 29. 10.: zapisuje se **OCS**, tedy to, co žádají pravidla; na Miloše se nečeká a změna na DSQ by byla jednořádková. Appka kód zatím jen **čte** (`app/src/lib/cil.ts`), zapisuje se na webu |
+| Dlaždice **OCS** → loď → odčinila / neodčinila | **Běží** | R35, 7. 11. 2026. Dlaždice po startu, druhým klepnutím se vybere loď ze zápisu. Jde to přes zápis výsledků, ne vlastní úkon: OCS je kód jedné lodi a dvě cesty k témuž by se rozešly |
 | Velitelský čas na mobilu hlavního startéra | **Běží** | `Velitel`, převzetí na žádost, doklad |
 | Start přežije výpadek | **Běží** | `app/src/lib/cekajici-start.ts`: odpočet nečeká na server, start se podrží a odešle, až je kam (29. 10.). **Jedna výjimka:** ohlásit rozjížďku bez signálu nejde, číslo dává server — popsáno v `APPKA-PORADI-PRACI.md` |
-| Posádka vidí stav startu | **Zadané** | R34. Rozhodnuto 29. 10.: **barva stavu, ne odpočet** — zpožděný odpočet na lodi je zdroj hádek, barva se zpožděním nelže. Miloš chtěl celou sekvenci, dostane informaci, ne otázku |
+| Posádka vidí stav startu | **V API** | R34. Veřejná cesta hotová 7. 11. 2026 (`GET /lod/dnes`, klíčem): regata, rozjížďka, jak loď eviduje rozhodčí a pokyny komise — jedním dotazem. **Obrazovka v appce ještě není** |
 | Posádka hlásí komisi (trest, neregulérnost) | **Zavřené** | R41. *„Alespoň v prvních verzích ne."* Miloš došel k témuž: *„abychom jim nekomplikovali život"* |
 
 ## Za jízdy
@@ -77,9 +77,9 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
 | Úprava tratě za jízdy | **Jen web** | Změna úseku a chybějící značka. Nově zadáno: pípání a focení bójí z appky v módu stavby, trať ale schvaluje rozhodčí |
-| Dlaždice **360°** za dotek bóje | **Zadané** | R36, ZPJ 31 |
-| Dlaždice **720°** za dotek s lodí soupeře | **Zadané** | R36, ZPJ 44 |
-| Trest dostupný **celou** rozjížďku, ne jako krok | **Zadané** | Z nahrávky 23: dlaždice se má *„průběžně posouvat"* |
+| Dlaždice **360°** za dotek bóje | **Běží** | R36, 7. 11. 2026. Vlastní tabulka `TrestyZaJizdy` — otáčka pořadí nemění, takže to není kód výsledku |
+| Dlaždice **720°** za dotek s lodí soupeře | **Běží** | R36, 7. 11. 2026. Totéž co 360°, jen dvě otáčky |
+| Trest dostupný **celou** rozjížďku, ne jako krok | **Běží** | 7. 11. 2026. Úkony jsou v panelu od chvíle, kdy je nastavený čas startu |
 | Vytlačená loď a rozjížďka přerušená pro bezpečnost | **Zadané** | R13. Pravidla mají čtyři různé cesty podle toho, kdo je původce, a aplikace nezná ani jednu; zrušit rozjížďku jde dnes jen oklikou přes eliminaci výsledků |
 | Startovní tresty bez vlajek | **Zavřené** | R15, R16. Na poháru se vlajky nevyvěšují, jede se megafonem, takže tresty podle pravidla 30 formálně neplatí. Nosné pro dlaždici OCS |
 | Polohy lodí na mapě | **Běží** | Tracking nasazený 24. 10.; **z telefonu to nikdo neověřil** |
@@ -103,7 +103,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Pomocník u cíle a slave startér | **Zadané** | K8. Rozhodnuto 28. 10.: **příznak u regaty**, který rozhodčí zaškrtne v klubovně u zápisu u lidí, kteří už pořadateli jsou. Otevře velení a zápis průjezdu, **ne** startovní listinu. Žádná nová role |
 | Zahájit další rozjížďku | **Běží** | V appce od 30. 10. jako *Ohlásit rozjížďku* — **dvě klepnutí**, ohlášení jen založí rozjížďku bez času, proceduru spouští až druhé. Bez signálu to nejde, číslo určuje server |
 | Kódy výsledků včetně DNE | **Běží** | Jedenáct kódů, čtyři z nich doplněné 28. 10.; DNE se nedá vyškrtnout (K1) |
-| Zrušení rozjížďky s povinným důvodem | **Zadané** | R17. Běží, ale rozhodnuto doplnit nejčastější důvody na výběr, aby to nemusel psát |
+| Zrušení rozjížďky s povinným důvodem | **Běží** | R17, v appce od 7. 11. 2026 se čtyřmi důvody podle **ZPJ 32.1** na výběr |
 
 ## Mimo den závodu
 
