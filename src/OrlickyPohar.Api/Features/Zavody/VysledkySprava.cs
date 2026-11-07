@@ -34,7 +34,14 @@ public record RozjizdkaSpravaRadek(
     // Proč se rozjížďka zrušila (28. 10. 2026, nálezy R13 a R17). Zrušená
     // mizí z poháru, takže se bude vysvětlovat — a ZPJ 32.1 rozlišuje
     // čtyři příčiny, které v zápisu vypadaly stejně.
-    string? DuvodZruseni = null);
+    string? DuvodZruseni = null,
+    /// <summary>
+    /// Kdy končí protestní časový limit (ZPJ 60.3(b), nález K2) —
+    /// <c>null</c>, dokud žádná loď nedokončila. Neuplynulý limit
+    /// <b>nic nezamyká</b>, viz <see cref="Protesty"/>.
+    /// </summary>
+    DateTimeOffset? ProtestniLimit = null,
+    bool LimitUplynul = false);
 
 public record PrehledVysledkuDto(
     string Serie,
@@ -143,22 +150,45 @@ public class VysledkySprava(AppDbContext db, TimeProvider cas)
                     .OrderBy(r => r.Cislo).Select(r => r.Cislo).ToList()))
             .ToListAsync(ct);
 
-    /// <summary>Rozjížďky zastávky i s počtem zapsaných výsledků.</summary>
-    public async Task<List<(Rozjizdka Rozjizdka, int PocetVysledku)>> RozjizdkyAsync(
-        int zavodId, CancellationToken ct)
+    /// <summary>
+    /// Rozjížďky zastávky i s počtem zapsaných výsledků a časem, kdy
+    /// dojela poslední loď.
+    /// <para>
+    /// <b>Poslední dojezd jde týmž dotazem jako počet</b>, ne druhým:
+    /// počítá se z téže skupiny a je to to, od čeho se odvozuje protestní
+    /// limit (ZPJ 60.3(b), nález K2).
+    /// </para>
+    /// </summary>
+    public async Task<List<(Rozjizdka Rozjizdka, int PocetVysledku, DateTimeOffset? PosledniDojezd)>>
+        RozjizdkyAsync(int zavodId, CancellationToken ct)
     {
         var rozjizdky = await db.Rozjizdky
             .Where(r => r.ZavodId == zavodId)
             .OrderBy(r => r.Cislo)
             .ToListAsync(ct);
 
-        var pocty = await db.Vysledky
+        var souhrny = await db.Vysledky
             .Where(v => v.Rozjizdka!.ZavodId == zavodId)
             .GroupBy(v => v.RozjizdkaId)
-            .Select(g => new { RozjizdkaId = g.Key, Pocet = g.Count() })
-            .ToDictionaryAsync(x => x.RozjizdkaId, x => x.Pocet, ct);
+            .Select(g => new
+            {
+                RozjizdkaId = g.Key,
+                Pocet = g.Count(),
+                // Nejpozdější zapsaný dojezd. Lodě s kódem (DNF, OCS) ho
+                // nemají, a to je správně: pravidlo mluví o tom, kdy
+                // poslední loď **dokončí**.
+                Posledni = g.Max(v => v.DojezdV),
+            })
+            .ToDictionaryAsync(x => x.RozjizdkaId, x => (x.Pocet, x.Posledni), ct);
 
-        return [.. rozjizdky.Select(r => (r, pocty.GetValueOrDefault(r.Id, 0)))];
+        return
+        [
+            .. rozjizdky.Select(r =>
+            {
+                var s = souhrny.GetValueOrDefault(r.Id, (0, null));
+                return (r, s.Item1, s.Item2);
+            }),
+        ];
     }
 
     public Task<Rozjizdka?> NajdiAsync(int zavodId, int cislo, CancellationToken ct) =>
