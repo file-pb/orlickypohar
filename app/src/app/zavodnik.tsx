@@ -39,6 +39,20 @@ import { spustZaznamNaPozadi, zastavZaznamNaPozadi } from '@/lib/tracker/uloha';
  * skončit s půlkou obrazovky.
  */
 
+/**
+ * Kterou vlajku k pokynu komise hledat na startovní lodi.
+ *
+ * Jen dva druhy, protože víc jich `PokynDto` nevydává. Písmena jsou táž,
+ * jakou nese obrazovka trati rozhodčímu — kdyby se rozešla, mluvil by
+ * každý o jiné vlajce. Neznámý druh raději nevypíše nic než špatné
+ * písmeno: na vodě se podle něj hledá očima.
+ */
+function vlajkaPokynu(druh: string): string | null {
+  if (druh === 'ZmenaUseku') return 'C';
+  if (druh === 'ChybejiciZnacka') return 'M';
+  return null;
+}
+
 /** Jak se stav rozjížďky řekne posádce — slovem, ne kódem. */
 function vetaStavu(d: ZavodnikDnes): string {
   if (d.stavRozjizdky === 'Probiha') return 'Jede se';
@@ -198,11 +212,22 @@ export default function Zavodnik() {
           <Text style={{ color: t.text, fontSize: 18, fontWeight: '700', marginTop: 4 }}>
             {p.veta}
           </Text>
+          {/* <b>Vlajka k pokynu</b> (návrh `Zavodnik-svetly.dc.html`:
+              *„Vyhlášeno 14:21 · vlajka S"*). Na vodě se úkon pozná
+              podle vlajky na startovní lodi a mluví se o něm písmenem —
+              posádka tedy potřebuje vědět, kterou má hledat.
+
+              Písmeno se nebere z API: `PokynDto` nese jen druh a větu.
+              Dvojice druh → vlajka je ale táž, jakou kreslí obrazovka
+              trati rozhodčímu (`trat.tsx`: *„vlajka C · ZPJ 33"*,
+              *„vlajka M · ZPJ 34"*), takže se dopočítá a nemůže se
+              s rozhodčím rozejít. */}
           <Text style={{ color: t.tlumeny, fontSize: 13, marginTop: 6 }}>
             Vyhlášeno {new Date(p.vyhlasenoV).toLocaleTimeString('cs-CZ', {
               hour: '2-digit',
               minute: '2-digit',
             })}
+            {vlajkaPokynu(p.druh) ? ` · vlajka ${vlajkaPokynu(p.druh)}` : ''}
           </Text>
         </View>
       ))}

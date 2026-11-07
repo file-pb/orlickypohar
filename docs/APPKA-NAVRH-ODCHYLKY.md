@@ -83,35 +83,61 @@ houkačku.
 Partitura k tomu v appce je (`lib/hlaseni.ts`, `dalsiTroubeni`), takže se
 to počítá z času startu bez jediného dotazu na server.
 
-### 5. Karta „Moje loď" na obrazovce posádky
+### 5. Role posádky v kartě „Moje loď"
 
-Návrh: jméno lodi, číslo plachty, třída jako štítek a **posádka po
-jménech s rolí** (*„Jana Burdová — kormidelník"*). Je to podle komentáře
-v artboardu to, co posádka kontroluje na břehu — že telefon visí u správné
-lodi.
+**Opraveno 7. 11. 2026, původní znění bylo širší, než je pravda.** Tenhle
+soupis nejdřív tvrdil, že karta *Moje loď* chybí celá. Nechybí: na
+obrazovce posádky stojí jméno lodi, číslo plachty i třída, přesně jak
+je kreslí návrh. Ověřeno čtením `app/src/app/zavodnik.tsx`, ne
+obrázkem — původní tvrzení vzniklo z pohledu na snímek obrazovky.
 
-Appka má jen řádek *„FAR STAR III · CZE 142 · Race"*. Jména posádky jsou
-o kus níž, ale v jiném významu: karta *Telefony na lodi* říká, kdo
-vysílá, ne kdo na lodi jede.
+Chybí z ní jediná věc, a ta je blokovaná daty: **role u jmen**
+(*„Jana Burdová — kormidelník"*). `ClenPosadkyDto` nese jméno, baterii,
+kdy se telefon ozval a jestli vysílá — roli ne.
 
-### 6. Pokyn komise nemá nadpis ani vlajku
+Samotný seznam jmen navíc appka vědomě nezdvojuje: stojí v kartě
+*Telefony na lodi*, kde je u každého i to, jestli vysílá, a kód u toho
+má napsáno proč — *„dva seznamy téhož by se lišily jen tím, co
+zamlčí"*. Dokud role v API nejsou, není co přidat.
 
-Návrh: *POKYN ZÁVODNÍ KOMISE* → tučný nadpis **„Trať zkrácena"** → text →
-*„Vyhlášeno 14:21 · vlajka S"*.
+### 6. Vlajka u pokynu komise
 
-Appka: *POKYN ZÁVODNÍ KOMISE* → text → *„Vyhlášeno 18:07"*. Chybí nadpis
-a vlajka. U zkrácení trati je vlajka S to, co posádka hledá očima na
-startovní lodi.
+**Opraveno 7. 11. 2026 tamtéž.** Soupis tvrdil, že pokynu chybí nadpis
+i vlajka. Nadpis nechybí — `p.veta` se kreslí jako tučný osmnáctibodový
+nadpis a POKYN ZÁVODNÍ KOMISE je nad ním. Vypadalo to jinak proto, že
+věta z ukázky je dlouhá a láme se do tří řádek.
+
+Chyběla **vlajka**, a ta se 7. 11. 2026 doplnila: `PokynDto` ji nenese,
+ale dvojice druh → písmeno je táž, jakou má obrazovka trati rozhodčího
+(vlajka C u změny úseku, ZPJ 33; vlajka M u chybějící značky, ZPJ 34),
+takže se dopočítá a nemůže se s rozhodčím rozejít.
+
+Co návrh kreslí nad rámec dat: **nadpis zvlášť od textu** (*„Trať
+zkrácena"* a pod tím věta). `PokynDto` má jedinou větu, a zkrácení trati
+(ZPJ 32) mezi jeho dvěma druhy vůbec není.
 
 ### 7. Předání velení z appky
 
 Hlavička všech artboardů rozhodčího má pilulku s baterií, která je
 **tlačítko**: `aria-label="Velíš ty, baterie 78 procent — předat velení"`.
 
-`HlavickaVelitele` v `index.tsx:676` kreslí baterii a hodiny, ale na nic
-se neklepe. Předání velení je dodnes jen na webu (`GET/POST /velitel`),
-jak zapisuje `docs/STAV-RESENI.md`. Tady je to doloženo podruhé, z druhé
-strany: návrh s tím počítá.
+`HlavickaVelitele` v `index.tsx` kreslí baterii a hodiny, ale na nic se
+neklepe. Předání velení je dodnes jen na webu, jak zapisuje
+`docs/STAV-RESENI.md`. Tady je to doloženo podruhé, z druhé strany:
+návrh s tím počítá.
+
+**Postavit to jde, a tady je co k tomu platí.** Endpointy existují
+(`GET` i `POST /sprava/serie/{serie}/vysledky/{zavod}/velitel`,
+`VysledkyEndpoints.cs`) a vrací, kdo velí, jestli jsem to já a jak se
+velení předávalo. Dvě věci k rozhodnutí předem:
+
+- **Vygenerovaný kontrakt odpověď nezná.** `schema.d.ts` cestu má, ale
+  `VeleniDto` v něm není — tvar by se musel buď napsat ručně, nebo
+  vygenerovat znovu.
+- **Návrh mluví o „předat velení", server umí opak.** Podle nálezu R19
+  si velení <b>vyžádá ten, kdo ho chce</b>, a server ho udělí; dát ho
+  někomu jinam nejde. Tlačítko tedy nemůže dělat to, co slibuje jeho
+  popisek v návrhu — a než se postaví, musí se rozhodnout, co říká.
 
 ---
 
@@ -168,15 +194,24 @@ Rozdílů je sedm a **žádný z nich není ozdoba** — každý je informace, k
 na vodě chybí, nebo slib, který appka nedrží. Vznikly tím, že se obrazovka
 stavěla z vlastní úvahy a návrh se otevřel až potom.
 
-Pořadí podle toho, co stojí nejmíň a dá nejvíc:
+Pořadí podle toho, co stojí nejmíň a dá nejvíc — a co z toho je
+hotové:
 
-1. **Poslední znamení posádce** (č. 4) — počítá se z času startu,
-   partitura v appce je, žádný nový dotaz.
-2. **Dlaždice odkladu přestane lhát** (č. 2, první polovina) — buď
-   plachta s časem, nebo jiný podtitul; lhát nesmí ani den.
-3. **Kolik lodí vysílá** (č. 1) — potřebuje součet za rozjížďku, tedy
+1. ~~**Poslední znamení posádce** (č. 4)~~ — **postaveno 7. 11. 2026.**
+2. ~~**Odklad se ptá na nový čas** (č. 2)~~ — **postaveno 7. 11. 2026**,
+   i se zkratkami +15 / +30 / +1 hod.
+3. ~~**Vlajka u pokynu** (č. 6)~~ — **postaveno 7. 11. 2026.**
+4. **Kolik lodí vysílá** (č. 1) — potřebuje součet za rozjížďku, tedy
    nejdřív dotaz, co k tomu API umí.
-4. **Konec rozjížďky a konec dne** (č. 3) — samostatná obrazovka a nový
-   úkon; největší kus.
-5. Zbytek (č. 5, 6, 7) jsou karty a pole, kde rozhoduje, jestli data
-   v API jsou.
+5. **Předání velení** (č. 7) — endpointy jsou, chybí tvar odpovědi
+   v kontraktu a rozhodnutí, co má tlačítko říkat.
+6. **Konec rozjížďky a konec dne** (č. 3) — samostatná obrazovka a nový
+   úkon; největší kus a jediný, který potřebuje nový endpoint.
+7. **Role posádky** (č. 5) — čeká na `ClenPosadkyDto`; v appce není co
+   udělat.
+
+**A jedna lekce o tomhle soupisu samotném.** Dvě ze sedmi položek byly
+nadsazené: karta *Moje loď* i nadpis pokynu stály v kódu celou dobu
+a do soupisu se dostaly z pohledu na snímek obrazovky, ne ze čtení
+`zavodnik.tsx`. Snímek ukáže, co je vidět; neukáže, proč to tak vypadá.
+Příště nejdřív kód.
