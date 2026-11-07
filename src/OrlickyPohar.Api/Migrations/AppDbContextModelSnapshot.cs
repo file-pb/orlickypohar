@@ -1708,6 +1708,39 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("TeplotyHladiny", (string)null);
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Pomocnik", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset?>("DoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("OdV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("OdskrtlId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UzivatelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ZaskrtlId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ZavodId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ZavodId", "UzivatelId", "DoV");
+
+                    b.ToTable("Pomocnici");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Rozjizdka", b =>
                 {
                     b.Property<int>("Id")
@@ -2812,6 +2845,17 @@ namespace OrlickyPohar.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Trasa");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Pomocnik", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany()
+                        .HasForeignKey("ZavodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Zavod");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Rozjizdka", b =>

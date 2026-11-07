@@ -70,6 +70,7 @@ try
     builder.Services.AddScoped<CilZTrasovaniSprava>();
     builder.Services.AddScoped<ZapisSprava>();
     builder.Services.AddScoped<VeleniSprava>();
+    builder.Services.AddScoped<PomocniciSprava>();
     builder.Services.AddScoped<PrihlaskySprava>();
     builder.Services.AddScoped<PoradateleSprava>();
     builder.Services.AddScoped<FotkySprava>();
@@ -249,6 +250,7 @@ try
         app.MapTrestyZaJizdy();
         app.MapZavodnik();
         app.MapPrihlasky();
+        app.MapPomocniky();
         app.MapSmernice();
         app.MapOponenturu();
         app.MapZpravy();
