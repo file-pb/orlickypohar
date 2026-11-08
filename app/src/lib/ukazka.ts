@@ -190,10 +190,16 @@ function nachystejZavodnika(data: Record<string, unknown>): void {
       veta: 'Trest 720° — nevykonán',
       kdy: new Date(Date.now() - 4 * 60_000).toISOString(),
     },
+    // <b>Pokyn musí být ten, který server opravdu vydává.</b> Do 8. 11.
+    // 2026 tu stál druh `Odlozeni` s větou *„nový čas dostanete
+    // megafonem"* — obojí vymyšlené: `PokynyAsync` zná jen změnu úseku
+    // a chybějící značku, a věty k nim píše sama. Ukázka tím posádce
+    // slibovala hlášení, o kterém appka nic neví, a `vlajkaPokynu` na
+    // ten druh neměla písmeno, takže pokyn visel bez vlajky.
     pokyny: [
       {
-        druh: 'Odlozeni',
-        veta: 'Start odložen, nový čas dostanete megafonem.',
+        druh: 'ZmenaUseku',
+        veta: 'Změna následujícího úseku dráhy',
         vyhlasenoV: new Date(Date.now() - 9 * 60_000).toISOString(),
       },
     ],

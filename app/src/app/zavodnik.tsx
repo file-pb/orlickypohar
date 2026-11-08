@@ -429,9 +429,28 @@ function StavTelefonu({
 
   return (
     <Karta>
-      {/* <b>„Komise tě vidí"</b> podle návrhu (`Zavodnik.dc.html`). Tohle
-          je jediná věta na obrazovce, kterou neříká appka o sobě, nýbrž
-          server o ní — a je to ta, na kterou se posádka ptá. */}
+      {/* <b>Technický stav, ne zpráva o dohledu</b> (Filip, 8. 11. 2026:
+          *„jakmile je někde napsáno, že někdo někoho sleduje, první, co
+          člověka napadne, je narušení soukromí, a to není smyslem…
+          spíš informace pro závodníka o technických podmínkách"*).
+
+          Návrh (`Zavodnik.dc.html`) tu měl *„Komise tě vidí"*. Věcně to
+          sedělo — je to jediná věta na obrazovce, kterou neříká appka
+          o sobě, nýbrž server o ní — ale říkala to z pohledu toho, kdo
+          se dívá. Otázka posádky je jiná a technická: <i>funguje mi
+          všechno, nebo mám něco řešit?</i> Nadpis proto odpovídá na ni
+          a podrobnost pod ním říká, co přesně telefon dělá.
+
+          <b>Nadpis musí sedět s tím, co stojí pod ním.</b> Napoprvé
+          nesl jen to, co ví server, a nad větou *„telefon o dnešní
+          regatě neví"* četl *„všechno funguje"* — doslova protimluv
+          (simulátor, 8. 11. 2026). Zelená je proto až tehdy, když sedí
+          obě strany: telefon zaznamenává nebo se hlásí <b>a</b> server
+          má jeho polohu čerstvou. Rozejdou-li se, nadpis řekne tu
+          stranu, která drhne.
+
+          <b>Vypnuté vysílání není porucha</b> — posádka si ho vypnula
+          sama, takže má tlumenou tečku, ne výstražnou. */}
       {/* <b>Jeden puntík, ne dva.</b> Napoprvé tu stály dvě barevné řádky
           nad sebou — *„Komise tě vidí"* zeleně a hned pod tím *„Nehlásí
           se"* červeně — a na simulátoru se to 7. 11. 2026 četlo jako
@@ -444,12 +463,29 @@ function StavTelefonu({
             width: 10,
             height: 10,
             borderRadius: 999,
-            backgroundColor: ja ? (ja.vysila ? t.stavVypsany : t.vystraha) : barva,
+            // Tečka jde s nadpisem: zelená jen tehdy, když sedí obě
+            // strany. Vypnuté vysílání má tlumenou, ne výstražnou —
+            // je to volba posádky, ne porucha.
+            backgroundColor: !ja
+              ? barva
+              : nahrava || hlasi
+                ? ja.vysila
+                  ? t.stavVypsany
+                  : t.vystraha
+                : barva,
             marginRight: 9,
           }}
         />
         <Text style={{ color: t.text, fontWeight: '700', flex: 1 }}>
-          {ja ? (ja.vysila ? 'Komise tě vidí' : 'Komise tě nevidí') : veta}
+          {!ja
+            ? veta
+            : nahrava || hlasi
+              ? ja.vysila
+                ? 'Všechno funguje'
+                : 'Poloha se neodesílá'
+              : pozastaveno
+                ? 'Vysílání je vypnuté'
+                : 'Záznam není zapnutý'}
         </Text>
         {ja ? (
           <Text style={{ color: t.tlumeny, fontSize: 12 }}>
