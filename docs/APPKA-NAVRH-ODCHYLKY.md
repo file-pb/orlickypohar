@@ -198,6 +198,10 @@ Ověřeno čtením kódu, u označených i na simulátoru 7. 11. 2026.
   patička s trestem. *(simulátor)*
 - **Systémový proužek** nad vším, na každé obrazovce, s počtem čekajících
   bodů.
+- **Hlavička velitele jako v návrhu**: jedna úzká řádka se jménem regaty,
+  odznakem stavu, velením a hodinami — velký nadpis ani datum tam od
+  8. 11. 2026 nejsou, stejně jako v žádném artboardu rozhodčího. Pro
+  čtenáře regaty nadpis zůstává. *(simulátor)*
 
 ---
 
