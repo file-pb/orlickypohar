@@ -9,6 +9,11 @@
  * nese <b>bílé</b> písmo na panelu poslední minuty a zároveň se sám čte na
  * papíře. Měřeno 29. 10. 2026. Proto má vlastní jméno — jedno jméno pro dvě
  * role byl ten rozchod, kvůli kterému kontrola 29. 10. odpoledne spadla.
+ *
+ * <b>Barvy tříd</b> (`tridaRace` a spol.) web dosud držel jen ve znacích
+ * tříd. Cílová obrazovka appky jimi od 8. 11. 2026 značí kategorii lodi
+ * barevným okrajem dlaždice, takže z nich musely být tokeny — a znaky na
+ * webu si je teď berou odtamtud, aby barva třídy zůstala jedna.
  */
 
 export const Colors = {
@@ -28,6 +33,9 @@ export const Colors = {
     vyzvaZnameni: '#ffffff',
     pripravaZnameni: '#f2c14e',
     minutaZnameni: '#ffffff',
+    tridaRace: '#c41e3a',
+    tridaNad7m: '#12344e',
+    tridaPod7m: '#708090',
   },
   dark: {
     pozadi: '#14171a',
@@ -45,6 +53,9 @@ export const Colors = {
     vyzvaZnameni: '#ffffff',
     pripravaZnameni: '#f2c14e',
     minutaZnameni: '#ffffff',
+    tridaRace: '#e25a6d',
+    tridaNad7m: '#7fa7c9',
+    tridaPod7m: '#a3b1bf',
   },
 } as const;
 

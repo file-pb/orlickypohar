@@ -25,6 +25,7 @@ import {
   type ZapisLod,
   type ZapisRozjizdky,
 } from '@/lib/api';
+import { barvaTridy } from '@/lib/tridy';
 import {
   klepni,
   nactiRozepsany,
@@ -304,8 +305,20 @@ function Zapisovani({
 
   return (
     <>
-      <Nadpis>{zapis.cislo}. rozjížďka — cíl</Nadpis>
-      <Jede startV={zapis.startV ?? null} t={t} />
+      {/* <b>Hlavička jedna řádka, ne nadpis přes půl obrazovky</b>
+          (Filip, 8. 11. 2026: *„ta hlavička cílové obrazovky je také
+          zbytečně veliká"*) — a návrh (`Cil.dc.html`) to tak kreslí:
+          nahoře úzký pruh, hned pod ním to, na co se klepe.
+
+          Co obrazovka říká, zůstalo celé: které rozjížďky je to cíl,
+          jak dlouho se jede, kolik lodí dojelo a jestli je zapsáno. Jen
+          to drží na dvou řádcích místo na pěti. */}
+      <View style={s.hlavicka}>
+        <Text style={[s.hlavickaNadpis, { color: t.text }]} numberOfLines={1}>
+          {zapis.cislo}. rozjížďka — cíl
+        </Text>
+        <Jede startV={zapis.startV ?? null} t={t} />
+      </View>
 
       <View style={s.radekStavu}>
         <Text style={[s.pocet, { color: t.tlumeny }]}>
@@ -334,27 +347,57 @@ function Zapisovani({
       {zbyvajici.length === 0 ? (
         <Prazdno text="Všechny lodě mají dojezd. Rozjížďku ukonči, až budeš chtít." />
       ) : (
+        /* <b>Kategorie barevným okrajem, ne řádkou textu</b> (Filip,
+           8. 11. 2026). Jméno třídy zabíralo na každé dlaždici celou
+           řádku a nikdo ho nečetl — rozhodčí potřebuje poznat, že loď
+           vedle patří jinam, a na to stačí pruh v barvě třídy
+           (`lib/tridy.ts`, tytéž odstíny jako znaky tříd na webu).
+           Ušetřené místo šlo do třetího sloupce, jak ho kreslí návrh
+           (`Cil.dc.html`), takže se na obrazovku vejde půldruhá řada
+           lodí navíc.
+
+           Číslo plachty zůstává: na vodě se loď pozná podle něj dřív
+           než podle jména. Třída, kterou paleta nezná, okraj nedostane
+           — vymýšlet jí odstín by znamenalo tvářit se, že ho má. */
         <View style={s.dlazdice}>
-          {zbyvajici.map((l) => (
-            <Pressable
-              key={l.prihlaskaId}
-              onPress={() => zmen(klepni(mista, l.prihlaskaId, Date.now()))}
-              style={({ pressed }) => [
-                s.lod,
-                { backgroundColor: t.procedura, opacity: pressed ? 0.6 : 1 },
-              ]}>
-              <Text
-                style={[s.lodJmeno, { color: pismoNaVyplni(t, t.procedura) }]}
-                numberOfLines={1}>
-                {l.lod}
-              </Text>
-              <Text
-                style={[s.lodPodtitul, s.tlumeneNaVyplni, { color: pismoNaVyplni(t, t.procedura) }]}
-                numberOfLines={1}>
-                {[l.cisloPlachty, l.kategorie].filter(Boolean).join(' · ')}
-              </Text>
-            </Pressable>
-          ))}
+          {zbyvajici.map((l) => {
+            const barva = barvaTridy(l.kategorie, t);
+            return (
+              <Pressable
+                key={l.prihlaskaId}
+                onPress={() => zmen(klepni(mista, l.prihlaskaId, Date.now()))}
+                accessibilityRole="button"
+                accessibilityLabel={[l.lod, l.cisloPlachty, l.kategorie]
+                  .filter(Boolean)
+                  .join(', ')}
+                style={({ pressed }) => [
+                  s.lod,
+                  {
+                    backgroundColor: t.procedura,
+                    opacity: pressed ? 0.6 : 1,
+                    borderLeftWidth: barva ? 6 : 0,
+                    borderLeftColor: barva ?? 'transparent',
+                  },
+                ]}>
+                <Text
+                  style={[s.lodJmeno, { color: pismoNaVyplni(t, t.procedura) }]}
+                  numberOfLines={2}>
+                  {l.lod}
+                </Text>
+                {l.cisloPlachty ? (
+                  <Text
+                    style={[
+                      s.lodPodtitul,
+                      s.tlumeneNaVyplni,
+                      { color: pismoNaVyplni(t, t.procedura) },
+                    ]}
+                    numberOfLines={1}>
+                    {l.cisloPlachty}
+                  </Text>
+                ) : null}
+              </Pressable>
+            );
+          })}
         </View>
       )}
 
@@ -537,9 +580,7 @@ function Jede({ startV, t }: { startV: string | null; t: Barvy }) {
   const od = odStartu(startV, ted);
   if (od === null) return null;
   return (
-    <Text style={[s.jede, { color: t.tlumeny }]}>
-      Jede se {trvani(od > 0 ? od : 0)}
-    </Text>
+    <Text style={[s.jede, { color: t.tlumeny }]}>jede se {trvani(od > 0 ? od : 0)}</Text>
   );
 }
 
@@ -794,7 +835,15 @@ function Sipka({
 }
 
 const s = StyleSheet.create({
-  jede: { fontSize: 15, marginTop: -8, marginBottom: 12, fontVariant: ['tabular-nums'] },
+  hlavicka: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 10,
+  },
+  hlavickaNadpis: { fontSize: 17, fontWeight: '800', flexShrink: 1 },
+  jede: { fontSize: 15, fontVariant: ['tabular-nums'] },
   radekStavu: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   pocet: { fontSize: 14, fontWeight: '600' },
   stav: { fontSize: 13 },
@@ -810,9 +859,12 @@ const s = StyleSheet.create({
   // Dlaždice jsou velké schválně: klepe se za jízdy, jednou rukou a bez
   // dívání (nahrávka 21 — v druhé ruce je houkačka).
   dlazdice: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  lod: { flexGrow: 1, flexBasis: '46%', minHeight: 78, borderRadius: 14, padding: 14, justifyContent: 'center' },
-  lodJmeno: { fontSize: 19, fontWeight: '800' },
-  lodPodtitul: { fontSize: 13, marginTop: 2 },
+  // Tři sloupce místo dvou — ušetřilo je zrušení řádky s kategorií.
+  // Výška 64 je pořád o polovinu nad mezí terče (44 pt) a na houpající
+  // se lodi se do ní trefí palec.
+  lod: { flexGrow: 1, flexBasis: '30%', minHeight: 64, borderRadius: 14, padding: 10, justifyContent: 'center' },
+  lodJmeno: { fontSize: 16, fontWeight: '800' },
+  lodPodtitul: { fontSize: 12, marginTop: 2 },
   tlumeneNaVyplni: { opacity: 0.85 },
 
   navrh: {

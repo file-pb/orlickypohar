@@ -33,6 +33,16 @@
   --vyzva-znameni: #ffffff;
   --priprava-znameni: #f2c14e;
   --minuta-znameni: #ffffff;
+
+  /* <b>Barvy lodních tříd.</b> Dosud žily jen ve znacích tříd
+     (`.znak-race` a spol.) a appka je neměla vůbec. Od 8. 11. 2026 je
+     potřebuje cílová obrazovka: kategorie se na dlaždici lodi značí
+     barevným okrajem, ne řádkou textu, protože u cíle je místo na
+     obrazovce dražší než jméno kategorie (Filip, 8. 11. 2026). Proto
+     mají vlastní tokeny — barva třídy je jedna pro oboje dveře. */
+  --trida-race: #c41e3a;
+  --trida-nad7m: #12344e;
+  --trida-pod7m: #708090;
   /* Proužek šrafy u nezveřejněné karty. <b>Vlastní token, ne `--zvyrazneni`</b>:
      s ním byla šrafa v tmavém režimu prakticky neviditelná (`#232830` na
      `#1b1f23`), takže kanál, který měl nést publikaci, nenesl nic. Obě
@@ -143,6 +153,11 @@
     --vyzva-znameni: #ffffff;
     --priprava-znameni: #f2c14e;
     --minuta-znameni: #ffffff;
+    /* Třídy na tmavém podkladu: tmavě modrá by zmizela. Tytéž odstíny,
+       jaké dosud nesly znaky tříd. */
+    --trida-race: #e25a6d;
+    --trida-nad7m: #7fa7c9;
+    --trida-pod7m: #a3b1bf;
     --srafa: #343b43;
     /* Světlejší odrudy týchž barev — syté by na tmavém podkladu zhasly.
        Zároveň o stupeň tlumenější než napoprvé (Filip, 29. 10. 2026:
@@ -182,6 +197,10 @@
   --vyzva-znameni: #ffffff;
   --priprava-znameni: #f2c14e;
   --minuta-znameni: #ffffff;
+  /* Třídy — viz tmavý blok výš. */
+  --trida-race: #e25a6d;
+  --trida-nad7m: #7fa7c9;
+  --trida-pod7m: #a3b1bf;
   --srafa: #343b43;
   --ukon-vysledky: #5e7f99;
   --ukon-prihlasky: #6e759c;
@@ -1896,9 +1915,9 @@ th.vlevo, td.vlevo { text-align: left; }
   --znak: #12344e; --znak-oblouk: #12344e;
   height: 2.4em; width: auto; flex: none; vertical-align: middle;
 }
-.znak-race { --znak: #c41e3a; }
-.znak-nad7m { --znak: #12344e; }
-.znak-pod7m { --znak: #708090; }
+.znak-race { --znak: var(--trida-race); }
+.znak-nad7m { --znak: var(--trida-nad7m); }
+.znak-pod7m { --znak: var(--trida-pod7m); }
 .znak-tridy .plachta { fill: var(--znak); }
 .znak-tridy .oblouk { fill: var(--znak-oblouk); }
 .znak-tridy text {
@@ -1911,16 +1930,16 @@ th.vlevo, td.vlevo { text-align: left; }
    splynul. Ve dvou podobách, viz začátek souboru. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-rezim="svetly"]) .znak-tridy { --znak-oblouk: #9fb4c6; }
-  :root:not([data-rezim="svetly"]) .znak-race { --znak: #e25a6d; }
-  :root:not([data-rezim="svetly"]) .znak-nad7m { --znak: #7fa7c9; }
-  :root:not([data-rezim="svetly"]) .znak-pod7m { --znak: #a3b1bf; }
+  :root:not([data-rezim="svetly"]) .znak-race { --znak: var(--trida-race); }
+  :root:not([data-rezim="svetly"]) .znak-nad7m { --znak: var(--trida-nad7m); }
+  :root:not([data-rezim="svetly"]) .znak-pod7m { --znak: var(--trida-pod7m); }
   :root:not([data-rezim="svetly"]) .znak-tridy .vodoznak { fill-opacity: 0.22; }
   :root:not([data-rezim="svetly"]) .znak-tridy .vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 }
 :root[data-rezim="tmavy"] .znak-tridy { --znak-oblouk: #9fb4c6; }
-:root[data-rezim="tmavy"] .znak-race { --znak: #e25a6d; }
-:root[data-rezim="tmavy"] .znak-nad7m { --znak: #7fa7c9; }
-:root[data-rezim="tmavy"] .znak-pod7m { --znak: #a3b1bf; }
+:root[data-rezim="tmavy"] .znak-race { --znak: var(--trida-race); }
+:root[data-rezim="tmavy"] .znak-nad7m { --znak: var(--trida-nad7m); }
+:root[data-rezim="tmavy"] .znak-pod7m { --znak: var(--trida-pod7m); }
 :root[data-rezim="tmavy"] .znak-tridy .vodoznak { fill-opacity: 0.22; }
 :root[data-rezim="tmavy"] .znak-tridy .vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 /* V tabu a v boku je znak hlavní poznávací značka třídy, proto velký. */
