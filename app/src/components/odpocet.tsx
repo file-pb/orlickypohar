@@ -551,11 +551,22 @@ function Dlazdice({
   );
 }
 
-/** Čím je ten úkon na dlaždici — druhý řádek, jako v návrhu. */
+/**
+ * Čím je ten úkon na dlaždici — druhý řádek, jako v návrhu.
+ *
+ * <b>„Přidá minutu" tu stálo a bylo to zavádějící</b> (Filip, 8. 11.
+ * 2026: *„ta minuta se mi nějak nezdá"*). Minuta je odstup k
+ * <b>vyzývacímu znamení</b> nového startu, ne k startu: ZPJ 29.2 říká,
+ * že vyzývací znamení padne minutu po spuštění prvního opakovače, a od
+ * něj teprve běží celá procedura. Nový start je tedy o minutu a celou
+ * proceduru dál — se zdejšími pěti minutami o šest minut, ne o jednu.
+ * Server to tak počítá (`Procedura.NovyStart`); mýlila se jen tahle
+ * řádka.
+ */
 function popisUkonu(ukon: UkonStartu): string {
   return ukon === 'Odlozit'
     ? 'vlajka AP · zeptá se na nový čas'
-    : 'ZPJ 29.2 · přidá minutu a jede znovu';
+    : 'ZPJ 29.2 · minuta a pak celá procedura';
 }
 
 /**

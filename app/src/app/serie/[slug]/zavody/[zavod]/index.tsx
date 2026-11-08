@@ -361,7 +361,16 @@ export default function Zastavka() {
         await ulozTrest(slug, zavod, vyber.cislo, prihlaskaId, vyber.ukon);
       }
       setVyber(null);
+
+      // <b>Pruh trestů se musí načíst taky</b> (Filip, 8. 11. 2026:
+      // *„vyberu trest a pak loď, a ono to vypadá, že se nepřidá mezi
+      // lodě s tresty"*). `obnov` je obnova **závodu**; tresty na trati
+      // mají vlastní cestu (`/zastavky/…/tresty`) a vlastní načítání,
+      // takže po zápisu zůstávaly ležet na starém seznamu až do dalšího
+      // otevření obrazovky. Zapsaný trest, který není vidět, se na vodě
+      // zapíše podruhé.
       obnov();
+      obnovTresty();
     } catch (e) {
       setChybaStartu(
         e instanceof OdmitnutoServerem
@@ -557,18 +566,68 @@ export default function Zastavka() {
               : `Zapíše se ${vyber?.ukon === 'Otacka360' ? 'jedna otáčka' : 'dvě otáčky'}. Pořadí to nemění.`}
           </Text>
 
+          {/* <b>Mřížka jmen, ne seznam s kategoriemi</b> (Filip, 8. 11.
+              2026: *„uprav ten seznam lodí, je to bez designu a má to
+              zbytečně kategorii"*) — a návrh (`VyberLodi.dc.html`) to
+              tak kreslí: tři sloupce dlaždic po šedesáti bodech, na
+              každé jen jméno lodi.
+
+              Kategorie je pryč, protože na tuhle otázku neodpovídá:
+              rozhodčí hledá loď, kterou právě viděl, a ta je jedna —
+              do které třídy patří, nerozhoduje a jen prodlužuje řádku.
+              Co zůstává, je <b>kód, který loď už má</b>: ten varuje, že
+              se zapisuje k lodi, u které něco stojí. */}
           {vyberLode === null ? (
             <Nacitani />
           ) : (
-            <ScrollView>
+            <ScrollView
+              contentContainerStyle={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                gap: 8,
+                paddingHorizontal: 16,
+                paddingTop: 4,
+                paddingBottom: 8,
+              }}>
               {vyberLode.map((l) => (
-                <Radek
+                <Pressable
                   key={l.prihlaskaId}
-                  text={l.lod}
-                  popis={l.kategorie ?? undefined}
-                  hodnota={vyberPosila === l.prihlaskaId ? 'zapisuje se' : (l.kod ?? undefined)}
                   onPress={() => void oznacLod(l.prihlaskaId)}
-                />
+                  accessibilityRole="button"
+                  accessibilityLabel={l.kod ? `${l.lod} — zapsáno ${l.kod}` : l.lod}
+                  style={({ pressed }) => ({
+                    // Tři sloupce: dvě mezery po osmi bodech ukrojené
+                    // rovným dílem. Výška je z návrhu a je nad mezí
+                    // terče (44 pt) i s delším jménem na dvě řádky.
+                    width: '31.8%',
+                    minHeight: 60,
+                    paddingVertical: 8,
+                    paddingHorizontal: 6,
+                    borderWidth: 1,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: t.papir,
+                    borderColor: t.linka,
+                    opacity: pressed || vyberPosila === l.prihlaskaId ? 0.6 : 1,
+                  })}>
+                  <Text
+                    style={{
+                      color: t.text,
+                      fontSize: 15,
+                      fontWeight: '700',
+                      letterSpacing: 0.2,
+                      textAlign: 'center',
+                    }}
+                    numberOfLines={2}>
+                    {l.lod}
+                  </Text>
+                  {vyberPosila === l.prihlaskaId || l.kod ? (
+                    <Text style={{ color: t.tlumeny, fontSize: 11, marginTop: 2 }} numberOfLines={1}>
+                      {vyberPosila === l.prihlaskaId ? 'zapisuje se' : l.kod}
+                    </Text>
+                  ) : null}
+                </Pressable>
               ))}
             </ScrollView>
           )}
