@@ -176,6 +176,27 @@ a jít od toho pryč.
   28. 10. 2026, a nikdo o tom nevěděl. Ověřeno 29. 10. 2026: produkce
   rozdává `kqe5AoMTEs….apk`, tedy build 5.
 
+- **Lokálně postavený iPhone aktualizace nedostane, dokud nedostane
+  kanál** (8. 11. 2026, stálo to večer). `prebuild` zapíše do
+  `ios/…/Supporting/Expo.plist` adresu i zapnutí aktualizací, ale
+  **`EXUpdatesRequestHeaders` s `expo-channel-name` ne** — ten tam
+  u EAS buildů doplňuje EAS z `eas.json`. Telefon se pak ptá
+  `u.expo.dev` bez kanálu a dostává **HTTP 400** *„channel-name:
+  Required"*. Navenek to vypadá, že nic nového není: appka na chybu
+  neupozorní a sekce *Verze appky* hlásí, že je aktuální.
+  <br>Ověřeno týmž dotazem jako u otisků, jen bez hlavičky
+  `expo-channel-name`. Zapisuje ho teď `app/scripts/iphone.sh`, a to
+  **až do Expo.plist, ne do `app.json`**: přes `app.json` by se změnil
+  nativní otisk a od publikovaných aktualizací by se odřízlo i vydané
+  APK, které kanál od EAS má správně. `ios/` je gitignorovaný, takže se
+  ten zápis po každém `prebuild --clean` musí opakovat — proto skript.
+
+- **Poučení pro příště: že aktualizace leží v kanálu, neznamená, že si
+  pro ni telefon umí dojít.** Dotaz na `u.expo.dev` s ručně složenými
+  hlavičkami ověřuje jen půlku cesty — to, co je na serveru. Druhá
+  půlka je, s jakými hlavičkami se ptá ten konkrétní build, a ta se
+  čte z jeho `Expo.plist`, ne z kanálu.
+
 - **Build 10 sám o sobě odvolání na dva kroky nemá** (8. 11. 2026). APK
   se stavělo ráno, kdežto oprava podle ZPJ 29.2 šla do mainu večer —
   a protože je to čistě JavaScript, otisk neposunula a jde po síti. Proto
