@@ -73,12 +73,22 @@ const KLAKSON = {
  *       začne hrát hned.</li>
  *   <li><b>Délka slova.</b> Každá číslovka byla samostatná jednoslovná
  *       věta a syntetizátor na konci věty protahuje — u *„tři"*
- *       nejvíc. Nahrávka má délku pevnou.</li>
+ *       nejvíc. Nahrávka má aspoň délku pevnou, tedy stejnou pokaždé.</li>
  * </ul>
  *
  * <b>Navíc zazní i bez českého hlasu v telefonu.</b> Appka dosud uměla
  * jen varovat, že hlášení bude k nepoznání; odpočet, na kterém u vody
  * záleží nejvíc, teď na tom hlasu nestojí.
+ *
+ * <b>Protažení samo tu zůstává</b> a ví se proč: *phrase-final
+ * lengthening*. Dotáhnout slova na stejnou délku zkusil 8. 11. 2026
+ * druhý pokus a byl horší — odpočet se začal rozjíždět, protože každé
+ * slovo mluvilo jiným tempem. Pořádně to řeší jedině číslovka
+ * vystřižená zprostřed nosné fráze, na kterou `say` nemá hranice slov,
+ * nebo hlas živého člověka; Filip to 8. 11. 2026 odložil (*„necháme
+ * syntézu a třeba časem pošlu"*) s tím, že podstatné je, aby číslovka
+ * padla přesně na vteřinu. To drží tenhle soubor, ne nahrávka. Celá
+ * rozprava je v hlavičce `tools/zvuky-cislovek.py`.
  *
  * Vyrábí je `tools/zvuky-cislovek.py` týmž syntetizátorem, jaký by
  * použil iOS, takže se od zbytku hlášení nepoznají. `assets/zvuky`

@@ -6,13 +6,45 @@
 Mezi naplánovaným okamžikem a začátkem zvuku stálo probuzení zvukové
 relace a režie syntetizátoru, takže odpočet nešel jako metronom (Filip,
 7. 11. 2026: *„odpočet je nepravidelný, někdy není sekunda jako
-sekunda"*). Navíc každá číslovka byla samostatná jednoslovná věta
-a syntetizátor na konci věty prodlužuje — nejvíc to bylo slyšet na
-*„tři"* (*„tři dost často hlas divně prodlouží"*).
+sekunda"*). Nahrávka začne hrát hned (`seekTo(0)` + `play`) a má pevnou
+délku.
 
-Nahrávka obojí řeší: `seekTo(0)` + `play` začne hrát hned a délka slova
-je pevná. Navíc zazní i na telefonu, který český hlas nemá — appka
-dosud uměla jen varovat, že hlášení bude k nepoznání.
+<b>Proč mají všechna slova totéž tempo, i když nejsou stejně dlouhá.</b> Syntetizátor protahuje konec
+fráze a každá číslovka je fráze sama pro sebe — ať stojí samostatně,
+za čárkou, nebo za vloženým tichem `[[slnc]]`. Změřeno 8. 11. 2026:
+„tři" vyšlo ve všech třech případech na 444–496 ms, zatímco táž věta
+bez jakýchkoliv oddělovačů měla 1269 ms na pět slov, tedy ~254 ms na
+slovo. Interpunkcí se to tedy obejít nedá a rozstříhat souvislou větu
+taky ne: nejsou v ní mezery, na kterých by se dalo řezat (zkoušeno pět
+prahů × čtyři délky mezery, ani jedna kombinace nedala pět kusů).
+
+Co protažení umenšuje, je <b>tempo</b>: při 190 slovech za minutu má
+„tři" 496 ms, při 310 jen 351. Tím se odpočet zkrátí, ale vyrovnat
+délky to nedokáže — „dva" je proti „pět" o polovinu delší, protože tak
+ta slova prostě znějí.
+
+<b>Dotahovat je na stejnou délku se zkusilo a bylo to horší.</b> Každé
+slovo si tempo hledalo samo, aby vyšlo na 250 ms; délky se srovnaly na
+rozptyl 12 ms, ale „dva" pak mluvilo 480 slov za minutu proti 319
+u „pět" a odpočet se rozjížděl (Filip, 8. 11. 2026: *„jen se to
+počítání i zkracuje a zrychluje"*). Je to přesně to, co dělá
+`mstts:audioduration` v Azure — a jeho dokumentace u toho varuje, že
+velká změna tempa zhorší kvalitu. Tudy cesta nevede.
+
+<b>Co by ji vyřešilo, a proč to tu není.</b> Výrobci hlasových hlášek
+nahrávají číslovku <b>uprostřed nosné fráze</b> a vystřihnou ji; mimo
+konec fráze se neprotahuje. `say` na macOS ale neumí říct, kde slovo
+končí, a slova slepuje — zkoušeny čtyři nosné věty, ani jedna nedala
+najít řezy. Produkční linky na to berou enginy s hranicemi slov
+(Azure, Polly) nebo rovnou hlas živého člověka. Filip, 8. 11. 2026:
+*„asi to necháme v šuplíku, necháme syntézu a třeba časem pošlu"* —
+takže se tu drží jedno tempo pro všechna slova a nerovnost délek se
+bere, jak je. Na čem u vody záleží, je, že číslovka padne přesně na
+vteřinu; to drží appka, ne nahrávka.
+
+<b>Navíc zazní i bez českého hlasu v telefonu.</b> Appka dosud uměla
+jen varovat, že hlášení bude k nepoznání; odpočet, na kterém u vody
+záleží nejvíc, teď na tom hlasu nestojí.
 
 <b>Co to nestojí.</b> `app/assets/zvuky` nečte `@expo/fingerprint` —
 do otisku jdou jen soubory, na které ukazuje `app.json` (ikony, splash).
@@ -25,10 +57,6 @@ vydaných buildů aktualizací po síti, bez nového APK.
 Vyrábí `app/assets/zvuky/cislovka-*.wav`. Hlas je macOS Zuzana
 (cs_CZ) — týž syntetizátor, jaký by appka použila na iOS, takže se
 nahrávka od zbytku hlášení nepozná.
-
-<b>Ticho na začátku se ořezává</b>, a je to to podstatné: `say` dává
-před slovo desítky milisekund ticha a bez ořezu by každá číslovka
-zazněla o tu chvíli později. Ořez je to, co z nahrávek dělá metronom.
 """
 from __future__ import annotations
 
@@ -43,8 +71,8 @@ CIL = f"{KOREN}/app/assets/zvuky"
 
 HLAS = "Zuzana"
 
-# Slova a jména souborů. Pořadí je pořadí odpočtu; jména bez diakritiky,
-# protože se na ně v kódu ukazuje `require`.
+# Slova a jména souborů, v pořadí odpočtu. Jména bez diakritiky, protože
+# se na ně v kódu ukazuje `require`.
 CISLOVKY = [
     ("pět", "pet"),
     ("čtyři", "ctyri"),
@@ -53,26 +81,25 @@ CISLOVKY = [
     ("jedna", "jedna"),
 ]
 
-# Slov za minutu. Odpočet má na číslovku vteřinu, takže se musí vejít
-# s rezervou; 190 drží i to nejdelší („čtyři") pod 600 ms.
-TEMPO_WPM = 190
+# Slov za minutu, jednotně pro všech pět. 310 je mez, kde je slovo
+# znatelně kratší než při výchozím tempu a pořád není uspěchané;
+# naměřený součet všech pěti klesne z 2105 na 1650 ms.
+TEMPO_WPM = 310
 
 # Pod touhle hladinou se vzorek počítá za ticho. 16bitové PCM má rozsah
 # ±32768, takže je to zhruba −52 dBFS — dost nízko, aby to neukouslo
 # nádech do „pět", a dost vysoko, aby to utnulo šum.
 TICHO = 80
 
-# Kolik ticha nechat před slovem. Nula by ukousla náběh první hlásky.
-NABEH_MS = 8
+# Kolik ticha nechat kolem slova. Nula by ukousla náběh první hlásky
+# a doznění poslední.
+LEM_MS = 25
 
 
-def rekni(slovo: str, kam: str) -> None:
-    """Vysloví slovo do WAV: `say` do AIFF, `afconvert` do 16bitového PCM."""
+def nahraj(text: str, wpm: int, kam: str) -> None:
+    """Vysloví text do WAV: `say` do AIFF, `afconvert` do 16bitového PCM."""
     aiff = f"{kam}.aiff"
-    subprocess.run(
-        ["say", "-v", HLAS, "-r", str(TEMPO_WPM), "-o", aiff, slovo],
-        check=True,
-    )
+    subprocess.run(["say", "-v", HLAS, "-r", str(wpm), "-o", aiff, text], check=True)
     subprocess.run(
         ["afconvert", "-f", "WAVE", "-d", "LEI16@22050", "-c", "1", aiff, kam],
         check=True,
@@ -80,35 +107,39 @@ def rekni(slovo: str, kam: str) -> None:
     os.remove(aiff)
 
 
-def orez_ticho(cesta: str) -> tuple[int, int]:
-    """Ustřihne ticho na začátku i na konci. Vrací (uříznuto ms, délka ms)."""
+def nacti(cesta: str) -> tuple[list[int], int]:
     with wave.open(cesta, "rb") as f:
-        kanalu, sirka, rychlost, snimku = f.getnchannels(), f.getsampwidth(), f.getframerate(), f.getnframes()
-        data = f.readframes(snimku)
-
+        kanalu, sirka, rychlost = f.getnchannels(), f.getsampwidth(), f.getframerate()
+        data = f.readframes(f.getnframes())
     if sirka != 2 or kanalu != 1:
         raise SystemExit(f"{cesta}: čekal jsem mono 16 bitů, je {kanalu}×{sirka * 8} b")
+    return list(struct.unpack(f"<{len(data) // 2}h", data)), rychlost
 
-    vzorky = struct.unpack(f"<{len(data) // 2}h", data)
 
+def orez(vzorky: list[int], rychlost: int) -> list[int]:
+    """Ustřihne ticho před slovem i za ním.
+
+    <b>Ticho na začátku je to podstatné:</b> `say` ho dává před slovo
+    desítky milisekund a bez ořezu by číslovka zazněla o tu chvíli
+    později — a právě z toho se skládá nepravidelnost, kvůli které se
+    nahrávky dělají. Lem se nechává, aby se neukousl náběh první hlásky
+    a doznění poslední.
+    """
     prvni = next((i for i, v in enumerate(vzorky) if abs(v) > TICHO), 0)
     posledni = next(
         (i for i in range(len(vzorky) - 1, -1, -1) if abs(vzorky[i]) > TICHO),
         len(vzorky) - 1,
     )
-    od = max(0, prvni - rychlost * NABEH_MS // 1000)
-    # Doznění se nechává celé; useknutý konec slova je slyšet víc než
-    # o pár milisekund delší soubor.
-    do = min(len(vzorky), posledni + rychlost // 20)
+    lem = rychlost * LEM_MS // 1000
+    return vzorky[max(0, prvni - lem) : min(len(vzorky), posledni + lem)]
 
-    orezane = vzorky[od:do]
+
+def uloz(vzorky: list[int], rychlost: int, cesta: str) -> None:
     with wave.open(cesta, "wb") as f:
         f.setnchannels(1)
         f.setsampwidth(2)
         f.setframerate(rychlost)
-        f.writeframes(struct.pack(f"<{len(orezane)}h", *orezane))
-
-    return round(od * 1000 / rychlost), round(len(orezane) * 1000 / rychlost)
+        f.writeframes(struct.pack(f"<{len(vzorky)}h", *vzorky))
 
 
 def main() -> None:
@@ -116,19 +147,22 @@ def main() -> None:
         raise SystemExit("`say` je macOS; na jiném systému se číslovky nenahrají.")
 
     os.makedirs(CIL, exist_ok=True)
-    nejdelsi = 0
+    delky = []
     for slovo, jmeno in CISLOVKY:
         cesta = f"{CIL}/cislovka-{jmeno}.wav"
-        rekni(slovo, cesta)
-        uriznuto, delka = orez_ticho(cesta)
-        nejdelsi = max(nejdelsi, delka)
-        print(f"  {jmeno:6s} {delka:4d} ms (ticho na začátku {uriznuto} ms)")
+        nahraj(slovo, TEMPO_WPM, cesta)
+        vzorky, rychlost = nacti(cesta)
+        orezane = orez(vzorky, rychlost)
+        uloz(orezane, rychlost, cesta)
+        delka = round(len(orezane) * 1000 / rychlost)
+        delky.append(delka)
+        print(f"  {jmeno:6s} {delka:4d} ms")
 
-    # Číslovka delší než vteřina by přetekla do té další a odpočet by se
-    # slil. Je to mez, ne odhad — proto se tu kontroluje.
-    if nejdelsi >= 1000:
-        raise SystemExit(f"nejdelší číslovka má {nejdelsi} ms, vteřina nestačí")
-    print(f"  nejdelší {nejdelsi} ms, do vteřiny se vejde")
+    # <b>Mez, ne odhad.</b> Číslovka delší než vteřina by přetekla do té
+    # další a odpočet by se slil.
+    if max(delky) >= 1000:
+        raise SystemExit(f"nejdelší číslovka má {max(delky)} ms, vteřina nestačí")
+    print(f"  nejdelší {max(delky)} ms, do vteřiny se vejde")
 
 
 if __name__ == "__main__":
