@@ -229,10 +229,25 @@ nepozná, jestli se úkon povedl (Filip, 8. 11. 2026: *„odložení startu
 taky nic neudělá a aplikace ani nic neřekne"*). Ověřeno na simulátoru:
 odklad s časem i bez času zapíše správně, jen o sobě mlčí.
 
-**Nerozhodnuto zůstává**, jestli má appka tahle znamení troubit. Appka
-houká **s** rozhodčím, ne místo něj, a u odkladu i odvolání je ten
-povel na něm — otázka tedy je, jestli mu má telefon podat signál
-stejně jako u procedury, nebo jen potvrdit na obrazovce.
+**Rozhodnuto 8. 11. 2026** (Filip: *„jestli ne, tak nějaký ping drobný
+a slovně oznámit hlasem. Jinak by se to pletlo s oficiálním
+signálem"*): **ping a věta, klakson ne.**
+
+Důvod stojí v nálezu R23. Zvuková znamení u startu jsou **vyhlášená**
+a plachetní směrnice poháru vypisuje jediné — *„Zrušení rozjížďky: dva
+dlouhé zvuky"*. Odklad ani odvolání v ní nejsou, takže klakson by u
+nich oznamoval poli znamení, které nikdo nevyhlásil, a na vodě by se
+pletl s tím, co platí. Ping žádné znamení není: je to potvrzení
+rozhodčímu, že úkon prošel, a věta po něm říká co — *„Start rozjížďky 4
+odložen"*, *„Všeobecné odvolání, rozjížďka 4. Nový start v 15:06."*
+
+Zvuk vyrábí `app/scripts/ping.py` a je schválně syntetický, ačkoli
+klakson stál za oklikou přes nahrávku skutečné houkačky: ping má znít
+**jako z telefonu**. Dva čisté tóny (A6 a E7) nad pásmem houkačky,
+0,30 s. Že se délkou nepřiblíží klaksonu, hlídá `testy/zvuky.test.ts`.
+
+Hlásí se **přechodem stavu**, ne klepnutím — stejně jako zrušení, takže
+to rozhodčí u vody slyší, i když úkon udělal někdo jiný z webu.
 
 ## Co z toho plyne pro příště
 

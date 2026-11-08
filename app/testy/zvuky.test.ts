@@ -13,7 +13,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { DELKA_TROUBENI_MS, type Troubeni } from '../src/lib/hlaseni.ts';
+import { DELKA_PINGU_MS, DELKA_TROUBENI_MS, type Troubeni } from '../src/lib/hlaseni.ts';
 
 let prosly = 0;
 function zkus(nazev: string, f: () => void) {
@@ -82,6 +82,29 @@ zkus('dlouhý klakson je doopravdy delší než krátký', () => {
   // ZPJ 26 rozlišuje krátký a dlouhý zvuk; kdyby se soubory prohodily,
   // minuta do startu by zněla jako vyzývací znamení.
   assert.ok(delkaMs(SOUBORY.dlouze) > delkaMs(SOUBORY.kratce) * 2);
+});
+
+const PING = new URL('../assets/zvuky/ping.wav', import.meta.url).pathname;
+
+zkus('čekání po pingu sedí se souborem', () => {
+  const skutecna = delkaMs(PING);
+  assert.ok(
+    DELKA_PINGU_MS >= skutecna - 1,
+    `čeká se ${DELKA_PINGU_MS} ms, ale ping zní ${Math.round(skutecna)} ms`,
+  );
+  assert.ok(
+    DELKA_PINGU_MS - skutecna <= 250,
+    `čeká se ${DELKA_PINGU_MS} ms na ping dlouhý ${Math.round(skutecna)} ms`,
+  );
+});
+
+zkus('ping se nedá splést s klaksonem', () => {
+  // <b>Kdyby ping dorostl do délky klaksonu</b>, přestal by být pingem
+  // a stal by se znamením, které směrnice nevyhlašuje (R23). Mez je
+  // půlvteřina: kratší než krátký klakson o víc než trojnásobek.
+  const ping = delkaMs(PING);
+  assert.ok(ping < 500, `ping zní ${Math.round(ping)} ms, to už je zvukové znamení`);
+  assert.ok(ping * 3 < delkaMs(SOUBORY.kratce), 'ping se délkou blíží krátkému klaksonu');
 });
 
 console.log(`  ${prosly} prošlo`);

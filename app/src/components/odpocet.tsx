@@ -212,6 +212,57 @@ export function Odpocet({
     for (const c of ted2) if (!drive.has(c)) zrusenoHlas(c);
   }, [zruseneCisla, zrusenoHlas]);
 
+  // <b>Odklad a odvolání se ohlašují taky přechodem</b>, ze stejného
+  // důvodu jako zrušení: udělat je může i web a rozhodčí u vody to má
+  // slyšet. Pozná se to z dvojice (stav, čas startu), protože úkon sám
+  // se v datech nevede — vede se jeho výsledek:
+  //
+  // <ul>
+  //   <li><b>odvolání</b> — rozjížďka byla <code>Probiha</code> a je
+  //       zase plánovaná (ZPJ 29.2, nový čas spočítal server);</li>
+  //   <li><b>odklad</b> — čas startu zmizel (ZPJ 27.3), nebo se posunul
+  //       dopředu u rozjížďky, která nejela.</li>
+  // </ul>
+  //
+  // Zapsání času u rozjížďky, která žádný neměla, se schválně nehlásí:
+  // to není přerušení, to je rozprava.
+  const snimekStartu = rozjizdky
+    .map((r) => `${r.cislo}:${r.stav}:${r.startV ?? ''}`)
+    .join('|');
+  const prerusenHlas = dirigent.prerusen;
+  const uzVideno = useRef<Map<number, { stav: string; startV: string }> | null>(null);
+  useEffect(() => {
+    const ted2 = new Map<number, { stav: string; startV: string }>(
+      snimekStartu === ''
+        ? []
+        : snimekStartu.split('|').map((kus) => {
+            const [cislo, stavR, startV] = kus.split(':');
+            // Čas je ISO a ten dvojtečky obsahuje — zbytek se slepí zpět.
+            return [Number(cislo), { stav: stavR, startV: kus.split(':').slice(2).join(':') }];
+          }),
+    );
+    const drive = uzVideno.current;
+    uzVideno.current = ted2;
+    if (drive === null) return;
+
+    for (const [cislo, nyni] of ted2) {
+      const bylo = drive.get(cislo);
+      if (!bylo || nyni.stav !== 'Planovana') continue;
+
+      if (bylo.stav === 'Probiha') {
+        prerusenHlas('odvolani', cislo, nyni.startV ? casStartu(nyni.startV) : null);
+      } else if (bylo.startV && !nyni.startV) {
+        prerusenHlas('odklad', cislo, null);
+      } else if (
+        bylo.startV &&
+        nyni.startV &&
+        Date.parse(nyni.startV) > Date.parse(bylo.startV)
+      ) {
+        prerusenHlas('odklad', cislo, casStartu(nyni.startV));
+      }
+    }
+  }, [snimekStartu, prerusenHlas]);
+
   // <b>Start se neklepe, start padne.</b> Rozhodčí spustil proceduru,
   // odpočet doběhl — tím rozjížďka odstartovala a appka to serveru řekne
   // sama. Dřív tu bylo tlačítko „Jede se" a panel o sobě tvrdil, že čeká

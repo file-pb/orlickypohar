@@ -44,6 +44,7 @@ import { File, Paths } from 'expo-file-system';
 
 import {
   coOkamzik,
+  DELKA_PINGU_MS,
   DELKA_TROUBENI_MS,
   nejblizsiOkamzik,
   type Troubeni,
@@ -58,6 +59,15 @@ const KLAKSON = {
   kratce: require('../../assets/zvuky/klakson-kratky.wav'),
   dlouze: require('../../assets/zvuky/klakson-dlouhy.wav'),
 } as const;
+
+/**
+ * <b>Ping</b>, kterým se ohlašuje odklad a všeobecné odvolání
+ * (`scripts/ping.py`). Schválně nic společného s klaksonem: dva čisté
+ * tóny vysoko nad pásmem houkačky a desetina jeho délky. Znamení
+ * u startu jsou vyhlášená ve směrnici a tyhle dva úkony v ní nejsou —
+ * ping tedy neoznamuje poli nic, jen rozhodčímu, že úkon prošel.
+ */
+const PING = require('../../assets/zvuky/ping.wav');
 
 /**
  * <b>Číslovky odpočtu jako nahrávky, ne syntéza.</b>
@@ -230,6 +240,12 @@ export type Dirigent = {
    * takže zazní i tehdy, když rozjížďku zrušil někdo jiný z webu.
    */
   zruseno: (cislo: number) => void;
+  /**
+   * <b>Odklad nebo všeobecné odvolání.</b> Ping a věta — ne klakson,
+   * viz implementace. `kdy` je nový čas startu (pražský, „15:06"), nebo
+   * `null`, když se odkládá bez času.
+   */
+  prerusen: (druh: 'odklad' | 'odvolani', cislo: number, kdy: string | null) => void;
 };
 
 /**
@@ -254,6 +270,7 @@ export function useDirigent(
 
   const kratky = useAudioPlayer(KLAKSON.kratce);
   const dlouhy = useAudioPlayer(KLAKSON.dlouze);
+  const ping = useAudioPlayer(PING);
 
   // Pět přehrávačů, každý se svou číslovkou. Vypsané jeden po druhém,
   // protože hooky se nedají volat ve smyčce nad objektem — a i kdyby
@@ -478,7 +495,47 @@ export function useDirigent(
     [dlouhy, probud],
   );
 
-  // Naplánované zvuky zrušení nesmějí přežít odchod z obrazovky.
+  /**
+   * <b>Odklad a odvolání: ping a věta, ne klakson</b> (Filip, 8. 11.
+   * 2026: *„jestli ne, tak nějaký ping drobný a slovně oznámit hlasem.
+   * Jinak by se to pletlo s oficiálním signálem"*).
+   *
+   * Zvuková znamení u startu jsou vyhlášená a plachetní směrnice poháru
+   * vypisuje jediné — zrušení rozjížďky dvěma dlouhými (R23). Tyhle dva
+   * úkony v ní nejsou, takže klakson by u nich oznamoval poli znamení,
+   * které nikdo nevyhlásil. Ping žádné znamení není: je to potvrzení
+   * rozhodčímu, že úkon prošel, a věta po něm říká co.
+   *
+   * Nespouští se klepnutím, ale změnou stavu rozjížďky — tedy i tehdy,
+   * když odložil někdo jiný z webu, stejně jako u zrušení.
+   */
+  const prerusen = useCallback(
+    (druh: 'odklad' | 'odvolani', cislo: number, kdy: string | null) => {
+      if (!hlasiTed.current) return;
+      void (async () => {
+        await probud();
+        zahraj(ping);
+        const veta =
+          druh === 'odklad'
+            ? `Start rozjížďky ${cislo} odložen.`
+            : `Všeobecné odvolání, rozjížďka ${cislo}.`;
+        // Nový čas se řekne, jen když existuje: po odkladu bez času ho
+        // rozhodčí teprve bude hledat a věta „nový start null" by byla
+        // horší než ticho.
+        const sCasem = kdy ? `${veta} Nový start v ${kdy}.` : veta;
+        casovaceZruseni.current.push(
+          setTimeout(() => {
+            Speech.stop().catch(() => {});
+            Speech.speak(sCasem, { language: JAZYK, rate: TEMPO });
+          }, DELKA_PINGU_MS),
+        );
+      })();
+    },
+    [ping, probud],
+  );
+
+  // Naplánované zvuky zrušení a přerušení nesmějí přežít odchod
+  // z obrazovky.
   useEffect(
     () => () => {
       casovaceZruseni.current.forEach(clearTimeout);
@@ -489,6 +546,7 @@ export function useDirigent(
 
   return {
     zruseno,
+    prerusen,
     zapnuto,
     bezCestiny: hlasi && bezCestiny,
     klidChybiPovoleni: veli && klidJdeTo() && !smimeKlid,

@@ -42,6 +42,23 @@ export const DELKA_TROUBENI_MS: Record<Troubeni, number> = {
   dlouze: 4120,
 };
 
+/**
+ * Jak dlouho zní <b>ping</b>, kterým se ohlašuje odklad a všeobecné
+ * odvolání (`scripts/ping.py`), v milisekundách.
+ *
+ * <b>Ping není zvukové znamení.</b> Znamení u startu jsou vyhlášená
+ * a plachetní směrnice poháru vypisuje jediné — *„Zrušení rozjížďky:
+ * dva dlouhé zvuky"* (R23). Odklad ani odvolání v ní nejsou, takže
+ * klakson by u nich vyhlašoval něco, co nikdo nevyhlásil, a na vodě by
+ * se pletl s tím, co platí (Filip, 8. 11. 2026: *„jinak by se to pletlo
+ * s oficiálním signálem"*). Ping je upozornění pro rozhodčího, že úkon
+ * prošel — a hlášení po něm říká co.
+ *
+ * Stejně jako u troubení platí, že se hlášení pouští až po něm: sedět
+ * se souborem to musí, a hlídá to `testy/zvuky.test.ts`.
+ */
+export const DELKA_PINGU_MS = 300;
+
 /** Jedna věc, která se má stát v určitý čas před startem. */
 export type Znameni = {
   /** Kolik vteřin před startovním znamením; 0 je start. */
