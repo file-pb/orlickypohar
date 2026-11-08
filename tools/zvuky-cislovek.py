@@ -73,18 +73,25 @@ HLAS = "Zuzana"
 
 # Slova a jména souborů, v pořadí odpočtu. Jména bez diakritiky, protože
 # se na ně v kódu ukazuje `require`.
+# Třetí hodnota je <b>strop délky</b>, nebo `None`. Používá ho jediné
+# slovo: „tři" vychází i při zpomaleném tempu o půl decky delší než
+# sousedi, protože mu syntetizátor nechá dozvučet samohlásku. Filip,
+# 8. 11. 2026: *„u té trojky to prostě neumí a jen to trochu usekni."*
+# Useknutí je tedy vědomá pomoc syntéze, ne obecné pravidlo — a drží se
+# na jednom slově, aby se z něj nestalo plošné zkracování, které už se
+# jednou neosvědčilo.
 CISLOVKY = [
-    ("pět", "pet"),
-    ("čtyři", "ctyri"),
-    ("tři", "tri"),
-    ("dva", "dva"),
-    ("jedna", "jedna"),
+    ("pět", "pet", None),
+    ("čtyři", "ctyri", None),
+    ("tři", "tri", 370),
+    ("dva", "dva", None),
+    ("jedna", "jedna", None),
 ]
 
-# Slov za minutu, jednotně pro všech pět. 310 je mez, kde je slovo
-# znatelně kratší než při výchozím tempu a pořád není uspěchané;
-# naměřený součet všech pěti klesne z 2105 na 1650 ms.
-TEMPO_WPM = 310
+# Slov za minutu, jednotně pro všech pět. Vybráno poslechem ze tří
+# variant (Filip, 8. 11. 2026): 310 bylo uspěchané, 270 pořád rychlé,
+# 230 sedí. Číslovky pak mají 349 až 471 ms.
+TEMPO_WPM = 230
 
 # Pod touhle hladinou se vzorek počítá za ticho. 16bitové PCM má rozsah
 # ±32768, takže je to zhruba −52 dBFS — dost nízko, aby to neukouslo
@@ -94,6 +101,11 @@ TICHO = 80
 # Kolik ticha nechat kolem slova. Nula by ukousla náběh první hlásky
 # a doznění poslední.
 LEM_MS = 25
+
+# Jak dlouhé je ztišení na useknutém konci. Rovný řez uprostřed
+# samohlásky lupne; dvanáct milisekund stačí, aby to lupnutí zmizelo,
+# a je kratší, než ucho pozná jako doznívání.
+USEK_MS = 12
 
 
 def nahraj(text: str, wpm: int, kam: str) -> None:
@@ -114,6 +126,18 @@ def nacti(cesta: str) -> tuple[list[int], int]:
     if sirka != 2 or kanalu != 1:
         raise SystemExit(f"{cesta}: čekal jsem mono 16 bitů, je {kanalu}×{sirka * 8} b")
     return list(struct.unpack(f"<{len(data) // 2}h", data)), rychlost
+
+
+def usekni(vzorky: list[int], rychlost: int, strop_ms: int) -> list[int]:
+    """Zkrátí slovo na strop a konec ztiší, aby řez nelupl."""
+    nejvic = rychlost * strop_ms // 1000
+    if len(vzorky) <= nejvic:
+        return vzorky
+    kratsi = vzorky[:nejvic]
+    fade = rychlost * USEK_MS // 1000
+    for i in range(min(fade, len(kratsi))):
+        kratsi[-1 - i] = int(kratsi[-1 - i] * i / fade)
+    return kratsi
 
 
 def orez(vzorky: list[int], rychlost: int) -> list[int]:
@@ -148,15 +172,19 @@ def main() -> None:
 
     os.makedirs(CIL, exist_ok=True)
     delky = []
-    for slovo, jmeno in CISLOVKY:
+    for slovo, jmeno, strop in CISLOVKY:
         cesta = f"{CIL}/cislovka-{jmeno}.wav"
         nahraj(slovo, TEMPO_WPM, cesta)
         vzorky, rychlost = nacti(cesta)
-        orezane = orez(vzorky, rychlost)
-        uloz(orezane, rychlost, cesta)
-        delka = round(len(orezane) * 1000 / rychlost)
+        hotove = orez(vzorky, rychlost)
+        pred = round(len(hotove) * 1000 / rychlost)
+        if strop is not None:
+            hotove = usekni(hotove, rychlost, strop)
+        uloz(hotove, rychlost, cesta)
+        delka = round(len(hotove) * 1000 / rychlost)
         delky.append(delka)
-        print(f"  {jmeno:6s} {delka:4d} ms")
+        useknuto = f"  (useknuto z {pred} ms)" if delka < pred else ""
+        print(f"  {jmeno:6s} {delka:4d} ms{useknuto}")
 
     # <b>Mez, ne odhad.</b> Číslovka delší než vteřina by přetekla do té
     # další a odpočet by se slil.
