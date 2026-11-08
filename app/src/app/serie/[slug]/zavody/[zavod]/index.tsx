@@ -17,6 +17,7 @@ import {
 } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
+import { barvaTridy } from '@/lib/tridy';
 import {
   nactiJa,
   nactiPolohy,
@@ -612,11 +613,16 @@ export default function Zastavka() {
               tak kreslí: tři sloupce dlaždic po šedesáti bodech, na
               každé jen jméno lodi.
 
-              Kategorie je pryč, protože na tuhle otázku neodpovídá:
-              rozhodčí hledá loď, kterou právě viděl, a ta je jedna —
-              do které třídy patří, nerozhoduje a jen prodlužuje řádku.
-              Co zůstává, je <b>kód, který loď už má</b>: ten varuje, že
-              se zapisuje k lodi, u které něco stojí. */}
+              Kategorie je pryč <b>jako řádka textu</b>, ne jako
+              informace: od 8. 11. 2026 ji nese barevný okraj, týž,
+              jakým se lodě značí v cíli (Filip: *„tohle bychom mohli
+              roznést do celé appky, tam, kde je tlačítko lodi"*).
+              Vypsaná prodlužovala dlaždici a rozhodčí ji nečte —
+              hledá loď, kterou právě viděl, a ta je jedna. Barva
+              přitom dělá to jediné, k čemu je tu třída dobrá: dvě
+              lodě vedle sebe jsou vidět jako dvě různé.
+              Co zůstává textem, je <b>kód, který loď už má</b>: ten
+              varuje, že se zapisuje k lodi, u které něco stojí. */}
           {vyberLode === null ? (
             <Nacitani />
           ) : (
@@ -629,12 +635,17 @@ export default function Zastavka() {
                 paddingTop: 4,
                 paddingBottom: 8,
               }}>
-              {vyberLode.map((l) => (
+              {vyberLode.map((l) => {
+                const barva = barvaTridy(l.kategorie, t);
+                return (
                 <Pressable
                   key={l.prihlaskaId}
                   onPress={() => void oznacLod(l.prihlaskaId)}
                   accessibilityRole="button"
-                  accessibilityLabel={l.kod ? `${l.lod} — zapsáno ${l.kod}` : l.lod}
+                  // Třída zůstává ve čtečce: barvu z ní nikdo nepřečte.
+                  accessibilityLabel={[l.lod, l.kategorie, l.kod ? `zapsáno ${l.kod}` : null]
+                    .filter(Boolean)
+                    .join(', ')}
                   style={({ pressed }) => ({
                     // Tři sloupce: dvě mezery po osmi bodech ukrojené
                     // rovným dílem. Výška je z návrhu a je nad mezí
@@ -649,6 +660,10 @@ export default function Zastavka() {
                     justifyContent: 'center',
                     backgroundColor: t.papir,
                     borderColor: t.linka,
+                    // Okraj vlevo jako v cíli. Třída, kterou paleta
+                    // nezná, zůstane u obyčejné linky — viz `lib/tridy.ts`.
+                    borderLeftWidth: barva ? 6 : 1,
+                    borderLeftColor: barva ?? t.linka,
                     opacity: pressed || vyberPosila === l.prihlaskaId ? 0.6 : 1,
                   })}>
                   <Text
@@ -668,7 +683,8 @@ export default function Zastavka() {
                     </Text>
                   ) : null}
                 </Pressable>
-              ))}
+                );
+              })}
             </ScrollView>
           )}
         </View>

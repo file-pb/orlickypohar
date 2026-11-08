@@ -1,5 +1,5 @@
 import { useKeepAwake } from 'expo-keep-awake';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -167,6 +167,8 @@ function Zapisovani({
   /** Načtení zápisu znovu — po ukončení už rozjížďka není na vodě. */
   obnov: () => void;
 }) {
+  const router = useRouter();
+
   // <b>Tlačítka mají lodě na regatě</b> — přihlášené a potvrzené. Když
   // přihlášky nikdo nevede, má je celý ročník, jinak by u cíle nebylo na
   // co klepat (tutéž úvahu dělá cílová obrazovka na webu).
@@ -313,10 +315,29 @@ function Zapisovani({
           Co obrazovka říká, zůstalo celé: které rozjížďky je to cíl,
           jak dlouho se jede, kolik lodí dojelo a jestli je zapsáno. Jen
           to drží na dvou řádcích místo na pěti. */}
+      {/* <b>Nadpis je zároveň cesta zpátky</b> (Filip, 8. 11. 2026:
+          *„v cílové obrazovce nemáme možnost se přepnout zpátky na ten
+          panel… měl by to být nějaký malý odkaz v té hlavičce, abychom
+          si nesežrali design, prostor"*).
+
+          Hlavička je skrytá pro celý zásobník (`app/_layout.tsx`:
+          *„určitě headerShown: false, zpět gestem"*), takže z cíle vedlo
+          zpátky jedině gesto od hrany — na houpající se lodi nejistý
+          terč, a hlavně není vidět, že tam je. Samostatné tlačítko by
+          ale ukrojilo řádku, kterou obrazovka před chvílí ušetřila, tak
+          se šipka přilepila k nadpisu: stojí v něm jediný znak a celý
+          nadpis je terč. */}
       <View style={s.hlavicka}>
-        <Text style={[s.hlavickaNadpis, { color: t.text }]} numberOfLines={1}>
-          {zapis.cislo}. rozjížďka — cíl
-        </Text>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel={`${zapis.cislo}. rozjížďka — cíl; zpět na panel rozjížďky`}
+          style={({ pressed }) => [s.zpet, { opacity: pressed ? 0.6 : 1 }]}>
+          <Text style={[s.hlavickaNadpis, { color: t.text }]} numberOfLines={1}>
+            <Text style={{ color: t.voda }}>‹ </Text>
+            {zapis.cislo}. rozjížďka — cíl
+          </Text>
+        </Pressable>
         <Jede startV={zapis.startV ?? null} t={t} />
       </View>
 
@@ -830,7 +851,9 @@ function Sipka({
 const s = StyleSheet.create({
   hlavicka: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    // Na střed, ne na účaří: nadpis je od 8. 11. 2026 v dotykovém terči
+    // vysokém 44 bodů a účaří pohledu leží jinde než účaří textu v něm.
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
     marginBottom: 10,
@@ -839,6 +862,8 @@ const s = StyleSheet.create({
     // v hlavičce velitele.
     paddingRight: 48,
   },
+  // Terč nadpisu: mez 44 pt platí i tady, i když nadpis sám je nižší.
+  zpet: { flexShrink: 1, minHeight: 44, justifyContent: 'center' },
   hlavickaNadpis: { fontSize: 17, fontWeight: '800', flexShrink: 1 },
   jede: { fontSize: 15, fontVariant: ['tabular-nums'] },
   // Odsazení zprava jako hlavička: druhý řádek leží pod touž nabídkou.
