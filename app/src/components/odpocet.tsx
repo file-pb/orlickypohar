@@ -293,17 +293,29 @@ export function Odpocet({
           accessibilityLabel="Hlásí a troubí"
           style={({ pressed }) => [
             s.hlas,
-            { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
+            {
+              // Zapnutý se barví vodou, tedy barvou panelu nad ním —
+              // ať to spolu drží jako jedna věc (Filip, 8. 11. 2026:
+              // *„ještě bych to nějak možná barevně sladil"*). Zelená
+              // tam byla vypůjčená od „jede se" a mluvila o něčem jiném.
+              borderColor: dirigent.zapnuto ? t.voda : t.linka,
+              backgroundColor: dirigent.zapnuto ? t.zvyrazneni : 'transparent',
+              opacity: pressed ? 0.6 : 1,
+            },
           ]}>
-          <Text style={[s.hlasText, { color: dirigent.zapnuto ? t.text : t.tlumeny }]}>
+          <Text style={[s.hlasText, { color: dirigent.zapnuto ? t.voda : t.tlumeny }]}>
             {dirigent.zapnuto ? 'Hlásí a troubí' : 'Mlčí'}
           </Text>
+          {/* <b>Knoflík na střed řádky.</b> `Switch` má vlastní výšku
+              a na iOSu k ní ještě okraj, takže se s textem sám
+              nesrovná — `alignSelf` ho dorovná na tutéž osu. */}
           <Switch
             value={dirigent.zapnuto}
             onValueChange={dirigent.prepni}
-            trackColor={{ false: t.linka, true: t.jede }}
+            trackColor={{ false: t.linka, true: t.voda }}
             thumbColor={t.papir}
             ios_backgroundColor={t.linka}
+            style={{ alignSelf: 'center' }}
           />
         </Pressable>
       ) : null}
@@ -1274,11 +1286,14 @@ const s = StyleSheet.create({
 
   // Přepínač hlasu je řádek, ne tlačítko: mačká se jednou za den, kdežto
   // volby pod ním rozhodují o startu a musí být větší terč.
+  // <b>Popisek a knoflík u sebe uprostřed</b> (Filip, 8. 11. 2026:
+  // *„ten nový přepínač vycentruj"*). Roztažené po krajích se na šířku
+  // telefonu rozešly tak, že spolu přestaly vypadat jako jedna věc.
   hlas: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
+    justifyContent: 'center',
+    gap: 14,
     minHeight: 48,
     paddingHorizontal: 14,
     borderWidth: 1,

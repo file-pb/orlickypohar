@@ -77,7 +77,8 @@ HLAS = "Zuzana"
 # ta, kterým syntetizátor nechá dozvučet samohlásku dál než ostatním:
 # „tři" vycházelo na 417 ms a „dva" na 471 proti 349–368 u zbytku.
 # Filip, 8. 11. 2026: *„u té trojky to prostě neumí a jen to trochu
-# usekni"*, a po poslechu *„tři zkrať ještě kousek a dva taky"*.
+# usekni"*, pak *„tři zkrať ještě kousek a dva taky"* a potřetí
+# *„trojku ještě malinko zkrať"* — proto je ze všech nejkratší.
 #
 # Useknutí je vědomá pomoc syntéze tam, kde selhává, ne obecné
 # pravidlo. Proto stojí u konkrétních slov a ostatní zůstávají, jak
@@ -86,7 +87,7 @@ HLAS = "Zuzana"
 CISLOVKY = [
     ("pět", "pet", None),
     ("čtyři", "ctyri", None),
-    ("tři", "tri", 340),
+    ("tři", "tri", 310),
     ("dva", "dva", 420),
     ("jedna", "jedna", None),
 ]
