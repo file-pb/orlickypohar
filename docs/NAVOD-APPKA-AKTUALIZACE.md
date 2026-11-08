@@ -40,79 +40,55 @@ skončí u druhého kroku.
 
 ## Text k poslání
 
-> Ahoj Miloši, mám pro tebe novou verzi appky. Hlavní věc v ní je
-> **všeobecné odvolání** — a je v něm změna, o které potřebuješ vědět
-> dřív, než ji použiješ u vody. Popíšu ji níž.
->
-> Tahle verze veze i věci, které se musí do telefonu doinstalovat, takže
-> po síti by k tobě nedošly. Jinak se appka aktualizuje sama — většinu
-> novinek jen otevřeš a bude nová. Co se takhle přenést nedá, je to, co
-> sahá hlouběji do telefonu; pak ti napíšu jako teď. Ozvu se sám, ty to
-> hlídat nemusíš.
->
-> **Poznáš to.** Když se appka sama aktualizuje, při otevření se dole krátce
-> ukáže oznámení, že jedeš na nové verzi, a samo zhasne. A kdykoliv se chceš
-> podívat, na čem jedeš, je to v **Účtu** dole pod *Verze appky* — je tam
-> i tlačítko, kterým se dá hledání novinek vyvolat ručně.
->
-> Co udělat:
+**Krátký schválně** (Filip, 8. 11. 2026: *„Miloše zajímá jednoduchost,
+jak nejjednodušeji nainstaluje apku… prostě člověk, kterému potřebuju
+velmi jednoduše a co nejkratší cestou napsat, jak si tu apku má
+nainstalovat."*). Předchozí podoba vysvětlovala, jak se appka
+aktualizuje sama a co se změnilo v pravidlech — informace správné, ale
+ne pro někoho, kdo chce mít appku v telefonu a jít od toho pryč. Co se
+nevejde do instalace, patří do oddílu níž, a posílá se zvlášť, nebo
+vůbec.
+
+> Ahoj Miloši, mám pro tebe novou verzi appky.
 >
 > 1. V telefonu otevři **orlickypohar.klihovka.cz/appka**
-> 2. Klepni na tlačítko ke stažení. Telefon se zeptá, jestli soubor chceš
->    — dej **Stáhnout**.
-> 3. Až se stáhne, klepni na něj (nebo na oznámení o stažení).
-> 4. Telefon se zeptá, jestli chceš nahradit stávající aplikaci —
->    dej **ano**. Nic nepřijdeš: tvoje lodě i rozepsané věci zůstanou.
-> 5. **Appku pak otevři, zavři a otevři znovu.** Napoprvé si stáhne to
->    nejčerstvější, co ještě nebylo v souboru, a podruhé to teprve uvidíš.
+> 2. Klepni na tlačítko ke stažení a dej **Stáhnout**.
+> 3. Až se stáhne, klepni na něj a potvrď, že má nahradit tu starou.
+>    Nic nepřijdeš.
+> 4. Pak ji **otevři, zavři a otevři znovu** — podruhé už je úplně
+>    nová.
 >
-> **Jestli to telefon zablokuje:** napíše něco jako „Neznámá aplikace je
-> blokována" nebo se zeptá, jestli tomuhle zdroji věříš. To je normální,
-> protože appka není z obchodu Google Play. Stačí v té hlášce klepnout na
-> **Nastavení** a povolení zapnout; telefon tě tam sám navede. Na
-> Samsungu to bývá v *Nastavení → Zabezpečení a soukromí → Automatické
-> blokování*. Po instalaci se to dá vrátit zpátky.
+> Kdyby telefon hlásil, že blokuje neznámou aplikaci: klepni v té hlášce
+> na **Nastavení** a povolení zapni, telefon tě navede. Na Samsungu to
+> bývá v *Nastavení → Zabezpečení a soukromí → Automatické blokování*.
+> Po instalaci se to dá vrátit zpátky.
 >
-> ---
+> Kdyby to někde drhlo, zavolej mi.
+
+---
+
+## Co poslat zvlášť, až bude čas (ne spolu s instalací)
+
+Tohle **není součást instalace** a nemá se posílat v jedné zprávě s ní.
+Je to ale změna, která mění, co rozhodčí u vody fyzicky dělá, takže se
+o ní dozvědět musí — jen ne ve chvíli, kdy chce mít appku v telefonu
+a jít od toho pryč.
+
+> Miloši, jedna věc k **všeobecnému odvolání** — teď je na dva kroky.
 >
-> **Co se změnilo u všeobecného odvolání**
+> Appka dřív po odvolání rovnou řekla nový čas startu. To bylo špatně:
+> pravidlo počítá tu minutu od chvíle, kdy **svěsíš první opakovač**, a jak
+> dlouho visí, je na tobě. Takže:
 >
-> Předtím appka po odvolání rovnou spočítala nový start: minuta a pak
-> celá procedura. To bylo špatně. Pravidlo 29.2 říká, že vyzývací znamení
-> nového startu padne minutu poté, co je **první opakovač svěšen** — a jak
-> dlouho visí, neurčuje vůbec. To je na tobě, podle toho, kdy se pole
-> vrátí za čáru. Appka ti tedy ukazovala čas, který neplatil.
+> 1. **Všeobecné odvolání** — vyvěsí opakovač, žádný čas zatím není.
+> 2. **Opakovač dolů** — zmáčkneš, až ho doopravdy spustíš. Od té vteřiny
+>    běží minuta a po ní procedura, a teprve tady ti appka řekne nový start.
 >
-> Teď to jde na dva kroky:
+> Zkusit se to dá nanečisto, nic se neodešle: **tři tečky → Ukázkový
+> režim**, dej *Spustit startovní proceduru* (nabídku *Přeskočit čekání?*
+> odklikni, ať nečekáš), a po startu zmáčkni *Všeobecné odvolání*.
 >
-> 1. **Všeobecné odvolání** — vyvěsí opakovač. Žádný čas z toho zatím
->    nevyjde. Appka ukáže *Visí první opakovač* a počítá, jak dlouho už
->    je nahoře.
-> 2. **Opakovač dolů** — zmáčkneš ve chvíli, kdy ho doopravdy spustíš.
->    Od té vteřiny běží ta minuta a po ní celá procedura. Teprve tady
->    appka řekne, kdy je nový start.
->
-> Dokud opakovač visí, nejde zmáčknout nic jiného — schválně, aby se ta
-> minuta nedala obejít.
->
-> **Vyzkoušej si to nanečisto**, ať to u vody nevidíš poprvé. Nic se
-> nikam neodešle:
->
-> 1. V appce vpravo nahoře **tři tečky → Ukázkový režim**
-> 2. Nahoře naskočí modrý pruh *UKÁZKA — nic se neodesílá* a pod ním
->    panel regaty Izolepa.
-> 3. Dej **Spustit startovní proceduru**. Občas vyskočí nabídka
->    *Přeskočit čekání?* — dej **Ano, přeskoč**, ať nečekáš pět minut.
-> 4. Jakmile start padne, rozsvítí se dlaždice **Všeobecné odvolání**.
->    Zmáčkni ji a potvrď.
-> 5. Objeví se okno *Visí první opakovač*. Můžeš ho zavřít (*Zatím visí*)
->    a panel ti stav podrží — zkus si obojí.
-> 6. Dej **Opakovač dolů** a koukni, na kdy ti vyšel nový start.
->
-> Řekni mi prosím, jestli ti to takhle sedí s tím, co děláš na vodě —
-> tohle je přesně věc, kde se dá splést zadání a já to z kódu nepoznám.
->
-> Jestli to někde zaseknu, zavolej mi a projdeme to spolu.
+> Řekni mi, jestli ti to sedí s tím, co děláš na vodě.
 
 ---
 
@@ -217,12 +193,15 @@ skončí u druhého kroku.
   18:16**, kterou po nasazení vydala úloha `aktualizace-appky`. Bez nového
   APK tedy Miloš odvolání neuvidí, ať appku otevírá, jak chce.
 
-- **Ověření v ukázkovém režimu je v textu schválně.** Odvolání se dá
-  u vody zkusit jedině tak, že se odvolá doopravdy — a změna na dva kroky
-  mění, co rozhodčí fyzicky dělá. Ukázka běží bez serveru a nic
-  neodesílá (`app/src/lib/ukazka.ts`), takže je to jediné místo, kde si
-  to jde projít nanečisto. Postup v textu je ten, kterým se ta změna
-  8. 11. 2026 ověřovala v simulátoru, krok za krokem.
+- **Ověření v ukázkovém režimu je odsunuté do druhé zprávy, ne
+  vyhozené.** Odvolání se dá u vody zkusit jedině tak, že se odvolá
+  doopravdy, a změna na dva kroky mění, co rozhodčí fyzicky dělá — vědět
+  o ní tedy musí. Ukázka běží bez serveru a nic neodesílá
+  (`app/src/lib/ukazka.ts`), takže je to jediné místo, kde si to jde
+  projít nanečisto; postup je ten, kterým se ta změna 8. 11. 2026
+  ověřovala v simulátoru. Do instalační zprávy to ale nepatří: kdo řeší,
+  jak dostat appku do telefonu, nečte výklad pravidel, a dlouhá zpráva se
+  přestane číst celá — i ty čtyři kroky, kvůli kterým se psala.
 
 - **Zvýrazněný slib „od téhle verze se appka umí aktualizovat sama" z textu
   zmizel schválně.** V téhle podobě zazněl dvakrát a dvakrát nevyšel —
