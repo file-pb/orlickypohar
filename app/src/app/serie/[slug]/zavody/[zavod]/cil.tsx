@@ -373,25 +373,18 @@ function Zapisovani({
                 style={({ pressed }) => [
                   s.lod,
                   {
-                    backgroundColor: t.procedura,
+                    backgroundColor: t.papir,
+                    borderColor: t.linka,
                     opacity: pressed ? 0.6 : 1,
-                    borderLeftWidth: barva ? 6 : 0,
-                    borderLeftColor: barva ?? 'transparent',
+                    borderLeftWidth: barva ? 6 : 1,
+                    borderLeftColor: barva ?? t.linka,
                   },
                 ]}>
-                <Text
-                  style={[s.lodJmeno, { color: pismoNaVyplni(t, t.procedura) }]}
-                  numberOfLines={2}>
+                <Text style={[s.lodJmeno, { color: t.text }]} numberOfLines={2}>
                   {l.lod}
                 </Text>
                 {l.cisloPlachty ? (
-                  <Text
-                    style={[
-                      s.lodPodtitul,
-                      s.tlumeneNaVyplni,
-                      { color: pismoNaVyplni(t, t.procedura) },
-                    ]}
-                    numberOfLines={1}>
+                  <Text style={[s.lodPodtitul, { color: t.tlumeny }]} numberOfLines={1}>
                     {l.cisloPlachty}
                   </Text>
                 ) : null}
@@ -841,10 +834,15 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
     marginBottom: 10,
+    // Prvních ~48 bodů zprava patří nabídce, která se kreslí nad celým
+    // zásobníkem — bez odsazení leze čas pod tři tečky. Táž mez jako
+    // v hlavičce velitele.
+    paddingRight: 48,
   },
   hlavickaNadpis: { fontSize: 17, fontWeight: '800', flexShrink: 1 },
   jede: { fontSize: 15, fontVariant: ['tabular-nums'] },
-  radekStavu: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  // Odsazení zprava jako hlavička: druhý řádek leží pod touž nabídkou.
+  radekStavu: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingRight: 48 },
   pocet: { fontSize: 14, fontWeight: '600' },
   stav: { fontSize: 13 },
 
@@ -862,10 +860,9 @@ const s = StyleSheet.create({
   // Tři sloupce místo dvou — ušetřilo je zrušení řádky s kategorií.
   // Výška 64 je pořád o polovinu nad mezí terče (44 pt) a na houpající
   // se lodi se do ní trefí palec.
-  lod: { flexGrow: 1, flexBasis: '30%', minHeight: 64, borderRadius: 14, padding: 10, justifyContent: 'center' },
+  lod: { flexGrow: 1, flexBasis: '30%', minHeight: 64, borderRadius: 14, borderWidth: 1, padding: 10, justifyContent: 'center' },
   lodJmeno: { fontSize: 16, fontWeight: '800' },
   lodPodtitul: { fontSize: 12, marginTop: 2 },
-  tlumeneNaVyplni: { opacity: 0.85 },
 
   navrh: {
     flexDirection: 'row', alignItems: 'center', gap: 10,

@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Baterie } from '@/components/baterie';
 import { Odpocet } from '@/components/odpocet';
-import { Radek } from '@/components/ui';
 import {
   Chyba,
   Karta,
@@ -698,9 +697,44 @@ export default function Zastavka() {
             Zrušení se bude vysvětlovat (ZPJ 61.4(d)). Co se na vodě stalo, je
             vidět ze záznamu trasy — vytlačení od bojky z paluby ne.
           </Text>
-          <ScrollView>
+          {/* <b>Důvody jako dlaždice, ne jako seznam řádků</b> (Filip,
+              8. 11. 2026: *„uprav design"* nad snímkem čtyř holých
+              řádek). Panel nad tím je samá dlaždice — úkony na startu,
+              tresty za jízdy, lodě u OCS —, takže řádkový seznam tady
+              vypadal jako kus jiné appky. Terč je u toho větší, a to
+              není ozdoba: ruší se na houpající se lodi a omyl mezi
+              „Počasí" a „Bezpečnost" je důvod, který se pak vysvětluje
+              (ZPJ 61.4(d)). */}
+          <ScrollView
+            contentContainerStyle={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              gap: 10,
+              paddingHorizontal: 16,
+              paddingTop: 4,
+              paddingBottom: 8,
+            }}>
             {DUVODY_ZRUSENI.map((d) => (
-              <Radek key={d} text={d} onPress={() => void zrus(d)} />
+              <Pressable
+                key={d}
+                onPress={() => void zrus(d)}
+                accessibilityRole="button"
+                disabled={rusi}
+                style={({ pressed }) => ({
+                  flexGrow: 1,
+                  flexBasis: '46%',
+                  minHeight: 72,
+                  borderWidth: 1,
+                  borderRadius: 14,
+                  paddingVertical: 12,
+                  paddingHorizontal: 14,
+                  justifyContent: 'center',
+                  backgroundColor: t.papir,
+                  borderColor: t.linka,
+                  opacity: pressed || rusi ? 0.6 : 1,
+                })}>
+                <Text style={{ color: t.text, fontSize: 17, fontWeight: '700' }}>{d}</Text>
+              </Pressable>
             ))}
           </ScrollView>
         </View>
