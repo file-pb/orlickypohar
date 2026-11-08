@@ -6,6 +6,7 @@ import {
   Modal,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -277,12 +278,33 @@ export function Odpocet({
           z ní něco uslyší — a na vodě může chtít ticho, aniž by kvůli
           tomu zavíral obrazovku. */}
       {veli ? (
+        /* <b>Přepínač, ne věta</b> (Filip, 8. 11. 2026: *„dej tam nějaký
+           přepínač … ať to není jenom prostý text"*). Do té doby to byl
+           odkaz, který sám sebe přejmenovával — rozhodčí z něj poznal
+           stav až tím, že si přečetl, co se stane po klepnutí.
+
+           Terčem je celá řádka, ne jen ten knoflík: na houpající se lodi
+           je knoflík 51 × 31 bodů málo. `Switch` si klepnutí na sebe
+           vezme sám, takže se nepřepne dvakrát. */
         <Pressable
           onPress={dirigent.prepni}
-          style={({ pressed }) => [s.hlas, { opacity: pressed ? 0.6 : 1 }]}>
-          <Text style={[s.hlasText, { color: dirigent.zapnuto ? t.jede : t.tlumeny }]}>
-            {dirigent.zapnuto ? 'Hlásí a troubí — vypnout' : 'Mlčí — zapnout hlas'}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: dirigent.zapnuto }}
+          accessibilityLabel="Hlásí a troubí"
+          style={({ pressed }) => [
+            s.hlas,
+            { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
+          ]}>
+          <Text style={[s.hlasText, { color: dirigent.zapnuto ? t.text : t.tlumeny }]}>
+            {dirigent.zapnuto ? 'Hlásí a troubí' : 'Mlčí'}
           </Text>
+          <Switch
+            value={dirigent.zapnuto}
+            onValueChange={dirigent.prepni}
+            trackColor={{ false: t.linka, true: t.jede }}
+            thumbColor={t.papir}
+            ios_backgroundColor={t.linka}
+          />
         </Pressable>
       ) : null}
 
@@ -1252,8 +1274,19 @@ const s = StyleSheet.create({
 
   // Přepínač hlasu je řádek, ne tlačítko: mačká se jednou za den, kdežto
   // volby pod ním rozhodují o startu a musí být větší terč.
-  hlas: { alignSelf: 'flex-start', paddingVertical: 12, marginTop: -14, marginBottom: 4 },
-  hlasText: { fontSize: 13, fontWeight: '700' },
+  hlas: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    minHeight: 48,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderRadius: 12,
+    marginTop: -8,
+    marginBottom: 12,
+  },
+  hlasText: { fontSize: 15, fontWeight: '700' },
   volba: {
     flex: 1,
     borderWidth: 1,
