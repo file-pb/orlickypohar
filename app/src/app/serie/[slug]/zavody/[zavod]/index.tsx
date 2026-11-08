@@ -115,9 +115,17 @@ export default function Zastavka() {
   );
 
   /**
-   * <b>Pod panelem velitele už obrazovka nepokračuje</b> (Filip, 7. 11.
+   * <b>Obrazovka velitele je pracovní, ne čtenářská</b> (Filip, 7. 11.
    * 2026: *„ten seznam je tam zbytečný, stačí, aby okno končilo tím,
-   * tresty na trati"*).
+   * tresty na trati"*, a 8. 11.: *„tohle je taky zbytečný"* o velkém
+   * nadpisu s datem).
+   *
+   * <b>Váže se to na velení, ne na rozjížďku v panelu.</b> Do 8. 11.
+   * 2026 tu stálo `&& cisloVPanelu !== null` a mezi zrušením rozjížďky
+   * a ohlášením další — tedy ve chvíli, kdy žádná v panelu není —
+   * obrazovka na okamžik spadla zpátky do čtenářské podoby i s pořadím
+   * (Filip: *„furt je tam tohle"*). Panel přitom pořád něco ukazuje:
+   * nabídku *Pojede se další?*.
    *
    * Startovní listina i výsledky patří tomu, kdo regatu čte. Veliteli,
    * který zrovna drží rozjížďku, jsou k ničemu — lodě má v dlaždicích
@@ -129,7 +137,7 @@ export default function Zastavka() {
    * Platí jen pro velitele a jen s rozjížďkou v panelu: čtenář regaty
    * ani velitel mezi rozjížďkami o nic nepřijdou.
    */
-  const uVody = veliNekde(ja ?? null) && cisloVPanelu !== null;
+  const uVody = veliNekde(ja ?? null);
 
   // <b>Kolik lodí vysílá polohu</b> — řádek v panelu startu z návrhu.
   // Ptá se jen velitel a jen tehdy, když panel něco drží: čtenáři regaty
@@ -383,16 +391,32 @@ export default function Zastavka() {
 
       {data ? (
         <>
-          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
-            <Nadpis>{data.nazev}</Nadpis>
-            <View style={{ marginBottom: 16 }}>
-              <Stav stav={data.stav} />
-            </View>
-          </View>
-          <Text style={{ color: t.tlumeny, marginTop: -8, marginBottom: 8 }}>
-            {rozsah(data.datum, data.datumKonce)}
-            {data.poradatel ? ` · pořádá ${data.poradatel}` : ''}
-          </Text>
+          {/* <b>Veliteli stačí jméno regaty malé</b> (Filip, 8. 11. 2026:
+              *„tohle je taky zbytečný, stačí jen název regaty někam
+              níže"*), a návrh to tak kreslí od začátku: v každém
+              artboardu rozhodčího je jedna úzká řádka — jméno malým
+              písmem, vedle něj odznak stavu, baterie a hodiny. Velký
+              nadpis a datum tam nejsou vůbec. (Návrh kreslí patnáct
+              bodů, appka sedmnáct — tolik má i zbytek hlavičky a dvě
+              velikosti v jedné řádce by se jen praly.)
+
+              Datum ani pořadatele tu velitel nepotřebuje: stojí na té
+              regatě, takže ví, která je a kdy. Čtenáři regaty nadpis
+              zůstává — ten přišel odjinud a potřebuje vědět, kde je. */}
+          {uVody ? null : (
+            <>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+                <Nadpis>{data.nazev}</Nadpis>
+                <View style={{ marginBottom: 16 }}>
+                  <Stav stav={data.stav} />
+                </View>
+              </View>
+              <Text style={{ color: t.tlumeny, marginTop: -8, marginBottom: 8 }}>
+                {rozsah(data.datum, data.datumKonce)}
+                {data.poradatel ? ` · pořádá ${data.poradatel}` : ''}
+              </Text>
+            </>
+          )}
 
           {/* <b>Hodiny a baterie v hlavičce</b>, jak je kreslí návrh
               (`Jede.dc.html`). Jen tomu, kdo velí: čtenáři regaty je
@@ -404,7 +428,14 @@ export default function Zastavka() {
               appka nedohoní — a je to <b>vlastní</b> baterie, tedy ta
               výjimka z pravidla, že si ji uživatel vidí nativně: ruku má
               na houkačce a do stavového řádku se nekouká. */}
-          {veliNekde(ja ?? null) ? <HlavickaVelitele serie={slug} zavod={zavod} /> : null}
+          {veliNekde(ja ?? null) ? (
+            <HlavickaVelitele
+              serie={slug}
+              zavod={zavod}
+              nazev={uVody ? data.nazev : null}
+              stav={data.stav}
+            />
+          ) : null}
 
           {/* Panel startu se ukáže sám, jen když se zrovna startuje nebo jede.
               Jindy nevykreslí nic — stránka regaty tím zůstává tím, čím je. */}
@@ -736,7 +767,18 @@ function PrihlaseneLode({ lode }: { lode: UcastLodi[] }) {
  * <b>Chybějící baterie se nekreslí.</b> V simulátoru vrací `expo-battery`
  * minus jedničku a prázdný obrys by vypadal jako vybitý telefon.
  */
-function HlavickaVelitele({ serie, zavod }: { serie: string; zavod: string }) {
+function HlavickaVelitele({
+  serie,
+  zavod,
+  nazev,
+  stav,
+}: {
+  serie: string;
+  zavod: string;
+  /** Jméno regaty, když velkou hlavičku nahrazuje tahle řádka; jinak `null`. */
+  nazev: string | null;
+  stav: ZavodDetail['stav'];
+}) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
   const [baterie, setBaterie] = useState<number | null>(null);
@@ -790,7 +832,24 @@ function HlavickaVelitele({ serie, zavod }: { serie: string; zavod: string }) {
         gap: 8,
         marginTop: -2,
         marginBottom: 12,
+        // Prvních ~48 bodů zprava patří nabídce, která se kreslí nad
+        // celým zásobníkem — bez odsazení lezou hodiny pod tři tečky.
+        paddingRight: 48,
       }}>
+      {/* <b>Jméno regaty malé, v téže řádce</b> — tak to kreslí každý
+          artboard rozhodčího. Velký nadpis a datum nad tím jsou pro
+          čtenáře, který přišel odjinud; velitel na té regatě stojí. */}
+      {nazev ? (
+        <>
+          <Text
+            style={{ color: t.text, fontSize: 17, fontWeight: '800', flexShrink: 1 }}
+            numberOfLines={1}>
+            {nazev}
+          </Text>
+          <Stav stav={stav} />
+        </>
+      ) : null}
+
       {/* <b>Pilulka s velením a baterií</b>, jak ji kreslí každý artboard
           rozhodčího. V návrhu nese popisek *„předat velení"*; server to
           ale podle nálezu R19 umí obráceně — velení si <b>vyžádá</b> ten,
