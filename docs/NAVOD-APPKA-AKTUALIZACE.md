@@ -1,12 +1,12 @@
 # Příručka: jak si Miloš přeinstaluje appku
 
-**Platí pro APK vydané 30. 10. 2026** (build `cd907b77`, versionCode 8,
-otisk `afbd9b0c…`, zapsané v `app/vydane-apk.json`; produkce na `/appka`
-ho rozdává, ověřeno 30. 10.). Až vyjde další, projdi text znovu — a zkontroluj
+**Platí pro APK vydané 8. 11. 2026** (build `17d1b684`, versionCode 10,
+otisk `0759d5bd…`, zapsané v `app/vydane-apk.json`; produkce na `/appka`
+ho rozdává, ověřeno 8. 11.). Až vyjde další, projdi text znovu — a zkontroluj
 hlavně to, co appce slibuje.
 
-**Čtyři instalace za tři dny**, a za každou stojí posunutý nativní otisk — ne
-novinka v appce:
+**Pět instalací**, a za každou stojí posunutý nativní otisk — ne novinka
+v appce:
 
 | Vydáno | Build | Otisk | Co ho posunulo |
 |---|---|---|---|
@@ -14,12 +14,16 @@ novinka v appce:
 | 28. 10. odpoledne | `4b579f9b` | `c4d54801…` | `expo-battery`, přišla pár minut po předchozím buildu |
 | 29. 10. | `1e869aa0` | `9dfabf3c…` | `expo` `~57.0.30` → `~57.0.31` a nové `overrides` (`expo-modules-core` → `react-native-worklets`) |
 | 30. 10. | `cd907b77` | `afbd9b0c…` | nativní dávka: hlas, klakson a modul *Nerušit* (`app/modules/nerusit/`) |
+| 8. 11. | `17d1b684` | `0759d5bd…` | kolečko pro výběr času (`@react-native-community/datetimepicker`) a nová ikona appky |
 
 Dávka ve čtvrtém řádku se schválně přidávala **najednou** právě proto, aby
 instalací nebylo pět (`APPKA-PORADI-PRACI.md`). Slib „většinu novinek už
 stahovat nebudeš" platí pro novinky v appce, ne pro nativní závislosti,
 a ten rozdíl laik neudělá — **než se pošle znovu, přečti si, co se mu
 slibuje.** Miloš si první z těch buildů podle tohohle návodu stáhl sám.
+
+**Devítka se nikdy nevydala.** Číslo buildu zvedá EAS při každém běhu
+(`autoIncrement`), takže díra v řadě neznamená ztracené vydání.
 
 Text níž je **pro rozhodčího, ne pro vývojáře** — píše se tak, aby šel
 poslat do WhatsAppu beze změny. Vzniknul proto, že od 28. 10. 2026 se
@@ -36,17 +40,15 @@ skončí u druhého kroku.
 
 ## Text k poslání
 
-> Ahoj Miloši, mám pro tebe novou verzi appky. Je v ní všechno, co jsme
-> spolu minulý týden probírali.
+> Ahoj Miloši, mám pro tebe novou verzi appky. Hlavní věc v ní je
+> **všeobecné odvolání** — a je v něm změna, o které potřebuješ vědět
+> dřív, než ji použiješ u vody. Popíšu ji níž.
 >
-> Vím, že je to krátce po sobě. Tahle verze veze i věci, které se musí do
-> telefonu doinstalovat, takže po síti by k tobě nedošly — od ní už by
-> většina novinek měla chodit sama.
->
-> Appka se umí aktualizovat sama — většinu novinek jen otevřeš a bude
-> nová, stahovat je nebudeš. Co se takhle přenést nedá, je to, co sahá
-> hlouběji do telefonu; pak ti napíšu, že je potřeba stáhnout novou verzi
-> jako teď. Ozvu se sám, ty to hlídat nemusíš.
+> Tahle verze veze i věci, které se musí do telefonu doinstalovat, takže
+> po síti by k tobě nedošly. Jinak se appka aktualizuje sama — většinu
+> novinek jen otevřeš a bude nová. Co se takhle přenést nedá, je to, co
+> sahá hlouběji do telefonu; pak ti napíšu jako teď. Ozvu se sám, ty to
+> hlídat nemusíš.
 >
 > **Poznáš to.** Když se appka sama aktualizuje, při otevření se dole krátce
 > ukáže oznámení, že jedeš na nové verzi, a samo zhasne. A kdykoliv se chceš
@@ -61,6 +63,8 @@ skončí u druhého kroku.
 > 3. Až se stáhne, klepni na něj (nebo na oznámení o stažení).
 > 4. Telefon se zeptá, jestli chceš nahradit stávající aplikaci —
 >    dej **ano**. Nic nepřijdeš: tvoje lodě i rozepsané věci zůstanou.
+> 5. **Appku pak otevři, zavři a otevři znovu.** Napoprvé si stáhne to
+>    nejčerstvější, co ještě nebylo v souboru, a podruhé to teprve uvidíš.
 >
 > **Jestli to telefon zablokuje:** napíše něco jako „Neznámá aplikace je
 > blokována" nebo se zeptá, jestli tomuhle zdroji věříš. To je normální,
@@ -68,6 +72,45 @@ skončí u druhého kroku.
 > **Nastavení** a povolení zapnout; telefon tě tam sám navede. Na
 > Samsungu to bývá v *Nastavení → Zabezpečení a soukromí → Automatické
 > blokování*. Po instalaci se to dá vrátit zpátky.
+>
+> ---
+>
+> **Co se změnilo u všeobecného odvolání**
+>
+> Předtím appka po odvolání rovnou spočítala nový start: minuta a pak
+> celá procedura. To bylo špatně. Pravidlo 29.2 říká, že vyzývací znamení
+> nového startu padne minutu poté, co je **první opakovač svěšen** — a jak
+> dlouho visí, neurčuje vůbec. To je na tobě, podle toho, kdy se pole
+> vrátí za čáru. Appka ti tedy ukazovala čas, který neplatil.
+>
+> Teď to jde na dva kroky:
+>
+> 1. **Všeobecné odvolání** — vyvěsí opakovač. Žádný čas z toho zatím
+>    nevyjde. Appka ukáže *Visí první opakovač* a počítá, jak dlouho už
+>    je nahoře.
+> 2. **Opakovač dolů** — zmáčkneš ve chvíli, kdy ho doopravdy spustíš.
+>    Od té vteřiny běží ta minuta a po ní celá procedura. Teprve tady
+>    appka řekne, kdy je nový start.
+>
+> Dokud opakovač visí, nejde zmáčknout nic jiného — schválně, aby se ta
+> minuta nedala obejít.
+>
+> **Vyzkoušej si to nanečisto**, ať to u vody nevidíš poprvé. Nic se
+> nikam neodešle:
+>
+> 1. V appce vpravo nahoře **tři tečky → Ukázkový režim**
+> 2. Nahoře naskočí modrý pruh *UKÁZKA — nic se neodesílá* a pod ním
+>    panel regaty Izolepa.
+> 3. Dej **Spustit startovní proceduru**. Občas vyskočí nabídka
+>    *Přeskočit čekání?* — dej **Ano, přeskoč**, ať nečekáš pět minut.
+> 4. Jakmile start padne, rozsvítí se dlaždice **Všeobecné odvolání**.
+>    Zmáčkni ji a potvrď.
+> 5. Objeví se okno *Visí první opakovač*. Můžeš ho zavřít (*Zatím visí*)
+>    a panel ti stav podrží — zkus si obojí.
+> 6. Dej **Opakovač dolů** a koukni, na kdy ti vyšel nový start.
+>
+> Řekni mi prosím, jestli ti to takhle sedí s tím, co děláš na vodě —
+> tohle je přesně věc, kde se dá splést zadání a já to z kódu nepoznám.
 >
 > Jestli to někde zaseknu, zavolej mi a projdeme to spolu.
 
@@ -156,6 +199,30 @@ skončí u druhého kroku.
   běhu. Dokud ta kontrola nebyla, nabízela stránka starý build od 8. 9. do
   28. 10. 2026, a nikdo o tom nevěděl. Ověřeno 29. 10. 2026: produkce
   rozdává `kqe5AoMTEs….apk`, tedy build 5.
+
+- **Build 10 sám o sobě odvolání na dva kroky nemá** (8. 11. 2026). APK
+  se stavělo ráno, kdežto oprava podle ZPJ 29.2 šla do mainu večer —
+  a protože je to čistě JavaScript, otisk neposunula a jde po síti. Proto
+  je v textu pátý krok *otevři, zavři, otevři znovu*: aktualizace se
+  stahuje při startu a projeví se až při dalším otevření, takže kdo appku
+  po instalaci jen jednou otevře, uvidí pořád tu ranní verzi — a z ničeho
+  to nepozná.
+
+- **Ruční instalaci si tentokrát vynutil otisk, ne velikost změny.**
+  Ověřeno 8. 11. 2026 dotazem na `u.expo.dev` (hlavičky `expo-channel-name:
+  preview`, `expo-runtime-version: <otisk>`, `expo-platform: android`):
+  pro otisk buildu 8 (`afbd9b0c…`), na kterém Miloš jel, je poslední
+  aktualizace ze **7. 11. 20:17** — dnešní práce se k němu nedostane
+  nikdy. Pro otisk buildu 10 (`0759d5bd…`) leží aktualizace z **8. 11.
+  18:16**, kterou po nasazení vydala úloha `aktualizace-appky`. Bez nového
+  APK tedy Miloš odvolání neuvidí, ať appku otevírá, jak chce.
+
+- **Ověření v ukázkovém režimu je v textu schválně.** Odvolání se dá
+  u vody zkusit jedině tak, že se odvolá doopravdy — a změna na dva kroky
+  mění, co rozhodčí fyzicky dělá. Ukázka běží bez serveru a nic
+  neodesílá (`app/src/lib/ukazka.ts`), takže je to jediné místo, kde si
+  to jde projít nanečisto. Postup v textu je ten, kterým se ta změna
+  8. 11. 2026 ověřovala v simulátoru, krok za krokem.
 
 - **Zvýrazněný slib „od téhle verze se appka umí aktualizovat sama" z textu
   zmizel schválně.** V téhle podobě zazněl dvakrát a dvakrát nevyšel —
