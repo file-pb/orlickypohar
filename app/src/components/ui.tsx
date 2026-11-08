@@ -54,11 +54,52 @@ export function procNejsouVysledky(stav: StavZavodu): string {
   }
 }
 
-export function Nadpis({ children, tlumene }: { children: React.ReactNode; tlumene?: string }) {
+/**
+ * Nadpis obrazovky, a volitelně <b>cesta zpátky</b>.
+ *
+ * <b>Šipka se lepí k nadpisu, nemá vlastní řádek</b> (Filip, 8. 11.
+ * 2026: *„měl by to být nějaký malý odkaz třeba v té hlavičce, aby jsme
+ * si prostě nesežrali design, prostor"*). Pracovní obrazovky appky se
+ * otevírají z panelu regaty a bez odkazu se z nich vracelo jen systémovým
+ * gestem — na vodě, v rukavicích, u telefonu v pouzdru.
+ *
+ * Terč je celý nadpis, ne ta šipka: 44 pt na výšku drží `naZpet`,
+ * protože čtyři body široká šipka by byla nejhůř mířené tlačítko
+ * v appce.
+ */
+export function Nadpis({
+  children,
+  tlumene,
+  naZpet,
+  /** Co se o cestě zpátky řekne nahlas, bez toho se čte jen nadpis. */
+  zpetKam,
+}: {
+  children: React.ReactNode;
+  tlumene?: string;
+  naZpet?: () => void;
+  zpetKam?: string;
+}) {
   const t = useTheme();
+  const text = (
+    <Text style={[s.nadpis, { color: t.text }]}>
+      {naZpet ? <Text style={{ color: t.voda }}>‹ </Text> : null}
+      {children}
+    </Text>
+  );
+
   return (
     <View style={{ marginBottom: 16 }}>
-      <Text style={[s.nadpis, { color: t.text }]}>{children}</Text>
+      {naZpet ? (
+        <Pressable
+          onPress={naZpet}
+          accessibilityRole="button"
+          accessibilityLabel={zpetKam ?? 'Zpátky'}
+          style={({ pressed }) => [s.nadpisZpet, { opacity: pressed ? 0.6 : 1 }]}>
+          {text}
+        </Pressable>
+      ) : (
+        text
+      )}
       {tlumene ? <Text style={{ color: t.tlumeny, marginTop: 2 }}>{tlumene}</Text> : null}
     </View>
   );
@@ -246,6 +287,9 @@ export function Radek({
 
 const s = StyleSheet.create({
   nadpis: { fontSize: 26, fontWeight: '700', letterSpacing: -0.5 },
+  // Terč na dotyk je celý nadpis, ne šipka: 44 pt je mez
+  // `tools/kontrola-dotyku.py`.
+  nadpisZpet: { minHeight: 44, justifyContent: 'center' },
   sekce: {
     fontSize: 12,
     fontWeight: '600',

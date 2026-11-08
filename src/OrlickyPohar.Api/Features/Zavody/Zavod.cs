@@ -623,6 +623,27 @@ public class Rozjizdka : Fotky.IMaFotku
     public int OpakovanychStartu { get; set; }
 
     /// <summary>
+    /// Kdy byl vyvěšen <b>první opakovač</b> — a tím i to, že pořád visí.
+    /// <c>null</c> znamená, že nevisí.
+    /// <para>
+    /// <b>Proč to musí být v datech</b> (Filip, 8. 11. 2026). Odvolání
+    /// podle ZPJ 29.2 nedává nový čas startu: ten běží *„jednu minutu
+    /// poté, co je první opakovač <b>svěšen</b>"*, a jak dlouho visí,
+    /// pravidlo neurčuje — komise ho drží, dokud se pole nevrátí za
+    /// čáru. Mezi vyvěšením a svěšením je tedy stav, který trvá minuty
+    /// a <b>musí ho vidět i druhý telefon</b>: držet ho jen v appce by
+    /// znamenalo, že po restartu nebo na telefonu u druhého bodu čáry
+    /// nemá rozjížďka ani čas startu, ani vysvětlení.
+    /// </para>
+    /// <para>
+    /// Je to <b>okamžik, ne příznak</b>, protože se z něj dá přečíst, jak
+    /// dlouho opakovač visel — a to je doklad k nahlášenému novému
+    /// startu.
+    /// </para>
+    /// </summary>
+    public DateTimeOffset? OpakovacOd { get; set; }
+
+    /// <summary>
     /// Zapsal čas startu <b>velitel</b>, tedy hlavní startér regaty?
     /// <para>
     /// Na tom stojí celý velitelský čas (nález R19, rozhodnuto

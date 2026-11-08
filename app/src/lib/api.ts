@@ -193,7 +193,7 @@ export async function provedProceduru(
   serie: string,
   zavod: string,
   cislo: number,
-  druh: 'Spustit' | 'Odlozit' | 'Odvolat',
+  druh: 'Spustit' | 'Odlozit' | 'Odvolat' | 'OpakovacDolu',
   /**
    * Kdy to startér zmáčkl (ISO). Bez něj platí čas, kdy požadavek dorazil
    * — a podržený úkon by tím posunul start o celý výpadek sítě.

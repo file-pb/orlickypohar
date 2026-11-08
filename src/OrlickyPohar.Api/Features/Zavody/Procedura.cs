@@ -17,12 +17,32 @@ public enum DruhProcedury
     Odlozit = 1,
 
     /// <summary>
-    /// <b>Všeobecné odvolání po startu</b> — ZPJ 29.2, první opakovač.
-    /// Nový čas <b>volný není</b>: pravidlo říká *„Vyzývací znamení nového
-    /// startu odvolané třídy musí být dáno jednu minutu poté, co je první
-    /// opakovač spuštěn."*
+    /// <b>Všeobecné odvolání po startu</b> — ZPJ 29.2, vyvěšení prvního
+    /// opakovače. <b>Nový čas z toho ještě nevyjde</b>: běží od okamžiku,
+    /// kdy se opakovač <em>svěsí</em>, a to je samostatný úkon
+    /// (<see cref="OpakovacDolu"/>).
     /// </summary>
     Odvolat = 2,
+
+    /// <summary>
+    /// <b>První opakovač dolů</b> — tím začíná nový start odvolané
+    /// rozjížďky. ZPJ 29.2: *„Vyzývací znamení nového startu odvolané
+    /// třídy musí být dáno jednu minutu poté, co je první opakovač
+    /// <b>svěšen</b> (jeden zvukový signál)."*
+    /// <para>
+    /// <b>Proč je to krok zvlášť</b> (Filip, 8. 11. 2026: *„ta minuta se
+    /// mi nějak nezdá"*, a po doložení znění *„po stisku toho tlačítka
+    /// musí být vyvěšeno modální okno, které informuje o tom stavu, a
+    /// v okamžiku, kdy ho zavřeme, běží ona minuta"*). Do té doby se
+    /// nový čas počítal od <see cref="Odvolat"/>, tedy od vyvěšení —
+    /// a to platí jedině tehdy, kdyby komise opakovač svěsila v tutéž
+    /// vteřinu, kdy ho vytáhla. Na vodě visí, dokud se pole nevrátí za
+    /// čáru, a <b>jak dlouho, pravidlo neurčuje vůbec</b>: rozhoduje
+    /// komise. Dopočítaný čas startu tedy neplatil a appka ho ukazovala
+    /// posádkám.
+    /// </para>
+    /// </summary>
+    OpakovacDolu = 3,
 }
 
 /// <summary>
@@ -73,8 +93,14 @@ public static class Procedura
     public const int DelkaNejvic = 60;
 
     /// <summary>
-    /// Jak dlouho po spuštění prvního opakovače padne vyzývací znamení
-    /// nového startu — ZPJ 29.2 doslova *„jednu minutu poté"*.
+    /// Jak dlouho po <b>svěšení</b> prvního opakovače padne vyzývací
+    /// znamení nového startu — ZPJ 29.2 doslova *„jednu minutu poté, co
+    /// je první opakovač svěšen"*.
+    /// <para>
+    /// <b>Měří se od svěšení, ne od vyvěšení.</b> Jméno zůstalo, protože
+    /// odkazuje na pravidlo; okamžik, od kterého se počítá, nese
+    /// <see cref="DruhProcedury.OpakovacDolu"/>.
+    /// </para>
     /// </summary>
     public static readonly TimeSpan PoOdvolani = TimeSpan.FromMinutes(1);
 
@@ -93,13 +119,32 @@ public static class Procedura
     /// podle jména, ne podle toho, co se stalo.
     /// </para>
     /// </summary>
-    public static string? ProcNejde(DruhProcedury druh, StavRozjizdky stav, DateTimeOffset? startV) =>
+    /// <param name="opakovacOd">
+    /// Kdy byl vyvěšen první opakovač, pokud ještě visí
+    /// (<see cref="Rozjizdka.OpakovacOd"/>). Dokud visí, je jediný úkon
+    /// <see cref="DruhProcedury.OpakovacDolu"/> — nový start odvolané
+    /// rozjížďky se počítá od svěšení, takže cokoliv jiného by tu minutu
+    /// obešlo.
+    /// </param>
+    public static string? ProcNejde(
+        DruhProcedury druh,
+        StavRozjizdky stav,
+        DateTimeOffset? startV,
+        DateTimeOffset? opakovacOd = null) =>
         (druh, stav) switch
         {
             (_, StavRozjizdky.Zrusena) =>
                 "Rozjížďka je zrušená, takže se nestartuje. Vrať ji do hry.",
             (_, StavRozjizdky.Dokoncena) =>
                 "Rozjížďka je dojetá. Nový start je opakování startu — pusť nejdřív časomíru znovu.",
+
+            // <b>Dokud opakovač visí, nic jiného se nestartuje.</b> Nový
+            // start se počítá od jeho svěšení, takže spuštění procedury
+            // nebo druhé odvolání by tu minutu obešly — a startér by měl
+            // na obrazovce čas, který pravidlo nedává.
+            (not DruhProcedury.OpakovacDolu, _) when opakovacOd is not null =>
+                "Visí první opakovač. Nejdřív ho svěs — od toho okamžiku běží "
+                + "minuta do vyzývacího znamení (ZPJ 29.2).",
 
             // Spustit proceduru dvakrát by posunulo start dopředu a lodím,
             // které podle prvního odpočtu najíždějí, vzalo minuty.
@@ -119,6 +164,13 @@ public static class Procedura
                 "Rozjížďka ještě nestartovala, takže není co odvolat (ZPJ 29.2 platí po startu). "
                 + "Před startem se odkládá.",
 
+            // Svěsit jde jen to, co visí. Jediná výjimka je rozjížďka,
+            // která na serveru pořád „probíhá": tam odvolání nedoletělo
+            // ze vody a svěšení ho dohání, viz `JeOpakovanyStart`.
+            (DruhProcedury.OpakovacDolu, StavRozjizdky.Planovana) when opakovacOd is null =>
+                "Žádný opakovač nevisí, takže není co svěsit. Nový start "
+                + "odvolané rozjížďky začíná všeobecným odvoláním.",
+
             _ => null,
         };
 
@@ -137,10 +189,17 @@ public static class Procedura
             // start, který aplikace od 28. 10. 2026 umí zapsat (K6).
             DruhProcedury.Odlozit => null,
 
-            // <b>Tady volný není</b> (ZPJ 29.2): vyzývací znamení padne
-            // minutu po spuštění opakovače, a od vyzývacího znamení do
-            // startu uplyne celá procedura.
-            DruhProcedury.Odvolat => ted + PoOdvolani + TimeSpan.FromMinutes(delkaMinut),
+            // <b>Odvolání samo žádný čas nedává</b> (ZPJ 29.2). Opakovač
+            // je vyvěšený a visí, dokud se pole nevrátí za čáru; minuta
+            // běží teprve od jeho svěšení. Dopočítat čas už tady by
+            // znamenalo ukázat posádkám start, který pravidlo neslibuje
+            // — a který by komise přestřelila, kdykoliv opakovač podrží
+            // delší než vteřinu.
+            DruhProcedury.Odvolat => null,
+
+            // <b>Tady volný není</b>: od svěšení opakovače minuta do
+            // vyzývacího znamení a od něj celá procedura.
+            DruhProcedury.OpakovacDolu => ted + PoOdvolani + TimeSpan.FromMinutes(delkaMinut),
 
             _ => null,
         };
@@ -161,4 +220,11 @@ public static class Procedura
     /// </para>
     /// </summary>
     public static bool JeOpakovanyStart(DruhProcedury druh) => druh == DruhProcedury.Odvolat;
+
+    /// <summary>
+    /// Visí po tom úkonu první opakovač? Vyvěsí ho odvolání a svěsí
+    /// kterýkoliv další úkon — odklad včetně, protože AP se nad visícím
+    /// opakovačem nevyvěšuje.
+    /// </summary>
+    public static bool VisiOpakovac(DruhProcedury druh) => druh == DruhProcedury.Odvolat;
 }

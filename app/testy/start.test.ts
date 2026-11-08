@@ -342,6 +342,55 @@ zkus('bez startu není co zastavovat', () => {
   assert.deepEqual(ukonyStartu(stavStartu([planovana(1, null)], V('11:50:00'))), []);
 });
 
+zkus('visící opakovač přebíjí všechno a nenabízí žádnou dlaždici', () => {
+  // <b>Stav mezi odvoláním a novým startem</b> (ZPJ 29.2, 8. 11. 2026).
+  // V datech je k nerozeznání od odložené rozjížďky — `Planovana` bez
+  // času startu — takže bez `opakovacOd` by panel hlásil „bez času
+  // startu" a nabízel spuštění procedury, které server odmítne.
+  const r: RozjizdkaProOdpocet[] = [
+    { cislo: 2, startV: null, stav: 'Planovana', opakovacOd: '2027-05-15T12:03:00Z' },
+  ];
+  const stav = stavStartu(r, V('12:03:40'));
+  assert.equal(stav?.druh, 'opakovac');
+  assert.equal(stav?.druh === 'opakovac' ? stav.visiS : null, 40);
+
+  // Odložit nejde (AP se nad visícím opakovačem nevyvěšuje) a odvolat je
+  // už odvoláno; pokračování je jediné — svěsit, a to panel nabízí sám.
+  assert.deepEqual(ukonyStartu(stav), []);
+
+  // A hlas nemá co ohlašovat: žádný start naplánovaný není.
+  assert.equal(kolikDoStartu(stav, V('12:03:40')), null);
+  assert.equal(maBytKlid(stav, V('12:03:40')), false);
+});
+
+zkus('visící opakovač přebije i rozjížďku, která podle serveru jede', () => {
+  // Server může mít rozjížďku pořád `Probiha`, když odvolání dojde
+  // jinou cestou než ohlášení startu. Opakovač je akutnější zpráva.
+  const r: RozjizdkaProOdpocet[] = [
+    { cislo: 2, startV: START, stav: 'Probiha', opakovacOd: '2027-05-15T12:03:00Z' },
+  ];
+  assert.equal(stavStartu(r, V('12:03:30'))?.druh, 'opakovac');
+});
+
+zkus('svěšený opakovač už žádný stav nedrží', () => {
+  // `opakovacOd: null` znamená „nevisí" — a tím se panel vrací k běžnému
+  // čekání na nový start.
+  const r: RozjizdkaProOdpocet[] = [
+    { cislo: 2, startV: '2027-05-15T12:09:00Z', stav: 'Planovana', opakovacOd: null },
+  ];
+  assert.equal(stavStartu(r, V('12:03:00'))?.druh, 'ceka');
+});
+
+zkus('popis visícího opakovače neslibuje čas', () => {
+  const r: RozjizdkaProOdpocet[] = [
+    { cislo: 3, startV: null, stav: 'Planovana', opakovacOd: '2027-05-15T12:03:00Z' },
+  ];
+  assert.equal(
+    popisStartu(stavStartu(r, V('12:03:30'))),
+    'Rozjížďka 3 — visí první opakovač',
+  );
+});
+
 zkus('rozjížďka, která jede, se taky dá odvolat', () => {
   // Zapomenutý čas sem patří: i rozjížďku, co „jede" od včerejška, je
   // čím vrátit na start.
@@ -358,7 +407,11 @@ zkus('důsledek úkonu mluví o čase, ne o vlajce', () => {
   // později. Obojí mluví o čase; o vlajce ani jedno.
   assert.ok(dusledekUkonu('Odlozit').includes('Nový čas'));
   assert.ok(dusledekUkonu('Odlozit').includes('Odpočet se zruší'));
-  assert.ok(dusledekUkonu('Odvolat').includes('znovu'));
+  // U odvolání musí z věty být poznat, že čas z něj **nevyjde**: běží
+  // teprve od svěšení opakovače (ZPJ 29.2, oprava z 8. 11. 2026).
+  assert.ok(dusledekUkonu('Odvolat').includes('opakovač'));
+  assert.ok(dusledekUkonu('Odvolat').includes('svěsíš'));
+  assert.ok(!dusledekUkonu('Odvolat').includes('od začátku procedury'));
 });
 
 /* ---------- čas do startu pro partituru ---------- */

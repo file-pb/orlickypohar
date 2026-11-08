@@ -25,7 +25,15 @@ public record VysledekDto(
 public record RozjizdkaDto(
     int Cislo, DateTimeOffset? StartV, StavRozjizdky Stav, bool DoSerie,
     IReadOnlyList<VysledekDto> Vysledky,
-    StavVysledku StavVysledku = StavVysledku.Navrzeno);
+    StavVysledku StavVysledku = StavVysledku.Navrzeno,
+    /// <summary>
+    /// Kdy byl vyvěšen první opakovač, pokud ještě visí (ZPJ 29.2,
+    /// 8. 11. 2026). <b>Vydává se i veřejně</b>, a to schválně: vlajka
+    /// visí na stěžni a posádky ji vidí z vody — appka jim má říct totéž,
+    /// protože v tomhle stavu žádný čas startu neexistuje a odpočet by
+    /// jinak jen zmizel. Aditivně, starší klienti ho nečtou.
+    /// </summary>
+    DateTimeOffset? OpakovacOd = null);
 
 /// <summary>
 /// Loď, která na zastávku přijela — bez ohledu na to, jestli se už jelo.
@@ -365,7 +373,7 @@ public static class ZavodEndpoints
         var vsechny = await db.Rozjizdky
             .Where(r => r.ZavodId == zavod.Id)
             .OrderBy(r => r.Cislo)
-            .Select(r => new { r.Cislo, r.StartV, r.Stav, r.DoSerie, r.StavVysledku })
+            .Select(r => new { r.Cislo, r.StartV, r.Stav, r.DoSerie, r.StavVysledku, r.OpakovacOd })
             .ToListAsync(ct);
 
         var podleCisla = radky.GroupBy(r => r.Cislo).ToDictionary(g => g.Key, g => g.ToList());
@@ -386,7 +394,7 @@ public static class ZavodEndpoints
                     v.Lod, v.Kategorie, v.Kormidelnik, v.PoradiVCili,
                     v.NamerenyCas == null ? null : (int)v.NamerenyCas.Value.TotalSeconds,
                     v.Kod)),
-            ], r.StavVysledku))
+            ], r.StavVysledku, r.OpakovacOd))
             .ToList();
 
         // Kódy mají přihlášených do závodu + 1 (A5.2), takže je potřeba

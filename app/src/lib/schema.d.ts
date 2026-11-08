@@ -7375,7 +7375,7 @@ export interface components {
             doSerie: boolean;
         };
         /** @enum {unknown} */
-        DruhProcedury: "Spustit" | "Odlozit" | "Odvolat";
+        DruhProcedury: "Spustit" | "Odlozit" | "Odvolat" | "OpakovacDolu";
         /** @enum {unknown} */
         DruhStartu: "PevnaLinie" | "OtevirajiciSeBrana" | null;
         /** @enum {unknown} */
@@ -8158,6 +8158,8 @@ export interface components {
             doSerie: boolean;
             vysledky: components["schemas"]["VysledekDto"][];
             stavVysledku?: components["schemas"]["StavVysledku"];
+            /** Format: date-time */
+            opakovacOd?: null | string;
         };
         RozjizdkaNaVyberDto: {
             /** Format: int32 */
@@ -8816,6 +8818,8 @@ export interface components {
             velitel?: null | string;
             /** @default false */
             veliS: boolean;
+            /** Format: date-time */
+            opakovacOd?: null | string;
         };
         ZapisTeplotyRadek: {
             snimek: string;

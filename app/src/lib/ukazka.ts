@@ -520,17 +520,20 @@ export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: st
       const zapsanoV = typeof telo.zapsanoV === 'string' ? Date.parse(telo.zapsanoV) : Date.now();
       const delka = (z.delkaProceduryMin ?? 5) * 60_000;
 
-      // <b>Všeobecné odvolání nový čas má</b>, a nepočítá se stejně jako
-      // spuštění: vyzývací znamení padne **minutu** po spuštění prvního
-      // opakovače (ZPJ 29.2) a od něj teprve uplyne celá procedura —
-      // `Procedura.NovyStart` na serveru. Do 8. 11. 2026 tady odvolání
-      // padalo do téhož `null` jako odklad.
+      // <b>Nový čas odvolané rozjížďky dává svěšení opakovače, ne
+      // odvolání</b> (ZPJ 29.2: *„jednu minutu poté, co je první
+      // opakovač svěšen"*). Odvolání jen vyvěsí opakovač a čas zahodí;
+      // ukázka to musí dělat stejně jako `Procedura.NovyStart`, jinak
+      // by se v ní okno „visí opakovač" nikdy neukázalo.
       r.startV =
         telo.druh === 'Spustit'
           ? new Date(zapsanoV + delka).toISOString()
-          : telo.druh === 'Odvolat'
+          : telo.druh === 'OpakovacDolu'
             ? new Date(zapsanoV + 60_000 + delka).toISOString()
             : null;
+
+      // Opakovač vyvěsí odvolání a svěsí ho kterýkoliv další úkon.
+      r.opakovacOd = telo.druh === 'Odvolat' ? new Date(zapsanoV).toISOString() : null;
 
       // <b>A všechny tři vracejí rozjížďku mezi plánované</b>
       // (`Procedura.StavPo`): procedura znamená, že se teprve pojede.

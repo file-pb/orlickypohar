@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -84,6 +84,7 @@ type Zadani =
 
 export default function TratZaJizdy() {
   const { slug, zavod } = useLocalSearchParams<{ slug: string; zavod: string }>();
+  const router = useRouter();
   const t = useTheme();
 
   const { data, chyba: chybaZavodu, nacita, obnov } = useData(
@@ -171,7 +172,15 @@ export default function TratZaJizdy() {
     <ScrollView
       contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={obnov} tintColor={t.voda} />}>
-      <Nadpis tlumene={data.nazev}>Trať za jízdy</Nadpis>
+      {/* Nadpis je zároveň cesta zpátky na panel rozjížďky — stejně
+          jako v cíli. Trať za jízdy se otevírá z panelu a vracelo se
+          z ní jen systémovým gestem. */}
+      <Nadpis
+        tlumene={data.nazev}
+        naZpet={() => router.back()}
+        zpetKam="Trať za jízdy — zpět na panel rozjížďky">
+        Trať za jízdy
+      </Nadpis>
 
       {cislo === null ? (
         // Před startem se staví rovnou jiná trať, po dojetí se už nemění,

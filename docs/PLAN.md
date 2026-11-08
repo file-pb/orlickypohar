@@ -9005,16 +9005,41 @@ která dostala Z a pak nedokončila, má DNF.
 > Kódy jsou v aplikaci proto, aby se výsledek té dohody dal zapsat.
 
 **Startovní procedura má místo, kam se zapíše, co se stalo** *(R5, R12)*.
-Jedna cesta `POST …/rozjizdky/{cislo}/procedura` se třemi úkony:
+Jedna cesta `POST …/rozjizdky/{cislo}/procedura` se čtyřmi úkony:
 
 - **Spustit** — start padne za tolik minut, kolik má regata nastaveno;
 - **Odložit** (ZPJ 27.3) — čas se smaže a **nový je volný**, jak pravidlo
   žádá;
-- **Odvolat start** (ZPJ 29.2) — nový start spočítá pravidlo: minuta po
-  spuštění opakovače plus celá procedura. Volný tu není.
+- **Odvolat start** (ZPJ 29.2) — vyvěsí se první opakovač a čas se smaže.
+  **Žádný nový z toho nevyjde**, viz níž;
+- **Opakovač dolů** — teprve tenhle úkon dá nový čas: minuta a pak celá
+  procedura.
 
-Server hlídá, že se ty dva nezaměňují: odkládá se **před** startem,
-odvolává **po** něm. A že se start opakoval, je nově vidět —
+Server hlídá, že se odklad s odvoláním nezamění: odkládá se **před**
+startem, odvolává **po** něm.
+
+> **Proč je svěšení opakovače samostatný krok** *(oprava z 8. 11. 2026,
+> po Filipově dotazu „ta minuta se mi nějak nezdá")*. ZPJ 29.2 zní: *„The
+> warning signal for a new start for the recalled class shall be made one
+> minute after the First Substitute is **removed** (one sound)."* Minuta
+> se tedy měří od **svěšení** opakovače, a jak dlouho visí, pravidlo
+> neurčuje vůbec — drží ho komise, dokud se pole nevrátí za startovní
+> čáru. Dokud aplikace počítala `odvolání + 1 min + procedura`, platil
+> ten čas v jediném případě: kdyby komise opakovač spustila v tutéž
+> vteřinu, kdy ho vytáhla. Na vodě to tak nikdy není, takže appka
+> ukazovala posádkám start, který už neplatil.
+>
+> Stav mezi oběma úkony drží **server** (`Rozjizdka.OpakovacOd`), ne
+> appka: trvá minuty a musí ho vidět i druhý telefon, web a kdokoliv,
+> komu se appka mezitím vypne. Panel i lišta v něm ukazují *Visí první
+> opakovač* a to, jak dlouho visí; appka k tomu vyvěsí okno. Dokud visí,
+> server **každý jiný úkon odmítne** — jinak by se ta minuta dala obejít
+> spuštěním procedury.
+>
+> Jediná výjimka je svěšení, které dohnalo **neodeslané odvolání**: appka
+> drží jediný čekající úkon (`cekajici-start.ts`), takže ve výpadku sítě
+> se odvolání přepíše svěšením a na server dojde jen to druhé. Počítadlo
+> opakovaných startů (ZPJ 36) se proto zvedne i tam. A že se start opakoval, je nově vidět —
 `Rozjizdka.OpakovanychStartu` a štítek *„2× odvolaný start"*; do té doby
 po předchozím pokusu nezbylo nic (ZPJ 36).
 
@@ -9023,8 +9048,9 @@ s výchozí pětkou, protože pětka v pravidle 26 má hvězdičku. Byla
 zadrátovaná na **dvou místech naráz** (okno přenosu poloh a tabule); obě
 ji teď berou z regaty a tiskne se do vypsání závodu.
 
-**Čas se neposílá z klienta**: spuštění i odvolání si ho počítají
-z pravidla, takže vlastní čas by u odvolání znamenal obejít ZPJ 29.2.
+**Čas se neposílá z klienta**: spuštění i svěšení opakovače si ho
+počítají z pravidla, takže vlastní čas by u nového startu znamenal obejít
+ZPJ 29.2.
 
 **Velitelský čas: jeden, a drží ho hlavní startér** *(R19, body 2–4;
 předávání rozhodl Filip 28. 10. 2026)*. Filip: *„Startér může být jeden

@@ -284,11 +284,16 @@ export async function ulozCil(
 /**
  * Úkony startovní procedury (nálezy R5 a R12, 28. 10. 2026).
  *
- * <b>Čas se neposílá</b>: spuštění i odvolání si ho počítají z pravidel
- * (ZPJ 26 a 29.2) a z délky procedury regaty. Poslat vlastní čas by
- * znamenalo obejít to pravidlo — a u odvolání je ten čas závazný.
+ * <b>Čas se neposílá</b>: spuštění i svěšení opakovače si ho počítají
+ * z pravidel (ZPJ 26 a 29.2) a z délky procedury regaty. Poslat vlastní
+ * čas by znamenalo obejít to pravidlo — a u nového startu po odvolání je
+ * ten čas závazný.
+ *
+ * <b>Odvolání a svěšení opakovače jsou dva úkony</b> (8. 11. 2026):
+ * odvolání opakovač vyvěsí, čas z něj žádný nevyjde, a nový start běží
+ * teprve od <code>OpakovacDolu</code>.
  */
-export type DruhProcedury = "Spustit" | "Odlozit" | "Odvolat";
+export type DruhProcedury = "Spustit" | "Odlozit" | "Odvolat" | "OpakovacDolu";
 
 /**
  * Převezme velení startu regaty (nález R19, rozhodnuto 28. 10. 2026).

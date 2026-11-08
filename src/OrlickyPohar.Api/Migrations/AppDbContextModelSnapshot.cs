@@ -1768,6 +1768,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<DateTimeOffset?>("KonecV")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("OpakovacOd")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("OpakovanychStartu")
                         .HasColumnType("integer");
 

@@ -58,9 +58,19 @@ zkus('odložení nechává čas volný', () => {
   assert.equal(startZUkonu('Odlozit', STISK, DELKA_S), null);
 });
 
-zkus('odvolání přidá minutu z pravidla 29.2', () => {
-  // „Vyzývací znamení nového startu musí být dáno jednu minutu poté."
-  assert.equal(startZUkonu('Odvolat', STISK, DELKA_S), '2027-05-15T12:01:00.000Z');
+zkus('odvolání samo žádný čas nedává', () => {
+  // ZPJ 29.2 měří minutu od **svěšení** opakovače *(„one minute after
+  // the First Substitute is removed")*, a jak dlouho visí, neurčuje:
+  // drží ho komise, dokud se pole nevrátí za čáru. Do 8. 11. 2026 se tu
+  // počítalo `stisk + 1 min + procedura`, tedy čas platný jedině tehdy,
+  // kdyby opakovač spadl v tutéž vteřinu, kdy ho vytáhli.
+  assert.equal(startZUkonu('Odvolat', STISK, DELKA_S), null);
+});
+
+zkus('svěšený opakovač přidá minutu z pravidla 29.2', () => {
+  assert.equal(startZUkonu('OpakovacDolu', STISK, DELKA_S), '2027-05-15T12:01:00.000Z');
+  // Minuta je z 29.2, zbytek je procedura regaty (ZPJ 26 s hvězdičkou).
+  assert.equal(startZUkonu('OpakovacDolu', STISK, 10 * 60), '2027-05-15T12:06:00.000Z');
 });
 
 zkus('odpočet běží dřív, než o něm server ví', () => {
@@ -88,12 +98,45 @@ zkus('odvolaná rozjížďka přestane jet hned, ne až to potvrdí server', () 
   const po = (vterin: number) =>
     stavStartu(sCekajicim(zeServeru, ukon('Odvolat'), DELKA_S), STISK + vterin * 1000, DELKA_S);
 
-  // Půl minuty po odvolání se čeká: vyzývací znamení padne až minutu
-  // poté, co je spuštěn první opakovač (ZPJ 29.2), takže procedura
-  // ještě neběží. Hlavně ale už <b>nejede</b> rozjížďka.
-  assert.equal(po(30)?.druh, 'ceka');
+  // <b>Visí opakovač</b>, a to i deset minut po odvolání: žádný čas
+  // startu z odvolání nevyjde a odpočet se tedy nerozjede sám. Hlavní
+  // je, že rozjížďka už <b>nejede</b>.
+  assert.equal(po(30)?.druh, 'opakovac');
   assert.equal(po(30)?.cislo, 2);
+  assert.equal(po(600)?.druh, 'opakovac');
+});
 
+zkus('visí opakovač od stisku, ne od doručení', () => {
+  const zeServeru: RozjizdkaProOdpocet[] = [
+    { cislo: 2, startV: '2027-05-15T11:40:00Z', stav: 'Probiha' },
+  ];
+  const stav = stavStartu(
+    sCekajicim(zeServeru, ukon('Odvolat'), DELKA_S),
+    STISK + 42_000,
+    DELKA_S,
+  );
+  assert.equal(stav?.druh, 'opakovac');
+  assert.equal(stav?.druh === 'opakovac' ? stav.visiS : null, 42);
+});
+
+zkus('svěšení opakovače rozjede nový start i bez serveru', () => {
+  // Server o odvolání neví vůbec (rozjížďka „probíhá") a appka drží
+  // jediný čekající úkon — ve výpadku sítě se tedy odvolání přepíše
+  // svěšením. I tak musí odpočet nového startu běžet z hodin startéra.
+  const zeServeru: RozjizdkaProOdpocet[] = [
+    { cislo: 2, startV: '2027-05-15T11:40:00Z', stav: 'Probiha' },
+  ];
+
+  const po = (vterin: number) =>
+    stavStartu(
+      sCekajicim(zeServeru, ukon('OpakovacDolu'), DELKA_S),
+      STISK + vterin * 1000,
+      DELKA_S,
+    );
+
+  // Půl minuty po svěšení se čeká: vyzývací znamení padne až minutu poté
+  // (ZPJ 29.2), takže procedura ještě neběží.
+  assert.equal(po(30)?.druh, 'ceka');
   // A po té minutě je z toho odpočet nového startu.
   assert.equal(po(90)?.druh, 'procedura');
 });

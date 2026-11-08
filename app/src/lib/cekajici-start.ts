@@ -23,10 +23,10 @@
  */
 import { File, Paths } from 'expo-file-system';
 
-import { NEJDELSI_JIZDA_S, type RozjizdkaProOdpocet, type UkonStartu } from './start';
+import { NEJDELSI_JIZDA_S, type RozjizdkaProOdpocet, type UkonPanelu } from './start';
 
-/** Úkony procedury: spuštění a obě přerušení. */
-export type UkonProcedury = 'Spustit' | UkonStartu;
+/** Úkony procedury: spuštění, obě přerušení a svěšení opakovače. */
+export type UkonProcedury = 'Spustit' | UkonPanelu;
 
 /** Co appka drží, dokud to neprojde na server. */
 export type CekajiciUkon = {
@@ -41,9 +41,9 @@ export type CekajiciUkon = {
 /* ---------- čistá část: dá se testovat na Node ---------- */
 
 /**
- * Jak dlouho po spuštění prvního opakovače padne vyzývací znamení nového
- * startu — ZPJ 29.2 doslova *„jednu minutu poté"*. Totéž číslo má server
- * jako `Procedura.PoOdvolani`.
+ * Jak dlouho po <b>svěšení</b> prvního opakovače padne vyzývací znamení
+ * nového startu — ZPJ 29.2 doslova *„jednu minutu poté, co je první
+ * opakovač svěšen"*. Totéž číslo má server jako `Procedura.PoOdvolani`.
  */
 export const PO_ODVOLANI_S = 60;
 
@@ -57,8 +57,12 @@ export const PO_ODVOLANI_S = 60;
  * ne až u vody.
  */
 export function startZUkonu(druh: UkonProcedury, kdy: number, delkaS: number): string | null {
-  if (druh === 'Odlozit') return null;
-  const zaS = druh === 'Odvolat' ? PO_ODVOLANI_S + delkaS : delkaS;
+  // <b>Odvolání čas nedává.</b> Opakovač visí a nový start běží od jeho
+  // svěšení (ZPJ 29.2) — do té doby žádný neexistuje. Do 8. 11. 2026 se
+  // tu počítalo `kdy + 1 min + procedura`, což platí jedině tehdy, kdyby
+  // komise opakovač svěsila v tutéž vteřinu, kdy ho vytáhla.
+  if (druh === 'Odlozit' || druh === 'Odvolat') return null;
+  const zaS = druh === 'OpakovacDolu' ? PO_ODVOLANI_S + delkaS : delkaS;
   return new Date(kdy + zaS * 1000).toISOString();
 }
 
@@ -99,7 +103,16 @@ export function sCekajicim(
   if (!u) return rozjizdky;
   return rozjizdky.map((r) =>
     r.cislo === u.cislo
-      ? { ...r, startV: startZUkonu(u.druh, u.kdy, delkaS), stav: 'Planovana' as const }
+      ? {
+          ...r,
+          startV: startZUkonu(u.druh, u.kdy, delkaS),
+          stav: 'Planovana' as const,
+          // <b>Opakovač visí od stisku, ne od doručení.</b> Odvolání ho
+          // vyvěsí, každý další úkon svěsí — a dokud se nedoručí, panel
+          // ten stav drží sám. Bez toho by se startér po odvolání bez
+          // signálu koukal na „bez času startu" a neměl čím pokračovat.
+          opakovacOd: u.druh === 'Odvolat' ? new Date(u.kdy).toISOString() : null,
+        }
       : r,
   );
 }

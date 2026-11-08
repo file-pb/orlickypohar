@@ -400,7 +400,13 @@ export function Cil({
    *
    * <b>Odložit a odvolat nejsou totéž</b> a server to hlídá: před startem
    * se odkládá (ZPJ 27.3, nový čas volný), po startu se všeobecně odvolává
-   * (ZPJ 29.2, nový start minutu po opakovači plus procedura).
+   * (ZPJ 29.2).
+   *
+   * <b>Odvolání je krok, ne výsledek</b> (8. 11. 2026). Vyvěsí první
+   * opakovač a tím to zatím končí: nový start padne *„jednu minutu poté,
+   * co je první opakovač svěšen"*, a jak dlouho visí, pravidlo neurčuje —
+   * drží ho komise, dokud se pole nevrátí za čáru. Svěšení je proto
+   * samostatný úkon (<code>OpakovacDolu</code>) a teprve z něj vyjde čas.
    */
   const proved = async (druh: DruhProcedury, otazka?: string) => {
     if (otazka && !window.confirm(otazka)) return;
@@ -567,7 +573,38 @@ export function Cil({
               nebo nemá". Plánovaný start je mezi tím — čas je zapsaný,
               ale rozjížďka se ještě nejede, a lišta má odpočítávat, ne
               hlásit uplynulý čas jízdy. */}
-          {planovany && start ? (
+          {/* <b>Visí první opakovač</b> — stav mezi všeobecným odvoláním
+              a novým startem (ZPJ 29.2, 8. 11. 2026). Má přednost přede
+              všemi ostatními podobami lišty: žádný čas startu
+              neexistuje, protože nový běží teprve od svěšení opakovače,
+              a dokud visí, server každý jiný úkon odmítne. Bez téhle
+              větve by lišta po odvolání nabízela „Spustit proceduru"
+              a odvolaná rozjížďka by vypadala jako ta, které nikdo
+              nenastavil čas. */}
+          {zapis.opakovacOd ? (
+            <>
+              <span>
+                Visí první opakovač · <b className="cil-cas">nahoře {trvani(zapis.opakovacOd, ted)}</b>
+              </span>
+              <button
+                type="button"
+                className="cil-startuj"
+                onClick={() =>
+                  void proved(
+                    "OpakovacDolu",
+                    "První opakovač dolů? Od téhle chvíle běží minuta do vyzývacího "
+                      + `znamení a pak ${delkaProcedury} min procedura.`,
+                  )
+                }
+              >
+                Opakovač dolů
+              </button>
+              <span className="cil-poznamka">
+                Nech ho nahoře, dokud se pole nevrátí za startovní čáru — minuta
+                se měří od svěšení, ne od odvolání.
+              </span>
+            </>
+          ) : planovany && start ? (
             <>
               <span>
                 Plánovaný start {hodiny(start)} ·{" "}
@@ -650,8 +687,9 @@ export function Cil({
                 onClick={() =>
                   void proved(
                     "Odvolat",
-                    "Všeobecné odvolání? Rozjížďka se vrátí na start a nový čas "
-                      + `spočítá pravidlo: minuta po opakovači a ${delkaProcedury} min procedura.`,
+                    "Všeobecné odvolání? Vyvěsí se první opakovač a pole se vrátí "
+                      + "na start. Nový čas zatím žádný nebude — běží teprve od chvíle, "
+                      + "kdy opakovač svěsíš.",
                   )
                 }
               >

@@ -45,22 +45,82 @@ public class ProceduraTests
     }
 
     /// <summary>
-    /// <b>Po všeobecném odvolání volný není</b> — ZPJ 29.2: *„Vyzývací
-    /// znamení nového startu odvolané třídy musí být dáno jednu minutu
-    /// poté, co je první opakovač spuštěn."* Od vyzývacího znamení do
-    /// startu pak uplyne celá procedura.
+    /// <b>Odvolání samo žádný čas nedává</b> — a tohle je ta oprava
+    /// z 8. 11. 2026. ZPJ 29.2 doslova: *„The warning signal for a new
+    /// start for the recalled class shall be made one minute after the
+    /// First Substitute <b>is removed</b> (one sound)."* Minuta se měří
+    /// od <b>svěšení</b> opakovače, ne od jeho vyvěšení — a jak dlouho
+    /// visí, pravidlo neurčuje vůbec: drží ho komise, dokud se pole
+    /// nevrátí za čáru.
+    /// <para>
+    /// Do té doby se tu počítalo <c>ted + 1 + procedura</c> rovnou při
+    /// odvolání, což platí jedině tehdy, kdyby komise opakovač svěsila
+    /// v tutéž vteřinu, kdy ho vytáhla. Appka ten čas ukazovala
+    /// posádkám (Filip: *„ta minuta se mi nějak nezdá"*).
+    /// </para>
     /// </summary>
     [Fact]
-    public void Vseobecne_odvolani_pocita_cas_z_pravidla()
+    public void Odvolani_samo_zadny_cas_nedava()
+    {
+        Assert.Null(Procedura.NovyStart(DruhProcedury.Odvolat, Ted, 5));
+    }
+
+    /// <summary>
+    /// <b>Čas dává svěšení opakovače</b> — minuta do vyzývacího znamení
+    /// a od něj celá procedura (ZPJ 29.2 a 26).
+    /// </summary>
+    [Fact]
+    public void Svesen_opakovac_pocita_cas_z_pravidla()
     {
         Assert.Equal(
             Ted.AddMinutes(1 + 5),
-            Procedura.NovyStart(DruhProcedury.Odvolat, Ted, 5));
+            Procedura.NovyStart(DruhProcedury.OpakovacDolu, Ted, 5));
 
         // A s delší procedurou se posune jen ta druhá část; minuta je z 29.2.
         Assert.Equal(
             Ted.AddMinutes(1 + 10),
-            Procedura.NovyStart(DruhProcedury.Odvolat, Ted, 10));
+            Procedura.NovyStart(DruhProcedury.OpakovacDolu, Ted, 10));
+    }
+
+    /// <summary>
+    /// <b>Dokud opakovač visí, nic jiného se nestartuje.</b> Nový start
+    /// se počítá od jeho svěšení, takže spuštění procedury, odklad ani
+    /// druhé odvolání tu minutu obejít nesmějí.
+    /// </summary>
+    [Fact]
+    public void Pri_visicim_opakovaci_jde_jen_svesit()
+    {
+        foreach (var druh in Enum.GetValues<DruhProcedury>())
+        {
+            var chyba = Procedura.ProcNejde(druh, StavRozjizdky.Planovana, null, Ted);
+            if (druh == DruhProcedury.OpakovacDolu) Assert.Null(chyba);
+            else Assert.Contains("opakovač", chyba);
+        }
+    }
+
+    /// <summary>
+    /// A obráceně: svěsit jde jen to, co visí — s jedinou výjimkou
+    /// rozjížďky, která na serveru pořád „probíhá". Tam odvolání
+    /// nedoletělo ze vody a svěšení ho dohání, protože appka drží jediný
+    /// čekající úkon.
+    /// </summary>
+    [Fact]
+    public void Svesit_nevisici_opakovac_nejde()
+    {
+        Assert.NotNull(
+            Procedura.ProcNejde(DruhProcedury.OpakovacDolu, StavRozjizdky.Planovana, Ted, null));
+        Assert.Null(
+            Procedura.ProcNejde(DruhProcedury.OpakovacDolu, StavRozjizdky.Probiha, Ted, null));
+    }
+
+    /// <summary>Opakovač vyvěsí odvolání a svěsí ho kterýkoliv další úkon.</summary>
+    [Fact]
+    public void Opakovac_visi_jen_po_odvolani()
+    {
+        Assert.True(Procedura.VisiOpakovac(DruhProcedury.Odvolat));
+        Assert.False(Procedura.VisiOpakovac(DruhProcedury.OpakovacDolu));
+        Assert.False(Procedura.VisiOpakovac(DruhProcedury.Odlozit));
+        Assert.False(Procedura.VisiOpakovac(DruhProcedury.Spustit));
     }
 
     /// <summary>
@@ -120,13 +180,14 @@ public class ProceduraTests
     }
 
     /// <summary>
-    /// Všechny tři úkony vracejí rozjížďku mezi plánované: procedura
+    /// Všechny úkony vracejí rozjížďku mezi plánované: procedura
     /// znamená, že se teprve pojede.
     /// </summary>
     [Theory]
     [InlineData(DruhProcedury.Spustit)]
     [InlineData(DruhProcedury.Odlozit)]
     [InlineData(DruhProcedury.Odvolat)]
+    [InlineData(DruhProcedury.OpakovacDolu)]
     public void Po_procedure_je_rozjizdka_planovana(DruhProcedury druh)
     {
         Assert.Equal(StavRozjizdky.Planovana, Procedura.StavPo(druh));

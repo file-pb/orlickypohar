@@ -2613,6 +2613,9 @@ def zapis_dto(z, r):
             # parametr regaty — pětka v ZPJ 26 má hvězdičku.
             "delkaProceduryMin": z.get("delkaProceduryMin", 5),
             "opakovanychStartu": r.get("opakovanychStartu", 0),
+            # Visí první opakovač? Dokud visí, nový čas startu neexistuje
+            # — běží od svěšení, ne od odvolání (ZPJ 29.2, 8. 11. 2026).
+            "opakovacOd": r.get("opakovacOd"),
             # Velitelský čas (nález R19). Kdo velí a jestli to je ten,
             # kdo se ptá — obrazovka podle toho nabídne „přebírám velení".
             "velitel": (v := velitel_ted(z["slug"])) and v["jmeno"],
@@ -5319,16 +5322,25 @@ class H(BaseHTTPRequestHandler):
             return self.chyba(400, chyba)
 
         druh = (self.telo_zadosti() or {}).get("druh")
-        if druh not in ("Spustit", "Odlozit", "Odvolat"):
+        if druh not in ("Spustit", "Odlozit", "Odvolat", "OpakovacDolu"):
             return self.chyba(400, "Neznámý úkon procedury.")
 
         stav = r.get("stav")
+        opakovac = r.get("opakovacOd")
         if stav == "Zrusena":
             return self.chyba(400, "Rozjížďka je zrušená, takže se nestartuje. "
                                    "Vrať ji do hry.")
         if stav == "Dokoncena":
             return self.chyba(400, "Rozjížďka je dojetá. Nový start je opakování "
                                    "startu — pusť nejdřív časomíru znovu.")
+        # Dokud visí první opakovač, nic jiného se nestartuje: nový start
+        # se počítá od jeho svěšení (ZPJ 29.2).
+        if opakovac and druh != "OpakovacDolu":
+            return self.chyba(400, "Visí první opakovač. Nejdřív ho svěs — od toho "
+                                   "okamžiku běží minuta do vyzývacího znamení (ZPJ 29.2).")
+        if druh == "OpakovacDolu" and stav == "Planovana" and not opakovac:
+            return self.chyba(400, "Žádný opakovač nevisí, takže není co svěsit. Nový "
+                                   "start odvolané rozjížďky začíná všeobecným odvoláním.")
         if druh == "Spustit" and stav == "Probiha":
             return self.chyba(400, "Rozjížďka už jede. Na nový start je všeobecné odvolání.")
         if druh == "Odlozit" and stav == "Probiha":
@@ -5345,13 +5357,22 @@ class H(BaseHTTPRequestHandler):
         delka = z.get("delkaProceduryMin", 5)
         if druh == "Spustit":
             r["startV"] = _iso(_ted() + timedelta(minutes=delka))
-        elif druh == "Odlozit":
-            # ZPJ 27.3: nový čas je volný, takže se smaže.
-            r["startV"] = None
-        else:
-            # ZPJ 29.2: minuta po opakovači, pak celá procedura.
+        elif druh == "OpakovacDolu":
+            # ZPJ 29.2: minuta po **svěšení** opakovače, pak celá procedura.
             r["startV"] = _iso(_ted() + timedelta(minutes=1 + delka))
-            r["opakovanychStartu"] = r.get("opakovanychStartu", 0) + 1
+            # Svěšení, které dohnalo neodeslané odvolání — appka drží
+            # jediný čekající úkon, takže ve výpadku dojde jen to druhé.
+            if stav == "Probiha":
+                r["opakovanychStartu"] = r.get("opakovanychStartu", 0) + 1
+        else:
+            # Odklad (ZPJ 27.3) i odvolání (29.2) nechávají rozjížďku bez
+            # času: u odkladu je volný, u odvolání vznikne až svěšením.
+            r["startV"] = None
+            if druh == "Odvolat":
+                r["opakovanychStartu"] = r.get("opakovanychStartu", 0) + 1
+
+        # Opakovač vyvěsí odvolání a svěsí ho kterýkoliv další úkon.
+        r["opakovacOd"] = _iso(_ted()) if druh == "Odvolat" else None
 
         r["stav"] = "Planovana"
         r["konecV"] = None
@@ -6401,6 +6422,10 @@ class H(BaseHTTPRequestHandler):
                         # bodů nejde, protože `poradi` níž filtruje
                         # `plati()`, ale z řady zmizet nesmí.
                         "stavVysledku": r.get("stavVysledku", "Navrzeno"),
+                        # Visí první opakovač (ZPJ 29.2). Vydává se
+                        # i veřejně: vlajka visí na stěžni a posádky ji
+                        # vidí, a v tom stavu žádný čas startu není.
+                        "opakovacOd": r.get("opakovacOd"),
                         "vysledky": [] if not venku(z, r) else [{
                             "lod": nazvy(v["lod"]),
                             "kategorie": KAT[v["lod"]],

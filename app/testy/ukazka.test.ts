@@ -119,7 +119,10 @@ const testyAsync: [string, () => Promise<void>][] = [
   // ZPJ 29.2: vyzývací znamení padne minutu po spuštění prvního
   // opakovače a od něj uplyne celá procedura; `Procedura.NovyStart`
   // v API to tak počítá. Zahodit čas umí jedině odklad (ZPJ 27.3).
-  ['odvolání dá nový čas: minuta a pak celá procedura', async () => {
+  // <b>Odvolání čas nedává, dává ho svěšení opakovače</b> (ZPJ 29.2,
+  // oprava z 8. 11. 2026). Ukázka to musí zrcadlit, jinak by se v ní
+  // okno „visí opakovač" nikdy neukázalo.
+  ['odvolání vyvěsí opakovač a čas startu zahodí', async () => {
     zapniUkazku();
     const z = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo;
     const cislo = z.rozjizdky[0].cislo;
@@ -128,8 +131,25 @@ const testyAsync: [string, () => Promise<void>][] = [
       { method: 'POST', body: JSON.stringify({ druh: 'Odvolat', zapsanoV }) });
     const r = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo
       .rozjizdky.find((x: any) => x.cislo === cislo);
+    assert.equal(r.startV, null);
+    assert.equal(Date.parse(r.opakovacOd), Date.parse(zapsanoV));
+  }],
+
+  ['svěšený opakovač dá nový čas: minuta a pak celá procedura', async () => {
+    zapniUkazku();
+    const z = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo;
+    const cislo = z.rozjizdky[0].cislo;
+    const cesta = `/sprava/serie/2026-nanecisto/vysledky/izolepa/rozjizdky/${cislo}/procedura`;
+    await odpoved(cesta, { method: 'POST', body: JSON.stringify({ druh: 'Odvolat' }) });
+
+    const zapsanoV = '2027-05-15T09:00:00.000Z';
+    await odpoved(cesta,
+      { method: 'POST', body: JSON.stringify({ druh: 'OpakovacDolu', zapsanoV }) });
+    const r = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo
+      .rozjizdky.find((x: any) => x.cislo === cislo);
     const cekany = Date.parse(zapsanoV) + 60_000 + (z.delkaProceduryMin ?? 5) * 60_000;
     assert.equal(Date.parse(r.startV), cekany);
+    assert.equal(r.opakovacOd, null);
   }],
 
   ['odklad čas startu zahodí (ZPJ 27.3)', async () => {

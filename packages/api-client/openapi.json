@@ -8322,7 +8322,8 @@
                 "enum": [
                     "Spustit",
                     "Odlozit",
-                    "Odvolat"
+                    "Odvolat",
+                    "OpakovacDolu"
                 ]
             },
             "DruhStartu": {
@@ -11468,6 +11469,13 @@
                     },
                     "stavVysledku": {
                         "$ref": "#/components/schemas/StavVysledku"
+                    },
+                    "opakovacOd": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -13955,6 +13963,13 @@
                     "veliS": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "opakovacOd": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },

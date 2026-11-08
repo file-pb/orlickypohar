@@ -76,7 +76,11 @@ public record ZapisRozjizdkyDto(
     // nabídne „přebírám velení", a telefon se na to ptá při každém
     // připojení, aby se o ztrátě velení dozvěděl.
     string? Velitel = null,
-    bool VeliS = false);
+    bool VeliS = false,
+    // Kdy byl vyvěšen první opakovač, pokud ještě visí (8. 11. 2026).
+    // Dokud visí, nový čas startu neexistuje — běží od svěšení, ne od
+    // odvolání. Aditivně, starší klienti ho nečtou.
+    DateTimeOffset? OpakovacOd = null);
 
 /// <summary>Jeden řádek snímku i s tím, co o lodi ví ročník.</summary>
 public record NavrhRadekDto(
@@ -222,7 +226,8 @@ public class ZapisSprava(
             Fotky.Nahravani.Dto(papir, uloziste.VerejnaAdresa), poradatel, pocetNavrhu,
             rozjizdka.Revize, rozjizdka.KonecV, rozjizdka.Stav,
             zavod.DelkaProceduryMin, rozjizdka.OpakovanychStartu,
-            velitel?.Jmeno, velitel is not null && kdo is { } ja && velitel.Id == ja);
+            velitel?.Jmeno, velitel is not null && kdo is { } ja && velitel.Id == ja,
+            rozjizdka.OpakovacOd);
     }
 
     /// <summary>
@@ -603,7 +608,8 @@ public class ZapisSprava(
         var zavod = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
         if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno) return zamceno;
 
-        if (Procedura.ProcNejde(druh, rozjizdka.Stav, rozjizdka.StartV) is { } nejde) return nejde;
+        if (Procedura.ProcNejde(druh, rozjizdka.Stav, rozjizdka.StartV, rozjizdka.OpakovacOd)
+            is { } nejde) return nejde;
 
         // <b>„Teď" je chvíle stisku, ne chvíle doručení.</b> Odpočet běží
         // na telefonu startéra a ten úkon podrží, dokud nemá signál; se
@@ -618,7 +624,18 @@ public class ZapisSprava(
         // stejně jako u nového startu.
         rozjizdka.KonecV = null;
 
-        if (Procedura.JeOpakovanyStart(druh)) rozjizdka.OpakovanychStartu++;
+        // <b>Opakovaný start se počítá při odvolání</b> (ZPJ 36) — ale
+        // taky při svěšení, které odvolání dohnalo: appka drží jediný
+        // čekající úkon (`cekajici-start.ts`), takže ve výpadku sítě se
+        // odvolání přepíše svěšením a na server dojde jen to druhé.
+        // Rozjížďka pak pořád „probíhá", a kdyby se počítadlo nezvedlo,
+        // o opakovaném startu by nebylo nikde ani slovo.
+        var dohnaneOdvolani = druh == DruhProcedury.OpakovacDolu
+            && rozjizdka.Stav == StavRozjizdky.Probiha;
+        if (Procedura.JeOpakovanyStart(druh) || dohnaneOdvolani) rozjizdka.OpakovanychStartu++;
+
+        // Opakovač vyvěsí odvolání a svěsí ho kterýkoliv další úkon.
+        rozjizdka.OpakovacOd = Procedura.VisiOpakovac(druh) ? ted.ToUniversalTime() : null;
 
         // <b>Odložení a odvolání jsou ty zprávy, které minutu nesnesou</b>
         // (nález R18, 28. 10. 2026 — `OdesilaniUloha` je jmenovala přesně
@@ -634,24 +651,37 @@ public class ZapisSprava(
         // <b>A push nenahrazuje signál.</b> Odložení se podle ZPJ 27.3
         // signalizuje vlajkou, ne telefonem; tohle je navíc — dosah tam,
         // kam megafon nedoletí, a doklad, co bylo oznámeno a kdy (R18).
-        var spesna = druh is DruhProcedury.Odlozit or DruhProcedury.Odvolat;
+        var spesna = druh is DruhProcedury.Odlozit or DruhProcedury.Odvolat
+            or DruhProcedury.OpakovacDolu;
         if (spesna)
         {
             var kdy = rozjizdka.StartV is { } s
                 ? $" Nový start {Vypsani.CasVPraze(s)}."
+                // <b>U odvolání je tohle ta pravdivá věta.</b> Čas
+                // doopravdy ještě neexistuje: vznikne až svěšením
+                // opakovače, a to je druhá zpráva.
                 : " Nový čas oznámí závodní komise.";
 
             var serie = await db.Serie.Where(x => x.Id == zavod.SerieId)
                 .Select(x => x.Slug).FirstAsync(ct);
 
+            var (nadpis, veta) = druh switch
+            {
+                DruhProcedury.Odlozit =>
+                    ($"{rozjizdka.Cislo}. rozjížďka: start odložen", "Start se odkládá."),
+                DruhProcedury.Odvolat => (
+                    $"{rozjizdka.Cislo}. rozjížďka: všeobecné odvolání",
+                    "Start byl odvolán, jede se znovu. Vrať se za startovní čáru — "
+                    + "nový start běží od svěšení opakovače."),
+                _ => (
+                    $"{rozjizdka.Cislo}. rozjížďka: nový start",
+                    "První opakovač je dole."),
+            };
+
             upozorneni.Zarad(
                 Upozorneni.Odbery.Zavod(zavod.Slug),
-                druh == DruhProcedury.Odlozit
-                    ? $"{rozjizdka.Cislo}. rozjížďka: start odložen"
-                    : $"{rozjizdka.Cislo}. rozjížďka: všeobecné odvolání",
-                (druh == DruhProcedury.Odlozit
-                    ? "Start se odkládá."
-                    : "Start byl odvolán, jede se znovu.") + kdy,
+                nadpis,
+                veta + kdy,
                 $"/serie/{serie}/zavody/{zavod.Slug}",
                 spesne: true);
         }

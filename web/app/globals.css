@@ -1801,6 +1801,10 @@ th.vlevo, td.vlevo { text-align: left; }
 @media (min-width: 1180px) { .cil-lista { top: 6.25rem; } }
 .cil-start { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
 .cil-cas { font-variant-numeric: tabular-nums; }
+/* Věta vedle tlačítka v liště cíle — proč se s tím má počkat. Používá to
+   visící první opakovač (ZPJ 29.2): tam je ta informace podstatnější než
+   kterékoliv číslo, protože minuta se měří od svěšení. */
+.cil-poznamka { font-size: 0.8rem; color: var(--tlumeny); flex-basis: 100%; }
 .cil-startuj {
   font-weight: 700; font-size: 1.15rem; padding: 0.7rem 2.2rem; border: 0; border-radius: 10px;
   background: var(--stav-vypsany); color: var(--papir) !important;

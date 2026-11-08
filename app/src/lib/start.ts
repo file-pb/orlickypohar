@@ -18,6 +18,11 @@ export type RozjizdkaProOdpocet = {
   cislo: number;
   startV: string | null;
   stav: 'Planovana' | 'Probiha' | 'Dokoncena' | 'Zrusena';
+  /**
+   * Kdy byl vyvěšen první opakovač, pokud ještě visí (ZPJ 29.2).
+   * Chybí u starší odpovědi API.
+   */
+  opakovacOd?: string | null;
 };
 
 /**
@@ -70,6 +75,11 @@ export function trvani(vterin: number): string {
  *   <li><b>jede</b> — po startu; `odStartuS` říká, jak dlouho se jede.</li>
  *   <li><b>bezCasu</b> — rozjížďka je na programu, ale čas startu nemá.
  *       Takhle v datech vypadá odložená rozjížďka (ZPJ 27.3).</li>
+ *   <li><b>opakovac</b> — visí první opakovač po všeobecném odvolání
+ *       (ZPJ 29.2). <b>Žádný čas startu neexistuje</b>, a to je správně:
+ *       nový běží od okamžiku, kdy komise opakovač svěsí. `visiS` říká,
+ *       jak dlouho už visí — jediné číslo, které v tom stavu jde
+ *       odpočítávat.</li>
  * </ul>
  */
 export type StavStartu =
@@ -77,7 +87,8 @@ export type StavStartu =
   | { druh: 'procedura'; cislo: number; startV: string; doStartuS: number }
   | { druh: 'odstartovano'; cislo: number; odStartuS: number }
   | { druh: 'jede'; cislo: number; odStartuS: number }
-  | { druh: 'bezCasu'; cislo: number };
+  | { druh: 'bezCasu'; cislo: number }
+  | { druh: 'opakovac'; cislo: number; opakovacOd: string; visiS: number };
 
 /**
  * Nejdelší jízda, která ještě dává smysl.
@@ -123,6 +134,23 @@ export function stavStartu(
   /** Délka procedury té regaty ve vteřinách; bez ní platí pětka. */
   delkaS: number = PROCEDURA_S,
 ): StavStartu | null {
+  // <b>Visící opakovač přebíjí všechno.</b> Je to nejakutnější věc na
+  // startu — pole se vrací za čáru a čeká se, až komise opakovač svěsí
+  // — a v datech se nepozná ničím jiným: rozjížďka je `Planovana` bez
+  // času startu, tedy k nerozeznání od odložené. Bez téhle věty by
+  // panel po odvolání hlásil „bez času startu" a nabízel spuštění
+  // procedury, které server odmítne.
+  const opakovac = rozjizdky.find((r) => r.stav !== 'Zrusena' && r.opakovacOd);
+  if (opakovac) {
+    const od = Date.parse(opakovac.opakovacOd!);
+    return {
+      druh: 'opakovac',
+      cislo: opakovac.cislo,
+      opakovacOd: opakovac.opakovacOd!,
+      visiS: Number.isFinite(od) ? Math.max(0, Math.round((ted - od) / 1000)) : 0,
+    };
+  }
+
   const bezi = rozjizdky.find(
     (r) => r.stav === 'Probiha' && !jeZapomenuta(r, ted),
   );
@@ -398,6 +426,9 @@ export function maBytKlid(
   // Bez času startu není kdy ztichnout: procedura nemá začátek, od
   // kterého by se okno klidu odměřilo.
   if (stav.druh === 'bezCasu') return false;
+  // Visící opakovač taky ne: nový start začne až jeho svěšením, takže
+  // žádná procedura se nechystá a telefon nemá proč ztichnout.
+  if (stav.druh === 'opakovac') return false;
   if (stav.druh === 'procedura') return true;
   if (stav.druh === 'jede' || stav.druh === 'odstartovano')
     return stav.odStartuS <= PO_STARTU_NERUSIT_S;
@@ -422,6 +453,8 @@ export function popisStartu(stav: StavStartu | null): string | null {
     return `Rozjížďka ${stav.cislo} — start padl před ${trvani(stav.odStartuS)}`;
   if (stav.druh === 'procedura') return `Rozjížďka ${stav.cislo} startuje`;
   if (stav.druh === 'bezCasu') return `Rozjížďka ${stav.cislo} — bez času startu`;
+  if (stav.druh === 'opakovac')
+    return `Rozjížďka ${stav.cislo} — visí první opakovač`;
   return `Rozjížďka ${stav.cislo} — procedura začne ve ${zacatekProcedury(stav.startV)}`;
 }
 
@@ -446,6 +479,16 @@ export function popisStartu(stav: StavStartu | null): string | null {
  */
 export type UkonStartu = 'Odlozit' | 'Odvolat';
 
+/**
+ * Co panel umí poslat: obě dlaždice a <b>svěšení prvního opakovače</b>.
+ *
+ * Svěšení dlaždice není a nemá být. Není to volba mezi úkony — je to
+ * jediné pokračování stavu, do kterého appku dostalo odvolání, a kdyby
+ * stálo v mřížce vedle odkladu, vypadalo by jako třetí možnost, kterou
+ * si startér vybírá.
+ */
+export type UkonPanelu = UkonStartu | 'OpakovacDolu';
+
 /** Co se dá s tímhle stavem udělat. Prázdné znamená „nic se nestartuje". */
 export function ukonyStartu(stav: StavStartu | null): UkonStartu[] {
   if (!stav) return [];
@@ -453,6 +496,11 @@ export function ukonyStartu(stav: StavStartu | null): UkonStartu[] {
   // (`Procedura.ProcNejde`: *„Rozjížďka nemá nastavený čas startu, takže
   // není co odložit."*). Odtud se startuje tlačítkem, ne úkonem.
   if (stav.druh === 'bezCasu') return [];
+  // <b>Dokud opakovač visí, žádná dlaždice.</b> Odložit nejde (AP se nad
+  // visícím opakovačem nevyvěšuje a rozjížďka nemá čas, co by se
+  // odkládal) a odvolat už je odvolané. Panel místo nich nabízí jediné
+  // pokračování — svěsit. Totéž odmítne server (`Procedura.ProcNejde`).
+  if (stav.druh === 'opakovac') return [];
   // Před startem se odkládá — i když procedura ještě nezačala, čas startu
   // už existuje a lodě se k němu chystají.
   if (stav.druh === 'ceka' || stav.druh === 'procedura') return ['Odlozit'];
@@ -492,8 +540,9 @@ export function dusledekUkonu(ukon: UkonStartu): string {
   return ukon === 'Odlozit'
     ? 'Odpočet se zruší. Nový čas si řekni rovnou, nebo nech pole prázdné '
       + 'a doplň ho, až bude jasno (ZPJ 27.3).'
-    : 'Start se ruší a celá rozjížďka pojede znovu od začátku procedury. '
-      + 'Počítá se jako opakovaný start (ZPJ 36).';
+    : 'Vyvěsí se první opakovač a pole se vrací za startovní čáru. Nový '
+      + 'čas zatím žádný není — běží teprve od chvíle, kdy opakovač svěsíš '
+      + '(ZPJ 29.2). Počítá se jako opakovaný start (ZPJ 36).';
 }
 
 /**
@@ -519,6 +568,9 @@ export function kolikDoStartu(stav: StavStartu | null, ted: number = Date.now())
     case 'jede':
       return -stav.odStartuS;
     case 'bezCasu':
+    // Nový start ještě nezačal — běží teprve od svěšení opakovače, takže
+    // není od čeho měřit a partitura hlasu nemá co ohlašovat.
+    case 'opakovac':
       return null;
   }
 }

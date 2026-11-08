@@ -19,6 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { Preskok } from '@/components/preskok';
 import type { TrestZaJizdy } from '@/lib/api';
+import { PO_ODVOLANI_S } from '@/lib/cekajici-start';
 import { useDirigent } from '@/lib/dirigent';
 import { casRozpravy } from '@/lib/start';
 import { barvaNaVyplni, pismoNaVyplni, sPruhlednosti } from '@/lib/kontrast';
@@ -38,6 +39,7 @@ import {
   zacatekProcedury,
   type RozjizdkaProOdpocet,
   type StavStartu,
+  type UkonPanelu,
   type UkonStartu,
 } from '@/lib/start';
 
@@ -115,7 +117,7 @@ export function Odpocet({
    * Co udělat, když rozhodčí start odloží nebo odvolá. Chybí-li, volby
    * se neukážou — obrazovku regaty čte i ten, kdo nevelí.
    */
-  naUkon?: (cislo: number, ukon: UkonStartu) => void | Promise<void>;
+  naUkon?: (cislo: number, ukon: UkonPanelu) => void | Promise<void>;
   /**
    * Kam na cíl. Karta se ukáže, jen když rozjížďka doopravdy jede —
    * <b>start a cíl jsou dvě karty pod jménem regaty</b>, ne položky
@@ -319,6 +321,8 @@ export function Odpocet({
       <Jede stav={stav} t={t} />
     ) : stav.druh === 'odstartovano' ? (
       <Odstartovano stav={stav} t={t} />
+    ) : stav.druh === 'opakovac' ? (
+      <Opakovac stav={stav} delkaS={delkaS} t={t} naUkon={naUkon} />
     ) : (
       <Bezi stav={stav} delkaS={delkaS} t={t} polohy={polohy} />
     );
@@ -618,19 +622,19 @@ function Dlazdice({
 /**
  * Čím je ten úkon na dlaždici — druhý řádek, jako v návrhu.
  *
- * <b>„Přidá minutu" tu stálo a bylo to zavádějící</b> (Filip, 8. 11.
- * 2026: *„ta minuta se mi nějak nezdá"*). Minuta je odstup k
- * <b>vyzývacímu znamení</b> nového startu, ne k startu: ZPJ 29.2 říká,
- * že vyzývací znamení padne minutu po spuštění prvního opakovače, a od
- * něj teprve běží celá procedura. Nový start je tedy o minutu a celou
- * proceduru dál — se zdejšími pěti minutami o šest minut, ne o jednu.
- * Server to tak počítá (`Procedura.NovyStart`); mýlila se jen tahle
- * řádka.
+ * <b>Dvakrát opravená řádka</b> (Filip, 8. 11. 2026: *„ta minuta se mi
+ * nějak nezdá"*). Nejdřív tu stálo „přidá minutu", a minuta je přitom
+ * odstup k <b>vyzývacímu znamení</b>, ne ke startu. Pak tu stálo
+ * „minuta a pak celá procedura", a to měřilo od vyvěšení opakovače —
+ * ZPJ 29.2 ale počítá od jeho <b>svěšení</b> *(„one minute after the
+ * First Substitute is removed")*, a jak dlouho visí, pravidlo neurčuje
+ * vůbec. Odvolání tedy žádný čas nedává; dá ho svěšení, a to je
+ * samostatný úkon.
  */
 function popisUkonu(ukon: UkonStartu): string {
   return ukon === 'Odlozit'
     ? 'vlajka AP · zeptá se na nový čas'
-    : 'ZPJ 29.2 · minuta a pak celá procedura';
+    : 'ZPJ 29.2 · opakovač nahoru, čas až po svěšení';
 }
 
 /**
@@ -774,7 +778,7 @@ function UkonyNaStartu({
 }: {
   stav: StavStartu;
   t: Barvy;
-  naUkon?: (cislo: number, ukon: UkonStartu) => void | Promise<void>;
+  naUkon?: (cislo: number, ukon: UkonPanelu) => void | Promise<void>;
   naPredcasnyStart?: (cislo: number) => void;
   naZruseni?: (cislo: number) => void;
   /** Zapsat nový čas startu — používá ho odklad hned po odložení. */
@@ -964,6 +968,160 @@ function UkonyNaStartu({
         </View>
       </Modal>
     </>
+  );
+}
+
+/**
+ * <b>Visí první opakovač</b> — stav mezi všeobecným odvoláním a novým
+ * startem (ZPJ 29.2).
+ *
+ * <b>Proč to vůbec je obrazovka</b> (Filip, 8. 11. 2026: *„po stisku
+ * toho tlačítka musí být vyvěšeno modální okno, které informuje o tom
+ * stavu, a v okamžiku, kdy ho zavřeme, běží ona minuta"*). Pravidlo
+ * neříká „minutu po odvolání", ale *„jednu minutu poté, co je první
+ * opakovač svěšen"* — a kdy se svěsí, neurčuje: komise ho drží, dokud
+ * se pole nevrátí za čáru. Dopočítaný čas startu by tedy byl čas, který
+ * nikdo neslíbil, a appka by ho ukazovala posádkám.
+ *
+ * <b>Panel, ne jen okno.</b> Okno se dá zavřít, appka vypnout a telefon
+ * vybít; stav přitom trvá minuty a drží ho server
+ * (`Rozjizdka.OpakovacOd`). Kdyby žil jen v okně, po zavření by panel
+ * hlásil „bez času startu" a jediné pokračování by nebylo odkud
+ * zmáčknout.
+ *
+ * <b>Odpočet se nekreslí.</b> Není co odpočítávat — čas startu neexistuje
+ * a vzniká až stiskem. Nahoru jde proto, jak dlouho opakovač visí: to je
+ * jediné číslo, které v tom okamžiku něco znamená.
+ */
+function Opakovac({
+  stav,
+  delkaS,
+  t,
+  naUkon,
+}: {
+  stav: Extract<StavStartu, { druh: 'opakovac' }>;
+  delkaS: number;
+  t: Barvy;
+  naUkon?: (cislo: number, ukon: UkonPanelu) => void | Promise<void>;
+}) {
+  const [posila, setPosila] = useState(false);
+  // <b>Okno se otevře samo, protože o stavu rozhoduje stav, ne stisk.</b>
+  // Odvolat může i druhý telefon nebo web a tenhle rozhodčí to musí
+  // vidět taky. Klíčem je číslo rozjížďky, aby se okno po zavření
+  // neotvíralo každým tikem.
+  //
+  // <b>Se zpožděním, a to je nutnost, ne ozdoba.</b> Odvolání se potvrzuje
+  // taky v `Modal` (`UkonyNaStartu`) a na iOSu se dva prezentované
+  // modály nepřekryjí: dokud se první dozavírá, druhý se neukáže
+  // vůbec — a protože se stav mezitím nezmění, nezkusí se znovu.
+  // Změřeno v simulátoru 8. 11. 2026: panel naskočil, okno nikdy.
+  const [okno, setOkno] = useState(false);
+  const videno = useRef<number | null>(null);
+  useEffect(() => {
+    if (videno.current === stav.cislo) return;
+    videno.current = stav.cislo;
+    const id = setTimeout(() => setOkno(true), 450);
+    return () => clearTimeout(id);
+  }, [stav.cislo]);
+
+  const svesOpakovac = async () => {
+    if (posila || !naUkon) return;
+    setPosila(true);
+    try {
+      await naUkon(stav.cislo, 'OpakovacDolu');
+      setOkno(false);
+    } finally {
+      setPosila(false);
+    }
+  };
+
+  /** Kdy nový start padne, zmáčkne-li se to teď. */
+  const novyStart = casStartu(
+    new Date(Date.now() + (PO_ODVOLANI_S + delkaS) * 1000).toISOString(),
+  );
+
+  const tlacitko = (vOkne: boolean) => (
+    <Pressable
+      onPress={() => void svesOpakovac()}
+      disabled={posila || !naUkon}
+      accessibilityRole="button"
+      accessibilityLabel={`První opakovač dolů — nový start ve ${novyStart}`}
+      style={({ pressed }) => [
+        vOkne ? s.oknoTlacitko : s.spustit,
+        {
+          backgroundColor: t.voda,
+          opacity: pressed || posila || !naUkon ? 0.6 : 1,
+        },
+      ]}>
+      <View style={s.spustitObsah}>
+        {posila ? <ActivityIndicator color={pismoNaVyplni(t, t.voda)} /> : null}
+        <Text style={[s.spustitText, { color: pismoNaVyplni(t, t.voda) }]}>
+          {posila ? 'Posílám…' : 'Opakovač dolů'}
+        </Text>
+      </View>
+    </Pressable>
+  );
+
+  return (
+    <View style={[s.panel, { backgroundColor: t.zvyrazneni, borderColor: t.vystraha, borderWidth: 2 }]}>
+      <Text style={[s.radek, { color: t.tlumeny }]}>Rozjížďka {stav.cislo}</Text>
+      <Text style={[s.vetaVelka, { color: t.text }]}>Visí první opakovač</Text>
+      <Text style={[s.pripominka, { color: t.tlumeny }]}>
+        všeobecné odvolání · nahoře {mmss(stav.visiS)}
+      </Text>
+
+      {naUkon ? (
+        <>
+          {tlacitko(false)}
+          <Text style={[s.pripominka, { color: t.tlumeny }]}>
+            Nech ho nahoře, dokud se pole nevrátí za čáru. Minuta do vyzývacího
+            znamení běží od svěšení (ZPJ 29.2), ne od odvolání — zmáčkni to ve
+            chvíli, kdy opakovač doopravdy spustíš.
+          </Text>
+
+          <Modal
+            visible={okno}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setOkno(false)}>
+            <View style={s.stin}>
+              <View style={[s.dialog, { backgroundColor: t.papir }]}>
+                <Text style={[s.dialogNadpis, { color: t.text }]}>
+                  Visí první opakovač — rozjížďka {stav.cislo}
+                </Text>
+                <Text style={[s.dialogVeta, { color: t.tlumeny }]}>
+                  Start je odvolaný a pole se vrací za startovní čáru. Opakovač
+                  nechej nahoře, dokud tam nebudou všichni.
+                </Text>
+                <Text style={[s.dialogVeta, { color: t.text }]}>
+                  Jak ho svěsíš, zmáčkni to tady: od té chvíle běží minuta do
+                  vyzývacího znamení a pak celá procedura. Teď by to znamenalo
+                  nový start ve {novyStart}.
+                </Text>
+
+                <View style={s.dialogTlacitka}>
+                  <Pressable
+                    onPress={() => setOkno(false)}
+                    disabled={posila}
+                    style={({ pressed }) => [
+                      s.volba,
+                      { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
+                    ]}>
+                    <Text style={[s.volbaText, { color: t.text }]}>Zatím visí</Text>
+                  </Pressable>
+                  {tlacitko(true)}
+                </View>
+              </View>
+            </View>
+          </Modal>
+        </>
+      ) : (
+        <Text style={[s.pripominka, { color: t.tlumeny }]}>
+          Start byl odvolán. Nový čas začne běžet, až závodní komise opakovač
+          svěsí (ZPJ 29.2).
+        </Text>
+      )}
+    </View>
   );
 }
 
