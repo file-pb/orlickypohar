@@ -823,11 +823,9 @@ function HlavickaVelitele({ serie, zavod }: { serie: string; zavod: string }) {
             fontWeight: '700',
           }}
           numberOfLines={1}>
-          {veleni === null
-            ? 'velení…'
-            : veleni.jsemTo
-              ? 'velíš ty'
-              : `velí ${veleni.jmeno ?? 'někdo jiný'}`}
+          {/* Dokud se server neozval, nepíše se nic: „velení…" by na
+              obrazovce zůstalo viset tam, kde se zeptat nedá. */}
+          {veleni === null ? '' : veleni.jsemTo ? 'velíš ty' : `velí ${veleni.jmeno ?? 'někdo jiný'}`}
         </Text>
       </Pressable>
 

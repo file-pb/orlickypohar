@@ -394,6 +394,9 @@ function zapis(z: S['ZavodDetailDto'], cislo: number): unknown {
  * ročník se chová, jako by nebyl) a prázdná obrazovka je čitelnější než
  * vymyšlená odpověď, která by v ukázce tvrdila něco, co v ní není.
  */
+/** Drží si ukázka velení? Přepne se, až si o ně rozhodčí řekne. */
+let veliUkazka = false;
+
 export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: string }): Promise<OdpovedSite> {
   if (!stav) return Promise.resolve(odpoved(503));
 
@@ -446,6 +449,22 @@ export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: st
     }
   }
 
+  // <b>Kdo velí.</b> Ve snímku to není a být nemůže — velení je stav
+  // chvíle, ne zápis regaty. Ukázka tedy odpovídá sama: velí někdo
+  // jiný, dokud si o velení rozhodčí neřekne. Bez toho by pilulka
+  // v hlavičce zůstala navždy viset na „velení…".
+  if (/\/vysledky\/[^/]+\/velitel$/.test(c)) {
+    if (metoda === 'POST') veliUkazka = true;
+    return Promise.resolve(
+      odpoved(200, {
+        uzivatelId: veliUkazka ? 'ukazka' : 'milos',
+        jmeno: veliUkazka ? 'ty' : 'Miloš',
+        odV: new Date().toISOString(),
+        jsemTo: veliUkazka,
+      }),
+    );
+  }
+
   if (metoda === 'GET') {
     if (c in stav) return Promise.resolve(odpoved(200, stav[c]));
     // Rozepsaný zápis se v snímku nedrží — skládá se z veřejného detailu,
@@ -488,6 +507,24 @@ export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: st
     case '/konec':
       r.stav = 'Dokoncena';
       break;
+    case '/stav': {
+      // <b>Zrušení rozjížďky.</b> Appka ho posílá jako stav výsledku
+      // `Eliminovano` — eliminace a zrušení jsou na serveru dvě strany
+      // téhož (`VysledkySprava`, nález R13). Do 8. 11. 2026 tahle větev
+      // chyběla a `default` vracel prázdné „OK", takže ukázka po výběru
+      // důvodu neudělala nic (Filip: *„vyberu důvod a nic se nestane"*).
+      if (telo.stav !== 'Eliminovano') break;
+      r.stav = 'Zrusena';
+
+      // <b>Posádka to musí vidět taky.</b> `/lod/dnes` je vlastní pohled
+      // složený při zapnutí ukázky, ne výřez z rozjížďky — bez tohohle
+      // by rozhodčí rozjížďku zrušil a posádce by dál svítilo „Startuje
+      // se". Tatáž past jako u posunu startu.
+      const dnes = stav['/lod/dnes'] as
+        | { rozjizdka?: number | null; stavRozjizdky?: string | null } | undefined;
+      if (dnes && dnes.rozjizdka === r.cislo) dnes.stavRozjizdky = 'Zrusena';
+      break;
+    }
     case '/vysledky':
       return Promise.resolve(odpoved(200, { ...(zapis(z, r.cislo) as object), revize: 2 }));
     default:

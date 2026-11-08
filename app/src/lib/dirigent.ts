@@ -215,6 +215,21 @@ export type Dirigent = {
   klidChybiPovoleni: boolean;
   /** Otevře nastavení systému, kde se oprávnění pro *Nerušit* dává. */
   povolKlid: () => void;
+  /**
+   * <b>Zrušení rozjížďky: dva dlouhé zvuky.</b>
+   *
+   * Tohle číslo nestojí v ZPJ, ale v <b>plachetní směrnici poháru</b>
+   * — a ta ho tam má celou dobu (nález R23: *„Zrušení rozjížďky: dva
+   * dlouhé zvuky"*, v aplikaci dosud *„nikde"*). Obecná pravidla mají
+   * pro zrušení po startu vlajku N a <b>tři</b> zvuky; směrnice to pro
+   * tenhle seriál mění na dva, a směrnice je ta, podle které se na
+   * Orlíku jede. Proto je to dvojka — a proto je tu tahle věta, aby to
+   * příště nikdo „neopravil" na tři.
+   *
+   * Nespouští se klepnutím, ale přechodem rozjížďky do zrušeného stavu,
+   * takže zazní i tehdy, když rozjížďku zrušil někdo jiný z webu.
+   */
+  zruseno: (cislo: number) => void;
 };
 
 /**
@@ -326,6 +341,7 @@ export function useDirigent(
   // Kdy se relace budila naposledy. Uvnitř odpočtu se nebudí znovu —
   // viz `RELACE_CERSTVA_MS`.
   const probuzeno = useRef(0);
+  const casovaceZruseni = useRef<ReturnType<typeof setTimeout>[]>([]);
   const probud = useCallback(async () => {
     if (Date.now() - probuzeno.current < RELACE_CERSTVA_MS) return;
     probuzeno.current = Date.now();
@@ -437,7 +453,42 @@ export function useDirigent(
     if (!hlasi) Speech.stop().catch(() => {});
   }, [hlasi]);
 
+  /**
+   * Zatroubí zrušení rozjížďky: dva dlouhé zvuky a pak věta.
+   *
+   * <b>Druhý zvuk až po doznění prvního</b>, ne přes něj — dva klaksony
+   * naráz zní jako jeden delší a počítat se mají dva. Věta jde až za
+   * nimi, ze stejného důvodu jako u znamení: pod klaksonem by zmizela.
+   */
+  const zruseno = useCallback(
+    (cislo: number) => {
+      if (!hlasiTed.current) return;
+      void (async () => {
+        await probud();
+        zahraj(dlouhy);
+        casovaceZruseni.current.push(
+          setTimeout(() => zahraj(dlouhy), DELKA_TROUBENI_MS.dlouze),
+          setTimeout(() => {
+            Speech.stop().catch(() => {});
+            Speech.speak(`Rozjížďka ${cislo} zrušena`, { language: JAZYK, rate: TEMPO });
+          }, DELKA_TROUBENI_MS.dlouze * 2),
+        );
+      })();
+    },
+    [dlouhy, probud],
+  );
+
+  // Naplánované zvuky zrušení nesmějí přežít odchod z obrazovky.
+  useEffect(
+    () => () => {
+      casovaceZruseni.current.forEach(clearTimeout);
+      casovaceZruseni.current = [];
+    },
+    [],
+  );
+
   return {
+    zruseno,
     zapnuto,
     bezCestiny: hlasi && bezCestiny,
     klidChybiPovoleni: veli && klidJdeTo() && !smimeKlid,

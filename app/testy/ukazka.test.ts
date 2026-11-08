@@ -293,6 +293,36 @@ zkus('fetch je jen v `lib/sit.ts` a v přihlašování', () => {
   assert.deepEqual(hrisnici, [], `fetch mimo šev: ${hrisnici.join(', ')}`);
 });
 
+testyAsync.push(['zrušení rozjížďky v ukázce doopravdy zruší', async () => {
+  // <b>Proč to má test.</b> Ukázka obsluhovala `/procedura`, `/start`,
+  // `/konec` a `/vysledky`, ale ne `/stav` — a `default` vracel prázdné
+  // „OK". Rozhodčí tedy v ukázce vybral důvod zrušení a nestalo se nic
+  // (Filip, 8. 11. 2026: *„vyberu důvod a potom se vlastně jakoby nic
+  // nestane"*). Z obrazovky se to pozná špatně, protože appka hlásí
+  // úspěch; pozná se to jedině tím, že rozjížďka zůstane plánovaná.
+  zapniUkazku();
+  const kde = kamVUkazce();
+  assert.ok(kde, 'ukázka nemá závod, na kterém by se dalo velet');
+  const cesta = `/serie/${kde.serie}/zavody/${kde.zavod}`;
+
+  const pred = (await odpoved(cesta)).telo;
+  const cislo = pred.rozjizdky.find((r: any) => r.stav !== 'Zrusena')?.cislo;
+  assert.ok(cislo, 'ukázka nemá rozjížďku, kterou by šlo zrušit');
+
+  await odpoved(`/sprava${cesta.replace('/zavody/', '/vysledky/')}/rozjizdky/${cislo}/stav`, {
+    method: 'POST',
+    body: JSON.stringify({ stav: 'Eliminovano', duvod: 'Nedostatek větru' }),
+  });
+
+  const po = (await odpoved(cesta)).telo;
+  assert.equal(
+    po.rozjizdky.find((r: any) => r.cislo === cislo).stav,
+    'Zrusena',
+    'rozjížďka po zrušení není zrušená',
+  );
+  vypniUkazku();
+}]);
+
 testyAsync.push(['posun startu vezme s sebou i pohled posádky', async () => {
   // <b>Proč to má test.</b> `/lod/dnes` se skládá při zapnutí ukázky
   // a nemá v sobě `rozjizdky`, takže smyčka v `posunStartUkazky` ho

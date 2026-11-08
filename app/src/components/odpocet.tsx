@@ -182,6 +182,32 @@ export function Odpocet({
   // má i obrazovka posádky — tady zbývá jen říct, kolik zbývá do startu.
   const doStartu = kolikDoStartu(stav, ted);
 
+  // <b>Zrušení se ohlašuje přechodem, ne klepnutím.</b> Rozjížďku může
+  // zrušit i někdo jiný z webu, a i tehdy má rozhodčí u vody slyšet, že
+  // se nejede. Panel ji přitom přestane ukazovat (`stavStartu` zrušené
+  // přeskakuje), takže bez tohohle by zmizela beze zvuku.
+  //
+  // Klíč je řetězec čísel, ne pole: `rozjizdky` vzniká při každém
+  // překreslení znovu (`sCekajicim`) a jako závislost by efekt pouštěl
+  // pořád dokola.
+  const zruseneCisla = rozjizdky
+    .filter((r) => r.stav === 'Zrusena')
+    .map((r) => r.cislo)
+    .join(',');
+  const zrusenoHlas = dirigent.zruseno;
+  const uzZruseno = useRef<Set<number> | null>(null);
+  useEffect(() => {
+    const ted2 = new Set(
+      zruseneCisla === '' ? [] : zruseneCisla.split(',').map(Number),
+    );
+    const drive = uzZruseno.current;
+    uzZruseno.current = ted2;
+    // První průchod jen zapamatuje, co bylo zrušené před otevřením
+    // obrazovky — jinak by appka po otevření zatroubila za celý den.
+    if (drive === null) return;
+    for (const c of ted2) if (!drive.has(c)) zrusenoHlas(c);
+  }, [zruseneCisla, zrusenoHlas]);
+
   // <b>Start se neklepe, start padne.</b> Rozhodčí spustil proceduru,
   // odpočet doběhl — tím rozjížďka odstartovala a appka to serveru řekne
   // sama. Dřív tu bylo tlačítko „Jede se" a panel o sobě tvrdil, že čeká
