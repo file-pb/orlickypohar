@@ -202,8 +202,37 @@ Ověřeno čtením kódu, u označených i na simulátoru 7. 11. 2026.
   odznakem stavu, velením a hodinami — velký nadpis ani datum tam od
   8. 11. 2026 nejsou, stejně jako v žádném artboardu rozhodčího. Pro
   čtenáře regaty nadpis zůstává. *(simulátor)*
+- **Výběr lodi** po OCS i po trestu: tři sloupce dlaždic, na každé jen
+  jméno lodi, jak to kreslí `VyberLodi.dc.html`. Kategorie u jmen byla
+  do 8. 11. 2026 navíc — na otázku *„kterou loď jsi viděl"* neodpovídá.
+  *(simulátor)*
+- **Hlavička cíle** jednou řádkou a dlaždice lodí ve třech sloupcích,
+  jak kreslí `Cil.dc.html`. Kategorie se místo řádky textu značí
+  **barevným okrajem** v barvě třídy (Filip, 8. 11. 2026) — ty barvy
+  dosud žily jen ve znacích tříd na webu a od téhož dne jsou tokeny
+  (`--trida-race` a spol.), takže je appka i web berou z jednoho místa.
+  *(simulátor)*
 
 ---
+
+### 8. Odklad a odvolání se neozvou
+
+Zrušení rozjížďky appka od 8. 11. 2026 ohlásí dvěma dlouhými zvuky,
+jak to žádají plachetní směrnice poháru. **Odklad startu a všeobecné
+odvolání neohlásí nic** — ani zvuk, ani větu —, přestože obojí má
+podle ZPJ 27.3 a 29.2 svá zvuková znamení (AP dvě, první opakovač
+dvě). Partitura (`lib/hlaseni.ts`) zná jen znamení procedury; úkony,
+které proceduru přeruší, v ní nejsou.
+
+Na obrazovce se po odkladu změní jen čas v panelu, takže rozhodčí
+nepozná, jestli se úkon povedl (Filip, 8. 11. 2026: *„odložení startu
+taky nic neudělá a aplikace ani nic neřekne"*). Ověřeno na simulátoru:
+odklad s časem i bez času zapíše správně, jen o sobě mlčí.
+
+**Nerozhodnuto zůstává**, jestli má appka tahle znamení troubit. Appka
+houká **s** rozhodčím, ne místo něj, a u odkladu i odvolání je ten
+povel na něm — otázka tedy je, jestli mu má telefon podat signál
+stejně jako u procedury, nebo jen potvrdit na obrazovce.
 
 ## Co z toho plyne pro příště
 
