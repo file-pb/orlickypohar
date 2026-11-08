@@ -114,11 +114,29 @@ const testyAsync: [string, () => Promise<void>][] = [
     assert.equal(Date.parse(r.startV), cekany);
   }],
 
-  ['odvolání čas startu zahodí', async () => {
+  // <b>Odvolání čas nezahazuje, počítá ho</b> — a tenhle test tvrdil
+  // opak, protože zapisoval, co ukázka dělala, ne co dělá server.
+  // ZPJ 29.2: vyzývací znamení padne minutu po spuštění prvního
+  // opakovače a od něj uplyne celá procedura; `Procedura.NovyStart`
+  // v API to tak počítá. Zahodit čas umí jedině odklad (ZPJ 27.3).
+  ['odvolání dá nový čas: minuta a pak celá procedura', async () => {
+    zapniUkazku();
+    const z = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo;
+    const cislo = z.rozjizdky[0].cislo;
+    const zapsanoV = '2027-05-15T09:00:00.000Z';
+    await odpoved(`/sprava/serie/2026-nanecisto/vysledky/izolepa/rozjizdky/${cislo}/procedura`,
+      { method: 'POST', body: JSON.stringify({ druh: 'Odvolat', zapsanoV }) });
+    const r = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo
+      .rozjizdky.find((x: any) => x.cislo === cislo);
+    const cekany = Date.parse(zapsanoV) + 60_000 + (z.delkaProceduryMin ?? 5) * 60_000;
+    assert.equal(Date.parse(r.startV), cekany);
+  }],
+
+  ['odklad čas startu zahodí (ZPJ 27.3)', async () => {
     zapniUkazku();
     const cislo = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo.rozjizdky[0].cislo;
     await odpoved(`/sprava/serie/2026-nanecisto/vysledky/izolepa/rozjizdky/${cislo}/procedura`,
-      { method: 'POST', body: JSON.stringify({ druh: 'Odvolat' }) });
+      { method: 'POST', body: JSON.stringify({ druh: 'Odlozit' }) });
     const r = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo
       .rozjizdky.find((x: any) => x.cislo === cislo);
     assert.equal(r.startV, null);

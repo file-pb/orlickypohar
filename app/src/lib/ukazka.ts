@@ -342,9 +342,16 @@ const bezDotazu = (cesta: string) => cesta.split('?')[0];
  * Regata, do které cesta míří. Zápisy chodí přes správu
  * (`/sprava/serie/{s}/vysledky/{z}/…`), ale měnit se musí to, co appka
  * čte veřejně — jinak by se obrazovka po uložení překreslila do starého.
+ *
+ * <b>I `zastavky`, ne jen `vysledky`.</b> Tresty za jízdy mají vlastní
+ * větev správy (`/zastavky/…/tresty`) a tahle funkce ji dřív nepoznala,
+ * takže si zápis trestu hledal regatu po svém — prvním klíčem, který
+ * ve snímku vypadal jako regata. To je *24hodinovka*, ne ta otevřená,
+ * a loď se v její listině nenašla, takže trest přistál v pruhu jako
+ * holé „Loď" (Filip, 8. 11. 2026).
  */
 function regata(cesta: string): S['ZavodDetailDto'] | null {
-  const m = /^\/sprava\/serie\/([^/]+)\/vysledky\/([^/]+)\//.exec(cesta);
+  const m = /^\/sprava\/serie\/([^/]+)\/(?:vysledky|zastavky)\/([^/]+)\//.exec(cesta);
   if (!m || !stav) return null;
   return (stav[`/serie/${m[1]}/zavody/${m[2]}`] as S['ZavodDetailDto'] | undefined) ?? null;
 }
@@ -431,9 +438,7 @@ export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: st
 
     if (metoda === 'POST') {
       const druh = (telo.druh as 'Otacka360' | 'Otacka720') ?? 'Otacka360';
-      const zz = (stav[
-        Object.keys(stav).find((k) => /^\/serie\/[^/]+\/zavody\/[^/]+$/.test(k)) ?? ''
-      ] ?? null) as S['ZavodDetailDto'] | null;
+      const zz = regata(c);
       const l = zz ? listina(zz).find((x) => x.prihlaskaId === telo.ucast) : undefined;
       const novy: TrestUkazky = {
         id: dalsiTrestId++,
@@ -497,13 +502,44 @@ export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: st
       // než kam ho panel nakreslí.
       const zapsanoV = typeof telo.zapsanoV === 'string' ? Date.parse(telo.zapsanoV) : Date.now();
       const delka = (z.delkaProceduryMin ?? 5) * 60_000;
-      r.startV = telo.druh === 'Spustit' ? new Date(zapsanoV + delka).toISOString() : null;
+
+      // <b>Všeobecné odvolání nový čas má</b>, a nepočítá se stejně jako
+      // spuštění: vyzývací znamení padne **minutu** po spuštění prvního
+      // opakovače (ZPJ 29.2) a od něj teprve uplyne celá procedura —
+      // `Procedura.NovyStart` na serveru. Do 8. 11. 2026 tady odvolání
+      // padalo do téhož `null` jako odklad.
+      r.startV =
+        telo.druh === 'Spustit'
+          ? new Date(zapsanoV + delka).toISOString()
+          : telo.druh === 'Odvolat'
+            ? new Date(zapsanoV + 60_000 + delka).toISOString()
+            : null;
+
+      // <b>A všechny tři vracejí rozjížďku mezi plánované</b>
+      // (`Procedura.StavPo`): procedura znamená, že se teprve pojede.
+      // Bez tohohle řádku zůstala odvolaná rozjížďka v `Probiha`
+      // a panel nad ní dál psal „jede" (Filip, 8. 11. 2026: *„spadne
+      // to do okna rozjížďka jede"*).
+      if (r.stav !== 'Zrusena') r.stav = 'Planovana';
       break;
     }
-    case '/start':
-      r.stav = 'Probiha';
+    case '/start': {
+      // <b>Plánovaný start rozjížďku nerozjede.</b> Týmž endpointem se
+      // zapisuje čas z rozpravy i skutečné odstartování a rozdíl je
+      // jedině v tom, jestli ten čas už přišel — server proto počítá
+      // `planovany = Planovana && kdy > ted` a `Probiha` nastaví jen
+      // `if (!planovany)` (`ZapisSprava.cs`).
+      //
+      // Do 8. 11. 2026 tady ukázka nastavovala `Probiha` bezpodmínečně,
+      // takže po zapsání času startu panel ohlásil „Rozjížďka jede
+      // 0:00" — stav, do kterého se na produkci dostat nedá, a který
+      // vypadal, jako by se mezitím spustila procedura.
+      const kdy = typeof telo.startV === 'string' ? Date.parse(telo.startV) : Date.now();
+      const planovany = r.stav === 'Planovana' && kdy > Date.now();
       if (typeof telo.startV === 'string') r.startV = telo.startV;
+      if (!planovany && r.stav !== 'Zrusena') r.stav = 'Probiha';
       break;
+    }
     case '/konec':
       r.stav = 'Dokoncena';
       break;
