@@ -306,6 +306,17 @@ export default function Zastavka() {
     setRusi(true);
     try {
       await zrusRozjizdku(slug, zavod, ruseni, duvod);
+
+      // <b>Podržený úkon zrušené rozjížďky se zahazuje.</b> Fronta
+      // zkouší odeslat dál a dál (`POKUS_MS`), takže start spuštěný bez
+      // signálu by se po návratu spojení doručil k rozjížďce, kterou
+      // rozhodčí mezitím zrušil — a ta by se rozjela znovu. Na vodě je
+      // to ten horší konec: zrušení je rozhodnutí, fronta jen doprava.
+      if (ceka?.cislo === ruseni) {
+        ulozCekajici(null);
+        setCeka(null);
+      }
+
       setRuseni(null);
       obnov();
     } catch (e) {
