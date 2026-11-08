@@ -101,6 +101,25 @@ export type Znameni = {
  * houkačku a ruka potřebuje čas na reakci. Kratší odpočet by ho nechal
  * zatroubit pozdě, delší by odvedl pozornost od vody.
  */
+/**
+ * <b>Co z okamžiku doopravdy zazní</b> podle toho, co má rozhodčí
+ * zapnuté (ZPJ 26 říká, co se má stát; tohle říká, co z toho uslyší).
+ *
+ * <b>Pravidlo zvlášť od přehrávání</b>, jako všude jinde v appce: že
+ * s vypnutým klaksonem nesmí zaznít troubení a s vypnutým hlasem ani
+ * slovo, se musí dát ověřit bez telefonu (`app/testy/hlaseni.test.ts`).
+ * Tichý telefon, který měl troubit, se pozná až na startovní linii.
+ */
+export function coZazni(
+  okamzik: readonly Znameni[],
+  zni: { mluvi: boolean; troubi: boolean },
+): { troubeni: Troubeni | null; veta: string } {
+  return {
+    troubeni: (zni.troubi && okamzik.find((z) => z.troubi)?.troubi) || null,
+    veta: (zni.mluvi && okamzik.find((z) => z.rekni)?.rekni) || '',
+  };
+}
+
 export const ODPOCET_S = 5;
 
 /**

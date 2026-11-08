@@ -40,11 +40,11 @@ import { AppState, Platform } from 'react-native';
 import { useAudioPlayer, setAudioModeAsync, setIsAudioActiveAsync } from 'expo-audio';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import * as Speech from 'expo-speech';
-import { File, Paths } from 'expo-file-system';
 
 import {
   casHlasem,
   coOkamzik,
+  coZazni,
   DELKA_PINGU_MS,
   DELKA_TROUBENI_MS,
   nejblizsiOkamzik,
@@ -53,6 +53,7 @@ import {
 } from './hlaseni';
 import { jdeTo as klidJdeTo, nastav as nastavKlid, otevriNastaveni, smime } from './nerusit';
 import { kolikDoStartu, maBytKlid, PROCEDURA_S, type StavStartu } from './start';
+import { nastavZvuk, useZvuk } from './zvuk';
 
 /** Zvuky klaksonu. Krátký a dlouhý jsou dva soubory, ne jeden zkrácený:
  *  zkrácení uprostřed cvakne, protože doběh zvuku zmizí. */
@@ -147,9 +148,6 @@ const JAZYK = 'cs-CZ';
  */
 const TEMPO = 0.95;
 
-/** Soubor, ve kterém si appka pamatuje, jestli má hlásit. */
-const PAMET = 'dirigent.json';
-
 /**
  * Jak daleko dopředu se zvuk plánuje.
  *
@@ -158,30 +156,6 @@ const PAMET = 'dirigent.json';
  * dalším tikem.
  */
 const OKNO_PLANU_S = 1.5;
-
-/** Co si o hlasu appka pamatuje mezi spuštěními. */
-export function nactiHlas(): boolean | null {
-  try {
-    const f = new File(Paths.document, PAMET);
-    if (!f.exists) return null;
-    const v = JSON.parse(f.textSync()) as { zapnuto?: unknown };
-    return typeof v?.zapnuto === 'boolean' ? v.zapnuto : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Zapamatuje volbu hlasu. Nepovede-li se to, platí jen pro tenhle běh. */
-export function ulozHlas(zapnuto: boolean): void {
-  try {
-    const f = new File(Paths.document, PAMET);
-    if (f.exists) f.delete();
-    f.create();
-    f.write(JSON.stringify({ zapnuto }));
-  } catch {
-    // Volba hlasu nestojí za pád obrazovky startu.
-  }
-}
 
 /**
  * Vyžádá si zvukovou relaci pro tenhle okamžik.
@@ -213,10 +187,11 @@ async function probudRelaci(): Promise<void> {
 
 /** Co dirigent umí říct o sobě. */
 export type Dirigent = {
-  /** Hlásí appka nahlas? */
-  zapnuto: boolean;
-  /** Přepnout hlas a zapamatovat volbu. */
-  prepni: () => void;
+  /** Mluví appka — hlášení a odpočet číslovkami? */
+  hlas: boolean;
+  /** Troubí appka klaksonem? */
+  klakson: boolean;
+
   /** Telefon nemá český hlas — hlášení by bylo k nepoznání. */
   bezCestiny: boolean;
   /**
@@ -266,7 +241,7 @@ export function useDirigent(
   delkaS: number = PROCEDURA_S,
   veli: boolean = false,
 ): Dirigent {
-  const [zapnuto, setZapnuto] = useState(() => nactiHlas() ?? true);
+  const volba = useZvuk();
   const [bezCestiny, setBezCestiny] = useState(false);
 
   const kratky = useAudioPlayer(KLAKSON.kratce);
@@ -291,7 +266,15 @@ export function useDirigent(
 
   const doStartu = kolikDoStartu(stav, ted);
   const vOkne = maBytKlid(stav, ted, delkaS);
-  const hlasi = veli && zapnuto;
+
+  // <b>Dvě nezávislé věci, ne jedna.</b> Klakson je takt pro ruku, která
+  // mačká houkačku; hlas je pro toho, kdo má telefon v kapse. Dá se
+  // chtít jen jedno z nich (Filip, 8. 11. 2026). `veli` je u obojího
+  // podmínka, ne volba: obrazovku regaty čte i závodník a divák.
+  const mluvi = veli && volba.hlas;
+  const troubi = veli && volba.klakson;
+  /** Zní z telefonu vůbec něco? Pro to, co platí pro obojí stejně. */
+  const zni = mluvi || troubi;
 
   // <b>Displej nesmí zhasnout v okně procedury.</b> Mimo něj se o něj
   // appka nestará — svítící telefon celý den sežere baterku, kterou
@@ -304,9 +287,10 @@ export function useDirigent(
     };
   }, [veli, vOkne]);
 
-  // Má telefon česky? Zjistí se jednou, při zapnutí hlasu.
+  // Má telefon česky? Zjistí se jednou, při zapnutí hlasu. Klaksonu je
+  // to jedno, takže se na něj nekouká.
   useEffect(() => {
-    if (!hlasi) return;
+    if (!mluvi) return;
     let platne = true;
     Speech.getAvailableVoicesAsync()
       .then((hlasy) => {
@@ -319,13 +303,13 @@ export function useDirigent(
     return () => {
       platne = false;
     };
-  }, [hlasi]);
+  }, [mluvi]);
 
   // <b>Zámek na Androidu</b> — bez něj zvuk na pozadí po ~3 minutách
   // umlká (omezení systému), a procedura je pětiminutová. Na iOSu to
   // řeší `UIBackgroundModes` a tahle část je zbytečná.
   useEffect(() => {
-    if (Platform.OS !== 'android' || !hlasi || !vOkne) return;
+    if (Platform.OS !== 'android' || !zni || !vOkne) return;
     try {
       kratky.setActiveForLockScreen(true, {
         title: 'Startovní procedura',
@@ -339,7 +323,7 @@ export function useDirigent(
         kratky.setActiveForLockScreen(false);
       } catch {}
     };
-  }, [hlasi, vOkne, kratky]);
+  }, [zni, vOkne, kratky]);
 
   // <b>Partitura se plánuje dopředu, nedohání se zpětně.</b> Panel tiká
   // po vteřině, takže zvuk puštěný „až s tikem" zazní až vteřinu po svém
@@ -353,8 +337,11 @@ export function useDirigent(
   const predchozi = useRef<number | null>(null);
   const vyrizeno = useRef(new Set<number>());
   const casovace = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const hlasiTed = useRef(hlasi);
-  hlasiTed.current = hlasi;
+  // <b>Drží to ref, ne proměnná.</b> Naplánovaný zvuk se ptá až ve chvíli,
+  // kdy má zaznít — a mezi naplánováním a tou chvílí mohl rozhodčí volbu
+  // změnit.
+  const zniTed = useRef({ mluvi, troubi });
+  zniTed.current = { mluvi, troubi };
 
   // Kdy se relace budila naposledy. Uvnitř odpočtu se nebudí znovu —
   // viz `RELACE_CERSTVA_MS`.
@@ -381,7 +368,7 @@ export function useDirigent(
 
     // První tik jen zapamatuje, kde jsme; jinak by se po otevření
     // obrazovky přehrálo všechno, co už dávno platilo.
-    if (minule === null || !hlasi) return;
+    if (minule === null || !zni) return;
 
     const vyriz = (okamzik: Znameni[], zaMs: number) => {
       const kdy = okamzik[0].vterinDoStartu;
@@ -393,7 +380,7 @@ export function useDirigent(
       if (zaMs <= 0) {
         void (async () => {
           await probud();
-          prehraj(okamzik, kratky, dlouhy, cislovky.current);
+          prehraj(okamzik, kratky, dlouhy, cislovky.current, zniTed.current);
         })();
         return;
       }
@@ -405,14 +392,14 @@ export function useDirigent(
       else
         casovace.current.push(
           setTimeout(() => {
-            if (hlasiTed.current) void probud();
+            if (zniTed.current.mluvi || zniTed.current.troubi) void probud();
           }, predem),
         );
 
       casovace.current.push(
         setTimeout(() => {
           // Mezi naplánováním a zazněním mohl rozhodčí hlas vypnout.
-          if (hlasiTed.current) prehraj(okamzik, kratky, dlouhy, cislovky.current);
+          prehraj(okamzik, kratky, dlouhy, cislovky.current, zniTed.current);
         }, zaMs),
       );
     };
@@ -422,7 +409,7 @@ export function useDirigent(
 
     const propadlo = coOkamzik(minule, doStartu, delkaS);
     if (propadlo.length > 0) vyriz(propadlo, 0);
-  }, [doStartu, hlasi, delkaS, kratky, dlouhy]);
+  }, [doStartu, zni, delkaS, kratky, dlouhy]);
 
   // Naplánovaný zvuk nesmí přežít odchod z obrazovky.
   useEffect(
@@ -468,8 +455,8 @@ export function useDirigent(
 
   // Vypnutí uprostřed věty musí ztichnout hned, ne až doříká.
   useEffect(() => {
-    if (!hlasi) Speech.stop().catch(() => {});
-  }, [hlasi]);
+    if (!mluvi) Speech.stop().catch(() => {});
+  }, [mluvi]);
 
   /**
    * Zatroubí zrušení rozjížďky: dva dlouhé zvuky a pak věta.
@@ -480,16 +467,26 @@ export function useDirigent(
    */
   const zruseno = useCallback(
     (cislo: number) => {
-      if (!hlasiTed.current) return;
+      const { mluvi: m, troubi: tr } = zniTed.current;
+      if (!m && !tr) return;
       void (async () => {
         await probud();
+        // <b>Věta čeká na klakson, jen když klakson zní.</b> S vypnutým
+        // klaksonem by se čekalo na ticho a oznámení by přišlo o dvě
+        // vteřiny později než zrušení samo.
+        const rekni = () => {
+          if (!m) return;
+          Speech.stop().catch(() => {});
+          Speech.speak(`Rozjížďka ${cislo} zrušena`, { language: JAZYK, rate: TEMPO });
+        };
+        if (!tr) {
+          rekni();
+          return;
+        }
         zahraj(dlouhy);
         casovaceZruseni.current.push(
           setTimeout(() => zahraj(dlouhy), DELKA_TROUBENI_MS.dlouze),
-          setTimeout(() => {
-            Speech.stop().catch(() => {});
-            Speech.speak(`Rozjížďka ${cislo} zrušena`, { language: JAZYK, rate: TEMPO });
-          }, DELKA_TROUBENI_MS.dlouze * 2),
+          setTimeout(rekni, DELKA_TROUBENI_MS.dlouze * 2),
         );
       })();
     },
@@ -512,10 +509,15 @@ export function useDirigent(
    */
   const prerusen = useCallback(
     (druh: 'odklad' | 'odvolani', cislo: number, kdy: string | null) => {
-      if (!hlasiTed.current) return;
+      const { mluvi: m, troubi: tr } = zniTed.current;
+      if (!m && !tr) return;
       void (async () => {
         await probud();
+        // <b>Ping zazní i tomu, kdo má jen klakson.</b> Není to znamení
+        // pro pole, ale potvrzení rozhodčímu, že úkon prošel — a bez
+        // něj by u vypnutého hlasu neřekl telefon vůbec nic.
         zahraj(ping);
+        if (!m) return;
         // <b>Odvolání čas neříká</b> (Filip, 8. 11. 2026: *„všeobecné
         // odvolání stačí říct"*). Nový čas u něj počítá pravidlo
         // (ZPJ 29.2), ne rozhodčí — nic se jím nerozhoduje a věta navíc
@@ -553,34 +555,40 @@ export function useDirigent(
   return {
     zruseno,
     prerusen,
-    zapnuto,
-    bezCestiny: hlasi && bezCestiny,
+    hlas: volba.hlas,
+    klakson: volba.klakson,
+    bezCestiny: mluvi && bezCestiny,
     klidChybiPovoleni: veli && klidJdeTo() && !smimeKlid,
     povolKlid: () => void otevriNastaveni(),
-    prepni: () => {
-      // <b>Zápis ani zvuk nepatří do aktualizační funkce stavu.</b> React
-      // ji smí zavolat víckrát a vedlejší efekt by se zopakoval — tahle
-      // past už jednou zasekla frontu hlášek.
-      const nove = !zapnuto;
-      setZapnuto(nove);
-      ulozHlas(nove);
-
-      // <b>Zapnutí se musí ozvat.</b> Rozhodčí si telefon strčí do kapsy
-      // a potřebuje vědět, že z ní něco uslyší — a jak nahlas. Jediná
-      // chvíle, kdy se to dá zkusit, je teď: za minutu už jde o start.
-      if (nove) {
-        void (async () => {
-          await probudRelaci();
-          troub('kratce', kratky, dlouhy);
-          setTimeout(() => {
-            Speech.speak('Dirigent hlásí', { language: JAZYK, rate: TEMPO });
-          }, DELKA_TROUBENI_MS.kratce);
-        })();
-      } else {
-        Speech.stop().catch(() => {});
-      }
-    },
   };
+}
+
+/** Krátký klakson, ať si ho umí přehrát i nastavení zvuku. */
+export const KLAKSON_KRATCE = KLAKSON.kratce;
+
+/**
+ * <b>Zapnutí se musí ozvat, a tím, co se zapnulo.</b>
+ *
+ * Rozhodčí si telefon strčí do kapsy a potřebuje vědět, že z ní něco
+ * uslyší — a jak nahlas. Jediná chvíle, kdy se to dá zkusit, je ta, kdy
+ * se to zapíná; za minutu už jde o start. Ukázat klakson tomu, kdo
+ * zapnul hlas, by přitom bylo zavádějící: slyšel by zvuk, který mu pak
+ * nezazní.
+ */
+export function ukazZvuk(co: 'hlas' | 'klakson', kratky: Prehravac): void {
+  void (async () => {
+    await probudRelaci();
+    if (co === 'klakson') {
+      zahraj(kratky);
+      return;
+    }
+    Speech.speak('Dirigent hlásí', { language: JAZYK, rate: TEMPO });
+  })();
+}
+
+/** Zastaví rozmluvené hlášení — po vypnutí hlasu nemá co dozvučovat. */
+export function umlkni(): void {
+  Speech.stop().catch(() => {});
 }
 
 /** Značka, pod kterou si panel drží displej. Vlastní, aby ji neuvolnil
@@ -602,9 +610,10 @@ function prehraj(
   kratky: Prehravac,
   dlouhy: Prehravac,
   cislovky: Record<string, Prehravac>,
+  /** Co z toho zní: hlas, klakson, nebo obojí. */
+  zni: { mluvi: boolean; troubi: boolean },
 ): void {
-  const troubeni = okamzik.find((z) => z.troubi)?.troubi ?? null;
-  const veta = okamzik.find((z) => z.rekni)?.rekni ?? '';
+  const { troubeni, veta } = coZazni(okamzik, zni);
 
   if (troubeni) troub(troubeni, kratky, dlouhy);
   if (!veta) return;

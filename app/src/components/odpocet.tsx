@@ -7,7 +7,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   useColorScheme,
   View,
@@ -337,52 +336,13 @@ export function Odpocet({
       {/* <b>Fronta se nesmí tvářit jako hotovo.</b> Odpočet běží z hodin
           telefonu, takže na obrazovce vypadá všechno v pořádku i tehdy,
           když o startu nikdo jiný neví. */}
-      {/* <b>Hlas se dá vypnout, ale musí být vidět, že je zapnutý.</b>
-          Rozhodčí si telefon strká do kapsy a potřebuje vědět, jestli
-          z ní něco uslyší — a na vodě může chtít ticho, aniž by kvůli
-          tomu zavíral obrazovku. */}
-      {veli ? (
-        /* <b>Přepínač, ne věta</b> (Filip, 8. 11. 2026: *„dej tam nějaký
-           přepínač … ať to není jenom prostý text"*). Do té doby to byl
-           odkaz, který sám sebe přejmenovával — rozhodčí z něj poznal
-           stav až tím, že si přečetl, co se stane po klepnutí.
-
-           Terčem je celá řádka, ne jen ten knoflík: na houpající se lodi
-           je knoflík 51 × 31 bodů málo. `Switch` si klepnutí na sebe
-           vezme sám, takže se nepřepne dvakrát. */
-        <Pressable
-          onPress={dirigent.prepni}
-          accessibilityRole="switch"
-          accessibilityState={{ checked: dirigent.zapnuto }}
-          accessibilityLabel="Hlásí a troubí"
-          style={({ pressed }) => [
-            s.hlas,
-            {
-              // Zapnutý se barví vodou, tedy barvou panelu nad ním —
-              // ať to spolu drží jako jedna věc (Filip, 8. 11. 2026:
-              // *„ještě bych to nějak možná barevně sladil"*). Zelená
-              // tam byla vypůjčená od „jede se" a mluvila o něčem jiném.
-              borderColor: dirigent.zapnuto ? t.voda : t.linka,
-              backgroundColor: dirigent.zapnuto ? t.zvyrazneni : 'transparent',
-              opacity: pressed ? 0.6 : 1,
-            },
-          ]}>
-          <Text style={[s.hlasText, { color: dirigent.zapnuto ? t.voda : t.tlumeny }]}>
-            {dirigent.zapnuto ? 'Hlásí a troubí' : 'Mlčí'}
-          </Text>
-          {/* <b>Knoflík na střed řádky.</b> `Switch` má vlastní výšku
-              a na iOSu k ní ještě okraj, takže se s textem sám
-              nesrovná — `alignSelf` ho dorovná na tutéž osu. */}
-          <Switch
-            value={dirigent.zapnuto}
-            onValueChange={dirigent.prepni}
-            trackColor={{ false: t.linka, true: t.voda }}
-            thumbColor={t.papir}
-            ios_backgroundColor={t.linka}
-            style={{ alignSelf: 'center' }}
-          />
-        </Pressable>
-      ) : null}
+      {/* <b>Ovládání zvuku tu bylo a odešlo do nastavení</b> (Filip,
+          8. 11. 2026: *„to pole dáme do nějakého meníčka v settings.
+          To nemusíme mít na každý obrazovce a nemusí to tam zabírat
+          místo"*). Panel na startovní linii má ukazovat odpočet
+          a úkony; přepínač zvuku se nastaví jednou za sezónu a pak
+          překáží. Je v Účtu, v sekci *Zvuk na startu*, a od té doby
+          zvlášť pro hlas a zvlášť pro klakson. */}
 
       {/* <b>Nerušit se povoluje jednou a pak platí.</b> Nabízí se proto
           rovnou na startovní obrazovce — v nastavení appky by to rozhodčí

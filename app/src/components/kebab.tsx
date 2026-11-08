@@ -36,7 +36,7 @@ const KAM: { text: string; cil: string; popis?: string }[] = [
   { text: 'Moje lodě a posádka', cil: '/lode' },
   { text: 'Klíč k lodi', cil: '/klic' },
   { text: 'Záznam trasy', cil: '/tracker' },
-  { text: 'Účet a oprávnění', cil: '/ucet' },
+  { text: 'Účet a nastavení', cil: '/ucet', popis: 'oprávnění, zvuk na startu, verze appky' },
 ];
 
 const WEB = 'https://orlickypohar.klihovka.cz';

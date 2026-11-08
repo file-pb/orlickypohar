@@ -3,6 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 
 import { Akce, Karta, Nacitani, Nadpis, Radek, Sekce } from '@/components/ui';
 import { VerzeAppky } from '@/components/verze-appky';
+import { ZvukNastaveni } from '@/components/zvuk-nastaveni';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiJa, type Ja } from '@/lib/api';
 import { navratovaAdresa, odhlas, prihlas, prihlasovaniJde } from '@/lib/identita';
@@ -146,6 +147,10 @@ export default function Ucet() {
       <Radek text="Klíč k lodi" href="/klic" />
       <Radek text="Záznam trasy" popis="zkouška" href="/tracker" />
       <Radek text="orlickypohar.klihovka.cz" href="https://orlickypohar.klihovka.cz" hodnota="web" />
+
+      {/* <b>Zvuk se nastavuje tady, ne na panelu startu</b> (Filip,
+          8. 11. 2026). Mimo `ja` schválně: troubí telefon, ne účet. */}
+      <ZvukNastaveni />
 
       {/* Mimo `ja`: na čem appka jede, je otázka nezávislá na přihlášení. */}
       <VerzeAppky />

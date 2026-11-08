@@ -63,6 +63,10 @@ echo
 echo "== Nedoručený start =="
 "${NODE[@]}" ./cekajici-start.test.ts
 
+echo
+echo "== Volba zvuku na startu =="
+"${NODE[@]}" ./zvuk.test.ts
+
 # `TZ` je tu schválně: čas aktualizace se skládá z místních složek a
 # v UTC by test prošel i s chybnou implementací.
 echo

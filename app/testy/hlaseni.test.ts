@@ -12,6 +12,7 @@ import {
   casHlasem,
   coOkamzik,
   coPrehrat,
+  coZazni,
   nejblizsiOkamzik,
   partitura,
   posledniZnameni,
@@ -326,6 +327,58 @@ zkus('co není čas, se neříká vůbec', () => {
   assert.equal(casHlasem('11:60'), null);
   assert.equal(casHlasem('brzo'), null);
   assert.equal(casHlasem(''), null);
+});
+
+/* ---------- co z toho zazní podle nastavení ---------- */
+
+zkus('se vším zapnutým zazní obojí', () => {
+  const okamzik: Znameni[] = [{ vterinDoStartu: 60, rekni: 'jedna minuta', troubi: 'kratce' }];
+  assert.deepEqual(coZazni(okamzik, { mluvi: true, troubi: true }), {
+    troubeni: 'kratce',
+    veta: 'jedna minuta',
+  });
+});
+
+zkus('vypnutý klakson umlčí troubení, ne slovo', () => {
+  // Filip, 8. 11. 2026: hlas a klakson jsou dvě nezávislé volby. Kdo
+  // chce jen mluvené hlášení, nesmí poli zatroubit znamení.
+  const okamzik: Znameni[] = [{ vterinDoStartu: 60, rekni: 'jedna minuta', troubi: 'kratce' }];
+  assert.deepEqual(coZazni(okamzik, { mluvi: true, troubi: false }), {
+    troubeni: null,
+    veta: 'jedna minuta',
+  });
+});
+
+zkus('vypnutý hlas umlčí slovo, ne klakson', () => {
+  const okamzik: Znameni[] = [{ vterinDoStartu: 60, rekni: 'jedna minuta', troubi: 'kratce' }];
+  assert.deepEqual(coZazni(okamzik, { mluvi: false, troubi: true }), {
+    troubeni: 'kratce',
+    veta: '',
+  });
+});
+
+zkus('se vším vypnutým nezazní nic', () => {
+  const okamzik: Znameni[] = [{ vterinDoStartu: 60, rekni: 'jedna minuta', troubi: 'kratce' }];
+  assert.deepEqual(coZazni(okamzik, { mluvi: false, troubi: false }), {
+    troubeni: null,
+    veta: '',
+  });
+});
+
+zkus('číslovky odpočtu jsou hlas, ne klakson', () => {
+  // Odpočet „pět, čtyři, tři…" jde z nahrávek, ale je to pořád mluvené
+  // slovo — s vypnutým hlasem musí zmlknout.
+  const okamzik: Znameni[] = [{ vterinDoStartu: 3, rekni: 'tři', troubi: null }];
+  assert.equal(coZazni(okamzik, { mluvi: false, troubi: true }).veta, '');
+  assert.equal(coZazni(okamzik, { mluvi: true, troubi: false }).veta, 'tři');
+});
+
+zkus('celá partitura s vypnutým klaksonem nezatroubí ani jednou', () => {
+  // Sabotáž téhle věty se pozná až na vodě, takže se měří celá
+  // partitura, ne jeden vybraný okamžik.
+  for (const z of partitura()) {
+    assert.equal(coZazni([z], { mluvi: true, troubi: false }).troubeni, null);
+  }
 });
 
 console.log(`  ${prosly} prošlo`);
