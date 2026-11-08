@@ -73,18 +73,21 @@ HLAS = "Zuzana"
 
 # Slova a jména souborů, v pořadí odpočtu. Jména bez diakritiky, protože
 # se na ně v kódu ukazuje `require`.
-# Třetí hodnota je <b>strop délky</b>, nebo `None`. Používá ho jediné
-# slovo: „tři" vychází i při zpomaleném tempu o půl decky delší než
-# sousedi, protože mu syntetizátor nechá dozvučet samohlásku. Filip,
-# 8. 11. 2026: *„u té trojky to prostě neumí a jen to trochu usekni."*
-# Useknutí je tedy vědomá pomoc syntéze, ne obecné pravidlo — a drží se
-# na jednom slově, aby se z něj nestalo plošné zkracování, které už se
-# jednou neosvědčilo.
+# Třetí hodnota je <b>strop délky</b>, nebo `None`. Mají ho dvě slova,
+# ta, kterým syntetizátor nechá dozvučet samohlásku dál než ostatním:
+# „tři" vycházelo na 417 ms a „dva" na 471 proti 349–368 u zbytku.
+# Filip, 8. 11. 2026: *„u té trojky to prostě neumí a jen to trochu
+# usekni"*, a po poslechu *„tři zkrať ještě kousek a dva taky"*.
+#
+# Useknutí je vědomá pomoc syntéze tam, kde selhává, ne obecné
+# pravidlo. Proto stojí u konkrétních slov a ostatní zůstávají, jak
+# zazněla: plošné zkracování se už jednou zkusilo (vyrovnávání všech
+# pěti na 250 ms) a odpočet se po něm rozjížděl.
 CISLOVKY = [
     ("pět", "pet", None),
     ("čtyři", "ctyri", None),
-    ("tři", "tri", 370),
-    ("dva", "dva", None),
+    ("tři", "tri", 340),
+    ("dva", "dva", 420),
     ("jedna", "jedna", None),
 ]
 
