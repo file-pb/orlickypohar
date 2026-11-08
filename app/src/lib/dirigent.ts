@@ -43,6 +43,7 @@ import * as Speech from 'expo-speech';
 import { File, Paths } from 'expo-file-system';
 
 import {
+  casHlasem,
   coOkamzik,
   DELKA_PINGU_MS,
   DELKA_TROUBENI_MS,
@@ -515,14 +516,19 @@ export function useDirigent(
       void (async () => {
         await probud();
         zahraj(ping);
-        const veta =
-          druh === 'odklad'
+        // <b>Odvolání čas neříká</b> (Filip, 8. 11. 2026: *„všeobecné
+        // odvolání stačí říct"*). Nový čas u něj počítá pravidlo
+        // (ZPJ 29.2), ne rozhodčí — nic se jím nerozhoduje a věta navíc
+        // jen prodlužuje hlášení ve chvíli, kdy se pole vrací ke startu.
+        // U odkladu je to naopak ta podstatná informace: čas si volí
+        // rozhodčí sám a hlášení je jediné potvrzení, že se zapsal ten,
+        // který chtěl.
+        const casem = druh === 'odklad' && kdy ? casHlasem(kdy) : null;
+        const sCasem = casem
+          ? `Start rozjížďky ${cislo} odložen na ${casem}.`
+          : druh === 'odklad'
             ? `Start rozjížďky ${cislo} odložen.`
             : `Všeobecné odvolání, rozjížďka ${cislo}.`;
-        // Nový čas se řekne, jen když existuje: po odkladu bez času ho
-        // rozhodčí teprve bude hledat a věta „nový start null" by byla
-        // horší než ticho.
-        const sCasem = kdy ? `${veta} Nový start v ${kdy}.` : veta;
         casovaceZruseni.current.push(
           setTimeout(() => {
             Speech.stop().catch(() => {});

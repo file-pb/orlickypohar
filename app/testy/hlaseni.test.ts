@@ -9,6 +9,7 @@
 import assert from 'node:assert/strict';
 
 import {
+  casHlasem,
   coOkamzik,
   coPrehrat,
   nejblizsiOkamzik,
@@ -306,6 +307,25 @@ zkus('poslední znamení je to, které už padlo', () => {
   assert.equal(posledniZnameni(0, 300)?.jmeno, 'Start');
   // Po startu zůstává start — po něm už žádné znamení není.
   assert.equal(posledniZnameni(-600, 300)?.jmeno, 'Start');
+});
+
+// <b>Čas, který jde vyslovit.</b> „15:06" syntéza čte nesrozumitelně
+// (Filip, 8. 11. 2026), proto se rozepisuje na hodiny a minuty.
+zkus('čas se řekne slovy, ne s dvojtečkou', () => {
+  assert.equal(casHlasem('15:06'), '15 hodin 6 minut');
+  assert.equal(casHlasem('9:30'), '9 hodin 30 minut');
+});
+
+zkus('celá hodina se říká bez minut', () => {
+  assert.equal(casHlasem('11:00'), '11 hodin');
+});
+
+zkus('co není čas, se neříká vůbec', () => {
+  // Raději věta bez času než věta s nesmyslem — volající ji vynechá.
+  assert.equal(casHlasem('25:00'), null);
+  assert.equal(casHlasem('11:60'), null);
+  assert.equal(casHlasem('brzo'), null);
+  assert.equal(casHlasem(''), null);
 });
 
 console.log(`  ${prosly} prošlo`);

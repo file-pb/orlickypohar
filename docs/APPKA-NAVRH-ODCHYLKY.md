@@ -239,7 +239,14 @@ dlouhé zvuky"*. Odklad ani odvolání v ní nejsou, takže klakson by u
 nich oznamoval poli znamení, které nikdo nevyhlásil, a na vodě by se
 pletl s tím, co platí. Ping žádné znamení není: je to potvrzení
 rozhodčímu, že úkon prošel, a věta po něm říká co — *„Start rozjížďky 4
-odložen"*, *„Všeobecné odvolání, rozjížďka 4. Nový start v 15:06."*
+odložen na 15 hodin 6 minut"*, *„Všeobecné odvolání, rozjížďka 4."*
+
+**Odvolání čas neříká** a odklad ho říká slovy (Filip tentýž den:
+*„všeobecné odvolání stačí říct a pak je ten čas nesrozumitelně"*).
+U odvolání počítá nový čas pravidlo, ne rozhodčí — nic se jím
+nerozhoduje. U odkladu je to naopak ta podstatná informace, protože čas
+si volí sám; proto se rozepisuje na hodiny a minuty, dvojtečku syntéza
+čte pokaždé jinak.
 
 Zvuk vyrábí `app/scripts/ping.py` a je schválně syntetický, ačkoli
 klakson stál za oklikou přes nahrávku skutečné houkačky: ping má znít

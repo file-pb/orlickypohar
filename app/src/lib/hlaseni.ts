@@ -59,6 +59,28 @@ export const DELKA_TROUBENI_MS: Record<Troubeni, number> = {
  */
 export const DELKA_PINGU_MS = 300;
 
+/**
+ * <b>Čas, který jde vyslovit</b> — „15:06" se čte nesrozumitelně
+ * (Filip, 8. 11. 2026: *„pak je ten čas nesrozumitelně"*). Dvojtečka
+ * není slovo a syntéza si s ní poradí pokaždé jinak; „patnáct hodin
+ * šest minut" je jednoznačné i z kapsy.
+ *
+ * Celá hodina se čte bez minut: *„v patnáct hodin"*. Minuta jedna
+ * zůstává jako „1 minut" schválně — čeština by chtěla „minutu", ale
+ * syntéza tvar nečasuje a rozhodčí u vody rozumí číslu, ne skloňování.
+ *
+ * Bere „HH:MM" i „H:MM"; co není čas, vrátí `null` a volající větu
+ * o čase vynechá, místo aby přečetl nesmysl.
+ */
+export function casHlasem(hhmm: string): string | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
+  if (!m) return null;
+  const hodin = Number(m[1]);
+  const minut = Number(m[2]);
+  if (hodin > 23 || minut > 59) return null;
+  return minut === 0 ? `${hodin} hodin` : `${hodin} hodin ${minut} minut`;
+}
+
 /** Jedna věc, která se má stát v určitý čas před startem. */
 export type Znameni = {
   /** Kolik vteřin před startovním znamením; 0 je start. */
