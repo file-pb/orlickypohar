@@ -14,8 +14,13 @@ Corel si v prologu přejmenovává operátory. Používají se tyhle:
 
 Barva je v EPS jen jako CMYK 0,96 0,63 0,20 0,36. Převod na RGB závisí na
 profilu, takže odstín je změřený z PDF téhož loga vykresleného v macOS
-(PDFKit do sRGB kontextu): #113b59. Světlá varianta pro tmavý vzhled
-webu bere modrou, kterou tmavý vzhled používal i pro staré logo.
+(PDFKit do sRGB kontextu): #113b59. **Archivní vektory ho drží, rozhraní
+ne.** V ikoně na ploše telefonu byla ta tmavě námořní modř skoro černá
+skvrna (Filip, 8. 11. 2026: *„logo apky je příliš tmavé, na tmavém
+prostředí mobilu je méně vidět"*) — a byla to zároveň jediná barva
+značky, která se nikde jinde nepoužívala: web i appka značku kreslí
+`#0b5cad`. Ikony, splash a favicon proto berou tutéž modrou jako
+obrazovka pod nimi.
 
 Vyrábí:
 
@@ -37,8 +42,16 @@ WEB = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 ZDROJ = f"{WEB}/grafika/orlik-yacht-series/Logo_Orlik_Yacht_Series_vektor.eps"
 CIL = f"{WEB}/public/logo/orlik-yacht-series"
 
-MODRA = "#113b59"          # změřeno z PDF, viz výše
-SVETLA = "#7fa7c9"         # tmavý vzhled webu, stejná jako u znaků tříd
+MODRA = "#113b59"          # změřeno z PDF, viz výše — archivní vektory
+# Značka v rozhraní. Obě barvy drží i `web/app/globals.css` (`--logo-oys`)
+# a `app/src/lib/znacka.ts` — kdo z nich kreslí značku na obrazovku, kreslí
+# ji touhle modrou, takže ikona vypadá jako appka, kterou otvírá.
+ZNACKA_SVETLE = "#0b5cad"
+# Tmavý vzhled. Do 8. 11. 2026 tu stála #7fa7c9, táž modrá jako znak třídy
+# Nad 7 m; proti pozadí appky má kontrast 7,1 a v ikoně na ploše se tenké
+# linky loga v té modré ztrácely. #b8d4ea dává 11,7 a modrá zůstane modrá —
+# o stupeň výš (#cfe2f3) už je značka skoro bílá.
+ZNACKA_TMAVE = "#b8d4ea"
 PAPIR = (252, 252, 251)    # podložka faviconu, stejná jako u staré ikony
 TMA = (20, 23, 26)         # `pozadi` tmavého vzhledu appky (constants/theme.ts)
 APP = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "app"))
@@ -218,8 +231,12 @@ def ikony_appky(alfa):
     # a Android by pod ní nechal prosvítat téma. Světlá verze stojí na
     # papíru, tmavá na pozadí tmavého vzhledu appky — tytéž dvě barvy,
     # mezi kterými se přepíná celá appka.
-    uloz_ikonu(ctverec_se_znakem(alfa, 0.86, MODRA, PAPIR), f"{cil}/icon.png")
-    uloz_ikonu(ctverec_se_znakem(alfa, 0.86, SVETLA, TMA), f"{cil}/icon-tmava.png")
+    #
+    # Značka je tu v barvě rozhraní, ne v archivní `MODRA`: ikona na ploše
+    # je 60 px a tenké linky loga v tmavě námořní modři se v ní slily
+    # (Filip, 8. 11. 2026). Totéž platí o splashi, který po ní naskočí.
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.86, ZNACKA_SVETLE, PAPIR), f"{cil}/icon.png")
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.86, ZNACKA_TMAVE, TMA), f"{cil}/icon-tmava.png")
 
     # <b>Tónovaná ikona</b> (iOS 18). Systém si ji obarví sám podle
     # plochy, takže se dodává v šedi na průhledném — jediné, co z ní
@@ -229,18 +246,18 @@ def ikony_appky(alfa):
     # <b>Androidí adaptivní ikona</b> je tři vrstvy. Popředí musí počítat
     # s tím, že si z něj launcher vyřízne kruh nebo čtverec se zaoblením:
     # bezpečná zóna je 72 ze 108 dílů, tedy dvě třetiny strany.
-    uloz_ikonu(ctverec_se_znakem(alfa, 0.64, MODRA), f"{cil}/android-icon-foreground.png")
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.64, ZNACKA_SVETLE), f"{cil}/android-icon-foreground.png")
     uloz_ikonu(Image.new("RGBA", (1024, 1024), PAPIR + (255,)), f"{cil}/android-icon-background.png")
     # Monochromatická vrstva pro motivované ikony: systém si ji obarví,
     # takže nese jen tvar.
     uloz_ikonu(ctverec_se_znakem(alfa, 0.64, "#ffffff"), f"{cil}/android-icon-monochrome.png")
 
     # Splash: značka na průhledném, podložku kreslí expo-splash-screen.
-    uloz_ikonu(ctverec_se_znakem(alfa, 0.92, MODRA), f"{cil}/splash-icon.png")
-    uloz_ikonu(ctverec_se_znakem(alfa, 0.92, SVETLA), f"{cil}/splash-icon-tmava.png")
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.92, ZNACKA_SVETLE), f"{cil}/splash-icon.png")
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.92, ZNACKA_TMAVE), f"{cil}/splash-icon-tmava.png")
 
     # Favicon webové verze appky.
-    uloz_ikonu(ctverec_se_znakem(alfa, 0.92, MODRA, PAPIR, 196), f"{cil}/favicon.png")
+    uloz_ikonu(ctverec_se_znakem(alfa, 0.92, ZNACKA_SVETLE, PAPIR, 196), f"{cil}/favicon.png")
 
 
 def main():
@@ -263,7 +280,7 @@ def main():
         )
 
     os.makedirs(CIL, exist_ok=True)
-    for pripona, barva in (("", MODRA), ("-tmave", SVETLA)):
+    for pripona, barva in (("", MODRA), ("-tmave", ZNACKA_TMAVE)):
         with open(f"{CIL}/orlik-yacht-series{pripona}.svg", "w", encoding="utf-8") as f:
             f.write(
                 f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{viewbox}">'
@@ -276,17 +293,17 @@ def main():
     for sirka in (1024, 512):
         a = alfa if sirka == 1024 else alfa.resize((sirka, round(sirka * h / w)), Image.LANCZOS)
         uloz_png(obarvi(a, MODRA), f"{CIL}/orlik-yacht-series-{sirka}.png", MODRA)
-        uloz_png(obarvi(a, SVETLA), f"{CIL}/orlik-yacht-series-tmave-{sirka}.png", SVETLA)
+        uloz_png(obarvi(a, ZNACKA_TMAVE), f"{CIL}/orlik-yacht-series-tmave-{sirka}.png", ZNACKA_TMAVE)
     # Výchozí adresa loga: čtverec 512 px, jako měl starý /logo.png.
     ctverec = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
-    ctverec.alpha_composite(obarvi(alfa, MODRA), (0, (1024 - alfa.height) // 2))
-    uloz_png(ctverec.resize((512, 512), Image.LANCZOS), f"{WEB}/public/logo.png", MODRA)
+    ctverec.alpha_composite(obarvi(alfa, ZNACKA_SVETLE), (0, (1024 - alfa.height) // 2))
+    uloz_png(ctverec.resize((512, 512), Image.LANCZOS), f"{WEB}/public/logo.png", ZNACKA_SVETLE)
 
     # Favicon na světlé podložce, jinak by tmavě modrý kruh na tmavém panelu
     # prohlížeče zmizel. Logo zabírá skoro celou plochu, v 16 px je každý
     # bod znát.
     ikona = Image.new("RGB", (1024, 1024), PAPIR)
-    znak = obarvi(alfa.resize((960, round(960 * h / w)), Image.LANCZOS), MODRA)
+    znak = obarvi(alfa.resize((960, round(960 * h / w)), Image.LANCZOS), ZNACKA_SVETLE)
     ikona.paste(znak, ((1024 - znak.width) // 2, (1024 - znak.height) // 2), znak)
     uloz_png(ikona.resize((512, 512), Image.LANCZOS), f"{WEB}/app/icon.png")
 

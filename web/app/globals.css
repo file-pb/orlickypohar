@@ -423,7 +423,7 @@ body:has(.uvod) .pozadi-znak { display: none; }
   :root:not([data-rezim="svetly"]) .pozadi-znak { opacity: 0.09; }
   :root:not([data-rezim="svetly"]) .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
   :root:not([data-rezim="svetly"]) .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
-  :root:not([data-rezim="svetly"]) .logo-oys { --logo-oys: #7fa7c9; }
+  :root:not([data-rezim="svetly"]) .logo-oys { --logo-oys: #b8d4ea; }
   /* Tmavý vzhled (Filip, 22. 9. 2026, varianta 5c): logo ledové, nápis
      středně šedý, aby logo stálo samo. Vodoznak na pozadí zůstává tlumený. */
   :root:not([data-rezim="svetly"]) header.hlavicka { --barva-znacky: #d6e6f5; --napis-znacky: #7d848c; }
@@ -431,7 +431,7 @@ body:has(.uvod) .pozadi-znak { display: none; }
 :root[data-rezim="tmavy"] .pozadi-znak { opacity: 0.09; }
 :root[data-rezim="tmavy"] .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
 :root[data-rezim="tmavy"] .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
-:root[data-rezim="tmavy"] .logo-oys { --logo-oys: #7fa7c9; }
+:root[data-rezim="tmavy"] .logo-oys { --logo-oys: #b8d4ea; }
 :root[data-rezim="tmavy"] header.hlavicka { --barva-znacky: #d6e6f5; --napis-znacky: #7d848c; }
 header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
 header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
