@@ -4,15 +4,18 @@ import {
   Animated,
   AppState,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
-  TextInput,
+  useColorScheme,
   View,
 } from 'react-native';
 
 import { Pressable } from 'react-native';
+
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { Preskok } from '@/components/preskok';
 import type { TrestZaJizdy } from '@/lib/api';
@@ -555,6 +558,137 @@ function popisUkonu(ukon: UkonStartu): string {
     : 'ZPJ 29.2 · přidá minutu a jede znovu';
 }
 
+/**
+ * <b>Volba času kolečkem</b>, ne klávesnicí (Filip, 8. 11. 2026:
+ * *„možná místo textu by se hodil nějaký nástroj"*).
+ *
+ * Mluví v „HH:MM", ne v `Date`, schválně: platnost času dál počítá
+ * {@link casRozpravy} — hlídá pražskou zónu a odmítá hodinu, která už
+ * minula. Volič je tedy jen jiný způsob, jak to pole vyplnit, a žádné
+ * pravidlo se kvůli němu nestěhuje.
+ *
+ * <b>Dvě cesty, protože systémy to mají jinak.</b> Na iOSu se kolečko
+ * kreslí do vlastní plachty, na Androidu si `DateTimePicker` otevře
+ * systémový dialog sám, jakmile se připojí — tam se tedy jen připojí
+ * a zase odpojí.
+ *
+ * <b>`onValueChange` a `onDismiss`, ne `onChange`.</b> Starý jediný
+ * callback je od verze 9 označený jako zastaralý a appka na něm
+ * nechávala v konzoli varování při každém otevření kolečka. Rozdíl je
+ * věcný, ne jen jmenný: zavření bez volby chodí vlastní cestou, takže
+ * se nemusí hádat z `event.type`.
+ */
+function VolbaCasu({
+  hodnota,
+  naZmenu,
+  t,
+  vypnuto,
+}: {
+  /** Čas jako „HH:MM", nebo prázdno, když žádný není. */
+  hodnota: string;
+  naZmenu: (hhmm: string) => void;
+  t: Barvy;
+  vypnuto?: boolean;
+}) {
+  const [otevreno, setOtevreno] = useState(false);
+  const [vybrano, setVybrano] = useState(() => new Date());
+  // Kolečko je nativní, takže si světlost musí říct samo — `useTheme`
+  // mu nic nepředá.
+  const tmave = useColorScheme() === 'dark';
+
+  /** Co kolečku nabídnout: napsaný čas, jinak půlhodina odsud. */
+  const vychozi = () => {
+    const d = new Date();
+    const m = /^(\d{1,2})[:.](\d{2})$/.exec(hodnota.trim());
+    if (m) d.setHours(Number(m[1]), Number(m[2]), 0, 0);
+    else d.setMinutes(d.getMinutes() + 30, 0, 0);
+    return d;
+  };
+
+  const naHodinu = (d: Date) =>
+    d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  return (
+    <>
+      <Pressable
+        disabled={vypnuto}
+        onPress={() => {
+          setVybrano(vychozi());
+          setOtevreno(true);
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={hodnota ? `Čas ${hodnota} — změnit` : 'Vybrat čas'}
+        style={({ pressed }) => [
+          s.poleCasu,
+          {
+            color: t.text,
+            borderColor: t.linka,
+            backgroundColor: t.zvyrazneni,
+            opacity: pressed ? 0.6 : 1,
+            justifyContent: 'center',
+          },
+        ]}>
+        <Text style={[s.poleCasuText, { color: hodnota ? t.text : t.tlumeny }]}>
+          {hodnota || '--:--'}
+        </Text>
+      </Pressable>
+
+      {Platform.OS === 'android' && otevreno ? (
+        <DateTimePicker
+          value={vybrano}
+          mode="time"
+          is24Hour
+          display="spinner"
+          onValueChange={(_u, d) => {
+            setOtevreno(false);
+            naZmenu(naHodinu(d));
+          }}
+          onDismiss={() => setOtevreno(false)}
+        />
+      ) : null}
+
+      {Platform.OS === 'ios' ? (
+        <Modal visible={otevreno} transparent animationType="fade" onRequestClose={() => setOtevreno(false)}>
+          <View style={s.stin}>
+            <View style={[s.dialog, { backgroundColor: t.papir }]}>
+              <Text style={[s.dialogNadpis, { color: t.text }]}>Nový čas startu</Text>
+              <DateTimePicker
+                value={vybrano}
+                mode="time"
+                is24Hour
+                display="spinner"
+                locale="cs-CZ"
+                themeVariant={tmave ? 'dark' : 'light'}
+                onValueChange={(_u, d) => setVybrano(d)}
+                style={{ alignSelf: 'stretch' }}
+              />
+              <View style={s.dialogTlacitka}>
+                <Pressable
+                  onPress={() => setOtevreno(false)}
+                  style={({ pressed }) => [s.volba, s.volbaVedleSebe, { borderColor: t.linka, opacity: pressed ? 0.6 : 1 }]}>
+                  <Text style={[s.volbaText, { color: t.text }]}>Zpátky</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    naZmenu(naHodinu(vybrano));
+                    setOtevreno(false);
+                  }}
+                  style={({ pressed }) => [
+                    s.volba,
+                    s.volbaVedleSebe,
+                    { backgroundColor: t.voda, borderColor: 'transparent', opacity: pressed ? 0.6 : 1 },
+                  ]}>
+                  <Text style={[s.volbaText, { color: pismoNaVyplni(t, t.voda) }]}>Hotovo</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      ) : null}
+    </>
+  );
+}
+
 function UkonyNaStartu({
   stav,
   t,
@@ -681,19 +815,7 @@ function UkonyNaStartu({
                 megafonem. */}
             {zadavaCas ? (
               <>
-                <TextInput
-                  value={napsano}
-                  onChangeText={setNapsano}
-                  placeholder="14:30"
-                  placeholderTextColor={t.tlumeny}
-                  keyboardType="numbers-and-punctuation"
-                  maxLength={5}
-                  editable={!posila}
-                  style={[
-                    s.poleCasu,
-                    { color: t.text, borderColor: t.linka, backgroundColor: t.zvyrazneni },
-                  ]}
-                />
+                <VolbaCasu hodnota={napsano} naZmenu={setNapsano} t={t} vypnuto={posila} />
                 <View style={s.zkratky}>
                   {([15, 30, 60] as const).map((m) => (
                     <Pressable
@@ -873,19 +995,7 @@ function Ceka({
                   Rozjížďka {stav.cislo} · hodina a minuta, pražského času
                 </Text>
 
-                <TextInput
-                  value={napsano}
-                  onChangeText={setNapsano}
-                  placeholder="11:00"
-                  placeholderTextColor={t.tlumeny}
-                  keyboardType="numbers-and-punctuation"
-                  autoFocus
-                  maxLength={5}
-                  style={[
-                    s.poleCasu,
-                    { color: t.text, borderColor: t.linka, backgroundColor: t.zvyrazneni },
-                  ]}
-                />
+                <VolbaCasu hodnota={napsano} naZmenu={setNapsano} t={t} />
 
                 {/* Napsané, ale nepoužitelné, se musí vysvětlit. Nejčastější
                     omyl je hodina, která už minula — a tiché přesunutí na
@@ -1376,16 +1486,18 @@ const s = StyleSheet.create({
   },
   okno: { borderRadius: 14, borderWidth: 1, padding: 18 },
   // Velké číslice: zadává se to v rukavicích a na houpající se lodi.
+  poleCasuText: { fontSize: 34, fontWeight: '800', fontVariant: ['tabular-nums'], textAlign: 'center' },
+  volbaVedleSebe: { flex: 1 },
+  // <b>Obal, ne text.</b> Od 8. 11. 2026 je to klepací pole, které
+  // otevírá kolečko; číslice kreslí `poleCasuText` uvnitř. Výška je nad
+  // mezí terče se slušnou rezervou — mačká se to na vodě.
   poleCasu: {
     marginTop: 12,
+    minHeight: 64,
     borderWidth: 1,
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    fontSize: 34,
-    fontWeight: '700',
-    textAlign: 'center',
-    fontVariant: ['tabular-nums'],
   },
   oknoTlacitko: {
     flex: 1,
