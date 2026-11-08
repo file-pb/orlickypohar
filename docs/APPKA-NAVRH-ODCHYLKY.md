@@ -166,6 +166,7 @@ nikdo nehlásil jako chybu.
 | Šipky nad sebou, 34×22 pt | vedle sebe, 44×44 | mez terče je 44 pt (`tools/kontrola-dotyku.py`); dvě tlačítka ve sloupci by každé řádce daly 88 |
 | Pruh stavu u zrušené rozjížďky říká *Odvoláno* | říká *Zrušeno* | odvolání startu (ZPJ 29.2) a zrušení rozjížďky (ZPJ 32.1) jsou dvě různé věci; kód je přesnější |
 | Systémový proužek má tři stavy, prostřední *NENAHRÁVÁ SE* | sedm stavů, ten říká *NEZAPISUJE SE* | přibyly ukázka, bez spojení, pozastaveno a bez klíče — stavy, které návrh nekreslí, protože vznikly později |
+| Pruh na dně nese jen otáčkové tresty a jmenuje se *Tresty na trati* | nese i předčasné starty a tehdy se jmenuje *Zapsáno* | OCS je zápis ze startu, ne trest na trati, ale pruh je jediné místo, kde rozhodčí vidí, co uložil — a zápis, který není vidět, se zapíše podruhé (Filip, 8. 11. 2026: *„dám OCS, vyberu loď, a neobjeví se mi ve výpisu trestů"*). Klepnutím se odčiní, jak žádá R35 |
 | Pod panelem velitele pokračuje obrazovka pořadím a listinou | pod pruhem trestů končí | Filip, 7. 11. 2026: *„ten seznam je tam zbytečný, stačí, aby okno končilo tím, tresty na trati"* |
 | Landing nese karty *Velíš* a *Sledování* | jen logo přes celou obrazovku | Filip, 7. 11. 2026 — a sám návrh to u sebe zapisuje jako **dočasný** stav |
 | Kebab má sedm položek | má deset (navíc *Domů*, *Moje regata*, *Ukázka pro závodníka*) | *„odevšad se musím umět vrátit na landing"* |

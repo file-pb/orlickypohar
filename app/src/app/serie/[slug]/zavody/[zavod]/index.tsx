@@ -24,6 +24,7 @@ import {
   prevezmiVeleni,
   nactiZavod,
   nactiZapis,
+  odcinilPredcasnyStart,
   type ZapisLod,
   ohlasRozjizdku,
   nactiTresty,
@@ -370,6 +371,7 @@ export default function Zastavka() {
       // zapíše podruhé.
       obnov();
       obnovTresty();
+      obnovZapisPanelu();
     } catch (e) {
       setChybaStartu(
         e instanceof OdmitnutoServerem
@@ -378,6 +380,43 @@ export default function Zastavka() {
       );
     } finally {
       setVyberPosila(null);
+    }
+  };
+
+  // <b>Zapsaný předčasný start musí být vidět</b> (Filip, 8. 11. 2026:
+  // *„dám OCS, vyberu loď, a neobjeví se mi ve výpisu trestů"*). OCS se
+  // zapisuje jako kód výsledku, ne jako úkon s vlastní tabulkou, takže
+  // po klepnutí nebylo kde se o něm přesvědčit — a zápis, který není
+  // vidět, se na vodě udělá podruhé.
+  //
+  // Čte se ze <b>zápisu</b> rozjížďky, ne z veřejného detailu: ten nese
+  // jméno lodi, ale ne přihlášku, a odčinění se adresuje přihláškou —
+  // dvě lodě téhož jména v jednom ročníku nejsou nic divného. Ptá se
+  // jen velitel, stejně jako na tresty.
+  const { data: zapisVPanelu, obnov: obnovZapisPanelu } = useData(
+    () =>
+      cisloVPanelu === null || !veliNekde(ja ?? null)
+        ? Promise.resolve(null)
+        : nactiZapis(slug, zavod, cisloVPanelu),
+    [slug, zavod, cisloVPanelu, veliNekde(ja ?? null)],
+  );
+
+  const ocsVPanelu = (zapisVPanelu?.lode ?? [])
+    .filter((l) => l.kod === 'Ocs')
+    .map((l) => ({ prihlaskaId: l.prihlaskaId, lod: l.lod }));
+
+  const odcinOcs = async (prihlaskaId: number) => {
+    if (cisloVPanelu === null) return;
+    try {
+      await odcinilPredcasnyStart(slug, zavod, cisloVPanelu, prihlaskaId);
+      obnov();
+      obnovZapisPanelu();
+    } catch (e) {
+      setChybaStartu(
+        e instanceof OdmitnutoServerem
+          ? (e.duvod ?? 'Server zápis odmítl.')
+          : 'Nepovedlo se zapsat — zkus to znovu.',
+      );
     }
   };
 
@@ -458,6 +497,8 @@ export default function Zastavka() {
             naPredcasnyStart={veliNekde(ja ?? null) ? (c) => otevriVyber(c, 'Ocs') : undefined}
             naTrest={veliNekde(ja ?? null) ? otevriVyber : undefined}
             tresty={tresty ?? undefined}
+            ocs={ocsVPanelu}
+            naOdcineniOcs={veliNekde(ja ?? null) ? odcinOcs : undefined}
             naVykonano={veliNekde(ja ?? null) ? zapisVykonani : undefined}
             naZruseni={veliNekde(ja ?? null) ? setRuseni : undefined}
             naCil={

@@ -356,20 +356,31 @@ function regata(cesta: string): S['ZavodDetailDto'] | null {
   return (stav[`/serie/${m[1]}/zavody/${m[2]}`] as S['ZavodDetailDto'] | undefined) ?? null;
 }
 
-/** Lodě na startovní listině, očíslované — snímek `prihlaskaId` nenese. */
-function listina(z: S['ZavodDetailDto']): S['ZapisLodDto'][] {
+/**
+ * Lodě na startovní listině, očíslované — snímek `prihlaskaId` nenese.
+ *
+ * <b>Zapsané kódy a pořadí se přibalí</b>, je-li rozjížďka po ruce.
+ * Do 8. 11. 2026 tady stálo `kod: null` natvrdo, takže i uložený
+ * předčasný start se při dalším čtení ztratil a zápis vypadal, jako by
+ * se nic nestalo (Filip: *„dám OCS, vyberu loď, a neobjeví se"*).
+ */
+function listina(z: S['ZavodDetailDto'], cislo?: number): S['ZapisLodDto'][] {
+  const r = cislo === undefined ? undefined : z.rozjizdky.find((x) => x.cislo === cislo);
   return z.lode
     .filter((l) => !l.vyloucena && l.potvrzena !== false)
-    .map((l, i) => ({
-      prihlaskaId: i + 1,
-      lod: l.lod,
-      cisloPlachty: null,
-      kategorie: l.kategorie,
-      poradiVCili: null,
-      kod: null,
-      casSekundy: null,
-      naRegate: true,
-    }));
+    .map((l, i) => {
+      const v = r?.vysledky.find((x) => x.lod === l.lod);
+      return {
+        prihlaskaId: i + 1,
+        lod: l.lod,
+        cisloPlachty: null,
+        kategorie: l.kategorie,
+        poradiVCili: v?.poradiVCili ?? null,
+        kod: v?.kod ?? null,
+        casSekundy: v?.casSekundy ?? null,
+        naRegate: true,
+      };
+    });
 }
 
 /** Rozepsaný zápis cílové obrazovky, složený z veřejného detailu. */
@@ -386,7 +397,7 @@ function zapis(z: S['ZavodDetailDto'], cislo: number): unknown {
     duvodRevize: null,
     smiZapisovat: true,
     procNelze: null,
-    lode: listina(z),
+    lode: listina(z, cislo),
     startV: r?.startV ?? null,
     doSerie: r?.doSerie ?? true,
     smiPapir: false,
@@ -561,8 +572,39 @@ export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: st
       if (dnes && dnes.rozjizdka === r.cislo) dnes.stavRozjizdky = 'Zrusena';
       break;
     }
-    case '/vysledky':
-      return Promise.resolve(odpoved(200, { ...(zapis(z, r.cislo) as object), revize: 2 }));
+    case '/vysledky': {
+      // <b>Zápis se musí uložit, ne jen odpovědět.</b> Do 8. 11. 2026
+      // tahle větev vracela nezměněný zápis s revizí 2, takže se
+      // v ukázce nic nezapsalo — a předčasný start, který appka posílá
+      // právě touhle cestou (`zapisPredcasnyStart` skládá celou sadu),
+      // zmizel beze stopy. Server kódy i pořadí ukládá k rozjížďce;
+      // tady se tedy propíšou do jejích výsledků.
+      const lode = listina(z);
+      const radky = Array.isArray(telo.radky) ? telo.radky : [];
+      for (const radek of radky as {
+        prihlaskaId?: number;
+        poradiVCili?: number | null;
+        kod?: string | null;
+      }[]) {
+        const l = lode.find((x) => x.prihlaskaId === radek.prihlaskaId);
+        if (!l) continue;
+        const uz = r.vysledky.find((x) => x.lod === l.lod);
+        const novy = {
+          lod: l.lod,
+          kategorie: l.kategorie,
+          kormidelnik: null,
+          poradiVCili: radek.poradiVCili ?? null,
+          casSekundy: uz?.casSekundy ?? null,
+          kod: (radek.kod ?? null) as S['VysledekDto']['kod'],
+        };
+        if (uz) Object.assign(uz, novy);
+        else r.vysledky.push(novy);
+      }
+      // Revize roste, jinak by si appka myslela, že zapisuje ještě
+      // někdo jiný, a další klepnutí by odmítla.
+      const dalsi = (typeof telo.revize === 'number' ? telo.revize : 1) + 1;
+      return Promise.resolve(odpoved(200, { ...(zapis(z, r.cislo) as object), revize: dalsi }));
+    }
     default:
       break;
   }

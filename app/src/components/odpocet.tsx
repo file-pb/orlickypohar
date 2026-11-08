@@ -78,6 +78,8 @@ export function Odpocet({
   naPredcasnyStart,
   naTrest,
   tresty,
+  ocs,
+  naOdcineniOcs,
   naVykonano,
   naZruseni,
   naCasStartu,
@@ -144,6 +146,10 @@ export function Odpocet({
   naTrest?: (cislo: number, druh: 'Otacka360' | 'Otacka720') => void;
   /** Co rozhodčí v téhle rozjížďce uložil a ještě neodkliknul. */
   tresty?: TrestZaJizdy[];
+  /** Lodě, které v téhle rozjížďce mají zapsaný OCS. */
+  ocs?: { prihlaskaId: number; lod: string }[];
+  /** Loď předčasný start odčinila — kód se smaže (R35). */
+  naOdcineniOcs?: (prihlaskaId: number) => void | Promise<void>;
   /** Rozhodčí zapisuje, že loď otáčku odkroužila. */
   naVykonano?: (trest: number) => void | Promise<void>;
   /** Zrušení rozjížďky s důvodem (ZPJ 32.1). */
@@ -481,7 +487,14 @@ export function Odpocet({
           a nikdy o vykonání, ačkoliv API `.../vykonan` měla od začátku.
           Ukazují se jen neodkliknuté: odkroužený trest už rozhodčího
           nezajímá a pruh by se do konce rozjížďky zanesl. */}
-      <TrestyNaTrati t={t} tresty={tresty} ted={ted} naVykonano={naVykonano} />
+      <TrestyNaTrati
+        t={t}
+        tresty={tresty}
+        ocs={ocs}
+        ted={ted}
+        naVykonano={naVykonano}
+        naOdcineniOcs={naOdcineniOcs}
+      />
 
       <Preskok doStartuS={doStartu} delkaS={delkaS} />
     </>
@@ -1203,25 +1216,40 @@ function Odstartovano({
 function TrestyNaTrati({
   t,
   tresty,
+  ocs,
   ted,
   naVykonano,
+  naOdcineniOcs,
 }: {
   t: Barvy;
   tresty?: TrestZaJizdy[];
+  ocs?: { prihlaskaId: number; lod: string }[];
   ted: number;
   naVykonano?: (trest: number) => void | Promise<void>;
+  naOdcineniOcs?: (prihlaskaId: number) => void | Promise<void>;
 }) {
   const [posila, setPosila] = useState<number | null>(null);
+  const [posilaOcs, setPosilaOcs] = useState<number | null>(null);
   const zbyva = (tresty ?? []).filter((x) => x.vykonanoV === null);
+  const predcasne = ocs ?? [];
 
-  if (zbyva.length === 0) return null;
+  if (zbyva.length === 0 && predcasne.length === 0) return null;
 
   const naVyplni = pismoNaVyplni(t, t.text);
 
   return (
     <View style={[s.naTrati, { backgroundColor: t.text }]}>
       <View style={s.naTratiHlava}>
-        <Text style={[s.skupina, { color: naVyplni }]}>TRESTY NA TRATI</Text>
+        {/* <b>Nadpis se řídí obsahem.</b> Návrh (`Jede.dc.html`) kreslí
+            pruh jen s otáčkami a jmenuje ho *Tresty na trati*. Od
+            8. 11. 2026 v něm stojí i předčasné starty — OCS je zápis
+            ze startu, ne trest na trati, takže by ten nadpis lhal.
+            Pruh je jediné místo, kde rozhodčí vidí, co uložil (R15,
+            R16: vlajky se nevyvěšují a trest se sděluje megafonem),
+            a zápis, který není vidět, se zapíše podruhé. */}
+        <Text style={[s.skupina, { color: naVyplni }]}>
+          {predcasne.length === 0 ? 'TRESTY NA TRATI' : 'ZAPSÁNO'}
+        </Text>
         {naVykonano ? (
           <Text style={[s.naTratiNapoveda, { color: sPruhlednosti(naVyplni, 0.72) }]}>
             klepnutím odčiněno
@@ -1230,6 +1258,38 @@ function TrestyNaTrati({
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {/* <b>Předčasné starty první.</b> Jsou ze startu, tedy starší
+            než cokoli na trati, a odčinit se musí hned — loď se vrací
+            za konec čáry, zatímco pole už jede. */}
+        {predcasne.map((x) => (
+          <Pressable
+            key={`ocs-${x.prihlaskaId}`}
+            disabled={!naOdcineniOcs || posilaOcs !== null}
+            onPress={async () => {
+              if (!naOdcineniOcs || posilaOcs !== null) return;
+              setPosilaOcs(x.prihlaskaId);
+              try {
+                await naOdcineniOcs(x.prihlaskaId);
+              } finally {
+                setPosilaOcs(null);
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={`${x.lod}, předčasný start — zapsat, že odčinila`}
+            style={({ pressed }) => [
+              s.naTratiCip,
+              {
+                backgroundColor: sPruhlednosti(naVyplni, 0.12),
+                borderColor: sPruhlednosti(t.stavZruseny, 0.9),
+                opacity: pressed || posilaOcs === x.prihlaskaId ? 0.6 : 1,
+              },
+            ]}>
+            <Text style={[s.naTratiLod, { color: naVyplni }]}>{x.lod}</Text>
+            <Text style={[s.naTratiCas, { color: sPruhlednosti(naVyplni, 0.78) }]}>
+              OCS · předčasný start
+            </Text>
+          </Pressable>
+        ))}
         {zbyva.map((x) => (
           <Pressable
             key={x.id}

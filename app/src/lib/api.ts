@@ -545,6 +545,33 @@ export async function zapisPredcasnyStart(
 }
 
 /**
+ * <b>Loď předčasný start odčinila</b> — kód se smaže (nález R35:
+ * *„dlaždice OCS → loď → odčinila / neodčinila"*).
+ *
+ * Vrácení se posílá touž cestou jako zápis, celou sadou: zápis výsledků
+ * je jeden dokument s revizí a dvě cesty k témuž by se rozešly. Loď se
+ * hledá podle `prihlaskaId`, ne podle jména — jména se v poli opakují.
+ */
+export async function odcinilPredcasnyStart(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  prihlaskaId: number,
+) {
+  const zapis = await nactiZapis(serie, zavod, cislo);
+  if (zapis === null) throw new Error('neprihlasen');
+
+  const radky: ZapisRadekVstup[] = zapis.lode.map((l) => ({
+    prihlaskaId: l.prihlaskaId,
+    poradiVCili: l.poradiVCili ?? null,
+    kod: l.prihlaskaId === prihlaskaId ? null : (l.kod ?? null),
+    dojezdV: null,
+  }));
+
+  return ulozVysledky(serie, zavod, cislo, radky, zapis.revize);
+}
+
+/**
  * <b>Co u cíle vidí trasování</b> (nález R33): u kterých lodí stopa
  * z telefonu protla cílovou čáru ve směru do cíle.
  *
