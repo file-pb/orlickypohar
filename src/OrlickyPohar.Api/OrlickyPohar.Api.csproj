@@ -28,7 +28,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.14" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.18.7" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.19.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.1.0" />
     <!-- ImageSharp 4 ověřuje licenci při buildu: v Debug varuje, v Release je to
