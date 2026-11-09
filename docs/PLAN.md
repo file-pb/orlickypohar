@@ -8050,7 +8050,7 @@ Expo 58. Neodmítá se proto, že by byl nebezpečnější než ostatní.
 |---|---|---|---|---|
 | `braces` (high, CVE-2026-93687) | 3.0.3 | `metro` → `metro-file-map` → `micromatch ^4.0.4` → `braces ^3.0.3` | **neexistuje** | není kam overridovat |
 | `node-forge` (high, CVE-2026-85393) | 1.4.0 | `expo` → `@expo/cli` → `node-forge ^1.3.3`, a týž CLI ještě přes `@expo/code-signing-certificates` | **neexistuje** | není kam overridovat |
-| `decode-uri-component` (medium, CVE-2026-45822) | 0.2.2 | **`expo-router`** → `query-string ^7.1.3` → `decode-uri-component ^0.2.2` | 0.5.0, ale dosažitelná jen přes Expo 58 | override rozbije `require` |
+| `decode-uri-component` (medium, CVE-2026-45822) | 0.2.2 | **`expo-router`** → `query-string ^7.1.3` → `decode-uri-component ^0.2.2` | 0.5.0, ale dosažitelná jen přes Expo 58 | override rozbije `require` — **vyvráceno 9. 11. 2026, viz níž** |
 | `uuid` (medium, CVE-2026-41907) | 7.0.3 | `@expo/config-plugins` → `xcode ^3.0.1` → `uuid ^7.0.3` | 11.1.1 | zranitelná funkce se nevolá |
 
 **U braces a node-forge není co rozhodovat.** Obě advisory mají
@@ -9193,7 +9193,7 @@ rozumně opravit**, a jsou proto odmítnuté jako `tolerable_risk`:
 | Hlášení | Kde | Proč to nejde |
 |---|---|---|
 | `zod` (high, 7.5) | `@expo/cli`, eslint plugin | Dependabot se o opravu pokusil a vzdal se sám (běh 40033508643): *„a patched version exists for zod, but the available update path would downgrade expo"*. `@expo/cli` chce `^3.25.76`, záplata je až ve 4.6.6. V APK zod není — jen build a lint, a vlastní zod schéma projekt nemá. |
-| `decode-uri-component` (medium) | `expo-router` → `query-string@7` | Opravená 0.5.1 je **ESM-only**, `query-string@7` ji volá přes `require`. Override by rozbil parsování deep linků — z teoretického DoS by se stal skutečný pád. Dopad je vyčerpání paměti na vlastním telefonu. |
+| `decode-uri-component` (medium) | `expo-router` → `query-string@7` | Opravená 0.5.1 je **ESM-only**, `query-string@7` ji volá přes `require`. Override by rozbil parsování deep linků — z teoretického DoS by se stal skutečný pád. Dopad je vyčerpání paměti na vlastním telefonu. **Vyvráceno 9. 11. 2026**: override se nasadil 7. 11. 2026 a drží, hlášení #2 i #27 jsou `fixed`. Čím se to vyvrátilo, stojí v oddílu *Override `decode-uri-component` drží*. |
 | `deepmerge` 4.3.1 (low, GHSA-gcqx-w48m-w2h4) | `expo` → `@expo/config`, `@expo/cli`, `@expo/prebuild-config` | **Záplata neexistuje** — hlášení platí na `>= 4.2.0, <= 4.3.1` a `first_patched_version` je prázdné, takže není kam jít. Na rozdíl od předchozích dvou tady odmítnutí nestojí na tom, že jde „jen o dostupnost": hlášení sahá na integritu (`I:L`, znečištění prototypu). Stojí na dosažitelnosti — `deepmerge` se tahá výhradně přes stavěcí nástroje Expa, které čtou `app.json` a `app.config.js` z tohohle repozitáře, a `app/src` ho neimportuje nikde. Útočník by musel umět změnit konfiguraci v repu, a pak už nepotřebuje znečišťovat prototyp. |
 
 > **Pozn. 7. 11. 2026:** odmítnutá hlášení jsou čtyři, ne tři — to čtvrté
@@ -9284,6 +9284,11 @@ routing nepokrývají (`app/testy/` jsou záznam trasy, klíče, role, zvuky),
 takže tohle tvrzení se neopírá o běh.
 
 ### Oprava nejde, a je to ta samá překážka jako u #2
+
+> **Vyvráceno 9. 11. 2026.** Nadpis neplatí: oprava šla a od 7. 11. 2026 je
+> nasazená. Co z tohohle oddílu platí dál a co ne, stojí níž v *Override
+> `decode-uri-component` drží*. Celý oddíl se tu nechává proto, že ten
+> mechanismus je pořád měřitelný a vysvětluje, proč to vypadalo nemožně.
 
 `decode-uri-component@0.5.1` je `"type": "module"` s jediným vstupem
 `exports.default` (`npm view decode-uri-component@0.5.1 type exports`),
@@ -9542,6 +9547,77 @@ přišel na vstup — a ten `^0.5.1` byl. Kontrola tedy měřila vstup, ne
 výsledek, což je ta samá past, kterou hlídka hlídá u sebe. Opravený případ
 posílá `^0.6.0`, takže „0.5.1" může přijít jen z prahu: s pevně zapsaným
 „0.5" zkouška spadne (ověřeno sabotáží 7. 11. 2026, kód 1), bez něj projde.
+
+## Override `decode-uri-component` drží, a co z té překážky platí (9. 11. 2026)
+
+Oddíl *Nové hlášení na decode-uri-component* tvrdil, že oprava nejde:
+0.5.1 je ESM-only, `query-string@7.1.3` ji volá přes `require`, override
+by rozbil parsování deep linků. **Nasadilo se to 7. 11. 2026** v commitu
+`60bf57a` (`"decode-uri-component": "^0.5.1"` v `app/package.json`) a od
+té doby jede — hlášení #2 i #27 jsou `fixed`, otevřených je **nula**
+(`gh api …/dependabot/alerts`, 9. 11. 2026).
+
+Ta věta byla ale napůl pravdivá, a rozdělit to má smysl, protože mechanismus
+platí dál:
+
+| Co | Měřeno 9. 11. 2026 nad `app/` z `main` | Výsledek |
+|---|---|---|
+| Pod Node: volá to query-string vůbec? | `node -e "require('query-string').parse('?a=1&b=%C4%8D')"` | **`TypeError: decodeComponent is not a function`** v `query-string/index.js:233` |
+| V appce: postaví se bundle? | `npx expo export --platform android` | **kód 0**, `entry-…​.hbc` 4,4 MB |
+
+Takže: **pod Node se to opravdu rozbije** — a není to ani výjimka z
+`require`, CJS si vytáhne jmenný prostor modulu a `decodeComponent` pak
+není funkce. **V appce se to nerozbije**, protože bundluje Metro, které
+`exports` přečte a ESM přeloží. Override tedy drží přesně tam, kde na něm
+záleží.
+
+A to „z teoretického DoS by se stal skutečný pád" bylo mimo dvakrát: i kdyby
+Metro `require` neuhlídalo, `queryString.parse` **nemá v živé cestě
+volajícího** (trasováno 6. 11. 2026, viz *Zranitelná funkce nemá v appce
+živé volání*). Není co rozbít.
+
+**Poučení je o tvaru tvrzení, ne o tom balíčku.** „Override to rozbije" bylo
+změřené v Node a vysloveno o appce. Mezi tím stojí jiný resolver a jiný
+překlad — a to je rozdíl, který se nedá odvodit, jen zkusit. `expo export`
+na to stačí a trvá minutu.
+
+## Hlídka měla čtvrtou vadu, a tahle radila zavřít živé hlášení (9. 11. 2026)
+
+Hlídka nad dnešním `main` vypsala:
+
+> `zod` je už na 4.6.7, tedy zaplátovaný. Hlášení se dá zavřít jako vyřešené.
+
+A je to špatně. V lockfilu jsou **dvě kopie**:
+
+| Cesta | Verze | |
+|---|---|---|
+| `node_modules/zod` | 4.6.7 | hoistnutá, pro devDependency (`eslint-plugin-react-hooks`, `zod-validation-error`) |
+| `node_modules/expo/node_modules/zod` | 3.25.76 | **ta, na které visí #25** (`@expo/cli` chce `^3.25.76`) |
+
+`zapis()` bere **nejkratší cestu** — „`node_modules/zod` před
+`node_modules/a/node_modules/zod`" — a to je u rozsahu správná otázka, ale
+u verze špatná: nejkratší cesta je ta hoistnutá, ne nutně ta zranitelná.
+Hlídka tedy radila zavřít hlášení o verzi, která je nainstalovaná. Že #25
+je v GitHubu pořád otevřené, jí přitom dávalo za lži — jen se nikdo
+nekoukal.
+
+Je to ta samá vada, na kterou upozorňuje oddíl o globu: tvrzení o jednom
+uzlu stromu není tvrzení o stromu. A je to **čtvrtá** tichá vada té hlídky
+za tři dny, všechny stejného druhu — kontrola měřila něco jiného, než co
+hlásila.
+
+Opraveno: `kopie()` vypíše všechny instalované kopie od nejnižší verze a
+`zaplatovany()` rozhoduje podle té nejnižší. Zkouška na to má případ se
+skutečným stavem obou kopií `zod`; se starým čtením z nejkratší cesty
+spadne (sabotáž 9. 11. 2026, kód 1) a hlídka by u toho vypsala
+*„`zod` je zaplátovaný ve **všech** kopiích (… 3.25.76, … 4.6.7)"* — tedy
+svou vlastní zprávou jmenovala zranitelnou verzi a nazvala ji zaplátovanou.
+
+**Druhá změna je o šumu.** Prahy pro `decode-uri-component` zůstávají, aby
+hlídaly regrese z 6. a 7. 11., ale rada „hlášení se dá zavřít" by u nich
+byla o zavřeném hlášení. Takový řádek měsíc po měsíci je přesně to, po čem
+se hlídky přestanou čítat, takže je `ZAVRENE` drží potichu. Nad dnešním
+`main` hlídka vypisuje **Klid** a je to poprvé správně.
 
 ## Fronta k 20. 10. 2026
 

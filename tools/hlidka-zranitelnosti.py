@@ -54,6 +54,14 @@ import urllib.request
 # hlášení se dá zavřít jako vyřešené" o verzi, na kterou visí otevřené high.
 ZAPLATY = {"zod": (4, 6, 6), "decode-uri-component": (0, 5, 1)}
 
+# Balíčky, jejichž hlášení už GitHub zavřel jako vyřešené (ověřeno
+# 9. 11. 2026 přes `gh api …/dependabot/alerts`: #2 i #27 jsou `fixed`,
+# protože `app/package.json` má od 7. 11. přepis na `^0.5.1`). Práh tu
+# **zůstává**, protože hlídá regrese z 6. 11. 2026, ale rada „h lášení se dá
+# zavřít" už by byla o zavřeném hlášení — tedy přesně ten měsíční šum,
+# kvůli kterému se hlídky přestávají číst.
+ZAVRENE = {"decode-uri-component"}
+
 ADVISORY = "https://api.github.com/advisories?ecosystem=npm&per_page=100&affects="
 
 # Hlášení, kvůli kterému vzniklo #26. Sahá na integritu a přijali jsme to
@@ -170,6 +178,51 @@ def zapis(lock, konec):
     if not nalezene:
         return None
     return lock["packages"][min(nalezene, key=len)]
+
+
+def kopie(lock, balicek):
+    """Verze **všech** nainstalovaných kopií balíčku, od nejnižší.
+
+    `zapis` bere nejkratší cestu, a to je u *verze* špatná otázka:
+    nejkratší cesta je ta hoistnutá, ne nutně ta zranitelná. Naměřeno
+    9. 11. 2026 nad `app/package-lock.json`: `node_modules/zod` drží 4.6.7
+    (kopie pro devDependency), kdežto `node_modules/expo/node_modules/zod`,
+    na kterém visí #25, pořád 3.25.76. Hlídka proto vypsala *„zod je už na
+    4.6.7, tedy zaplátovaný, hlášení se dá zavřít"* — tedy doporučila
+    zavřít hlášení o verzi, která je nainstalovaná.
+
+    Je to ta samá vada, na kterou upozorňuje oddíl *Při jedné instanci
+    balíčku se dá říct…* v `docs/PLAN.md`: tvrzení o jednom uzlu stromu
+    není tvrzení o stromu.
+
+    Vrací `(serazene, necitelne)` — seznam `(verze, cesta, dev)` od
+    nejnižší verze a seznam cest, kde se verze přečíst nepodařilo.
+    """
+    serazene, necitelne = [], []
+    for cesta, z in (lock.get("packages") or {}).items():
+        if not (cesta == balicek or cesta.endswith("node_modules/" + balicek)):
+            continue
+        v = verze(z.get("version", ""))
+        if v is None:
+            necitelne.append((cesta, z.get("version")))
+            continue
+        serazene.append((v, cesta, bool(z.get("dev"))))
+    serazene.sort()
+    return serazene, necitelne
+
+
+def zaplatovany(lock, balicek):
+    """Je balíček zaplátovaný ve **všech** kopiích? `None` = žádná není.
+
+    Rozhoduje nejnižší kopie. Jedna zaplátovaná — obvykle ta hoistnutá —
+    neznamená nic, dokud vedle ní visí zranitelná jiná; proč, stojí
+    v `kopie`. Oddělené od `main` schválně, aby to šlo zkoušet bez sítě
+    a bez skutečného lockfilu.
+    """
+    serazene, _ = kopie(lock, balicek)
+    if not serazene:
+        return None
+    return serazene[0][0] >= ZAPLATY[balicek]
 
 
 def hlidej_zod(lock):
@@ -317,16 +370,23 @@ def main():
     nalezy = hlidej_zod(lock) + hlidej_duc(lock) + hlidej_deepmerge(lock)
 
     for balicek in ZAPLATY:
-        z = zapis(lock, balicek)
-        if z is None:
-            nalezy.append(f"`{balicek}` v lockfilu není. Buď odešel — a pak se dá hlášení zavřít — nebo se přejmenoval.")
+        # Rozhoduje **nejnižší** nainstalovaná kopie, ne ta hoistnutá: viz
+        # `kopie`. Jedna zaplátovaná kopie nikam nestáčí, dokud vísí
+        # zranitelná jiná.
+        serazene, necitelne = kopie(lock, balicek)
+        for cesta, surova in necitelne:
+            nalezy.append(f"Verzi `{balicek}` v `{cesta}` z lockfilu nepřečtu (`{surova}`).")
+        if not serazene:
+            if not necitelne:
+                nalezy.append(f"`{balicek}` v lockfilu není. Buď odešel — a pak se dá hlášení zavřít — nebo se přejmenoval.")
             continue
-        v = verze(z.get("version", ""))
-        if v is None:
-            nalezy.append(f"Verzi `{balicek}` z lockfilu nepřečtu (`{z.get('version')}`).")
-            continue
-        if v >= ZAPLATY[balicek]:
-            nalezy.append(f"`{balicek}` je už na {z['version']}, tedy zaplátovaný. Hlášení se dá zavřít jako vyřešené.")
+        v, cesta, _ = serazene[0]
+        if zaplatovany(lock, balicek):
+            if balicek not in ZAVRENE:
+                kde = ", ".join(f"`{c}` {'.'.join(str(x) for x in ver)}" for ver, c, _ in serazene)
+                nalezy.append(
+                    f"`{balicek}` je zaplátovaný ve **všech** kopiích ({kde}). "
+                    "Hlášení se dá zavřít jako vyřešené.")
             continue
         nalezy += hlidej_dopad(balicek, v)
 

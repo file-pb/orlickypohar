@@ -14,6 +14,11 @@ Třetí přibyla 7. 11. 2026: oprava prahu nechala v textu zprávy původní
 „od 0.5 výš“, tedy to číslo, které bylo špatně — a člověk čte zprávu, ne
 `ZAPLATY`.
 
+Čtvrtá 9. 11. 2026, a je to ta nejhorší z nich: verze se četla z nejkratší
+cesty v lockfilu, tedy z hoistnuté kopie. U `zod` je hoistnutá kopie 4.6.7
+(pro devDependency), kdežto ta, na které visí #25, je 3.25.76 pod `expo` —
+hlídka tedy radila **zavřít hlášení o verzi, která je nainstalovaná**.
+
 `zkouska` v `hlidka-zranitelnosti.yml` ověřuje **cestu hlášení**, ne úsudek —
 vynutí nález a podívá se, že vznikne issue. Že hlídka pozná, *co* hlásit,
 nekontrolovalo nic. Tohle to kontroluje: sabotáž, ne přečtení kódu.
@@ -117,12 +122,38 @@ def main():
             "po posunu prahu na 9.9.9 pořád tvrdí, že je záplata dosažitelná "
             f"z `^0.6.0`: {sabotovane}")
 
+    # --- 5. verze se posuzuje podle nejnizsi kopie, ne podle hoistnute ---
+    # Skutečný stav `app/package-lock.json` z 9. 11. 2026: hoistnutá kopie
+    # `zod` je 4.6.7 (pro devDependency), ale ta, na které visí #25, je
+    # 3.25.76 pod `expo`. Hlídka na to řekla „zaplátovaný, zavři to".
+    lock_zod = {"packages": {
+        "": {"name": "orlickypohar-app"},
+        "node_modules/zod": {"version": "4.6.7", "dev": True},
+        "node_modules/expo/node_modules/zod": {"version": "3.25.76"},
+    }}
+    serazene, necitelne = h.kopie(lock_zod, "zod")
+    if necitelne:
+        chyby.append(f"verze kopií `zod` se nepřečetly: {necitelne}")
+    if [c for _, c, _ in serazene] != ["node_modules/expo/node_modules/zod", "node_modules/zod"]:
+        chyby.append(f"kopie `zod` nejsou seřazené od nejnižší verze: {serazene}")
+    if h.zaplatovany(lock_zod, "zod") is not False:
+        chyby.append(
+            "`zod` se jeví jako zaplátovaný, přestože pod `expo` visí 3.25.76 — "
+            "to je ta vada, kvůli které hlídka 9. 11. 2026 radila zavřít #25")
+    # Jediná kopie, a ta zaplátovaná: musí vyjít True (jinak by předchozí
+    # kontrola prošla i tak, že předikát vrací False vždycky).
+    lock_duc = {"packages": {"node_modules/decode-uri-component": {"version": "0.5.1"}}}
+    if h.zaplatovany(lock_duc, "decode-uri-component") is not True:
+        chyby.append("jediná zaplátovaná kopie `decode-uri-component` nevyšla jako zaplátovaná")
+    if h.zaplatovany({"packages": {}}, "zod") is not None:
+        chyby.append("chybějící balíček nevrátil `None`")
+
     if chyby:
         print("Hlídka soudí špatně:\n")
         for c in chyby:
             print(f"- {c}")
         return 1
-    print(f"Hlídka soudí správně: prah, {len(pripady)} případů dopadu i text zprávy.")
+    print(f"Hlídka soudí správně: prah, {len(pripady)} případů dopadu, text zprávy i všechny kopie.")
     return 0
 
 
