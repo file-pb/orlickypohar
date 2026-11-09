@@ -1572,6 +1572,44 @@ kterých to neplatí:
 Web a appka ukazují totéž a ze stejného zdroje — dvě vývěsky, které se
 rozcházejí, jsou horší než jedna.
 
+### Vývěska v telefonu: megafon a cíl zprávy — nápad (Filip, 9. 11. 2026)
+
+Filip přinesl pruh hlášení z webu Vendée Globe — *„hezké znázornění alertu
+pro posádky (jen inspirace)"* — a po upřesnění z něj zbyly dvě věci.
+
+<b>Megafon s počtem nepřečtených.</b> Vývěska dnes míří jen na tabuli:
+`Vyveska` ve správě trackeru má strop délky textu právě proto, že *„delší
+text by se na televizi stejně nepřečetl"*. Kdo zrovna není u břehu před
+tabulí, o zprávě neví. Značka v hlavičce appky to spraví, a <b>megafon je
+lepší než zvoneček</b>: zvoneček znamená „aplikace má novinku", megafon
+„pořadatel mluví" — a na vodě je tohle to jediné, co rozhoduje, jestli se
+posádka vůbec podívá. Číslo vedle něj řekne, kolik toho je, takže se dá
+odejít a vrátit se a vědět, že nic neuteklo.
+
+Sedí to k rozhodnutí <i>push není doručení</i> výš: značka je pasivní a čeká,
+až se posádka podívá. Je to ta „služba navíc", ne doručení, takže vývěsku
+jako místo, kam se chodí dívat, nijak nezpochybňuje.
+
+<b>Cíl zprávy jako příznak, ne odkaz v textu.</b> U nich je „Find out more"
+součástí věty. U nás by měl pořadatel vybrat, k čemu se zpráva váže
+(směrnice, trať, rozjížďka, program), a odkaz si z toho appka poskládá sama.
+Dva důvody: píše se to na vodě na telefonu, kde je lepení adresy to poslední,
+co jde zvládnout — a hlavně <b>na tabuli je odkaz k ničemu</b>, televizi
+nikdo neproklepne. Z téhož příznaku tam místo odkazu vyjde věta („nová verze
+směrnice visí na vývěsce"), takže obě místa dál říkají totéž ze stejného
+zdroje.
+
+<b>Co se nebere.</b> Barva — oranžová a červená už u druhů zprávy význam
+nesou, takže megafon ať si ji bere od nejvážnější nepřečtené, jinak vznikne
+čtvrtý barevný slovník. Běžící text — na tabuli se nedá dočíst, když se na
+něj člověk podívá v půlce, a na telefonu za jízdy je pohyblivý text nejhorší
+možná volba. Ikonky uvnitř textu (u nich medaile za umístění) — za měsíc jsou
+v hlášeních tři způsoby, jak se napíše totéž; když má mít zpráva značku, ať
+plyne z druhu, ne z toho, co kdo napsal do pole.
+
+<b>Pořadí:</b> megafon první, příznak s ním. Dokud je vývěska jen na tabuli,
+nemá odkaz kde fungovat.
+
 ## Tracker
 
 Appka zaznamenává trasu lodi během závodu; po dojezdu si ji každý prohlédne
