@@ -8030,6 +8030,14 @@ tvrzení je nepřesných jako ta dvě výše.
 
 ## Zranitelnosti v appce: žádné overrides (10. 10. 2026)
 
+> **Nadpis už neplatí (9. 11. 2026).** Overrides v `app/package.json` jsou:
+> čtyři kvůli zranitelnostem — `node-forge`, `decode-uri-component`, `glob`
+> a `minimatch@^10`, všechny ze 7. 11. 2026 (`60bf57a` a `35a348a`) — a pátý,
+> `react-native-worklets` pod `expo-modules-core`, který s hlášeními
+> nesouvisí. Oddíl zůstává jako záznam rozhodnutí z 10. 10. 2026: platí z něj
+> úvaha, ne stav. Dnešní stav čti z `app/package.json` a z
+> `gh api repos/file-pb/orlickypohar/dependabot/alerts`, ne odsud.
+
 Dependabot měl na `app/package-lock.json` **čtyři otevřená upozornění** a žádné
 z nich se nezavírá overridem. Balík PR #160 je nezavřel a žádný další balík je
 nezavře, protože **ani jedno z nich se v řadě Expa 57 opravit nedá**.
@@ -8110,6 +8118,12 @@ uživatel sám klikne. Žádný server, žádná data, žádná cizí loď.
 > neběželo v appce: `app/testy/` pokrývají záznam trasy, klíče, role, zvuky
 > a start, routing ne. Tvrzení stojí na statickém call grafu a na sabotáži
 > knihovny mimo React Native.
+
+> **Vyvráceno 9. 11. 2026.** Override jde a od 7. 11. 2026 je nasazený
+> (`"decode-uri-component": "^0.5.1"` v `app/package.json`). Následující
+> odstavec platí jen pod Node — appku bunduje Metro, které `exports` přečte
+> a ESM přeloží. Čím se to změřilo, stojí v oddílu *Override
+> `decode-uri-component` drží*.
 
 Override na 0.5.0 **technicky nejde.** Verze 0.5.0 je `"type": "module"`
 s jediným vstupem `exports.default`, zatímco `query-string@7.1.3` je CJS a dělá
@@ -9484,7 +9498,11 @@ Oba vektory jsou navíc **jen dostupnost**: #39
 `CVSS:4.0/AV:N/AC:L/AT:P/…/VC:N/VI:N/VA:L`, #40 totéž s `AT:N`.
 
 **Zvedlo se to přesto**, protože to nic nestálo — a to je rozdíl proti #27,
-kde oprava rozbíjí `require`. Zjištění ale patří sem: kdyby se ten override
+kde oprava podle tehdejšího čtení rozbíjela `require`. (**Opraveno 9. 11.
+2026:** rozbíjí ho jen pod Node, ne v appce. A override na
+`decode-uri-component` byl v `main` už od rána téhož dne — `60bf57a`, 7. 11.
+v 02:47, zatímco tahle větev se slila v 17:26. Viz *Override
+`decode-uri-component` drží*.) Zjištění ale patří sem: kdyby se ten override
 někdy vracel zpátky, důvod nesmí být „ta větev se nevolá", protože se volá.
 Je to „není čím útočit", a to je slabší tvrzení.
 
