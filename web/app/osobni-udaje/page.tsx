@@ -5,7 +5,7 @@ import { KONTAKT_UDAJE } from "@/lib/kontakt";
 export const metadata = {
   title: "Osobní údaje",
   description:
-    "Co o lidech Orlický pohár sbírá, proč, jak dlouho to drží a kam napsat, když to má zmizet.",
+    "Co o lidech Orlický pohár sbírá, proč, jak dlouho to drží a kam napsat, když to má zmizet. Včetně polohy lodi, kterou zaznamenává appka.",
 };
 
 /**
@@ -24,6 +24,15 @@ export const metadata = {
  * Dva správci, protože tak to opravdu je (Filip, 9. 10. 2026): web
  * a databázi provozuje Filip, s přihláškami na svou zastávku pracuje
  * pořadatel.
+ *
+ * <b>Oddíl o poloze přibyl 10. 11. 2026</b>, protože Google Play u appky
+ * s polohou na pozadí žádá zásady na veřejné adrese a prominentní
+ * disclosure, který se na ně odvolává — a stránka o poloze dosud neměla ani
+ * slovo, přestože appka trasu nahrává na server. Tvrzení o viditelnosti se
+ * ověřují v <c>Features/Polohy/PolohyEndpoints.cs</c>, kde má každý ze tří
+ * diváků vlastní cestu i vlastní přepínač, prořídnutí v <c>PolohySprava</c>,
+ * přenos z telefonu v <c>app/src/lib/tracker/nahravani.ts</c> a to, že trasa
+ * patří lodi a ne účtu, v <c>Features/Trasy/Trasa.cs</c>.
  */
 export default function OsobniUdaje() {
   return (
@@ -90,6 +99,11 @@ export default function OsobniUdaje() {
             <td>aby se vědělo, kdo co smí spravovat</td>
           </tr>
           <tr>
+            <td>Poloha lodi při závodě</td>
+            <td>appka, když posádka spustí záznam</td>
+            <td>trasa pro rozhodčího, podklad k protestu, přenos pro diváka</td>
+          </tr>
+          <tr>
             <td>Fotky</td>
             <td>nahrává pořadatel k článkům a lodím</td>
             <td>aby web nebyl jen tabulka čísel</td>
@@ -103,6 +117,79 @@ export default function OsobniUdaje() {
         Veřejně se vydává <b>jméno lodi, kategorie a kormidelník</b> — to jsou sportovní
         výsledky a ty se neschovávají. <b>Jméno majitele lodi veřejné není</b> a kontakty
         nejsou veřejné nikdy: e-mail ani telefon se z webu bez přihlášení vytáhnout nedá.
+      </p>
+
+      <h2>Poloha lodi při závodě</h2>
+      <p>
+        Jediné místo v celém poháru, kde se sbírá poloha, je <b>mobilní appka</b>. Na webu
+        se poloha nesbírá vůbec a appka má na ni vlastní pravidla.
+      </p>
+      <p>
+        <b>Záznam si pouští posádka sama</b> a sama ho taky ukončí. Dokud ho nespustí,
+        appka o polohu nepožádá a nečte ji — nainstalovaná appka sama od sebe
+        nezaznamenává nic.
+      </p>
+      <p>
+        <b>Běží dál, i když telefon zhasne,</b> a proto si appka řekne o oprávnění „Vždy".
+        Závod trvá hodiny a telefon leží v kapse nebo pod plachtou; s mírnějším oprávněním
+        by záznam skončil, jak zhasne displej, a chybějící prostředek trasy se pozná
+        teprve po dojezdu, kdy už se nedá nic opravit.
+      </p>
+      <p>
+        <b>Záznam smí běžet jen při závodě.</b> Musí platit všechno z toho: loď je
+        přihlášená do té regaty, telefon patří někomu z posádky nebo kapitánovi a běží
+        okno té regaty.
+      </p>
+      <p>
+        <b>Telefon se prokazuje klíčem k lodi, ne tvým účtem</b> — trasa patří lodi.
+        K záznamu appka žádný účet posádky nepotřebuje a server u trasy žádný nevede.
+      </p>
+
+      <h2>Kdo trasu vidí</h2>
+      <div className="tabulka-obal">
+        <table>
+        <thead>
+          <tr>
+            <th>Kdo</th>
+            <th>Co vidí</th>
+            <th>Za jakých podmínek</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Divák na webu</td>
+            <td>živé polohy, po dojetí přehrávku rozjížďky</td>
+            <td>
+              jen když to rozhodčí povolil a zrovna běží rozjížďka; mimo rozjížďku se
+              nevydá nic, u nezveřejněné regaty ani ročníku vůbec nic
+            </td>
+          </tr>
+          <tr>
+            <td>Posádka na palubě</td>
+            <td>podle rozhodnutí rozhodčího: nic, jen sebe, nebo i ostatní</td>
+            <td>
+              výchozí je <b>jen sebe</b>; mimo běžící okno regaty nic
+            </td>
+          </tr>
+          <tr>
+            <td>Pořadatel a rozhodčí</td>
+            <td>i běžící rozjížďku</td>
+            <td>vždy — je to jejich podklad pro rozhodnutí a pro protest</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Co jde ven k divákovi a na tabuli, je navíc <b>prořídlé na jeden bod za patnáct
+        sekund</b> a nejvýš čtyři sta bodů na loď. Jemnější stopu než tuhle nedostane
+        mimo závodní výbor nikdo.
+      </p>
+
+      <h2>Jak záznam vypnout</h2>
+      <p>
+        Oprávnění k poloze se odebírá v nastavení telefonu u appky; appka to respektuje
+        a záznam dál nepojede. Jednotlivý záznam smažeš v appce. <b>Co už je nahrané na
+        server, smažeme na požádání</b> — tlačítko na to není.
       </p>
 
       <h2>Jak dlouho to u nás zůstane</h2>
@@ -119,6 +206,10 @@ export default function OsobniUdaje() {
         </li>
         <li>
           <b>Účet trvá, dokud ho máš.</b> Zrušit se dá u poskytovatele identity.
+        </li>
+        <li>
+          <b>Trasy se nemažou samy.</b> Nahraná trasa na serveru zůstane, dokud o smazání
+          nepožádáš — automatický úklid, jaký mají kontakty, na ni zatím není.
         </li>
         <li>
           <b>Fotky zůstávají, dokud je někdo nesmaže.</b> Když na nějaké jsi a nechceš
