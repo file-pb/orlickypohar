@@ -1,0 +1,66 @@
+# DOČASNÉ. Sabotáž k oddílu "Ověření po nasazení se přeskakovalo".
+# Nesmí se slít do mainu — maže se v témže PR, viz docs/PLAN.md.
+#
+# Dokazuje, co se přečtením výrazu dokázat nedá: že `!cancelled() && …`
+# po selhání předchozího kroku proběhne, zatímco samotné `… == 'ano'`
+# se přeskočí. Běží na push do téhle větve, nikde jinde.
+name: zkouska-vzdy
+
+on:
+  push:
+    branches: [nasazeni-overit-vzdy]
+
+env:
+  API_URL: https://orlickypohar-api.klihovka.cz
+  WEB_URL: https://orlickypohar.klihovka.cz
+
+jobs:
+  zkouska:
+    runs-on: ubuntu-latest
+    steps:
+      # Napodobuje krok `Nevracet produkci do minulosti`, který v nasazení
+      # ten výstup vyrábí.
+      - name: Rozhodnuti
+        id: kontrola
+        run: echo "nasadit=ano" >> "$GITHUB_OUTPUT"
+
+      # Napodobuje `Deploy`, kterému se ztratila odpověď. Příčina je
+      # pro podmínku lhostejná, podstatné je, že krok skončí chybou.
+      - name: Deploy, kteremu se ztratila odpoved
+        if: ${{ steps.kontrola.outputs.nasadit == 'ano' }}
+        run: |
+          echo "napodobuje 520 od hacku"
+          curl -fsS --max-time 10 http://127.0.0.1:9/
+
+      # Stará podmínka. Musí se PŘESKOČIT.
+      - name: STARA PODMINKA ma se preskocit
+        if: ${{ steps.kontrola.outputs.nasadit == 'ano' }}
+        run: echo "::error::Tohle se nemelo spustit."
+
+      # Nová podmínka s tělem skutečného ověření (smyčka zkrácená na jedno
+      # kolo, aby zkouška netrvala pět minut — na podmínku to nemá vliv).
+      # Musí PROBĚHNOUT a musí skončit chybou "běží na jiné verzi": na
+      # produkci je jiný commit než tahle větev, což je správný verdikt.
+      - name: NOVA PODMINKA ma probehnout
+        if: ${{ !cancelled() && steps.kontrola.outputs.nasadit == 'ano' }}
+        run: |
+          ocekavano='${{ github.sha }}'
+          chyba=0
+          for i in $(seq 1 1); do
+            api=$(curl -fsS --max-time 20 "$API_URL/verze" 2>/dev/null \
+              | python3 -c "import json,sys; print(json.load(sys.stdin).get('verze',''))" 2>/dev/null || true)
+            web=$(curl -fsS --max-time 20 "$WEB_URL/verze" 2>/dev/null \
+              | python3 -c "import json,sys; print(json.load(sys.stdin).get('verze',''))" 2>/dev/null || true)
+            [ "$api" = "$ocekavano" ] && [ "$web" = "$ocekavano" ] && break
+            sleep 15
+          done
+          echo "cekano: $ocekavano"
+          echo "API:    ${api:-neodpovedelo}"
+          echo "web:    ${web:-neodpovedelo}"
+          [ -n "$api" ] || { echo "::error::API po nasazeni verzi nevydalo."; chyba=1; }
+          [ -n "$web" ] || { echo "::error::Web po nasazeni verzi nevydal."; chyba=1; }
+          [ -z "$api" ] || [ "$api" = "$ocekavano" ] \
+            || { echo "::error::API bezi na jine verzi."; chyba=1; }
+          [ -z "$web" ] || [ "$web" = "$ocekavano" ] \
+            || { echo "::error::Web bezi na jine verzi."; chyba=1; }
+          exit $chyba

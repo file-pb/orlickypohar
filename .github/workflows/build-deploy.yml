@@ -528,8 +528,24 @@ jobs:
       # Čeká se omezeně (20 × 15 s) a pak se **musí** vědět. Neověřený
       # výsledek končí chybou, i po obnově: zelená nad službou, o které
       # nevíme, co na ní běží, je falešná jistota.
+      #
+      # <b>`!cancelled()` je tu proto, že odpověď háčku není důkaz.</b>
+      # Bez něj GitHub krok implicitně přeskočí, kdykoliv `Deploy` selže —
+      # a přeskočí ho tím pádem přesně v tom případě, pro který je napsaný.
+      # Stalo se to 10. 11. 2026 u `fed3857`: háček nasadil, ale odpověď se
+      # vrátila jako 520 (Cloudflare, po 43 s), `Deploy` tím spadl, ověření
+      # se přeskočilo — a produkce přitom ten commit běžela. V logu nebylo
+      # jak rozeznat „háček nenasadil" od „háček nasadil a odpověď se
+      # ztratila v proxy". Teď se verze přečte v obou případech.
+      #
+      # Úloha zůstane červená i tak, protože selhal `Deploy`: ztracená
+      # odpověď je skutečný problém a nemá zmizet. Mění se jen to, že je
+      # u ní vidět, co na produkci běží.
+      #
+      # `!cancelled()` a ne `always()`: po zrušení běhu nemá smysl pět minut
+      # čekat na `/verze` a držet tím zrušení.
       - name: Ověřit, co doopravdy běží
-        if: ${{ steps.kontrola.outputs.nasadit == 'ano' }}
+        if: ${{ !cancelled() && steps.kontrola.outputs.nasadit == 'ano' }}
         run: |
           ocekavano='${{ github.sha }}'
           chyba=0
