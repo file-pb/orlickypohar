@@ -3327,10 +3327,11 @@ riziko, které se má znát dřív než v březnu.
 Nic z toho neblokuje nic ve frontě. Dvě položky jsou ale skutečná práce, ne
 formalita:
 
-1. **Zásady o poloze na webu chybí.** `web/app/osobni-udaje/page.tsx` má 172
-   řádků a o poloze, trase ani GPS v nich není ani slovo. Play žádá privacy
+1. ~~**Zásady o poloze na webu chybí.**~~ **hotovo 10. 11. 2026** —
+   `web/app/osobni-udaje/page.tsx` má oddíl *Poloha lodi při závodě*, tabulku
+   *Kdo trasu vidí* a větu o tom, že se trasy nemažou samy. Play žádá privacy
    policy na veřejné HTTPS adrese, v appce i na listingu, a prominentní
-   disclosure k poloze na pozadí se na ni odvolává.
+   disclosure k poloze na pozadí se na ni odvolává — odkazuje na ni.
 2. **Video pro deklaraci polohy na pozadí.**
    `support.google.com/googleplay/android-developer/answer/9799150` chce
    deklarační formulář, video (doporučeno do 30 s, musí ukázat aktivaci funkce
@@ -3360,6 +3361,45 @@ jen *„closed and open"*; `answer/9845334` k internal testingu dodává opatrn�
 reviews."* Výjimka pro Data safety se na deklaraci oprávnění svým vlastním
 textem nevztahuje. Pozná se to při prvním uploadu do internal tracku — a dokud
 to není jasné, počítej s tím, že video bude potřeba.
+
+### Sdělení o poloze je v appce (10. 11. 2026)
+
+Z těch dvou položek, které byly skutečná práce, zbývá video. Zásady jsou na
+webu od téhož dne a **sdělení v appce je hotové**.
+
+**Kde to leží.** Text a rozhodování v `app/src/lib/tracker/sdeleni.ts`,
+kreslení v `app/src/components/sdeleni-o-poloze.tsx`, host v korzeni
+zásobníku (`app/src/app/_layout.tsx`). Dialog se ukáže ze `zadejOpravneni`
+v `uloha.ts` — a to je **jediná cesta** v appce, kterou se k systémovému
+dotazu na polohu dá dojít, takže se sdělení nedá obejít tím, že někdo
+napíše novou obrazovku.
+
+**Text má tři povinné části** (`answer/9799150`, *Disclosure statement
+requirements*): slovo *poloha*, zmínku, že se sbírá i když je appka zavřená
+nebo se nepoužívá, a **výčet všech funkcí**, které polohu na pozadí berou —
+dnes tři: záznam trasy, živý přenos a hlášení s baterií. Reklamní věta,
+kterou tatáž stránka žádá navíc, se nepřidává: appka reklamu nemá.
+
+**Souhlas se v dialogu nesbírá** a je to tak správně. Google k témuž
+dialogu: *„Doesn't need explicit user consent such as an 'accept' or 'I
+understand.' This is done in the runtime prompt that immediately follows."*
+Opačným směrem je pravidlo tvrdé — zavření zpět ani klepnutí mimo se nesmí
+brát jako souhlas (`answer/10144311`), takže každá jiná cesta z dialogu než
+tlačítko *Rozumím* vrací nesouhlas a systémový dotaz nepřijde.
+
+**Co to hlídá.** `app/testy/sdeleni.test.ts` měří text (povinné části,
+úplnost výčtu, odkaz na zásady), `app/testy/opravneni.test.ts` **pořadí** —
+že dokud posádka sdělení nepřečte, žádný `request…PermissionsAsync` se
+nezavolá. Obojí prošlo sabotáží: vyhozená zmínka o zavřené appce, vyhozený
+účel z výčtu, odkaz svedený na domovskou stránku a obrácené pořadí
+v `zadejOpravneni` pokaždé rozsvítí chybu. Kvůli tomu druhému testu mají
+`app/testy/nahrady/` poprvé i `expo-location`, `expo-task-manager`
+a `react-native` — bez náhrady se ta část appky na Node nenačte vůbec.
+
+**Neověřené:** jak dialog vypadá na telefonu. Vývojový Mac nemá Xcode ani
+Android SDK, takže to musí projít oko v APK (`npm run apk`) — a tenže APK
+je potřeba i na to video, protože Play chce vidět disclosure, runtime
+prompt a funkci běžící na pozadí.
 
 ### Lokální záznam hotový, na pozadí nevyzkoušený (20. 10. 2026)
 

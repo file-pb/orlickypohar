@@ -6,6 +6,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { BannerAktualizace } from '@/components/banner-aktualizace';
 import { Kebab } from '@/components/kebab';
 import { ProuzekSpojeni, useProuzek } from '@/components/prouzek-spojeni';
+import { SdeleniOPoloze } from '@/components/sdeleni-o-poloze';
 import { Colors } from '@/constants/theme';
 import { jas, pismoNaVyplni } from '@/lib/kontrast';
 // Jen kvůli vedlejšímu efektu: `TaskManager.defineTask` musí být
@@ -87,6 +88,10 @@ function Obsah() {
       {/* Až za `Stack`, aby ležel nad obsahem; sám se stará o to, kdy a jak
           dlouho je vidět. */}
       <BannerAktualizace />
+      {/* <b>Sdělení o poloze patří sem, do korzene.</b> Musí předejít
+          systémovému dotazu, a ten se dá vyvolat z víc obrazovek než
+          jedné. Dokud se nikdo nezeptá, nevykreslí se nic. */}
+      <SdeleniOPoloze />
       </View>
     </>
   );

@@ -247,6 +247,9 @@ export default function Tracker() {
 
     if (zdroj === 'gps') {
       const stav = await zadejOpravneni();
+      // Sdělení o poloze posádka zavřela — rozhodla se, že ne, a druhý
+      // dialog s tou samou zprávou by byl jen otravný.
+      if (stav === 'bez-sdeleni') return;
       if (stav === 'bez-popredi') {
         Alert.alert('Bez polohy to nejde', 'Appka potřebuje přístup k poloze telefonu.');
         return;
@@ -324,6 +327,7 @@ export default function Tracker() {
     }
 
     const stav = await zadejOpravneni();
+    if (stav === 'bez-sdeleni') return;
     if (stav !== 'ok') {
       Alert.alert(
         'Potřebuje polohu „Vždy"',

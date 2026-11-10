@@ -12,12 +12,13 @@
  * obrazovky; proto si bere stav ze databáze a nesmí spoléhat na nic v paměti.
  */
 import * as Location from 'expo-location';
-import { Linking } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import * as TaskManager from 'expo-task-manager';
 
 import { baterieProcent, obnovBaterii } from './baterie';
 import { hlasim, ozviSeAsync, zacniKdyzJeCas } from './hlasim-se';
 import { zkusZiveAsync } from './nahravani';
+import { SDELENI, cekejNaSdeleni, hostJeNaMiste, textSdeleni } from './sdeleni';
 import { bezicZaznam, zapisBody } from './zaznam';
 
 export const ULOHA = 'orlickypohar-zaznam-trasy';
@@ -98,19 +99,64 @@ TaskManager.defineTask<DataPolohy>(ULOHA, async ({ data, error }) => {
   }
 });
 
-export type StavOpravneni = 'ok' | 'bez-popredi' | 'bez-pozadi';
+export type StavOpravneni = 'ok' | 'bez-sdeleni' | 'bez-popredi' | 'bez-pozadi';
 
 /**
  * Oprávnění se ptá ve dvou krocích, protože Android 11 a výš otevře
  * u polohy na pozadí systémové nastavení — bez vysvětlení dopředu tam
  * člověk neví, co má hledat.
+ *
+ * <b>Před systémovým dotazem musí přijít sdělení o poloze</b> a tohle je
+ * jediná cesta, kterou se k tomu dotazu dá dojít — proto je ta podmínka
+ * tady a ne na obrazovce. Co v něm musí stát a proč to Play vyžaduje,
+ * stojí v `sdeleni.ts`.
  */
 export async function zadejOpravneni(): Promise<StavOpravneni> {
+  // <b>Povolenou polohu na pozadí se znovu neptáme.</b> Systémový dotaz
+  // už nepřijde, takže by sdělení nemělo co předcházet — a dialog před
+  // každým spuštěním záznamu by byl jen zdržení u vody.
+  if ((await Location.getBackgroundPermissionsAsync()).status === 'granted') return 'ok';
+
+  if (!(await sdeleniPotvrzeno())) return 'bez-sdeleni';
+
   const popredi = await Location.requestForegroundPermissionsAsync();
   if (popredi.status !== 'granted') return 'bez-popredi';
+  // Popředí musí být povolené dřív — bez něj se oprávnění na pozadí
+  // nezíská (dokumentace `expo-location`, SDK 57).
   const pozadi = await Location.requestBackgroundPermissionsAsync();
   if (pozadi.status !== 'granted') return 'bez-pozadi';
   return 'ok';
+}
+
+/**
+ * Sdělení dialogem z korzene zásobníku, a když ho nikdo nekreslí,
+ * systémovým.
+ *
+ * Náhrada je tu kvůli jediné možnosti: že někdo hosta z `_layout.tsx`
+ * odpojí. Zaseknutý slib by byl tlačítko, po kterém se nestane nic,
+ * a vynechat sdělení nejde — Play by appku odmítl. Systémový dialog je
+ * ošklivější, ale pravidlo plní stejně.
+ */
+async function sdeleniPotvrzeno(): Promise<boolean> {
+  if (hostJeNaMiste()) return cekejNaSdeleni();
+  return new Promise<boolean>((hotovo) => {
+    let odpovezeno = false;
+    const odpovez = (souhlas: boolean) => {
+      if (odpovezeno) return;
+      odpovezeno = true;
+      hotovo(souhlas);
+    };
+    Alert.alert(
+      SDELENI.nadpis,
+      textSdeleni(),
+      [
+        { text: SDELENI.zrusit, style: 'cancel', onPress: () => odpovez(false) },
+        { text: SDELENI.dal, onPress: () => odpovez(true) },
+      ],
+      // Zavření mimo tlačítka se nesmí brát jako souhlas.
+      { cancelable: true, onDismiss: () => odpovez(false) },
+    );
+  });
 }
 
 /**

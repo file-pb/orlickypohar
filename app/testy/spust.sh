@@ -103,6 +103,18 @@ if chyby:
 print('  ok   zapsaná část i stav „běží" přežily konec procesu')
 PY
 
+# Play ho vyžaduje před systémovým dotazem na polohu, takže chybějící část
+# textu není kosmetika, ale odmítnutí appky.
+echo
+echo "== Sdělení o poloze =="
+"${NODE[@]}" ./sdeleni.test.ts
+
+# Pořadí, ne text: dokud posádka sdělení nepřečte, nesmí přijít systémový
+# dotaz. Potřebuje databázi, protože `uloha.ts` si veze celý záznam.
+echo
+echo "== Sdělení jde před dotazem na polohu =="
+TEST_DB=":memory:" "${NODE[@]}" ./opravneni.test.ts
+
 echo
 echo "== Přeskok v ukázce =="
 "${NODE[@]}" ./preskok.test.ts

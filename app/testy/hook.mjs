@@ -8,6 +8,10 @@ const NAHRADY = new Set([
   'expo-sqlite', 'expo-file-system', 'expo-sharing',
   'expo-auth-session', 'expo-secure-store', 'expo-battery',
   'expo-updates',
+  // Kvůli `opravneni.test.ts`: ten potřebuje `uloha.ts` a s ním i polohu,
+  // úlohu na pozadí a systémový dialog. `react-native` se v Node nenačte
+  // vůbec, takže bez náhrady nejde ta část appky zkoušet nijak.
+  'expo-location', 'expo-task-manager', 'react-native',
 ]);
 
 export function resolve(spec, ctx, next) {

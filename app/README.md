@@ -149,8 +149,9 @@ Dvě věci, které se zapisují natrvalo a mění se draho:
 - **Vydání do Google Play.** Účet stojí 25 $ jednorázově a kupuje se hned —
   nejen kvůli obchodu, ale protože od roku 2027 bude i APK z webu potřebovat
   registrovaného vývojáře. Pořadatelům appka pojede z internal testing tracku,
-  kde neplatí pravidlo dvanácti testerů na čtrnáct dní. Chybí k tomu zásady
-  o poloze na webu a video pro deklaraci polohy na pozadí.
+  kde neplatí pravidlo dvanácti testerů na čtrnáct dní. Zásady o poloze na webu
+  i sdělení v appce před systémovým dotazem jsou hotové (10. 11. 2026);
+  zbývá video pro deklaraci polohy na pozadí a to se nedá nahrát bez APK.
 - **Push upozornění** (fáze 7) — potřebují development build, na iOS
   i placený účet u Applu. V Expo Go se vyzkoušet nedají.
 - ~~**Ikona a splash** jsou zatím ze šablony.~~ **hotovo 8. 9. 2026** —
