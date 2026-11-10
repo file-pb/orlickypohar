@@ -8394,6 +8394,14 @@ zůstává schválně jen `decode-uri-component` (#2)** — je to jediné ze čt
 oprava existuje a jednou přijde, takže slouží jako připomínka k přechodu na
 Expo 58. Neodmítá se proto, že by byl nebezpečnější než ostatní.
 
+> **Opraveno 10. 11. 2026:** poslední dvě věty **neplatí**. Upozornění #2 už
+> otevřené není — commit 60bf57a z 7. 11. 2026 ho zavřel overridem
+> `decode-uri-component: ^0.5.1` a `gh api .../dependabot/alerts?state=open`
+> vrací 10. 11. 2026 prázdný seznam. Připomínkou k přechodu na Expo 58 je od
+> té doby oddíl *Tlumené majory v appce, a co tím odkládáme* — schválně text
+> v plánu, ne stav u Dependabota, protože ten se zavře, aniž by se ta věc
+> vyřešila.
+
 Že to není jen zastaralý strom, je potřeba říct přesně: `package.json` sice píše
 `expo ~57.0.21`, ale lockfile drží **to nejnovější, co v řadě vyšlo** — `expo
 57.0.27`, `expo-router 57.0.25`, `@expo/cli 57.0.28`, `metro 0.84.5` (ověřeno
@@ -8481,8 +8489,14 @@ Skutečná oprava je **`expo-router` 58.0.13 a výš, kde `query-string` ze
 závislostí úplně vypadl** — ne že by se povytáhl. To je major Expa a ten se
 podle `.github/dependabot.yml` zvedá s celým SDK, ne zvlášť. `expo-router@57.0.25`,
 nejnovější v naší řadě, má `query-string ^7.1.3` pořád. Vrátit se k tomu má
-tedy u přechodu na Expo 58, kde to spadne samo — a **upozornění #2 se nechává
-otevřené právě proto**, aby ta připomínka nezmizela.
+tedy u přechodu na Expo 58, kde to spadne samo.
+
+> **Opraveno 10. 11. 2026:** tady stálo, že „upozornění #2 se nechává otevřené
+> právě proto", aby ta připomínka nezmizela. **Nezmizela proto, že #2 je od
+> 7. 11. 2026 `fixed`** (override na 0.5.1, commit 60bf57a) — stav
+> u Dependabota se zavřel, odložený přechod zůstal. Připomínku drží oddíl
+> *Tlumené majory v appce, a co tím odkládáme*, který na žádném upozornění
+> nestojí.
 
 **Pozor na `npm audit` v tomhle repu.** U tří ze čtyř nabízí `fixAvailable:
 expo 44.0.6`, u Metra `react-native 0.72.17` — to je downgrade o třináct
@@ -8490,6 +8504,101 @@ majorů do pravěku, ne oprava. Správně míří jedině u `decode-uri-componen
 kde ukazuje na `expo-router 58.0.17`. Řídit se tu dá tedy jen Dependabotem
 a rozsahy z advisory, ne `fixAvailable`.
 
+
+## Tlumené majory v appce, a co tím odkládáme (10. 11. 2026)
+
+<b>Tenhle oddíl je ta stopa, kterou platforma u tlumení majorů vyžaduje</b>
+(`platform/docs/NOVY-PROJEKT.md`, oddíl *Když projekt přidává npm ekosystém*,
+a bod S13 bezpečnostního plánu). Je tu schválně jako vlastní oddíl, a ne jako
+věta v tabulce zranitelností: **stopa nesmí stát na stavu upozornění
+Dependabotu.** Do 7. 11. 2026 stála — stopou bylo „vědomě otevřené upozornění
+#2" — a ten den commit 60bf57a zavřel #2 i #27 overridem
+`decode-uri-component: ^0.5.1`, ne přechodem na SDK. Změřeno 10. 11. 2026:
+`gh api repos/file-pb/orlickypohar/dependabot/alerts?state=open` vrací prázdný
+seznam, #2 i #27 jsou `fixed`. Připomínka tedy zmizela, zrovna když přestala
+být pravdivá, a nikdo si toho nevšiml.
+
+### Co se tlumí a ve třech různých tvarech
+
+`.github/dependabot.yml`, sekce npm `/app`, řádky 58–107. Tvar tlumení není
+u všech stejný, a ten rozdíl je to podstatné:
+
+| Rodina | Co je utlumené | Co zůstává povolené |
+|---|---|---|
+| `expo*` | major | minor i patch v řadě 57 |
+| `react-native` | major + minor (na nule je minor fakticky řada vedle) | patch |
+| `react-native-screens` | major + minor | patch |
+| `@types/react` | major + minor | patch |
+| `react` | **všechno, i patch** | nic |
+| `react-dom` | **všechno, i patch** | nic |
+
+U `react` a `react-dom` je tedy zavřená i cesta v rámci řady. To je vědomé
+(SDK 57 jmenuje jednu konkrétní verzi, viz důvod přímo v `dependabot.yml`),
+ale znamená to, že **u těch dvou nepřijde ani bezpečnostní patch sám** — musí
+ho poslat člověk. Jsou to přímé závislosti `app/package.json`, takže cesta
+existuje a je krátká; jen není automatická.
+
+<b>Vedlejší nález, nezměřený na dopadu:</b> glob `expo*` matchne i
+`exponential-backoff` (3.1.3 v zámku, a 3.1.3 je zároveň `latest`, takže
+dnes nic netlumí). Kdyby na něm major vyšel, utlumil by se taky, aniž by to
+někdo zamýšlel.
+
+### Co se tím odkládá
+
+Jediná věc: **přechod na Expo 58.** Konkrétně a měřitelně `expo-router` 58,
+kde `query-string` ze závislostí vypadl — ověřeno 10. 11. 2026
+(`npm view expo-router@58.0.30 dependencies` ho neobsahuje, `57.0.28` z našeho
+zámku má `query-string ^7.1.3`). Tím odpadne celá kapitola kolem
+`decode-uri-component`, která dnes drží na overridu a na trasování, že
+zranitelná funkce nemá v appce živé volání.
+
+Dnešní rozestup, 10. 11. 2026: zámek drží `expo 57.0.31`, `latest` je
+`58.0.23`, tag `sdk-57` je `57.0.32`. **Řada 57 je tedy pořád živá a patche
+v ní chodí**, což je ten důvod, proč tlumení majorů nic bezpečnostního
+nezadržuje — dokud to platí.
+
+### Spoušť k přehodnocení
+
+Tlumení se vrací na stůl, jakmile nastane jedno z toho — a žádná z těch
+spouští nezávisí na tom, jestli má Dependabot otevřené upozornění:
+
+1. **Tag `sdk-57` přestane dostávat patche.** Pak už záplata do naší řady
+   nemá kudy přijít a major je jediná cesta k čemukoliv.
+2. **Advisory míří jmenovitě na kteroukoliv z těch šesti rodin** v drženém
+   rozsahu. Dnes žádné takové není (změřeno níž); jde o stav, ne o pravdu.
+3. **Záplata existuje jen v řadě 58.** To je přesně ten případ, který
+   `platform/docs/BEZPECNOST-PLAN.md` v bodu S13 popisuje.
+4. **`react` nebo `react-dom` dostane bezpečnostní patch v řadě 19.2.** Ten
+   PR nepřijde, protože u nich je utlumený i patch. Hlídat ho musí člověk
+   nebo `tools/hlidka-zranitelnosti.py`.
+
+### Změřeno 10. 11. 2026: žádná z šesti rodin dnes zranitelnost nedrží
+
+Doklad stojí na dvou nezávislých zdrojích — na upozorněních repozitáře
+(`gh api .../dependabot/alerts`, všech 33 napříč stavy) a na globální databázi
+GitHubu (`gh api /advisories?ecosystem=npm&affects=<balík>`), která o tomhle
+repozitáři ani o tlumení nic neví. Druhý zdroj je tam právě proto, aby závěr
+nestál na Dependabotu:
+
+| Rodina | V zámku | Co říká advisory | Jiná cesta než major |
+|---|---|---|---|
+| `expo*` | `expo 57.0.31` a 37 dalších balíčků řady 57 | jen GHSA-wr5g-q49g-548w (`< 48.0.0`) a GHSA-rwx9-wqj8-vr77 (`< 9.1.0`) — devět majorů pod námi | ano: patch v řadě 57 povolený, `sdk-57` = `57.0.32` |
+| `react-native` | 0.86.3 (= nejnovější v 0.86.x) | jen GHSA-7f53-fmmv-mfjv (`< 0.64.1`) | ano: patch povolený, řada vyčerpaná |
+| `react` | 19.2.3, v řadě existují až 19.2.9 | jen CVE-2013-7035 a GHSA-hg79-j56m-fxgv (`< 0.14.0`) | ano, ale **ruční**: přímá závislost v `app/package.json`, PR nepřijde |
+| `react-dom` | 19.2.3, v řadě existují až 19.2.9 | jen CVE-2018-6341 (`< 16.4.2`) | ano, ale **ruční**, a jen spolu s `react` — chce svou verzi |
+| `react-native-screens` | 4.26.2 (= nejnovější v 4.26.x) | žádné advisory | ano: patch povolený, řada vyčerpaná |
+| `@types/react` | 19.2.18 (= nejnovější v 19.2.x) | žádné advisory | ano: patch povolený; typy navíc neběží, do APK nejdou |
+
+**Skryté tlumením nic není.** Upozornění míří na jméno zranitelného balíčku,
+ne na jméno rodiče, a všech 33 upozornění v tomhle repozitáři míří na jiná
+jména než ta šestice (`node-forge`, `decode-uri-component`, `uuid`,
+`brace-expansion`, `zod`, `deepmerge`, `glob`, `minimatch`, `shell-quote`,
+`compression`, `source-map-js`, `next`, `sharp`). Tlumení brání PR, ne
+upozornění — a druhý zdroj výš ho obchází úplně.
+
+**Žádná ze šesti rodin tedy dnes nedrží zranitelnost dosažitelnou jedině přes
+SDK 58.** Co dnes zůstává, je jediná odložená věc: `decode-uri-component`
+mimo tuhle šestici, kde override 0.5.1 drží místo přechodu na `expo-router` 58.
 
 ## PR od Dependabota nemůžou být zelené (14. 10. 2026)
 

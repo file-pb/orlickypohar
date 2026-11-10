@@ -56,6 +56,13 @@ updates:
     commit-message:
       prefix: "app"
     ignore:
+      # <b>Stopa k tomu, co se tím tlumením odkládá, je v `docs/PLAN.md`,
+      # oddíl *Tlumené majory v appce, a co tím odkládáme*.</b> Stojí tam,
+      # co se tlumí, proč, co se tím odkládá (přechod na Expo 58) a čtyři
+      # spouště k přehodnocení. Schválně text v plánu, ne otevřené
+      # upozornění u Dependabota: to se 7. 11. 2026 zavřelo overridem,
+      # aniž by se odložená věc vyřešila, a připomínka s ním zmizela.
+      #
       # Balíčky Expo drží číslo řady podle SDK a jejich peer závislosti
       # chtějí celou tu řadu. Major u jednoho z nich vyrobí smíšený strom,
       # který CI nezachytí — appka se jen typově kontroluje, nestaví
