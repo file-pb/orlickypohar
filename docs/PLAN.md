@@ -8569,8 +8569,14 @@ spouští nezávisí na tom, jestli má Dependabot otevřené upozornění:
 3. **Záplata existuje jen v řadě 58.** To je přesně ten případ, který
    `platform/docs/BEZPECNOST-PLAN.md` v bodu S13 popisuje.
 4. **`react` nebo `react-dom` dostane bezpečnostní patch v řadě 19.2.** Ten
-   PR nepřijde, protože u nich je utlumený i patch. Hlídat ho musí člověk
-   nebo `tools/hlidka-zranitelnosti.py`.
+   PR nepřijde, protože u nich je utlumený i patch. Tuhle jednu spoušť
+   **hlídá od 10. 11. 2026 stroj** — pátá kontrola v
+   `tools/hlidka-zranitelnosti.py` čte, které rodiny mají `ignore` bez
+   `update-types`, a u každé se ptá advisory API, jestli se drženou verzi
+   něco netýká. Rozlišuje přitom záplatu v držené řadě (zvedne ji člověk
+   ručně) od záplaty mimo ni (to je rozhodnutí o přechodu na SDK, tedy
+   bod S13). Zkouší se šesti sabotážemi při každém běhu; co ani tak
+   nevidí, stojí v hlavičce `tools/hlidka-zranitelnosti.test.py`.
 
 ### Změřeno 10. 11. 2026: žádná z šesti rodin dnes zranitelnost nedrží
 

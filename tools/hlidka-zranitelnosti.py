@@ -20,6 +20,16 @@ A obě stála na tom, že je to **vyčerpání paměti**, tedy dopad jen na
 dostupnost. Proto se hlídá i třetí věc: nepřišlo na tyhle balíčky hlášení,
 které sahá i na důvěrnost nebo integritu? Tím by důvod odmítnutí padl.
 
+**Pátá kontrola hlídá něco jiného než ty čtyři** (přidána 10. 11. 2026):
+ne odmítnuté hlášení, ale **díru v automatice**. U `react` a `react-dom` tlumí
+`.github/dependabot.yml` všechno včetně patche, protože SDK 57 jmenuje jednu
+konkrétní verzi (19.2.3). Kdyby v řadě 19.2 vyšla bezpečnostní záplata, PR na
+ni nepřijde a nikdo se o ní nedozví ničím — u ostatních čtyř utlumených rodin
+je patch povolený, tam díra není. Odtlumit to nejde (PR #350 a #351 z
+20. 10. 2026 shodily `npm install`), takže náhradou za ten chybějící PR je
+tahle kontrola. Co se tím odkládá, drží `docs/PLAN.md`, oddíl *Tlumené majory
+v appce, a co tím odkládáme*.
+
 **Čte se lockfile, neinstaluje se.** `app/package-lock.json` drží u každého
 balíčku i rozsahy, které si vyžádal (ověřeno 23. 10. 2026: u `@expo/cli`
 je `dependencies.zod` = `^3.25.76`, u `query-string` je
@@ -31,6 +41,7 @@ balíček ani nedostupné API nesmí vyjít jako „nic se nestalo" — to je p�
 ta kontrola, která měří sebe a ne svět. Konec: 0 = klid, 1 = podívej se.
 """
 
+import fnmatch
 import json
 import os
 import re
@@ -361,13 +372,198 @@ def hlidej_dopad(balicek, nase, krome=()):
     return nalezy
 
 
+
+# --- Pátá kontrola: rodiny, u kterých je utlumený i patch ---------------
+#
+# **Proč je jiná než ty čtyři výš.** Ty hlídají *odmítnutá hlášení* — stav,
+# který někdo vědomě zavřel. Tahle hlídá **díru v automatice**: u `react`
+# a `react-dom` tlumí `.github/dependabot.yml` všechno včetně patche (SDK 57
+# jmenuje jednu konkrétní verzi, 19.2.3), takže kdyby v řadě 19.2 vyšla
+# bezpečnostní záplata, **PR na ni nepřijde**. U ostatních čtyř rodin je
+# patch povolený, tam díra není.
+#
+# Odtlumit to nejde: PR #350 a #351 z 20. 10. 2026 shodily `npm install`,
+# protože `react-dom` chce `react` téže verze a Dependabot je posílá zvlášť.
+# Náhradou za ten chybějící PR je tedy tahle kontrola.
+#
+# **Měří výsledek, ne vstup.** `dependabot.yml` se čte jen proto, aby se
+# vědělo, *na co se ptát* — a aby kontrola nezestarala, když někdo rodinu
+# přidá nebo tlumení zvolní. Závěr se skládá ze dvou měřených věcí: z verze
+# v zámku a z advisory API. Že je někde zapsané tlumení nebo stopa k němu,
+# neznamená nic; proto se na to hlídka neptá.
+
+# Co ještě nevidí: pozn. v `docs/PLAN.md`, oddíl *Tlumené majory v appce*.
+# Lookahead, ne obyčejný `split`: ten by separátor odřízl a v bloku by pak
+# `package-ecosystem: npm` nebylo, takže by hlídka nenašla ani jednu sekci.
+# Změřeno sabotáží 10. 11. 2026 — první běh vypsal „našel jsem 0 sekcí".
+VZOR_EKOSYSTEM = re.compile(r"(?=^  - package-ecosystem:)", re.M)
+VZOR_JMENO = re.compile(r"^\s*- dependency-name:\s*[\"']?([^\"'\s]+)[\"']?\s*$")
+VZOR_UPDATE_TYPES = re.compile(r"^\s*update-types:")
+
+
+def utlumene_rodiny(text):
+    """Rodiny ze sekce npm `/app`, u kterých je utlumený **i patch**.
+
+    Vrací `(rodiny, nálezy)`. Položka `ignore` bez `update-types` tlumí
+    všechno — major, minor i patch; s `update-types` tlumí jen vypsané.
+    Zajímají nás tedy ty bez něj.
+
+    Co nepřečtu, nahlásím: nenalezená sekce ani prázdný `ignore` nesmí vyjít
+    jako „není co hlídat". To je ta past, kde kontrola měří sebe.
+    """
+    bloky = VZOR_EKOSYSTEM.split(text)
+    nas = [b for b in bloky if "package-ecosystem: npm" in b and 'directory: "/app"' in b]
+    if len(nas) != 1:
+        return [], [
+            f"V `.github/dependabot.yml` jsem našel {len(nas)} sekcí npm `/app`, "
+            "čekám jednu. Přečti ji ručně — nevím, co je utlumené."
+        ]
+
+    radky = nas[0].split("\n")
+    zacatek = next((i for i, r in enumerate(radky) if r.strip() == "ignore:"), None)
+    if zacatek is None:
+        return [], [
+            "Sekce npm `/app` v `.github/dependabot.yml` už nemá `ignore:`. "
+            "Buď se přestalo tlumit — a pak je tahle kontrola zbytečná — nebo "
+            "se změnil tvar souboru."
+        ]
+
+    polozky = []  # [(jméno, má update-types)]
+    for radek in radky[zacatek + 1:]:
+        m = VZOR_JMENO.match(radek)
+        if m:
+            polozky.append([m.group(1), False])
+        elif polozky and VZOR_UPDATE_TYPES.match(radek):
+            polozky[-1][1] = True
+    if not polozky:
+        return [], [
+            "V `ignore` sekce npm `/app` jsem nepřečetl ani jednu položku "
+            "`dependency-name`. Tvar souboru se změnil — přečti ho ručně."
+        ]
+    return [jmeno for jmeno, ma_typy in polozky if not ma_typy], []
+
+
+def rodiny_v_locku(lock, vzory):
+    """Jména z lockfilu, na která sedí některý ze vzorů `ignore`.
+
+    Bere jen balíčky nahoře (`node_modules/x`), ne zanořené kopie — řeší se
+    to, co v appce doopravdy jede. Vzor je glob, takže `expo*` sedí i na
+    `exponential-backoff`; to je vlastnost `dependabot.yml`, ne chyba tady.
+    """
+    jmena = set()
+    for cesta in lock.get("packages") or {}:
+        if not cesta.startswith("node_modules/") or cesta.count("node_modules/") > 1:
+            continue
+        jmeno = cesta[len("node_modules/"):]
+        if any(fnmatch.fnmatch(jmeno, vzor) for vzor in vzory):
+            jmena.add(jmeno)
+    return sorted(jmena)
+
+
+def posudek_tlumene(balicek, nase, data):
+    """Úsudek páté kontroly nad už načtenými hlášeními. Bez sítě, ať se dá
+    sabotovat.
+
+    `nase` je verze ze zámku. Hlásí se **jen** hlášení, jehož rozsah tu verzi
+    doopravdy obsahuje — vydaný patch sám o sobě nález není. Kdyby se hlásil
+    každý novější patch, hlídka by u Reactu mluvila každý měsíc a za čtvrt
+    roku by ji nikdo nečetl.
+
+    Kde záplata leží, rozhoduje o tom, komu to patří:
+    * **v téže řadě** — zvednout ji může člověk hned, PR jen nepřijde;
+    * **mimo řadu** — to je bod S13 bezpečnostního plánu, tedy rozhodnutí
+      o přechodu na další SDK, ne úkol;
+    * **žádná** — není kam jít a ví se to.
+    """
+    nalezy = []
+    cislo = ".".join(str(c) for c in nase)
+    for a in data:
+        for v in a.get("vulnerabilities") or []:
+            if (v.get("package") or {}).get("name") != balicek:
+                continue
+            rozsah = v.get("vulnerable_version_range")
+            dotyka = pousti(rozsah, nase)
+            if dotyka is False:
+                continue
+            tezkost = a.get("severity") or "?"
+            ghsa = a.get("ghsa_id") or "?"
+            if dotyka is None:
+                nalezy.append(
+                    f"`{balicek}` {cislo}: rozsah `{rozsah}` u {ghsa} nepřečtu, "
+                    "takže nevím, jestli se nás dotýká. Přečti ho ručně.")
+                continue
+            zaplata = (v.get("first_patched_version") or {}).get("identifier")
+            uvod = (f"`{balicek}` {cislo} je **{tezkost}** {ghsa} (`{rozsah}`), "
+                    "a u téhle rodiny je utlumený i patch, takže **PR nepřijde**")
+            if not zaplata:
+                nalezy.append(f"{uvod} — a záplata neexistuje. Zatím není kam jít. {a.get('html_url')}")
+                continue
+            z = verze(zaplata)
+            if z is None:
+                nalezy.append(
+                    f"{uvod}. Záplatu `{zaplata}` nepřečtu — podívej se, jestli je v řadě {nase[0]}.{nase[1]}. {a.get('html_url')}")
+            elif z[:2] == nase[:2]:
+                nalezy.append(
+                    f"{uvod}. **Záplata `{zaplata}` je v držené řadě {nase[0]}.{nase[1]}**, "
+                    f"takže ji zvedni ručně v `app/package.json` — tlumení nech být. {a.get('html_url')}")
+            else:
+                nalezy.append(
+                    f"{uvod}. Záplata `{zaplata}` je **mimo drženou řadu** {nase[0]}.{nase[1]} — "
+                    "to je bod S13: oprava vede jedině přes přechod na další SDK. "
+                    f"Rozhodnutí, ne úkol. {a.get('html_url')}")
+    return nalezy
+
+
+def hlidej_tlumene_patche(lock, koren):
+    cesta = os.path.join(koren, ".github", "dependabot.yml")
+    try:
+        with open(cesta, encoding="utf-8") as f:
+            text = f.read()
+    except OSError as e:
+        return [f"`.github/dependabot.yml` nepřečtu ({e}). Nevím, co je utlumené."]
+
+    vzory, nalezy = utlumene_rodiny(text)
+    if nalezy:
+        return nalezy
+    if not vzory:
+        # Všechny položky `ignore` mají `update-types`, tedy patch je všude
+        # povolený a Dependabot záplatu v řadě ohlásí sám.
+        return []
+
+    balicky = rodiny_v_locku(lock, vzory)
+    if not balicky:
+        return [
+            "Tlumí se " + ", ".join(f"`{v}`" for v in vzory)
+            + ", ale v zámku appky na ty vzory nesedí ani jeden balíček. "
+            "Buď odešly, nebo se přejmenovaly — tlumení pak hlídá prázdno."
+        ]
+
+    for balicek in balicky:
+        z = zapis(lock, balicek)
+        nase = verze((z or {}).get("version", ""))
+        if nase is None:
+            nalezy.append(f"Verzi `{balicek}` ze zámku nepřečtu (`{(z or {}).get('version')}`).")
+            continue
+        try:
+            with urllib.request.urlopen(ADVISORY + balicek, timeout=30) as o:
+                data = json.load(o)
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
+            nalezy.append(
+                f"Hlášení pro `{balicek}` se nepodařilo načíst ({e}). U téhle rodiny "
+                "je utlumený i patch, takže tohle je jediná cesta, jak o záplatě vědět.")
+            continue
+        nalezy += posudek_tlumene(balicek, nase, data)
+    return nalezy
+
+
 def main():
     koren = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     cesta = os.path.join(koren, "app", "package-lock.json")
     with open(cesta, encoding="utf-8") as f:
         lock = json.load(f)
 
-    nalezy = hlidej_zod(lock) + hlidej_duc(lock) + hlidej_deepmerge(lock)
+    nalezy = (hlidej_zod(lock) + hlidej_duc(lock) + hlidej_deepmerge(lock)
+              + hlidej_tlumene_patche(lock, koren))
 
     for balicek in ZAPLATY:
         # Rozhoduje **nejnižší** nainstalovaná kopie, ne ta hoistnutá: viz

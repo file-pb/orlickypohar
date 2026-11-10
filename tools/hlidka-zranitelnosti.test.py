@@ -23,6 +23,29 @@ hlídka tedy radila **zavřít hlášení o verzi, která je nainstalovaná**.
 vynutí nález a podívá se, že vznikne issue. Že hlídka pozná, *co* hlásit,
 nekontrolovalo nic. Tohle to kontroluje: sabotáž, ne přečtení kódu.
 
+**Pátá kontrola se zkouší od 10. 11. 2026** (rodiny s utlumeným patchem).
+Šest sabotáží, všechny změřené toho dne: mlčící úsudek, zrušené rozlišení
+řady, hlášení mimo držený rozsah, `re.split` bez lookaheadu (to byla
+skutečná vada první verze — hlídka pak našla 0 sekcí npm `/app`), ignorované
+`update-types` a zmizelý `ignore:`. Každá spadne.
+
+**Co ani tak vidět není** — úspěšná sabotáž dokazuje jen tu část, kam
+zkouška dosáhne:
+
+1. **Cesta se sítí.** Sabotáže míří na `posudek_tlumene` a
+   `utlumene_rodiny`, tedy na úsudek. Že `hlidej_tlumene_patche` pošle dotaz
+   na správné jméno a odpověď úsudku doopravdy předá, nekontroluje nic —
+   kdyby data zahodila, zkouška projde a hlídka bude mlčet.
+2. **Advisory API je jediný zdroj.** Zranitelnost, kterou GitHub v
+   `/advisories` nevede, nebo hlášení bez `vulnerable_version_range`,
+   pátá kontrola nevidí vůbec.
+3. **Jen `ignore` v sekci npm `/app`** a jen balíčky nahoře v zámku.
+   Tlumení ve `web` nebo v nugetu nehlídá nic, zanořené kopie taky ne.
+4. **Rate limit.** Dnes se ptá na dva balíčky. Kdyby u `expo*` někdo mute
+   zvolnil na plný, bylo by jich 43 — a neautentizované advisory API dává
+   60 dotazů za hodinu. Hlídka by to nahlásila jako chybu načtení, ne jako
+   klid, ale nikdo to nezkoušel.
+
 Pustí se bez argumentů. 0 = v pořádku, 1 = podívej se.
 """
 
@@ -148,12 +171,97 @@ def main():
     if h.zaplatovany({"packages": {}}, "zod") is not None:
         chyby.append("chybějící balíček nevrátil `None`")
 
+    # --- 6. pata kontrola: rodiny s utlumenym patchem ---------------------
+    # Hlídá díru v automatice, ne odmítnuté hlášení: u `react`/`react-dom` je
+    # utlumený i patch, takže PR na záplatu v řadě 19.2 nepřijde. Sabotáž
+    # podstrčí stav, při kterém **má** zahlásit, a ověří, že zahlásí.
+    def advisory(rozsah, zaplata, balicek="react", tezkost="high"):
+        return {
+            "ghsa_id": "GHSA-zkouska", "severity": tezkost,
+            "html_url": "https://example.invalid/a",
+            "vulnerabilities": [{
+                "package": {"name": balicek},
+                "vulnerable_version_range": rozsah,
+                "first_patched_version": {"identifier": zaplata} if zaplata else None,
+            }],
+        }
+
+    nase = (19, 2, 3)
+    pripady_pata = [
+        # (jméno, hlášení, musí v nálezu být, nesmí v nálezu být)
+        ("záplata v držené řadě",
+         advisory("< 19.2.9", "19.2.9"), ["19.2.9", "držené řadě", "PR nepřijde"], []),
+        ("záplata mimo drženou řadu",
+         advisory("< 19.3.1", "19.3.1"), ["S13", "mimo drženou řadu"], ["držené řadě"]),
+        ("záplata neexistuje",
+         advisory("<= 19.2.3", None), ["záplata neexistuje"], ["S13"]),
+        ("rozsah, kterému nerozumím",
+         advisory("<19.2.x nebo tak", "19.2.9"), ["nepřečtu"], []),
+    ]
+    for jmeno, a, musi, nesmi in pripady_pata:
+        zpravy = h.posudek_tlumene("react", nase, [a])
+        text = " ".join(zpravy)
+        if not zpravy:
+            chyby.append(f"pátá kontrola u „{jmeno}“ mlčí, přitom má hlásit")
+            continue
+        for kus in musi:
+            if kus not in text:
+                chyby.append(f"pátá kontrola u „{jmeno}“ neříká „{kus}“: {text}")
+        for kus in nesmi:
+            if kus in text:
+                chyby.append(f"pátá kontrola u „{jmeno}“ říká „{kus}“, a to je jiný případ: {text}")
+
+    # Nesmí hlásit to, co se nás netýká. Skutečná advisory na `react` jsou
+    # `< 0.14.0` a `< 0.5.2` — devatenáct majorů pod zámkem. Kdyby je hlídka
+    # hlásila, měsíční issue by bylo pokaždé stejné a nikdo by ho nečetl.
+    mimo = h.posudek_tlumene("react", nase, [advisory("< 0.14.0", "0.14.0")])
+    if mimo:
+        chyby.append(f"pátá kontrola hlásí hlášení, které se držené verze netýká: {mimo}")
+    cizi = h.posudek_tlumene("react", nase, [advisory("< 99.0.0", "99.0.0", balicek="react-dom")])
+    if cizi:
+        chyby.append(f"pátá kontrola hlásí hlášení na cizí balíček: {cizi}")
+
+    # --- 7. ctou se skutecne rodiny, ne vymyslene ------------------------
+    # Tohle je sabotáž, která chytila první verzi: `re.split` bez lookaheadu
+    # separátor odřízl, takže hlídka našla **0 sekcí** npm `/app` a místo
+    # úsudku vypsala „přečti to ručně". Čte se skutečný soubor v repu.
+    dependabot = os.path.join(os.path.dirname(KOREN), ".github", "dependabot.yml")
+    with open(dependabot, encoding="utf-8") as f:
+        yml = f.read()
+    vzory, nalezy_yml = h.utlumene_rodiny(yml)
+    if nalezy_yml:
+        chyby.append(f"`dependabot.yml` v repu hlídka nepřečte: {nalezy_yml}")
+    if sorted(vzory) != ["react", "react-dom"]:
+        chyby.append(
+            f"utlumený patch má podle hlídky {vzory}, čekáno ['react', 'react-dom'] — "
+            "ostatní čtyři rodiny mají `update-types`, tedy patch povolený")
+
+    # Sabotáž naopak: dej `react` také `update-types` a musí ze seznamu zmizet.
+    # Bez toho by kontrola hlásila i rodiny, kde Dependabot záplatu pošle sám.
+    s_typy = yml.replace(
+        '      - dependency-name: "react"\n',
+        '      - dependency-name: "react"\n        update-types:\n'
+        '          - "version-update:semver-major"\n', 1)
+    vzory_s, _ = h.utlumene_rodiny(s_typy)
+    if "react" in vzory_s:
+        chyby.append("po doplnění `update-types` u `react` ho hlídka pořád bere jako plně utlumený")
+
+    # Co nepřečtu, nahlásím: zmizelý `ignore` nesmí vyjít jako „není co hlídat".
+    bez_ignore, nalezy_bez = h.utlumene_rodiny(yml.replace("    ignore:\n", "", 1))
+    if not nalezy_bez:
+        chyby.append(f"bez `ignore:` v sekci npm `/app` hlídka mlčí místo nahlášení: {bez_ignore}")
+    _, nalezy_prazdne = h.utlumene_rodiny("version: 2\nupdates:\n")
+    if not nalezy_prazdne:
+        chyby.append("nad `dependabot.yml` bez sekce npm `/app` hlídka mlčí místo nahlášení")
+
     if chyby:
         print("Hlídka soudí špatně:\n")
         for c in chyby:
             print(f"- {c}")
         return 1
-    print(f"Hlídka soudí správně: prah, {len(pripady)} případů dopadu, text zprávy i všechny kopie.")
+    print(f"Hlídka soudí správně: prah, {len(pripady)} případů dopadu, text zprávy, "
+          f"všechny kopie, {len(pripady_pata)} případů páté kontroly "
+          f"a čtení `dependabot.yml`.")
     return 0
 
 
