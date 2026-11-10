@@ -9743,6 +9743,64 @@ byla o zavřeném hlášení. Takový řádek měsíc po měsíci je přesně to
 se hlídky přestanou čítat, takže je `ZAVRENE` drží potichu. Nad dnešním
 `main` hlídka vypisuje **Klid** a je to poprvé správně.
 
+## Ověření po nasazení se přeskakovalo, když Deploy spadl (10. 11. 2026)
+
+Nasazení commitu `fed3857` (sloučení #535) skončilo červeně: háček
+odpověděl `curl: (22) The requested URL returned error: 520` po 43
+sekundách (`00:02:08` → `00:02:51`, běh 42724675155). **Produkce ten commit
+přitom dostala** — `/verze` obou služeb vrátilo `fed3857…` (čteno 10. 11.
+2026). Háček práci dokončil a ztratila se až odpověď.
+
+Krok `Ověřit, co doopravdy běží` se u toho **přeskočil**, protože měl jen
+`if: ${{ steps.kontrola.outputs.nasadit == 'ano' }}` a GitHub kroky po
+selhání předchozího kroku implicitně přeskakuje. Ten krok existuje právě
+proto, že `Healthy` a HTTP 200 samy nic nedokazují — a vypnul se přesně
+v tom případě, pro který je napsaný. V CI pak nejde rozeznat dvě různé
+věci:
+
+| Co se stalo | Jak to vypadá |
+|---|---|
+| háček nenasadil | `Deploy` failure, ověření skipped |
+| háček nasadil a odpověď se ztratila v proxy | `Deploy` failure, ověření skipped |
+
+Opraveno na `if: ${{ !cancelled() && steps.kontrola.outputs.nasadit == 'ano' }}`.
+Úloha zůstává červená i dál — ztracená odpověď je skutečný problém a nemá
+zmizet —, mění se jen to, že je u ní vidět, co na produkci běží.
+`!cancelled()` a ne `always()`: po zrušení běhu nemá smysl pět minut čekat
+na `/verze` a držet tím zrušení.
+
+### Čím se to dokázalo
+
+Přečtením výrazu ne — tak běžela sabotáž (10. 11. 2026, běh 42827771546,
+dočasný `.github/workflows/zkouska-vzdy.yml` na větvi
+`nasazeni-overit-vzdy`): krok, který selže jako ztracená odpověď, a za ním
+**obě** podmínky vedle sebe, stará i nová.
+
+| Krok | Výsledek |
+|---|---|
+| `Deploy, kteremu se ztratila odpoved` | failure |
+| `STARA PODMINKA ma se preskocit` | **skipped** |
+| `NOVA PODMINKA ma probehnout` | **failure**, tedy proběhl |
+
+A proběhl doopravdy, ne naprázdno: vypsal `cekano: ffb1d9ee…` proti
+`API: 9214048…` a `web: 9214048…`, tedy skutečnou verzi z produkce, a
+skončil chybou *„bezi na jine verzi"*. To je správný verdikt — na produkci
+byl jiný commit než na té větvi.
+
+Zkouška je ve stejném PR smazaná a v `main` není. Ověřil se tím **výraz
+a tělo kroku**, ne celá úloha `nasazeni`: ta POSTuje na produkční háček
+a zkoušet ji naostro by znamenalo nasadit. Smyčka byla ve zkoušce zkrácená
+na jedno kolo místo dvaceti; na podmínku to vliv nemá.
+
+### Kdy tu podmínku zrušit
+
+Platí u ní to samé kritérium jako u kontroly barev: cenu má, jen když se
+někdy projeví. Projeví se tím, že u červeného nasazení bude v logu stát,
+co na produkci běží. Když v historii za rok nebude ani jedno červené
+nasazení, nehlídá nic — rušit ji ale nebude důvod, protože nic nestojí: je
+to jedna podmínka ve stávajícím kroku, ne nový job ani další minuta
+Actions.
+
 ## Fronta k 20. 10. 2026
 
 <b>Proč je tenhle oddíl v plánu, a ne v hlavě.</b> Filip, 19. 10. 2026:
