@@ -142,8 +142,15 @@ Dvě věci, které se zapisují natrvalo a mění se draho:
 
 ## Co tady zatím není
 
-- **Vydání pro iPhone.** Účet u Applu stojí 99 $ ročně a platí se, až bude
-  o co stát. Do té doby Expo Go na vlastním telefonu a APK pro ostatní.
+- **Vydání pro iPhone.** Účet u Applu stojí 99 $ ročně a kupuje se v březnu
+  2027, protože platnost běží od nákupu a dřív neodemkne nic, co je potřeba
+  (rozhodnuto 10. 11. 2026, `docs/PLAN.md` — *Licence rozhodnuty*). Do té doby
+  jen vlastní iPhone přes osobní tým, kde podpis platí sedm dní.
+- **Vydání do Google Play.** Účet stojí 25 $ jednorázově a kupuje se hned —
+  nejen kvůli obchodu, ale protože od roku 2027 bude i APK z webu potřebovat
+  registrovaného vývojáře. Pořadatelům appka pojede z internal testing tracku,
+  kde neplatí pravidlo dvanácti testerů na čtrnáct dní. Chybí k tomu zásady
+  o poloze na webu a video pro deklaraci polohy na pozadí.
 - **Push upozornění** (fáze 7) — potřebují development build, na iOS
   i placený účet u Applu. V Expo Go se vyzkoušet nedají.
 - ~~**Ikona a splash** jsou zatím ze šablony.~~ **hotovo 8. 9. 2026** —

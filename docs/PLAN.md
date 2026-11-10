@@ -3210,6 +3210,112 @@ jsou config-plugin flagy, které mění nativní konfiguraci (dokumentace Expa
 k `Location` a `TaskManager`, ověřeno 9. 10. 2026). Na všechno ostatní Expo Go
 dost je — přihlášení, moje lodě, bóje, obrazovky —, jen ne na záznam polohy.
 
+### Licence rozhodnuty: Play hned, Apple v březnu (10. 11. 2026)
+
+Oddíl výš nechával rozhodnutí o 99 $ otevřené s termínem „živý účet nejpozději
+v březnu". Tenhle ho uzavírá a přidává druhou položku, o které se dosud
+nemluvilo, protože do roku 2026 neexistovala.
+
+**Google Play — 25 $ jednorázově, kupuje se hned.** Ne kvůli obchodu. Android
+zavádí *developer verification*: od 30. 9. 2026 v Brazílii, Indonésii,
+Singapuru a Thajsku, a `developer.android.com/developer-verification` slibuje
+*„Verification capability will be expanded globally for all apps on certified
+Android devices in 2027"*. Neregistrovaná appka pak na certifikovaném zařízení
+půjde nainstalovat jen přes ADB nebo „advanced flow" — jednodenní čekací lhůta,
+developer mode a klepnutí na *Install Anyway*. **Dnešní rozdávání APK z `/appka`
+má tedy datum spotřeby.** Účet v Play Console to řeší i pro appky mimo Play:
+*„If you have a Play Console account, use it to complete the verification
+requirements"* (`developer-verification/guides`).
+
+Bezplatná náhrada existuje — *limited distribution account*, bez poplatku a bez
+občanky — ale u nás má háček: *„You can only register new package names that
+have never been seen before on Android"*
+(`support.google.com/android-developer-console/answer/17131204`).
+`cz.klihovka.orlickypohar` koluje jako APK od 8. 11. 2026 a přenos z účtu Play
+na limited účet podporovaný není. Ta stránka si navíc protiřečí s přehledem
+verifikace v limitu zařízení — nápověda uvádí 50, přehled 20.
+
+**Apple — 99 $ ročně, kupuje se až v březnu 2027.** Platí se za rok od nákupu
+(*„99 USD per membership year"*, `developer.apple.com/programs/enroll/`), takže
+koupit to v listopadu znamená spálit čtvrtinu platnosti na dobu, kdy appka
+k posádkám nejde. Debut je jaro 2027, termín z oddílu výš platí.
+
+**Do produkce v Play se zatím nemusí.** Pravidlo *„a minimum of 12 testers who
+have been opted in continuously for at least 14 days"* (`answer/14151465`) je
+podmínkou **přístupu k produkci** a váže se na closed testing. Tabulka na té
+samé stránce má u internal testingu *„Requirements to access track: None"*,
+track zvládne 100 testerů, jde spustit před dokončením app setupu a je vyňatý
+z formuláře Data safety (*„Apps that are exclusively active on this track do
+not need to complete the Data safety form"*, `answer/10787469`). Pro pořadatele
+a rozhodčí je to hotová odpověď: appka z Play, bez produkce, bez
+čtrnáctidenního okna.
+
+**Cenovka:**
+
+| | 2026 | 2027 | dál |
+|---|---|---|---|
+| Google Play | 25 $ jednorázově | — | — |
+| Apple Developer Program | — | 99 $ (od března) | 99 $ ročně |
+| Expo Build | 0 $ — free plán nese *„Up to 15 Android and 15 iOS builds"* | 0 $ | 0 $ |
+
+Korunovou cenu nezveřejňuje ani jeden; Apple výslovně *„Prices may vary by
+region and are listed in local currency during the enrollment process"*, česká
+varianta té stránky vrací 404. Google nebere předplacené karty a chce kartu na
+jméno majitele účtu.
+
+**Volné Apple ID je poprvé ověřené z primárního zdroje, ne ze vzpomínky**
+(`developer.apple.com/support/compare-memberships/`, přesměruje na *Developer
+account overview*): *„up to 10 App IDs, which expire after 7 days"*, *„up to 3
+devices, which expire after 7 days"*, *„up to 3 apps per device"*, a výslovně
+*„To build more advanced app capabilities and distribute apps, you'll need to be
+an Apple Developer Program member."* Chybějící push entitlement z 8. 11. 2026
+do toho zapadá.
+
+**Jedna věc, kterou plán zatím nezmiňoval:** App Review Guidelines 2.2 žádá, aby
+appka v TestFlightu byla *„intended for public distribution"*, a úvod guidelines
+přímo radí, že na appku pro rodinu a přátele App Store nejlepší cesta není.
+Orlický pohár je veřejný seriál s veřejným webem, takže se to obhájí — ale je to
+riziko, které se má znát dřív než v březnu.
+
+### Co z licencí plyne za práci (10. 11. 2026)
+
+Nic z toho neblokuje nic ve frontě. Dvě položky jsou ale skutečná práce, ne
+formalita:
+
+1. **Zásady o poloze na webu chybí.** `web/app/osobni-udaje/page.tsx` má 172
+   řádků a o poloze, trase ani GPS v nich není ani slovo. Play žádá privacy
+   policy na veřejné HTTPS adrese, v appce i na listingu, a prominentní
+   disclosure k poloze na pozadí se na ni odvolává.
+2. **Video pro deklaraci polohy na pozadí.**
+   `support.google.com/googleplay/android-developer/answer/9799150` chce
+   deklarační formulář, video (doporučeno do 30 s, musí ukázat aktivaci funkce
+   z pozadí, disclosure dialog i runtime prompt), disclosure v appce **před**
+   runtime promptem a tu privacy policy. Dvě pasti: formulář smí popsat **jen
+   jednu** funkci (*„The inclusion of multiple features will result in an app's
+   rejection"*), a služba na popředí to neobejde — *„If an app's use of device
+   location via foreground service is equivalent to `ACCESS_BACKGROUND_LOCATION`
+   ... the app will be subject to location in the background permissions
+   requirements."* Záznam trasy lodi se obhajuje přes *„significant user
+   benefits include physical safety, perceived safety, and health/fitness"*.
+3. **V repu samotném je práce malá.** Profil `production` už staví AAB,
+   `appVersionSource: remote` a package jsou správně; dodělat se má
+   `submit.production` s cestou ke klíči a `eas credentials`.
+
+**Target API je v pořádku a nemusí se řešit.** Play žádá u nových appek
+a aktualizací API 36; tabulka *Support for Android and iOS versions* na
+`docs.expo.dev/versions/v57.0.0/` dává SDK 57 `compileSdkVersion` i
+`targetSdkVersion` **36**. (SDK 58 vyšlo 15. 10. 2026 a nekontroloval jsem ho.)
+
+**Nedořešené:** jestli deklaraci polohy na pozadí chce Play i u appky, která je
+**jen** na internal tracku. Stránky to neříkají: `answer/9799150` váže výzvu na
+manifest (*„contains `ACCESS_BACKGROUND_LOCATION` permission in the manifest,
+you'll be directed to complete details on location usage"*) a u tracků jmenuje
+jen *„closed and open"*; `answer/9845334` k internal testingu dodává opatrné
+*„Internal tests might not be subject to standard Play policy or security
+reviews."* Výjimka pro Data safety se na deklaraci oprávnění svým vlastním
+textem nevztahuje. Pozná se to při prvním uploadu do internal tracku — a dokud
+to není jasné, počítej s tím, že video bude potřeba.
+
 ### Lokální záznam hotový, na pozadí nevyzkoušený (20. 10. 2026)
 
 Pilot se začal stavět od lokálního záznamu, protože přejímací podmínka č. 2
