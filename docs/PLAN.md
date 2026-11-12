@@ -9776,8 +9776,12 @@ vypadl — major Expa. **Nedělá se**, a při tom přechodu se má znovu ověř
 trasování výše: kdyby se `queryString.parse` do živé cesty vrátil, padá
 důvod odmítnutí.
 
-**#27 se nechává otevřené**, stejně jako se kdysi schválně nechávalo #2 —
-je to připomínka k Expu 58. Odmítnutím by zmizela a hlídka ho nehlídá.
+**#27 se nechává otevřené**, ale **není to ta připomínka** — tak se to tu
+psalo o #2 a 7. 11. 2026 ho zavřel override úplně jiné zranitelnosti, takže
+připomínka k Expu 58 zmizela, aniž by se na Expo 58 přešlo. Stav
+u poskytovatele stopou být nemůže (platforma, poučení 75): připomínka leží
+v oddílu *Tlumené majory v appce, a co tím odkládáme* výše, kde ji zavře
+jedině člověk, který ji zavřít chtěl. Otevřené #27 je navíc jen pohodlí.
 
 ### Hlídka #27 neviděla, a byly to dvě vady
 
