@@ -1,6 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
+import { NadpisRocniku, PruhRocniku } from "@/app/sprava/pruh-rocniku";
 import { Vypadek } from "@/app/vypadek";
 import { datumClanku } from "@/app/datum";
 import { STAVY, jeWeb, nactiPrehled, nazevStavu, type ClanekRadek, type StavClanku } from "@/lib/clanky";
@@ -58,7 +59,7 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
         cesta={
           web
             ? drobeckySpravy(null, [{ text: "Obecné články" }])
-            : drobeckySpravy(serie, [{ text: "Novinky" }])
+            : drobeckySpravy(serie)
         }
       />
       <h1>{web ? "Obecné články — správa" : "Novinky — správa"}</h1>
@@ -100,8 +101,17 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
 
   return (
     <>
-      {hlava}
-      <p className="podtitulek">{prehled.serieNazev}</p>
+      {/* Obecné články leží mimo ročník, takže pruh ročníku nad nimi
+          nestojí — patří o patro výš, ke Správě webu. */}
+      {web ? (
+        hlava
+      ) : (
+        <>
+          <Drobecky cesta={drobeckySpravy(serie)} />
+          <PruhRocniku serie={serie} aktivni="clanky" />
+          <NadpisRocniku serie={serie} nazevRocniku={prehled.serieNazev} tab="clanky" />
+        </>
+      )}
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">

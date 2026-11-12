@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "@/app/sprava/odkaz";
 import { nactiJa } from "@/lib/ja";
+import { nactiSerie } from "@/lib/api";
 import { polozkaOponentury, polozkyRocniku, polozkyWebu, prava } from "@/lib/co-smim";
 import { DlazdiceSekci } from "@/app/prepinac-sekci";
 
@@ -83,7 +84,12 @@ export async function NadpisRocniku({
   children,
 }: {
   serie: string;
-  nazevRocniku: string;
+  /**
+   * Jméno ročníku. Kde ho stránka stejně zná (kalendář, oprávnění), předá
+   * se; jinak se dotáhne samo — veřejné čtení sérií má `revalidate: 60`,
+   * takže to nestojí volání navíc na každém přepnutí tabu.
+   */
+  nazevRocniku?: string;
   /** Klíč otevřeného tabu — týž jako `aktivni` u pruhu. */
   tab: string;
   /** Co stojí na konci lana: role, počty, stav. Součást řádku, ne odstavec pod ním. */
@@ -95,6 +101,11 @@ export async function NadpisRocniku({
     ? polozkyRocniku(prava(ja), serie).find((t) => tabZAdresy(t.kam) === tab)?.nazev
     : undefined;
 
+  const rocnik =
+    nazevRocniku ??
+    (await nactiSerie().catch(() => []))?.find((s) => s.slug === serie)?.nazev ??
+    serie;
+
   return (
     <div className="radek-nadpisu vybrany-ukon" data-ukon={tab}>
       <h1>
@@ -104,7 +115,7 @@ export async function NadpisRocniku({
         <span className="nadpis-ukonu">
           {/* Pevná mezera před pomlčkou: po zrušení `nowrap` se zalomí
               za ni, nikdy před ni — pomlčka na začátku řádku je osiřelá. */}
-          <span className="ctvrt">{nazevRocniku}&nbsp;—</span>{" "}
+          <span className="ctvrt">{rocnik}&nbsp;—</span>{" "}
           {nazev && <strong className="agenda">{nazev}</strong>}
         </span>
         {children}

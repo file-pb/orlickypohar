@@ -1,6 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
+import { NadpisRocniku, PruhRocniku } from "@/app/sprava/pruh-rocniku";
 import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
@@ -32,8 +33,8 @@ export default async function SpravaVysledku({
 
   const hlava = (
     <>
-      <Drobecky cesta={drobeckySpravy(serie, [{ text: "Výsledky" }])} />
-      <h1>Výsledky — správa</h1>
+      <Drobecky cesta={drobeckySpravy(serie)} />
+      <h1>Zápis výsledků</h1>
     </>
   );
 
@@ -72,8 +73,10 @@ export default async function SpravaVysledku({
 
   return (
     <>
-      {hlava}
-      <p className="podtitulek">Vyber regatu, jejíž rozjížďky chceš posunout.</p>
+      <Drobecky cesta={drobeckySpravy(serie)} />
+      <PruhRocniku serie={serie} aktivni="vysledky" />
+      <NadpisRocniku serie={serie} tab="vysledky" />
+      <p className="poznamka">Vyber regatu, jejíž rozjížďky chceš posunout.</p>
 
       {zastavky.length === 0 ? (
         <p className="prazdno">

@@ -1,6 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
+import { NadpisRocniku, PruhRocniku } from "@/app/sprava/pruh-rocniku";
 import { StavVRamu, tridaRamu } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
@@ -78,7 +79,7 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
 
   const hlava = (
     <>
-      <Drobecky cesta={drobeckySpravy(serie, [{ text: "Kalendář" }])} />
+      <Drobecky cesta={drobeckySpravy(serie)} />
       <h1>Kalendář — správa</h1>
     </>
   );
@@ -123,8 +124,9 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
 
   return (
     <>
-      {hlava}
-      <p className="podtitulek">{prehled.serieNazev}</p>
+      <Drobecky cesta={drobeckySpravy(serie)} />
+      <PruhRocniku serie={serie} aktivni="kalendar" />
+      <NadpisRocniku serie={serie} nazevRocniku={prehled.serieNazev} tab="kalendar" />
 
       <nav className="taby" aria-label="Kalendář">
         <Link href={`/sprava/${serie}/kalendar`} aria-current={naAkcich ? undefined : "page"}>

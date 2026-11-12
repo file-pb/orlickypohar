@@ -1,6 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
+import { NadpisRocniku, PruhRocniku } from "@/app/sprava/pruh-rocniku";
 import { Vypadek } from "@/app/vypadek";
 import { okamzik } from "@/app/datum";
 import {
@@ -69,7 +70,7 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
 
   const hlava = (
     <>
-      <Drobecky cesta={drobeckySpravy(serie, [{ text: "Oprávnění" }])} />
+      <Drobecky cesta={drobeckySpravy(serie)} />
       <h1>Oprávnění</h1>
     </>
   );
@@ -126,8 +127,9 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
 
   return (
     <>
-      {hlava}
-      <p className="podtitulek">{prehled.nazev}</p>
+      <Drobecky cesta={drobeckySpravy(serie)} />
+      <PruhRocniku serie={serie} aktivni="opravneni" />
+      <NadpisRocniku serie={serie} nazevRocniku={prehled.nazev} tab="opravneni" />
 
       {zpravy.chyba ? (
         <p className="hlaska chyba" role="alert">

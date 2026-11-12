@@ -1,6 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
+import { NadpisRocniku, PruhRocniku } from "@/app/sprava/pruh-rocniku";
 import { Vypadek } from "@/app/vypadek";
 import { okamzik } from "@/app/datum";
 import { NAZEV_ROLE, NAZEV_ROLE_KOHO } from "@/lib/pripojeni";
@@ -56,7 +57,7 @@ export default async function LodeRocniku({ params, searchParams }: Parametry) {
 
   const hlava = (
     <>
-      <Drobecky cesta={drobeckySpravy(serie, [{ text: "Lodě" }])} />
+      <Drobecky cesta={drobeckySpravy(serie)} />
       <h1>Lodě ročníku</h1>
     </>
   );
@@ -130,7 +131,9 @@ export default async function LodeRocniku({ params, searchParams }: Parametry) {
 
   return (
     <>
-      {hlava}
+      <Drobecky cesta={drobeckySpravy(serie)} />
+      <PruhRocniku serie={serie} aktivni="lode" />
+      <NadpisRocniku serie={serie} tab="lode" />
 
       {chyba && (
         <p className="hlaska chyba" role="alert">
