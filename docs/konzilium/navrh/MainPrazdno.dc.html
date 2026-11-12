@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Ročník — Co teď mimo sezónu</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="spolecne.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+.okno { --ukon: var(--ukon-uvod); }
+.vysvetlivka { margin-top: 1.2rem; padding: 0.9rem 1rem; border: 1px dashed var(--linka);
+  border-radius: 10px; font-size: 0.85rem; color: var(--tlumeny-cteny); background: var(--papir); }
+.vysvetlivka strong { color: var(--text); }
+</style>
+</helmet>
+<div class="okno">
+  <nav class="drobecky" aria-label="Kde stojím">
+    <a href="#">Domů</a><span aria-hidden="true">»</span>
+    <a href="Sprava.dc.html">Správa</a><span aria-hidden="true">»</span>
+    <span aria-current="page">Orlický pohár 2027</span>
+  </nav>
+
+  <nav aria-label="Co spravuju v ročníku">
+    <ul class="dlazdice">
+      <li style="--ukon: var(--ukon-uvod)"><a href="MainPrazdno.dc.html" aria-current="page">Co teď</a></li>
+      <li style="--ukon: var(--ukon-regaty)"><a href="Regaty.dc.html">Regaty</a></li>
+      <li style="--ukon: var(--ukon-kalendar)"><a href="Kalendar.dc.html">Kalendář</a></li>
+      <li style="--ukon: var(--ukon-vysledky)"><a href="#">Zápis výsledků</a></li>
+      <li style="--ukon: var(--ukon-lode)"><a href="#">Lodě a kapitáni</a></li>
+      <li style="--ukon: var(--ukon-novinky)"><a href="#">Novinky</a></li>
+      <li style="--ukon: var(--ukon-uvod)"><a href="#">Oprávnění</a></li>
+    </ul>
+  </nav>
+
+  <div class="radek-nadpisu">
+    <h1><span class="ctvrt">Orlický pohár 2027 —</span> <span class="agenda">Co teď</span></h1>
+    <span class="lano" aria-hidden="true"></span>
+    <span class="konec">pořadatel — Jarní vítr</span>
+  </div>
+
+  <ul class="ukoly">
+    <li>
+      <a class="fakt" href="Regaty.dc.html">
+        <div class="cim">Jarní vítr · 15. května · plánováno</div>
+        <div class="nazev">Nejbližší regata</div>
+        <div class="detail">Teď nic nečeká.</div>
+      </a>
+    </li>
+  </ul>
+
+  <p class="pata">
+    <a href="#">Otázky k aplikaci</a>
+  </p>
+
+  <div class="vysvetlivka">
+    <strong>Tohle je obrazovka, na které stojí pořadatel většinu roku.</strong>
+    Dnešní <em>Co teď</em> počítá jen ze tří věcí (vrácená revize, jede se, hotové není ven),
+    a žádná z nich u plánované regaty nenastane — sedm regat z osmi je přitom plánovaných.
+    Prázdné „Nic nečeká" by znamenalo klepnutí navíc na nejčastější cestě roku.
+    <br><br>
+    <strong>V pilotu</strong> karta nese nejbližší zastávku podle data a vede do okna té regaty;
+    víc <code>ZastavkaVysledkyDto</code> nenese. <strong>Ve druhé fázi</strong> se detail vymění za první
+    chybějící dokument řady <em>vypsání → směrnice → trať → startovní listina</em>
+    („vypsání závodu není vyvěšené“) — povinnost z pravidel, nikdy vymyšlená lhůta.
+    Jméno karty není rozkazovací způsob, protože to není úkol.
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

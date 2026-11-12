@@ -4,45 +4,34 @@
 <meta charset="utf-8">
 <title>Ročník na telefonu</title>
 <script src="./support.js"></script>
+<link rel="stylesheet" href="spolecne.css">
 </head>
 <body>
 <x-dc>
 <helmet>
 <style>
-:root {
-  --pozadi: #fbfaf8; --papir: #ffffff; --text: #1a1d21; --linka: #e2e0dc;
-  --tlumeny: #6b7280;
-  --ukon-coted: #8a5a4a; --ukon-regaty: #4a6a8a; --ukon-kalendar: #5a7a4a;
-  --ukon-vysledky: #4a7f91; --ukon-lode: #6a70a8; --ukon-novinky: #7a5a8a;
-  --ukon-otazky: #6b7280; --ukon-opravneni: #a18a4a;
-}
-body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--pozadi); color: var(--text); }
-a { color: #1f6b86; }
-.telefon { width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
-.hlavicka { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--linka); background: var(--papir); }
+.telefon { width: 390px; height: 844px; box-sizing: border-box; display: flex;
+  flex-direction: column; overflow: hidden; --ukon: var(--ukon-uvod); }
+.hlavicka { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid var(--linka); background: var(--papir); }
 .znacka { display: flex; align-items: center; gap: 0.4rem; font-weight: 800; font-size: 0.95rem; letter-spacing: -0.02em; }
-.znacka .kolecko { width: 1.35rem; height: 1.35rem; border-radius: 999px; border: 2px solid #0c4a8c; display: grid; place-items: center; color: #0c4a8c; font-size: 0.7rem; }
-.hlavicka .ucet { margin-left: auto; width: 1.8rem; height: 1.8rem; border-radius: 999px; background: #efece7; display: grid; place-items: center; font-size: 0.7rem; color: var(--tlumeny); }
-.okno { padding: 0.8rem 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.6rem; overflow: hidden; }
-.drobecky { font-size: 0.78rem; color: var(--tlumeny); display: flex; gap: 0.3rem; }
-.drobecky a { text-decoration: none; }
-.drobecky span[aria-current] { color: var(--text); }
-.dlazdice { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.35rem; }
-.dlazdice a { display: block; padding: 0.4rem 0.4rem 0.4rem 0.55rem; background: var(--papir); border: 1px solid var(--linka); border-left: 4px solid var(--ukon); border-radius: 7px; color: inherit; text-decoration: none; font-size: 0.85rem; font-weight: 600; text-align: left; }
-.dlazdice a[aria-current="page"] { background: color-mix(in srgb, var(--ukon) 10%, var(--papir)); border-color: color-mix(in srgb, var(--ukon) 45%, var(--linka)); border-left-color: var(--ukon); box-shadow: inset 0 -2px 0 var(--ukon); }
-.radek-nadpisu { display: flex; flex-direction: column; gap: 0.15rem; margin-top: 0.3rem; }
-h1 { margin: 0; font-size: 1.15rem; letter-spacing: -0.015em; font-weight: 500; }
-h1 strong { font-weight: 800; display: block; }
-h1 .agenda { font-size: 0.95rem; color: var(--tlumeny); }
-.lano { height: 0.55rem; background: repeating-linear-gradient(115deg, color-mix(in srgb, var(--ukon-coted) 55%, transparent) 0 2px, transparent 2px 7px); border-radius: 2px; margin-top: 0.2rem; }
-.ukoly { list-style: none; margin: 0.2rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
-.ukoly a { display: block; background: var(--papir); border: 1px solid var(--linka); border-radius: 10px; padding: 0.7rem 0.85rem; color: inherit; text-decoration: none; }
-.ukoly .cim { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--tlumeny); margin-bottom: 0.2rem; }
-.ukoly .nazev { font-weight: 700; font-size: 1rem; }
-.ukoly .detail { color: var(--tlumeny); font-size: 0.85rem; margin-top: 0.1rem; }
-.ukoly .dnes { background: color-mix(in srgb, var(--ukon-coted) 7%, var(--papir)); border-color: color-mix(in srgb, var(--ukon-coted) 35%, var(--linka)); }
-.teckovana { width: 0.45rem; height: 0.45rem; border-radius: 999px; background: var(--ukon-coted); flex: none; }
-.bez-pruhu { margin-top: auto; font-size: 0.72rem; color: var(--tlumeny); text-align: center; padding-top: 0.6rem; border-top: 1px dashed var(--linka); }
+.znacka .kolecko { width: 1.35rem; height: 1.35rem; border-radius: 999px; border: 2px solid #0c4a8c;
+  display: grid; place-items: center; color: #0c4a8c; font-size: 0.7rem; }
+.hlavicka .ucet { margin-left: auto; width: 1.8rem; height: 1.8rem; border-radius: 999px;
+  background: var(--zvyrazneni); display: grid; place-items: center; font-size: 0.7rem; color: var(--tlumeny-cteny); }
+/* Práh 6,6 rem dá na 350 px tři sloupce; 7,25 rem dnes dává dva a čtyři řady. */
+.telefon .okno { padding: 0.8rem 1.25rem 1rem; gap: 0.6rem; overflow: hidden; }
+.telefon .dlazdice { grid-template-columns: repeat(auto-fit, minmax(6.6rem, 1fr)); justify-content: stretch; gap: 0.4rem; }
+/* Dotykový cíl 44 px; dlouhé jméno se zalomí dovnitř dlaždice, nedostane druhé jméno. */
+.telefon .dlazdice a { padding: 0.7rem 0.4rem 0.7rem 0.55rem; font-size: 0.82rem;
+  line-height: 1.15; white-space: normal; min-height: 44px; box-sizing: border-box; }
+.telefon .radek-nadpisu { flex-direction: column; align-items: stretch; gap: 0.25rem; }
+.telefon h1 { font-size: 1.1rem; flex: none; }
+.telefon .lano { width: 100%; flex: none; }
+.telefon .ukoly { grid-template-columns: 1fr; gap: 0.55rem; }
+.telefon .ukoly a { padding: 0.7rem 0.85rem; }
+.telefon .ukoly .nazev { font-size: 1rem; }
+.telefon .pata { margin-top: auto; }
 </style>
 </helmet>
 <div class="telefon">
@@ -54,24 +43,23 @@ h1 .agenda { font-size: 0.95rem; color: var(--tlumeny); }
   <div class="okno">
     <nav class="drobecky" aria-label="Kde stojím">
       <a href="#">Správa</a><span aria-hidden="true">»</span>
-      <span aria-current="page">Pohár 2027</span>
+      <span aria-current="page">Orlický pohár 2027</span>
     </nav>
 
     <nav aria-label="Co spravuju v ročníku">
       <ul class="dlazdice">
-        <li style="--ukon: var(--ukon-coted)"><a href="Telefon.dc.html" aria-current="page">Co teď</a></li>
+        <li style="--ukon: var(--ukon-uvod)"><a href="Telefon.dc.html" aria-current="page">Co teď <span class="pocet">4</span></a></li>
         <li style="--ukon: var(--ukon-regaty)"><a href="#">Regaty</a></li>
         <li style="--ukon: var(--ukon-kalendar)"><a href="#">Kalendář</a></li>
-        <li style="--ukon: var(--ukon-vysledky)"><a href="#">Výsledky</a></li>
-        <li style="--ukon: var(--ukon-lode)"><a href="#">Lodě</a></li>
+        <li style="--ukon: var(--ukon-vysledky)"><a href="#">Zápis výsledků</a></li>
+        <li style="--ukon: var(--ukon-lode)"><a href="#">Lodě a kapitáni</a></li>
         <li style="--ukon: var(--ukon-novinky)"><a href="#">Novinky</a></li>
-        <li style="--ukon: var(--ukon-otazky)"><a href="#">Otázky</a></li>
-        <li style="--ukon: var(--ukon-opravneni)"><a href="#">Práva</a></li>
+        <li style="--ukon: var(--ukon-uvod)"><a href="#">Oprávnění</a></li>
       </ul>
     </nav>
 
     <div class="radek-nadpisu">
-      <h1><strong>Orlický pohár 2027</strong> <span class="agenda">Co teď</span></h1>
+      <h1><span class="ctvrt">Orlický pohár 2027&nbsp;—</span> <span class="agenda">Co teď</span></h1>
       <span class="lano" aria-hidden="true"></span>
     </div>
 
@@ -94,19 +82,12 @@ h1 .agenda { font-size: 0.95rem; color: var(--tlumeny); }
         <a href="#">
           <div class="cim">Radavská regata</div>
           <div class="nazev">Ověřit výsledky</div>
-          <div class="detail">3 ze 4 rozjížděk čeká na tvůj podpis.</div>
-        </a>
-      </li>
-      <li>
-        <a href="#">
-          <div class="cim">Jarní vítr</div>
-          <div class="nazev">Pustit ven</div>
-          <div class="detail">2 podepsané rozjížďky nikdo neuvidí.</div>
+          <div class="detail">3 ze 4 rozjížděk čekají na tvůj podpis.</div>
         </a>
       </li>
     </ul>
 
-    <p class="bez-pruhu">Pruh partnerů tu není — rozhodčí a správce ho nevidí nikde.</p>
+    <p class="pata"><a href="#">Otázky k aplikaci</a></p>
   </div>
 </div>
 </x-dc>

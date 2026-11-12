@@ -4,95 +4,62 @@
 <meta charset="utf-8">
 <title>Správa webu — Obecné články</title>
 <script src="./support.js"></script>
+<link rel="stylesheet" href="spolecne.css">
 </head>
 <body>
 <x-dc>
 <helmet>
 <style>
-:root {
-  --pozadi: #fbfaf8; --papir: #ffffff; --text: #1a1d21; --linka: #e2e0dc;
-  --tlumeny: #6b7280;
-  --ukon-rocniky: #4a6a8a; --ukon-clanky: #7a5a8a; --ukon-opravneni: #a18a4a; --ukon-naklady: #4a8a80;
-}
-body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--pozadi); color: var(--text); }
-a { color: #1f6b86; }
-a:hover { color: #154b5e; }
-.okno { padding: 1.5rem 2rem 2rem; display: flex; flex-direction: column; gap: 0.85rem; }
-.drobecky { font-size: 0.85rem; color: var(--tlumeny); display: flex; gap: 0.4rem; }
-.drobecky a { text-decoration: none; }
-.drobecky a:hover { text-decoration: underline; }
-.drobecky span[aria-current] { color: var(--text); }
-.dlazdice { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.4rem; }
-.dlazdice a { display: block; padding: 0.35rem 0.7rem 0.35rem 0.8rem; background: var(--papir); border: 1px solid var(--linka); border-left: 4px solid var(--ukon); border-radius: 7px; color: inherit; text-decoration: none; font-size: 0.95rem; font-weight: 600; }
-.dlazdice a:hover { border-color: var(--ukon); }
-.dlazdice a[aria-current="page"] { background: color-mix(in srgb, var(--ukon) 10%, var(--papir)); border-color: color-mix(in srgb, var(--ukon) 45%, var(--linka)); border-left-color: var(--ukon); box-shadow: inset 0 -2px 0 var(--ukon); }
-.radek-nadpisu { display: flex; align-items: baseline; gap: 0.75rem; margin-top: 0.35rem; }
-h1 { margin: 0; font-size: 1.55rem; letter-spacing: -0.015em; font-weight: 500; white-space: nowrap; }
-h1 strong { font-weight: 800; }
-.lano { flex: 1; height: 0.7rem; align-self: center; background: repeating-linear-gradient(115deg, color-mix(in srgb, var(--ukon) 55%, transparent) 0 2px, transparent 2px 7px); border-radius: 2px; }
-.konec { font-size: 0.85rem; color: var(--tlumeny); white-space: nowrap; }
-details { background: var(--papir); border: 1px solid var(--linka); border-radius: 10px; }
-summary { cursor: pointer; padding: 0.6rem 1rem; font-weight: 700; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
-summary::-webkit-details-marker { display: none; }
-summary .plus { width: 1.3rem; height: 1.3rem; border-radius: 999px; background: color-mix(in srgb, var(--ukon-clanky) 15%, var(--papir)); color: var(--ukon-clanky); display: grid; place-items: center; font-size: 0.95rem; }
+.okno { --ukon: var(--ukon-novinky); }
 .telo { padding: 0 1rem 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; align-items: start; }
-label { display: block; font-size: 0.82rem; color: var(--tlumeny); margin-bottom: 0.2rem; }
-input, textarea { font: inherit; font-size: 0.9rem; width: 100%; box-sizing: border-box; padding: 0.4rem 0.55rem; border: 1px solid var(--linka); border-radius: 7px; background: var(--papir); color: var(--text); }
-textarea { min-height: 7rem; resize: vertical; }
-button { font: inherit; font-size: 0.85rem; padding: 0.3rem 0.8rem; border-radius: 7px; border: 1px solid var(--linka); background: var(--papir); color: var(--text); cursor: pointer; }
-button.hlavni { background: #1f6b86; border-color: #1f6b86; color: #fff; font-weight: 600; padding: 0.45rem 1.1rem; }
-.volby { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: var(--tlumeny); margin-top: 0.5rem; }
-.napoveda { font-size: 0.78rem; color: var(--tlumeny); margin: 0.4rem 0 0; }
-.tabulka-obal { border: 1px solid var(--linka); border-radius: 10px; overflow: hidden; background: var(--papir); }
-table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
-th { text-align: left; font-weight: 600; color: var(--tlumeny); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--linka); }
-td { padding: 0.6rem 0.8rem; border-top: 1px solid var(--linka); }
-tbody tr:first-child td { border-top: 0; }
+.volby { display: flex; align-items: flex-start; gap: 0.5rem; margin-top: 0.5rem; }
+.volby input { width: auto; margin-top: 0.2rem; }
 .titulek { font-weight: 700; }
-.titulek span { display: block; font-weight: 400; font-size: 0.8rem; color: var(--tlumeny); margin-top: 0.1rem; }
-.stitek { display: inline-block; border: 1px solid var(--linka); border-radius: 999px; padding: 0.05rem 0.55rem; font-size: 0.75rem; color: var(--tlumeny); font-weight: 500; white-space: nowrap; }
-.stitek.venku { color: #2f6f4f; border-color: color-mix(in srgb, #2f6f4f 40%, var(--linka)); }
+.titulek span { display: block; font-weight: 400; font-size: 0.8rem; color: var(--tlumeny-cteny); margin-top: 0.1rem; }
+.stitek.venku { color: var(--stav-vypsany); border-color: color-mix(in srgb, var(--stav-vypsany) 40%, var(--linka)); }
 .akce { text-align: right; white-space: nowrap; }
 </style>
 </helmet>
 <div class="okno">
   <nav class="drobecky" aria-label="Kde stojím">
     <a href="#">Domů</a><span aria-hidden="true">»</span>
-    <a href="Sprava.dc.html">Správa</a><span aria-hidden="true">»</span>
-    <span aria-current="page">Obecné články</span>
+    <span aria-current="page">Správa</span>
   </nav>
 
   <nav aria-label="Co spravuju na celém webu">
     <ul class="dlazdice">
-      <li style="--ukon: var(--ukon-rocniky)"><a href="Sprava.dc.html">Ročníky</a></li>
-      <li style="--ukon: var(--ukon-clanky)"><a href="Clanky.dc.html" aria-current="page">Obecné články</a></li>
-      <li style="--ukon: var(--ukon-opravneni)"><a href="OpravneniWebu.dc.html">Oprávnění na celý web</a></li>
-      <li style="--ukon: var(--ukon-naklady)"><a href="#">Co web stojí</a></li>
+      <li style="--ukon: var(--ukon-regaty)"><a href="Sprava.dc.html">Ročníky</a></li>
+      <li style="--ukon: var(--ukon-novinky)"><a href="Clanky.dc.html" aria-current="page">Obecné články</a></li>
+      <li style="--ukon: var(--ukon-uvod)"><a href="OpravneniWebu.dc.html">Oprávnění na celý web</a></li>
+      <li style="--ukon: var(--ukon-uvod)"><a href="#">Co web stojí</a></li>
     </ul>
   </nav>
 
-  <div class="radek-nadpisu" style="--ukon: var(--ukon-clanky)">
-    <h1><strong>Správa</strong> <span class="agenda">— Obecné články</span></h1>
+  <div class="radek-nadpisu">
+    <h1><span class="ctvrt">Správa —</span> <span class="agenda">Obecné články</span></h1>
     <span class="lano" aria-hidden="true"></span>
     <span class="konec">co nepatří k žádnému ročníku</span>
   </div>
 
-  <details>
+  <details class="zakladani" style="--ukon: var(--ukon-novinky)">
     <summary><span class="plus" aria-hidden="true">+</span> Nový článek</summary>
     <div class="telo">
       <div>
         <label for="titulek">Titulek</label>
         <input id="titulek" type="text" placeholder="Pozvánka na Radavskou regatu">
         <div class="volby">
-          <input id="word" type="checkbox" style="width: auto">
-          <label for="word" style="margin: 0">Text je vložený z Wordu nebo z webu</label>
+          <input id="word" type="checkbox">
+          <div>
+            <label for="word" style="margin: 0">Převzít nadpisy, seznamy a odkazy z vloženého textu</label>
+            <p class="napoveda">Zaškrtni, když kopíruješ z Wordu nebo z webové stránky. Formátování — fonty, velikosti, barvy — se zahodí, struktura zůstane.</p>
+          </div>
         </div>
-        <p class="napoveda">Nový článek je vždycky koncept — veřejnost ho uvidí, až ho publikuješ.</p>
+        <p class="napoveda" style="margin-top: 0.7rem">Veřejnost ho uvidí, až ho publikuješ.</p>
         <button class="hlavni" type="button" style="margin-top: 0.4rem">Založit jako koncept</button>
       </div>
       <div>
         <label for="text">Text</label>
-        <textarea id="text" placeholder="Odstavce odděl prázdným řádkem."></textarea>
+        <textarea id="text" style="min-height: 9rem; resize: vertical" placeholder="Odstavce odděl prázdným řádkem."></textarea>
       </div>
     </div>
   </details>
@@ -100,7 +67,7 @@ tbody tr:first-child td { border-top: 0; }
   <div class="tabulka-obal">
     <table>
       <thead>
-        <tr><th scope="col">Článek</th><th scope="col">Stav</th><th scope="col">Vydání</th><th scope="col"><span class="akce">Úkony</span></th></tr>
+        <tr><th scope="col">Článek</th><th scope="col">Stav</th><th scope="col">Venku od</th><th scope="col"><span class="akce"></span></th></tr>
       </thead>
       <tbody>
         <tr>

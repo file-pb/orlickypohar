@@ -4,71 +4,36 @@
 <meta charset="utf-8">
 <title>Ročník — Co teď</title>
 <script src="./support.js"></script>
+<link rel="stylesheet" href="spolecne.css">
 </head>
 <body>
 <x-dc>
 <helmet>
 <style>
-:root {
-  --pozadi: #fbfaf8; --papir: #ffffff; --text: #1a1d21; --linka: #e2e0dc;
-  --tlumeny: #6b7280;
-  --ukon-coted: #8a5a4a; --ukon-regaty: #4a6a8a; --ukon-kalendar: #5a7a4a;
-  --ukon-vysledky: #4a7f91; --ukon-lode: #6a70a8; --ukon-novinky: #7a5a8a;
-  --ukon-otazky: #6b7280; --ukon-opravneni: #a18a4a;
-}
-body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--pozadi); color: var(--text); }
-a { color: #1f6b86; }
-a:hover { color: #154b5e; }
-.okno { padding: 1.5rem 2rem 2rem; display: flex; flex-direction: column; gap: 0.85rem; }
-.drobecky { font-size: 0.85rem; color: var(--tlumeny); display: flex; gap: 0.4rem; flex-wrap: wrap; }
-.drobecky a { text-decoration: none; }
-.drobecky a:hover { text-decoration: underline; }
-.drobecky span[aria-current] { color: var(--text); }
-.dlazdice { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr)); gap: 0.4rem; }
-.dlazdice a { display: block; padding: 0.35rem 0.7rem 0.35rem 0.8rem; background: var(--papir); border: 1px solid var(--linka); border-left: 4px solid var(--ukon); border-radius: 7px; color: inherit; text-decoration: none; font-size: 0.95rem; font-weight: 600; }
-.dlazdice a:hover { border-color: var(--ukon); }
-.dlazdice a[aria-current="page"] { background: color-mix(in srgb, var(--ukon) 10%, var(--papir)); border-color: color-mix(in srgb, var(--ukon) 45%, var(--linka)); border-left-color: var(--ukon); box-shadow: inset 0 -2px 0 var(--ukon); }
-.radek-nadpisu { display: flex; align-items: baseline; gap: 0.75rem; margin-top: 0.35rem; }
-h1 { margin: 0; font-size: 1.55rem; letter-spacing: -0.015em; font-weight: 500; white-space: nowrap; }
-h1 strong { font-weight: 800; }
-h1 .agenda { color: var(--text); }
-.lano { flex: 1; height: 0.7rem; align-self: center; background: repeating-linear-gradient(115deg, color-mix(in srgb, var(--ukon) 55%, transparent) 0 2px, transparent 2px 7px); border-radius: 2px; }
-.konec { font-size: 0.85rem; color: var(--tlumeny); white-space: nowrap; }
-.stitek { display: inline-block; border: 1px solid var(--linka); border-radius: 999px; padding: 0.05rem 0.55rem; font-size: 0.75rem; color: var(--tlumeny); font-weight: 500; background: var(--papir); }
-.ukoly { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
-.ukoly a { display: block; background: var(--papir); border: 1px solid var(--linka); border-radius: 10px; padding: 0.85rem 1rem; color: inherit; text-decoration: none; }
-.ukoly a:hover { border-color: #c9c5bd; }
-.ukoly .cim { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--tlumeny); margin-bottom: 0.3rem; }
-.ukoly .nazev { font-weight: 700; font-size: 1.05rem; }
-.ukoly .detail { color: var(--tlumeny); font-size: 0.9rem; margin-top: 0.15rem; }
-.ukoly .dnes { background: color-mix(in srgb, var(--ukon-coted) 7%, var(--papir)); border-color: color-mix(in srgb, var(--ukon-coted) 35%, var(--linka)); }
-.teckovana { width: 0.5rem; height: 0.5rem; border-radius: 999px; background: var(--ukon-coted); flex: none; }
-h2 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tlumeny); margin: 1.1rem 0 0; font-weight: 600; }
-.poznamka { color: var(--tlumeny); font-size: 0.88rem; margin: 0.35rem 0 0; }
+.okno { --ukon: var(--ukon-uvod); }
 </style>
 </helmet>
 <div class="okno">
   <nav class="drobecky" aria-label="Kde stojím">
     <a href="#">Domů</a><span aria-hidden="true">»</span>
-    <a href="#">Správa</a><span aria-hidden="true">»</span>
+    <a href="Sprava.dc.html">Správa</a><span aria-hidden="true">»</span>
     <span aria-current="page">Orlický pohár 2027</span>
   </nav>
 
   <nav aria-label="Co spravuju v ročníku">
     <ul class="dlazdice">
-      <li style="--ukon: var(--ukon-coted)"><a href="Main.dc.html" aria-current="page">Co teď</a></li>
+      <li style="--ukon: var(--ukon-uvod)"><a href="Main.dc.html" aria-current="page">Co teď <span class="pocet">4</span></a></li>
       <li style="--ukon: var(--ukon-regaty)"><a href="Regaty.dc.html">Regaty</a></li>
       <li style="--ukon: var(--ukon-kalendar)"><a href="Kalendar.dc.html">Kalendář</a></li>
-      <li style="--ukon: var(--ukon-vysledky)"><a href="#">Výsledky</a></li>
-      <li style="--ukon: var(--ukon-lode)"><a href="#">Lodě</a></li>
+      <li style="--ukon: var(--ukon-vysledky)"><a href="#">Zápis výsledků</a></li>
+      <li style="--ukon: var(--ukon-lode)"><a href="#">Lodě a kapitáni</a></li>
       <li style="--ukon: var(--ukon-novinky)"><a href="#">Novinky</a></li>
-      <li style="--ukon: var(--ukon-otazky)"><a href="#">Otázky</a></li>
-      <li style="--ukon: var(--ukon-opravneni)"><a href="#">Oprávnění</a></li>
+      <li style="--ukon: var(--ukon-uvod)"><a href="#">Oprávnění</a></li>
     </ul>
   </nav>
 
-  <div class="radek-nadpisu" style="--ukon: var(--ukon-coted)">
-    <h1><strong>Orlický pohár 2027</strong> <span class="agenda">— Co teď</span></h1>
+  <div class="radek-nadpisu">
+    <h1><span class="ctvrt">Orlický pohár 2027 —</span> <span class="agenda">Co teď</span></h1>
     <span class="lano" aria-hidden="true"></span>
     <span class="konec">správce ročníku · rozhodčí ročníku</span>
   </div>
@@ -92,7 +57,7 @@ h2 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.06em; colo
       <a href="#">
         <div class="cim">Radavská regata</div>
         <div class="nazev">Ověřit výsledky</div>
-        <div class="detail">3 ze 4 rozjížděk čeká na tvůj podpis.</div>
+        <div class="detail">3 ze 4 rozjížděk čekají na tvůj podpis.</div>
       </a>
     </li>
     <li>
@@ -102,10 +67,21 @@ h2 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.06em; colo
         <div class="detail">2 podepsané rozjížďky nikdo neuvidí.</div>
       </a>
     </li>
+    <li>
+      <a href="#">
+        <div class="cim">Orlický pohár 2027</div>
+        <div class="nazev">Odpovědět na otázky k aplikaci</div>
+        <div class="detail">3 otázky čekají na odpověď.</div>
+      </a>
+    </li>
   </ul>
 
-  <h2>Mimo ročník</h2>
-  <p class="poznamka">Obecné články · Oprávnění na celý web · Co web stojí — role, které platí ve všech ročnících, jsou o patro výš ve <a href="Sprava.dc.html">Správě</a>.</p>
+  <p class="pata">
+    <a href="Clanky.dc.html">Obecné články</a>
+    <a href="OpravneniWebu.dc.html">Oprávnění na celý web</a>
+    <a href="#">Co web stojí</a>
+    <a href="#">Otázky k aplikaci</a>
+  </p>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>

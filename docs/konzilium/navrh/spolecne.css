@@ -1,0 +1,142 @@
+/* Společné pro všechny makety — po konziliu 12. 11. 2026.
+   Hodnoty jsou z web/app/globals.css, kromě těch, které konzilium mění. */
+
+:root {
+  --pozadi: #fbfaf8; --papir: #ffffff; --text: #1a1d21; --linka: #e2e0dc;
+  --tlumeny: #6b7280; --zvyrazneni: #f3f0ea;
+  --tlumeny-cteny: #5b616d;       /* color-mix(--tlumeny 80%, --text) */
+
+  /* Barvy agend. Oprávnění a Co web stojí mají šeď --ukon-uvod, protože
+     jejich původní hexy se kryly se Směrnicí a s Tratí (ΔE 0,0). */
+  --ukon-uvod: #6b7280;
+  --ukon-regaty: #4a6a8a;
+  --ukon-kalendar: #5a7a4a;
+  --ukon-vysledky: #4a7f91;
+  --ukon-lode: #6a70a8;
+  --ukon-novinky: #7a5a8a;
+  --ukon-smernice: #a18a4a;       /* dokumenty — i Pravidla ročníku */
+
+  /* --ukon-coted zrušen. Upomínku nese tečka, ne dlaždice. */
+  --pozor: #8a5a4a;
+  --stav-vypsany: #2f6f4f;
+  --stav-odjety: #4a6a8a;
+  --stav-revize: #8a4a4a;
+}
+
+body {
+  margin: 0; background: var(--pozadi); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+a { color: #1f6b86; }
+a:hover { color: #154b5e; }
+
+.okno { padding: 1.5rem 2rem 2rem; display: flex; flex-direction: column; gap: 0.85rem; }
+
+/* Drobeček končí patrem, nikdy tabem (konzilium, bod 11). */
+.drobecky { font-size: 0.85rem; color: var(--tlumeny-cteny); display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.drobecky a { text-decoration: none; }
+.drobecky a:hover { text-decoration: underline; }
+.drobecky [aria-current] { color: var(--text); }
+
+/* Pruh dlaždic. Barvu nese vybraná; nevybraná má 45 % do --tlumeny,
+   takže hrana drží 4,12–5,31 : 1 a WCAG 1.4.11 se nepodkračuje. */
+.dlazdice { list-style: none; margin: 0; padding: 0; display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.25rem, max-content));
+  justify-content: start; gap: 0.4rem; }
+.dlazdice a {
+  display: block; padding: 0.35rem 0.7rem 0.35rem 0.8rem; background: var(--papir);
+  border: 1px solid var(--linka);
+  border-left: 4px solid color-mix(in srgb, var(--ukon) 45%, var(--tlumeny));
+  border-radius: 7px; color: inherit; text-decoration: none;
+  font-size: 0.95rem; font-weight: 600; white-space: nowrap;
+}
+.dlazdice a:hover { border-color: color-mix(in srgb, var(--ukon) 60%, var(--linka)); }
+.dlazdice a[aria-current="page"] {
+  background: color-mix(in srgb, var(--ukon) 10%, var(--papir));
+  border-color: color-mix(in srgb, var(--ukon) 45%, var(--linka));
+  border-left-color: var(--ukon);
+  box-shadow: inset 0 -2px 0 var(--ukon);
+}
+.dlazdice .pocet {
+  margin-left: 0.4rem; font-size: 0.78rem; font-weight: 700; color: var(--papir);
+  background: var(--pozor); border-radius: 999px; padding: 0.02rem 0.4rem;
+}
+.dlazdice .sipka { color: var(--tlumeny-cteny); margin-left: 0.3rem; }
+
+/* Nadpis: váhu má agenda, ne jméno ročníku; barvu má agenda (bod 10). */
+.radek-nadpisu { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem; margin-top: 0.35rem; }
+h1 { margin: 0; font-size: 1.2rem; letter-spacing: -0.01em; min-width: 0;
+  flex: 1 1 14rem; color: var(--ukon); }
+h1 .ctvrt { font-weight: 500; color: var(--tlumeny-cteny); }
+h1 .agenda { font-weight: 700; }
+/* Lano je pramen, ne šrafa — šrafu drží publikace (bod 9). */
+.lano { flex: 1 1 4rem; min-width: 2rem; height: 3px; align-self: center; border-radius: 999px;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--ukon) 45%, transparent) 0,
+    color-mix(in srgb, var(--ukon) 45%, transparent) calc(100% - 2rem),
+    transparent 100%); }
+.konec { font-size: 0.85rem; color: var(--tlumeny-cteny); white-space: nowrap; }
+
+.poznamka { color: var(--tlumeny-cteny); font-size: 0.88rem; margin: 0; }
+.stitek { display: inline-block; border: 1px solid var(--linka); border-radius: 999px;
+  padding: 0.05rem 0.55rem; font-size: 0.75rem; color: var(--tlumeny-cteny);
+  font-weight: 500; white-space: nowrap; background: var(--papir); }
+.stitek.vypsany { color: var(--stav-vypsany); border-color: color-mix(in srgb, var(--stav-vypsany) 40%, var(--linka)); }
+.stitek.odjety { color: var(--stav-odjety); border-color: color-mix(in srgb, var(--stav-odjety) 40%, var(--linka)); }
+.stitek.revize { color: var(--stav-revize); border-color: color-mix(in srgb, var(--stav-revize) 45%, var(--linka));
+  background: color-mix(in srgb, var(--stav-revize) 7%, var(--papir)); }
+
+/* Úkoly v Co teď */
+.ukoly { list-style: none; margin: 0.4rem 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
+.ukoly a { display: block; background: var(--papir); border: 1px solid var(--linka);
+  border-radius: 10px; padding: 0.85rem 1rem; color: inherit; text-decoration: none; }
+.ukoly a:hover { border-color: #c9c5bd; }
+.ukoly .cim { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;
+  color: var(--tlumeny-cteny); margin-bottom: 0.3rem; }
+.ukoly .nazev { font-weight: 700; font-size: 1.05rem; }
+.ukoly .detail { color: var(--tlumeny-cteny); font-size: 0.9rem; margin-top: 0.15rem; }
+.ukoly .dnes { background: color-mix(in srgb, var(--pozor) 7%, var(--papir));
+  border-color: color-mix(in srgb, var(--pozor) 35%, var(--linka)); }
+.teckovana { width: 0.5rem; height: 0.5rem; border-radius: 999px; background: var(--pozor); flex: none; }
+.fakt { background: var(--papir); }
+
+/* Tabulky */
+.tabulka-obal { border: 1px solid var(--linka); border-radius: 10px; overflow: hidden; background: var(--papir); }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+caption { text-align: left; padding: 0.8rem 0.9rem 0.6rem; }
+caption .co { font-weight: 800; font-size: 1rem; display: block; }
+caption .kdy { color: var(--tlumeny-cteny); font-size: 0.85rem; display: block; margin-top: 0.15rem; }
+th { text-align: left; font-weight: 600; color: var(--tlumeny-cteny); font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.04em; padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--linka); }
+td { padding: 0.55rem 0.7rem; border-top: 1px solid var(--linka); }
+tbody tr:first-child td { border-top: 0; }
+.cislo { text-align: right; }
+
+/* Formuláře */
+label { display: block; font-size: 0.82rem; color: var(--tlumeny-cteny); margin-bottom: 0.2rem; }
+input, select, textarea { font: inherit; font-size: 0.9rem; width: 100%; box-sizing: border-box;
+  padding: 0.4rem 0.55rem; border: 1px solid var(--linka); border-radius: 7px;
+  background: var(--papir); color: var(--text); }
+.napoveda { font-size: 0.78rem; color: var(--tlumeny-cteny); margin: 0.2rem 0 0; }
+button { font: inherit; font-size: 0.85rem; padding: 0.3rem 0.8rem; border-radius: 7px;
+  border: 1px solid var(--linka); background: var(--papir); color: var(--text); cursor: pointer; }
+button.hlavni { background: #1f6b86; border-color: #1f6b86; color: #fff; font-weight: 600; padding: 0.45rem 1.1rem; }
+details.zakladani { background: var(--papir); border: 1px solid var(--linka); border-radius: 10px; }
+details.zakladani summary { cursor: pointer; padding: 0.6rem 1rem; font-weight: 700;
+  list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+details.zakladani summary::-webkit-details-marker { display: none; }
+details.zakladani .plus { width: 1.3rem; height: 1.3rem; border-radius: 999px;
+  background: color-mix(in srgb, var(--ukon) 15%, var(--papir)); color: var(--ukon);
+  display: grid; place-items: center; font-size: 0.95rem; }
+
+/* Segmentovaná pilulka — patří k obsahu pod sebou, ne k nadpisu (3-ux). */
+.segment { display: inline-flex; background: var(--zvyrazneni); border-radius: 999px;
+  padding: 0.2rem; gap: 0.15rem; align-self: flex-start; margin-bottom: -0.5rem; margin-top: 0.25rem; }
+.segment a { padding: 0.25rem 0.85rem; border-radius: 999px; font-size: 0.88rem;
+  color: var(--tlumeny-cteny); text-decoration: none; font-weight: 600; }
+.segment a[aria-current="page"] { background: var(--papir); color: var(--text); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
+
+/* Pata okna: položky mimo ročník, filtrované podle práv. */
+.pata { margin-top: 0.4rem; padding-top: 0.7rem; border-top: 1px solid var(--linka);
+  font-size: 0.85rem; color: var(--tlumeny-cteny); display: flex; gap: 0.9rem; flex-wrap: wrap; }

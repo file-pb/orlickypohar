@@ -4,84 +4,46 @@
 <meta charset="utf-8">
 <title>Ročník — Kalendář</title>
 <script src="./support.js"></script>
+<link rel="stylesheet" href="spolecne.css">
 </head>
 <body>
 <x-dc>
 <helmet>
 <style>
-:root {
-  --pozadi: #fbfaf8; --papir: #ffffff; --text: #1a1d21; --linka: #e2e0dc;
-  --tlumeny: #6b7280;
-  --ukon-coted: #8a5a4a; --ukon-regaty: #4a6a8a; --ukon-kalendar: #5a7a4a;
-  --ukon-vysledky: #4a7f91; --ukon-lode: #6a70a8; --ukon-novinky: #7a5a8a;
-  --ukon-otazky: #6b7280; --ukon-opravneni: #a18a4a;
-}
-body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--pozadi); color: var(--text); }
-a { color: #1f6b86; }
-a:hover { color: #154b5e; }
-.okno { padding: 1.5rem 2rem 2rem; display: flex; flex-direction: column; gap: 0.85rem; }
-.drobecky { font-size: 0.85rem; color: var(--tlumeny); display: flex; gap: 0.4rem; flex-wrap: wrap; }
-.drobecky a { text-decoration: none; }
-.drobecky a:hover { text-decoration: underline; }
-.drobecky span[aria-current] { color: var(--text); }
-.dlazdice { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr)); gap: 0.4rem; }
-.dlazdice a { display: block; padding: 0.35rem 0.7rem 0.35rem 0.8rem; background: var(--papir); border: 1px solid var(--linka); border-left: 4px solid var(--ukon); border-radius: 7px; color: inherit; text-decoration: none; font-size: 0.95rem; font-weight: 600; }
-.dlazdice a:hover { border-color: var(--ukon); }
-.dlazdice a[aria-current="page"] { background: color-mix(in srgb, var(--ukon) 10%, var(--papir)); border-color: color-mix(in srgb, var(--ukon) 45%, var(--linka)); border-left-color: var(--ukon); box-shadow: inset 0 -2px 0 var(--ukon); }
-.radek-nadpisu { display: flex; align-items: baseline; gap: 0.75rem; margin-top: 0.35rem; }
-h1 { margin: 0; font-size: 1.55rem; letter-spacing: -0.015em; font-weight: 500; white-space: nowrap; }
-h1 strong { font-weight: 800; }
-.lano { flex: 1; height: 0.7rem; align-self: center; background: repeating-linear-gradient(115deg, color-mix(in srgb, var(--ukon) 55%, transparent) 0 2px, transparent 2px 7px); border-radius: 2px; }
-.konec { font-size: 0.85rem; color: var(--tlumeny); white-space: nowrap; }
-.segment { display: inline-flex; background: #efece7; border-radius: 999px; padding: 0.2rem; gap: 0.15rem; align-self: flex-start; }
-.segment a { padding: 0.25rem 0.85rem; border-radius: 999px; font-size: 0.88rem; color: var(--tlumeny); text-decoration: none; font-weight: 600; }
-.segment a[aria-current="page"] { background: var(--papir); color: var(--text); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
-.pruh-stavu { display: flex; align-items: center; gap: 0.8rem; background: var(--papir); border: 1px solid var(--linka); border-left: 4px solid var(--ukon-kalendar); border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 0.92rem; }
-.pruh-stavu .roste { flex: 1; color: var(--tlumeny); }
-button { font: inherit; font-size: 0.85rem; padding: 0.3rem 0.8rem; border-radius: 7px; border: 1px solid var(--linka); background: var(--papir); color: var(--text); cursor: pointer; }
-button.hlavni { background: #1f6b86; border-color: #1f6b86; color: #fff; font-weight: 600; padding: 0.45rem 1.1rem; }
-.sloupce { display: grid; grid-template-columns: 22rem 1fr; gap: 1.2rem; align-items: start; }
-.formular { background: var(--papir); border: 1px solid var(--linka); border-radius: 10px; padding: 1rem; display: flex; flex-direction: column; gap: 0.7rem; }
-.formular h2 { margin: 0; font-size: 1rem; }
-label { display: block; font-size: 0.82rem; color: var(--tlumeny); margin-bottom: 0.2rem; }
-input, select { font: inherit; font-size: 0.9rem; width: 100%; box-sizing: border-box; padding: 0.4rem 0.55rem; border: 1px solid var(--linka); border-radius: 7px; background: var(--papir); color: var(--text); }
+.okno { --ukon: var(--ukon-kalendar); }
+.pruh-stavu { display: flex; align-items: center; gap: 0.8rem; background: var(--papir);
+  border: 1px solid var(--linka); border-left: 4px solid var(--ukon-kalendar);
+  border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 0.92rem; }
+.pruh-stavu .roste { flex: 1; color: var(--tlumeny-cteny); }
+.telo { padding: 0 1rem 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem 1.2rem; align-items: start; }
+.telo .sirs { grid-column: 1 / -1; }
 .dvojice { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
-.napoveda { font-size: 0.78rem; color: var(--tlumeny); margin: 0.15rem 0 0; }
-table { border-collapse: collapse; width: 100%; background: var(--papir); font-size: 0.92rem; }
-.tabulka-obal { border: 1px solid var(--linka); border-radius: 10px; overflow: hidden; }
-th { text-align: left; font-weight: 600; color: var(--tlumeny); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--linka); }
-td { padding: 0.6rem 0.8rem; border-top: 1px solid var(--linka); }
-tr:first-child td { border-top: 0; }
-.stitek { display: inline-block; border: 1px solid var(--linka); border-radius: 999px; padding: 0.05rem 0.55rem; font-size: 0.75rem; color: var(--tlumeny); font-weight: 500; white-space: nowrap; }
-.stitek.vypsany { color: #2f6f4f; border-color: color-mix(in srgb, #2f6f4f 40%, var(--linka)); }
 .akce { text-align: right; white-space: nowrap; }
 </style>
 </helmet>
 <div class="okno">
   <nav class="drobecky" aria-label="Kde stojím">
     <a href="#">Domů</a><span aria-hidden="true">»</span>
-    <a href="#">Správa</a><span aria-hidden="true">»</span>
-    <a href="Main.dc.html">Orlický pohár 2027</a><span aria-hidden="true">»</span>
-    <span aria-current="page">Kalendář</span>
+    <a href="Sprava.dc.html">Správa</a><span aria-hidden="true">»</span>
+    <span aria-current="page">Orlický pohár 2027</span>
   </nav>
 
   <nav aria-label="Co spravuju v ročníku">
     <ul class="dlazdice">
-      <li style="--ukon: var(--ukon-coted)"><a href="Main.dc.html">Co teď</a></li>
+      <li style="--ukon: var(--ukon-uvod)"><a href="Main.dc.html">Co teď <span class="pocet">4</span></a></li>
       <li style="--ukon: var(--ukon-regaty)"><a href="Regaty.dc.html">Regaty</a></li>
       <li style="--ukon: var(--ukon-kalendar)"><a href="Kalendar.dc.html" aria-current="page">Kalendář</a></li>
-      <li style="--ukon: var(--ukon-vysledky)"><a href="#">Výsledky</a></li>
-      <li style="--ukon: var(--ukon-lode)"><a href="#">Lodě</a></li>
+      <li style="--ukon: var(--ukon-vysledky)"><a href="#">Zápis výsledků</a></li>
+      <li style="--ukon: var(--ukon-lode)"><a href="#">Lodě a kapitáni</a></li>
       <li style="--ukon: var(--ukon-novinky)"><a href="#">Novinky</a></li>
-      <li style="--ukon: var(--ukon-otazky)"><a href="#">Otázky</a></li>
-      <li style="--ukon: var(--ukon-opravneni)"><a href="#">Oprávnění</a></li>
+      <li style="--ukon: var(--ukon-uvod)"><a href="#">Oprávnění</a></li>
     </ul>
   </nav>
 
-  <div class="radek-nadpisu" style="--ukon: var(--ukon-kalendar)">
-    <h1><strong>Orlický pohár 2027</strong> <span class="agenda">— Kalendář</span></h1>
+  <div class="radek-nadpisu">
+    <h1><span class="ctvrt">Orlický pohár 2027 —</span> <span class="agenda">Kalendář</span></h1>
     <span class="lano" aria-hidden="true"></span>
-    <span class="konec">ročník je venku</span>
+    <span class="konec">venku od 2. 4. 2027</span>
   </div>
 
   <nav class="segment" aria-label="Co je v kalendáři">
@@ -91,13 +53,13 @@ tr:first-child td { border-top: 0; }
 
   <div class="pruh-stavu">
     <strong>Ročník je venku.</strong>
-    <span class="roste">Veřejné stránky ho ukazují i s publikovanými regatami.</span>
-    <button type="button">Stáhnout ročník z webu</button>
+    <span class="roste">Na veřejných stránkách je vidět i ty regaty, které jsou publikované.</span>
+    <button type="button">Schovat ročník před veřejností</button>
   </div>
 
-  <div class="sloupce">
-    <form class="formular">
-      <h2>Nová regata</h2>
+  <details class="zakladani" style="--ukon: var(--ukon-kalendar)">
+    <summary><span class="plus" aria-hidden="true">+</span> Nová regata</summary>
+    <div class="telo">
       <div>
         <label for="nazev">Název</label>
         <input id="nazev" type="text" placeholder="Radavská regata">
@@ -108,46 +70,50 @@ tr:first-child td { border-top: 0; }
           <input id="termin" type="date">
         </div>
         <div>
-          <label for="konec">Konec, u vícedenního</label>
+          <label for="konec">Poslední den</label>
           <input id="konec" type="date">
+          <p class="napoveda">Jen u vícedenní regaty.</p>
         </div>
       </div>
       <div class="dvojice">
         <div>
-          <label for="skrty">Škrtá se nejhorších</label>
+          <label for="skrty">Škrtá se nejhorších rozjížděk</label>
           <input id="skrty" type="text" value="0">
         </div>
         <div>
-          <label for="koef">Koeficient</label>
+          <label for="koef">Koeficient do poháru</label>
           <input id="koef" type="text" value="1">
+          <p class="napoveda">Násobí body z této regaty. Dvojka znamená dvojnásobné.</p>
         </div>
       </div>
       <div>
-        <label for="prubezne">Ukazovat průběžné výsledky</label>
+        <label for="prubezne">Kdy ukazovat průběžné výsledky</label>
         <select id="prubezne">
-          <option>Ano, i nepodepsané</option>
-          <option>Až po podpisu</option>
+          <option>Hned, i nepodepsané</option>
+          <option>Až po podpisu rozhodčího</option>
         </select>
       </div>
-      <p class="napoveda">Zbytek — typ, vyhodnocení, pořadatel — je na regatě samotné. Sem patří jen to, co se zadává při založení.</p>
-      <button class="hlavni" type="button">Založit regatu</button>
-    </form>
-
-    <div class="tabulka-obal">
-      <table>
-        <thead>
-          <tr><th scope="col">Regata</th><th scope="col">Termín</th><th scope="col">Stav</th><th scope="col"><span class="akce">Úkony</span></th></tr>
-        </thead>
-        <tbody>
-          <tr><td><strong>Jarní vítr</strong></td><td>15. 5. 2027</td><td><span class="stitek vypsany">vypsáno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
-          <tr><td><strong>Radavská regata</strong></td><td>26. 6. 2027</td><td><span class="stitek">plánováno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
-          <tr><td><strong>24hodinovka</strong></td><td>9. 7. 2027</td><td><span class="stitek">plánováno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
-          <tr><td><strong>Vánoční regata</strong></td><td>24. 7. 2027</td><td><span class="stitek">plánováno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
-          <tr><td><strong>Izolepa</strong></td><td>31. 7. 2027</td><td><span class="stitek">plánováno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
-          <tr><td><strong>FxCK Cancer</strong></td><td>14. 8. 2027</td><td><span class="stitek">zrušeno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
-        </tbody>
-      </table>
+      <div class="sirs">
+        <p class="napoveda">Typ, vyhodnocení a pořadatele nastavíš až na regatě.</p>
+        <button class="hlavni" type="button" style="margin-top: 0.5rem">Založit regatu</button>
+      </div>
     </div>
+  </details>
+
+  <div class="tabulka-obal">
+    <table>
+      <thead>
+        <tr><th scope="col">Regata</th><th scope="col">Termín</th><th scope="col">Pořadatel</th><th scope="col">Stav</th><th scope="col"><span class="akce"></span></th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Jarní vítr</strong></td><td>15. 5. 2027</td><td>Marina Orlík</td><td><span class="stitek vypsany">vypsáno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
+        <tr><td><strong>Radavská regata</strong></td><td>26. 6. 2027</td><td>YC Radava</td><td><span class="stitek vypsany">vypsáno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
+        <tr><td><strong>24hodinovka</strong></td><td>9. 7. 2027</td><td>Stingray</td><td><span class="stitek">plánováno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
+        <tr><td><strong>Vltavská pouť</strong></td><td>24. 7. 2027</td><td>Colins Yacht Club</td><td><span class="stitek">plánováno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
+        <tr><td><strong>Izolepa</strong></td><td>31. 7. 2027</td><td>YC Praha</td><td><span class="stitek">plánováno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
+        <tr><td><strong>FxCK Cancer</strong></td><td>14. 8. 2027</td><td>F*CK Cancer</td><td><span class="stitek">zrušeno</span></td><td class="akce"><button type="button">Upravit</button></td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 </x-dc>

@@ -5,17 +5,19 @@
   "launch": { "view": "canvas" },
   "pages": [],
   "boards": {
-    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 860, "title": "Ročník — Co teď", "expand": "fill", "is_interactive": true },
-    "Regaty.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 860, "title": "Ročník — Regaty", "expand": "fill", "is_interactive": true },
-    "Kalendar.dc.html": { "x": 2720, "y": 0, "w": 1280, "h": 860, "title": "Ročník — Kalendář", "expand": "fill", "is_interactive": true },
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 860, "title": "Ročník — Co teď (den regaty)", "expand": "fill", "is_interactive": true },
+    "MainPrazdno.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 860, "title": "Ročník — Co teď (mimo sezónu)", "expand": "fill", "is_interactive": true },
+    "Regaty.dc.html": { "x": 2720, "y": 0, "w": 1280, "h": 860, "title": "Ročník — Regaty", "expand": "fill", "is_interactive": true },
+    "Kalendar.dc.html": { "x": 4080, "y": 0, "w": 1280, "h": 860, "title": "Ročník — Kalendář", "expand": "fill", "is_interactive": true },
     "Sprava.dc.html": { "x": 0, "y": 1260, "w": 1280, "h": 860, "title": "Správa webu — Ročníky", "expand": "fill", "is_interactive": true },
     "Clanky.dc.html": { "x": 1360, "y": 1260, "w": 1280, "h": 860, "title": "Správa webu — Obecné články", "expand": "fill", "is_interactive": true },
     "OpravneniWebu.dc.html": { "x": 2720, "y": 1260, "w": 1280, "h": 860, "title": "Správa webu — Oprávnění", "expand": "fill", "is_interactive": true },
-    "VerejnyRocnik.dc.html": { "x": 0, "y": 2520, "w": 1280, "h": 860, "title": "Veřejný ročník — Průběžné pořadí", "expand": "fill", "is_interactive": true },
+    "VerejnyRocnik.dc.html": { "x": 0, "y": 2520, "w": 1280, "h": 900, "title": "Veřejný ročník — Průběžné pořadí", "expand": "fill", "is_interactive": true },
     "Telefon.dc.html": { "x": 1360, "y": 2520, "w": 390, "h": 844, "title": "Ročník na telefonu", "is_interactive": true }
   },
   "order": [
     "Main.dc.html",
+    "MainPrazdno.dc.html",
     "Regaty.dc.html",
     "Kalendar.dc.html",
     "Sprava.dc.html",
@@ -25,7 +27,7 @@
     "Telefon.dc.html"
   ],
   "notes": {
-    "n1": { "x": 0, "y": -300, "text": "Správa ročníku — jedno okno, taby podle práv", "kind": "title1", "maxW": 4000 },
+    "n1": { "x": 0, "y": -300, "text": "Správa ročníku — sedm tabů, barva jen na vybrané", "kind": "title1", "maxW": 5360 },
     "n2": { "x": 0, "y": 960, "text": "Správa webu — totéž o patro výš", "kind": "title1", "maxW": 4000 },
     "n3": { "x": 0, "y": 2220, "text": "Veřejný ročník a tentýž pruh na telefonu", "kind": "title1", "maxW": 2730 }
   },

@@ -4,43 +4,24 @@
 <meta charset="utf-8">
 <title>Správa webu — Ročníky</title>
 <script src="./support.js"></script>
+<link rel="stylesheet" href="spolecne.css">
 </head>
 <body>
 <x-dc>
 <helmet>
 <style>
-:root {
-  --pozadi: #fbfaf8; --papir: #ffffff; --text: #1a1d21; --linka: #e2e0dc;
-  --tlumeny: #6b7280;
-  --ukon-rocniky: #4a6a8a; --ukon-clanky: #7a5a8a; --ukon-opravneni: #a18a4a; --ukon-naklady: #4a8a80;
-}
-body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--pozadi); color: var(--text); }
-a { color: #1f6b86; }
-a:hover { color: #154b5e; }
-.okno { padding: 1.5rem 2rem 2rem; display: flex; flex-direction: column; gap: 0.85rem; }
-.drobecky { font-size: 0.85rem; color: var(--tlumeny); display: flex; gap: 0.4rem; flex-wrap: wrap; }
-.drobecky a { text-decoration: none; }
-.drobecky a:hover { text-decoration: underline; }
-.drobecky span[aria-current] { color: var(--text); }
-.dlazdice { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.4rem; }
-.dlazdice a { display: block; padding: 0.35rem 0.7rem 0.35rem 0.8rem; background: var(--papir); border: 1px solid var(--linka); border-left: 4px solid var(--ukon); border-radius: 7px; color: inherit; text-decoration: none; font-size: 0.95rem; font-weight: 600; }
-.dlazdice a:hover { border-color: var(--ukon); }
-.dlazdice a[aria-current="page"] { background: color-mix(in srgb, var(--ukon) 10%, var(--papir)); border-color: color-mix(in srgb, var(--ukon) 45%, var(--linka)); border-left-color: var(--ukon); box-shadow: inset 0 -2px 0 var(--ukon); }
-.radek-nadpisu { display: flex; align-items: baseline; gap: 0.75rem; margin-top: 0.35rem; }
-h1 { margin: 0; font-size: 1.55rem; letter-spacing: -0.015em; font-weight: 500; white-space: nowrap; }
-h1 strong { font-weight: 800; }
-.lano { flex: 1; height: 0.7rem; align-self: center; background: repeating-linear-gradient(115deg, color-mix(in srgb, var(--ukon) 55%, transparent) 0 2px, transparent 2px 7px); border-radius: 2px; }
-.konec { font-size: 0.85rem; color: var(--tlumeny); white-space: nowrap; }
-.poznamka { color: var(--tlumeny); font-size: 0.88rem; margin: 0.2rem 0 0.3rem; }
-.rocniky { list-style: none; margin: 0; padding: 0; background: var(--papir); border: 1px solid var(--linka); border-radius: 10px; overflow: hidden; }
+.okno { --ukon: var(--ukon-regaty); }
+.rocniky { list-style: none; margin: 0; padding: 0; background: var(--papir);
+  border: 1px solid var(--linka); border-radius: 10px; overflow: hidden; }
 .rocniky > li + li { border-top: 1px solid var(--linka); }
-.rocniky a { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 1rem; padding: 0.85rem 1rem; color: inherit; text-decoration: none; }
+.rocniky a { display: grid; grid-template-columns: 1fr auto auto; align-items: center;
+  gap: 1rem; padding: 0.85rem 1rem; color: inherit; text-decoration: none; }
 .rocniky a:hover { background: #f6f4f0; }
 .jmeno { font-weight: 700; font-size: 1.1rem; }
-.jmeno .co { display: block; font-weight: 400; font-size: 0.85rem; color: var(--tlumeny); margin-top: 0.15rem; }
-.stitek { display: inline-block; border: 1px solid var(--linka); border-radius: 999px; padding: 0.05rem 0.55rem; font-size: 0.75rem; color: var(--tlumeny); font-weight: 500; white-space: nowrap; }
-.ceka { color: #8a4a4a; border-color: color-mix(in srgb, #8a4a4a 45%, var(--linka)); background: color-mix(in srgb, #8a4a4a 7%, var(--papir)); }
-.sipka { color: var(--tlumeny); font-size: 1.1rem; }
+.jmeno .co { display: block; font-weight: 400; font-size: 0.85rem; color: var(--tlumeny-cteny); margin-top: 0.15rem; }
+.ceka { color: var(--stav-revize); border-color: color-mix(in srgb, var(--stav-revize) 45%, var(--linka));
+  background: color-mix(in srgb, var(--stav-revize) 7%, var(--papir)); }
+.sipka { color: var(--tlumeny-cteny); font-size: 1.1rem; }
 </style>
 </helmet>
 <div class="okno">
@@ -51,24 +32,24 @@ h1 strong { font-weight: 800; }
 
   <nav aria-label="Co spravuju na celém webu">
     <ul class="dlazdice">
-      <li style="--ukon: var(--ukon-rocniky)"><a href="Sprava.dc.html" aria-current="page">Ročníky</a></li>
-      <li style="--ukon: var(--ukon-clanky)"><a href="#">Obecné články</a></li>
-      <li style="--ukon: var(--ukon-opravneni)"><a href="#">Oprávnění na celý web</a></li>
-      <li style="--ukon: var(--ukon-naklady)"><a href="#">Co web stojí</a></li>
+      <li style="--ukon: var(--ukon-regaty)"><a href="Sprava.dc.html" aria-current="page">Ročníky</a></li>
+      <li style="--ukon: var(--ukon-novinky)"><a href="Clanky.dc.html">Obecné články</a></li>
+      <li style="--ukon: var(--ukon-uvod)"><a href="OpravneniWebu.dc.html">Oprávnění na celý web</a></li>
+      <li style="--ukon: var(--ukon-uvod)"><a href="#">Co web stojí</a></li>
     </ul>
   </nav>
 
-  <div class="radek-nadpisu" style="--ukon: var(--ukon-rocniky)">
-    <h1><strong>Správa</strong> <span class="agenda">— Ročníky</span></h1>
+  <div class="radek-nadpisu">
+    <h1><span class="ctvrt">Správa —</span> <span class="agenda">Ročníky</span></h1>
     <span class="lano" aria-hidden="true"></span>
     <span class="konec">správce webu</span>
   </div>
-  <p class="poznamka">Ročník se otevře do vlastního okna — Co teď, regaty, kalendář, výsledky, lodě.</p>
+  <p class="poznamka">Ročník se otevře do vlastní stránky — Co teď, regaty, kalendář, zápis výsledků, lodě.</p>
 
   <ul class="rocniky">
     <li><a href="Main.dc.html">
       <span class="jmeno">Orlický pohár 2027 <span class="co">8 regat · nejbližší 15. května</span></span>
-      <span><span class="stitek ceka">1 úkol čeká</span> <span class="stitek">správce</span></span>
+      <span><span class="stitek ceka">Co teď: 4</span> <span class="stitek">správce</span></span>
       <span class="sipka" aria-hidden="true">→</span>
     </a></li>
     <li><a href="#">
@@ -77,6 +58,12 @@ h1 strong { font-weight: 800; }
       <span class="sipka" aria-hidden="true">→</span>
     </a></li>
   </ul>
+
+  <p class="poznamka">
+    Dvě dlaždice vpravo mají šeď schválně: původní barvy <em>Oprávnění</em> a <em>Co web stojí</em>
+    se kryly na hex se <em>Směrnicí</em> a s <em>Tratí</em>, takže pravidlo „barva patří agendě“
+    v návrhu samo neplatilo. Šeď má z téhož důvodu <em>Úvod</em> u regaty.
+  </p>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
