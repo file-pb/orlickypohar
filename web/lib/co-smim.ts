@@ -154,6 +154,21 @@ function poradatelemVRocniku(udelena: Udelena[], serie: string): boolean {
 }
 
 /**
+ * Smí psát aspoň u jedné regaty tohohle ročníku?
+ *
+ * Táž otázka jako u pořadatele, jen o stupeň níž: server u přehledu článků
+ * neptá na ročník, ale na <c>KdeSmiAsync(Role.Editor)</c>
+ * (`ClankySpravaEndpoints:341`), což vrací i pověření k jednotlivým
+ * zastávkám. Pořadatel zastávky je tím pádem editor té zastávky
+ * (`pokryva`), a server ho pustí.
+ */
+function editoremVRocniku(udelena: Udelena[], serie: string): boolean {
+  return udelena.some(
+    (u) => (u.serie === null || u.serie === serie) && pokryva(u.role, "Editor"),
+  );
+}
+
+/**
  * Z několika podob položky ta, na kterou člověk doopravdy má.
  *
  * <b>Proč to není jedna role na položku.</b> Server u výsledků, přihlášek
@@ -256,6 +271,13 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
         kam: kam("/vysledky"),
         role: "Organizator",
         pozadavek: { role: "Organizator", serie },
+        // Server pouští i pořadatele <b>jediné zastávky</b>
+        // (`VysledkyEndpoints.PohledAsync`: `zavody.Count == 0` je poslední
+        // ze tří podmínek), kdežto tahle položka chtěla pověření na celý
+        // ročník — takže kdo má na starost jednu regatu, neměl na zápis
+        // vlastních výsledků v pruhu cestu. Funkce bez cesty, potřetí
+        // (projetí tabů proti serveru, 12. 11. 2026).
+        kdyz: (u) => poradatelemVRocniku(u, serie),
       },
       {
         nazev: "Zápis výsledků",
@@ -281,6 +303,11 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
       kam: kam("/clanky"),
       role: "Editor",
       pozadavek: { role: "Editor", serie },
+      // Totéž jako u výsledků: server se ptá `KdeSmiAsync(Role.Editor)`,
+      // tedy i na pověření k jedné zastávce, a pořadatel regaty je jejím
+      // editorem. Bez tohohle neměl pořadatel cestu k blogu vlastní
+      // regaty, ačkoliv je to jeho stránka a jeho příběh.
+      kdyz: (u) => editoremVRocniku(u, serie),
     }],
     // Rozhodčí přiřazuje pořadatele a editora jedné regatě; roli na celý
     // ročník a rozhodčího dává jen správce (`Udeleni.RozhodciSmiUdelit`).
@@ -324,9 +351,14 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
  * Sadu dostává rozhodčí a odpovídá na ni; pořadatel ji čte. Proto dvě
  * podoby a popis podle toho, co ten člověk na obrazovce dělá.
  *
- * <b>Pořadatel jedné zastávky ji taky má.</b> Varianta pro `Organizator`
- * nesměla chtít právo na celý ročník — tatáž vada, kvůli které dostal
- * `kdyz` kalendář (audit obsazení, 26. 10. 2026).
+ * <b>Pořadatel jedné zastávky ji ale nemá</b>, a je to schválně.
+ * `OponenturaEndpoints.SmiCistAsync` se ptá
+ * `Pozadavek(Role.Organizator, rozsah.SerieId)` <b>bez</b> zastávky, takže
+ * pověření k jedné regatě tudy neprojde — udělení na užší rozsah nepokryje
+ * požadavek na širší (`Prava.Smi`). Konzilium tvrdilo opak a já podle toho
+ * 12. 11. 2026 přidal `kdyz: poradatelemVRocniku`; projetí tabů proti
+ * serveru ukázalo, že tím web sliboval obrazovku, kterou API odmítne 403.
+ * Slib naprázdno je horší než chybějící odkaz.
  */
 export function polozkaOponentury(udelena: Udelena[], serie: string): Polozka | null {
   const kam = `/sprava/${encodeURIComponent(serie)}/oponentura`;
@@ -345,7 +377,6 @@ export function polozkaOponentury(udelena: Udelena[], serie: string): Polozka | 
       kam,
       role: "Organizator",
       pozadavek: { role: "Organizator", serie },
-      kdyz: (u) => poradatelemVRocniku(u, serie),
     },
   ]);
 }
