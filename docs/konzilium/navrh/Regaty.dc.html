@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Ročník — Regaty</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+:root {
+  --pozadi: #fbfaf8; --papir: #ffffff; --text: #1a1d21; --linka: #e2e0dc;
+  --tlumeny: #6b7280;
+  --ukon-coted: #8a5a4a; --ukon-regaty: #4a6a8a; --ukon-kalendar: #5a7a4a;
+  --ukon-vysledky: #4a7f91; --ukon-lode: #6a70a8; --ukon-novinky: #7a5a8a;
+  --ukon-otazky: #6b7280; --ukon-opravneni: #a18a4a;
+  --stav-vypsany: #2f6f4f; --stav-odjety: #4a6a8a; --stav-zruseny: #8a4a4a;
+}
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--pozadi); color: var(--text); }
+a { color: #1f6b86; }
+a:hover { color: #154b5e; }
+.okno { padding: 1.5rem 2rem 2rem; display: flex; flex-direction: column; gap: 0.85rem; }
+.drobecky { font-size: 0.85rem; color: var(--tlumeny); display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.drobecky a { text-decoration: none; }
+.drobecky a:hover { text-decoration: underline; }
+.drobecky span[aria-current] { color: var(--text); }
+.dlazdice { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr)); gap: 0.4rem; }
+.dlazdice a { display: block; padding: 0.35rem 0.7rem 0.35rem 0.8rem; background: var(--papir); border: 1px solid var(--linka); border-left: 4px solid var(--ukon); border-radius: 7px; color: inherit; text-decoration: none; font-size: 0.95rem; font-weight: 600; }
+.dlazdice a:hover { border-color: var(--ukon); }
+.dlazdice a[aria-current="page"] { background: color-mix(in srgb, var(--ukon) 10%, var(--papir)); border-color: color-mix(in srgb, var(--ukon) 45%, var(--linka)); border-left-color: var(--ukon); box-shadow: inset 0 -2px 0 var(--ukon); }
+.radek-nadpisu { display: flex; align-items: baseline; gap: 0.75rem; margin-top: 0.35rem; }
+h1 { margin: 0; font-size: 1.55rem; letter-spacing: -0.015em; font-weight: 500; white-space: nowrap; }
+h1 strong { font-weight: 800; }
+.lano { flex: 1; height: 0.7rem; align-self: center; background: repeating-linear-gradient(115deg, color-mix(in srgb, var(--ukon) 55%, transparent) 0 2px, transparent 2px 7px); border-radius: 2px; }
+.konec { font-size: 0.85rem; color: var(--tlumeny); white-space: nowrap; }
+.poznamka { color: var(--tlumeny); font-size: 0.88rem; margin: 0.2rem 0 0.3rem; }
+.regaty { list-style: none; margin: 0; padding: 0; background: var(--papir); border: 1px solid var(--linka); border-radius: 10px; overflow: hidden; }
+.regaty > li + li { border-top: 1px solid var(--linka); }
+.regaty a { display: grid; grid-template-columns: 3.4rem 1fr auto auto; align-items: center; gap: 0.9rem; padding: 0.7rem 1rem; color: inherit; text-decoration: none; }
+.regaty a:hover { background: #f6f4f0; }
+.den { text-align: center; line-height: 1.05; }
+.den .cislo { font-size: 1.25rem; font-weight: 700; display: block; }
+.den .mesic { font-size: 0.7rem; color: var(--tlumeny); text-transform: uppercase; letter-spacing: 0.05em; }
+.jmeno { font-weight: 700; font-size: 1.05rem; }
+.jmeno .porad { display: block; font-weight: 400; font-size: 0.82rem; color: var(--tlumeny); margin-top: 0.1rem; }
+.prubeh { font-size: 0.82rem; color: var(--tlumeny); text-align: right; min-width: 9rem; }
+.prubeh .pruh { display: block; height: 4px; border-radius: 999px; background: var(--linka); margin-top: 0.3rem; overflow: hidden; }
+.prubeh .pruh i { display: block; height: 100%; background: var(--ukon-vysledky); }
+.stitek { display: inline-block; border: 1px solid var(--linka); border-radius: 999px; padding: 0.05rem 0.55rem; font-size: 0.75rem; color: var(--tlumeny); font-weight: 500; white-space: nowrap; }
+.stitek.vypsany { color: var(--stav-vypsany); border-color: color-mix(in srgb, var(--stav-vypsany) 40%, var(--linka)); }
+.stitek.odjety { color: var(--stav-odjety); border-color: color-mix(in srgb, var(--stav-odjety) 40%, var(--linka)); }
+.stitek.revize { color: #8a4a4a; border-color: color-mix(in srgb, #8a4a4a 45%, var(--linka)); background: color-mix(in srgb, #8a4a4a 7%, var(--papir)); }
+.skrtnute { text-decoration: line-through; color: var(--tlumeny); }
+</style>
+</helmet>
+<div class="okno">
+  <nav class="drobecky" aria-label="Kde stojím">
+    <a href="#">Domů</a><span aria-hidden="true">»</span>
+    <a href="#">Správa</a><span aria-hidden="true">»</span>
+    <span aria-current="page">Orlický pohár 2027</span>
+  </nav>
+
+  <nav aria-label="Co spravuju v ročníku">
+    <ul class="dlazdice">
+      <li style="--ukon: var(--ukon-coted)"><a href="Main.dc.html">Co teď</a></li>
+      <li style="--ukon: var(--ukon-regaty)"><a href="Regaty.dc.html" aria-current="page">Regaty</a></li>
+      <li style="--ukon: var(--ukon-kalendar)"><a href="Kalendar.dc.html">Kalendář</a></li>
+      <li style="--ukon: var(--ukon-vysledky)"><a href="#">Výsledky</a></li>
+      <li style="--ukon: var(--ukon-lode)"><a href="#">Lodě</a></li>
+      <li style="--ukon: var(--ukon-novinky)"><a href="#">Novinky</a></li>
+      <li style="--ukon: var(--ukon-otazky)"><a href="#">Otázky</a></li>
+      <li style="--ukon: var(--ukon-opravneni)"><a href="#">Oprávnění</a></li>
+    </ul>
+  </nav>
+
+  <div class="radek-nadpisu" style="--ukon: var(--ukon-regaty)">
+    <h1><strong>Orlický pohár 2027</strong> <span class="agenda">— Regaty</span></h1>
+    <span class="lano" aria-hidden="true"></span>
+    <span class="konec">8 regat · 1 se jede dnes</span>
+  </div>
+  <p class="poznamka">Klepnutím se otevře okno regaty — přihlášky, směrnice, trať, výsledky a polohy pohromadě.</p>
+
+  <ul class="regaty">
+    <li><a href="#">
+      <span class="den"><span class="cislo">15</span><span class="mesic">kvě</span></span>
+      <span class="jmeno">Jarní vítr <span class="porad">Marina Orlík</span></span>
+      <span class="prubeh">2 ze 4 rozjížděk venku<i class="pruh"><i style="width: 50%"></i></i></span>
+      <span><span class="stitek revize">1× k revizi</span> <span class="stitek vypsany">vypsáno</span></span>
+    </a></li>
+    <li><a href="#">
+      <span class="den"><span class="cislo">26</span><span class="mesic">čvn</span></span>
+      <span class="jmeno">Radavská regata <span class="porad">YC Radava</span></span>
+      <span class="prubeh">čeká na podpis rozhodčího<i class="pruh"><i style="width: 25%"></i></i></span>
+      <span><span class="stitek odjety">odjeto</span></span>
+    </a></li>
+    <li><a href="#">
+      <span class="den"><span class="cislo">9</span><span class="mesic">čvc</span></span>
+      <span class="jmeno">24hodinovka <span class="porad">Stingray</span></span>
+      <span class="prubeh">přihlášeno 14 lodí</span>
+      <span><span class="stitek">plánováno</span></span>
+    </a></li>
+    <li><a href="#">
+      <span class="den"><span class="cislo">24</span><span class="mesic">čvc</span></span>
+      <span class="jmeno">Vánoční regata <span class="porad">Colins Yacht Club</span></span>
+      <span class="prubeh">bez přihlášek</span>
+      <span><span class="stitek">plánováno</span></span>
+    </a></li>
+    <li><a href="#">
+      <span class="den"><span class="cislo">31</span><span class="mesic">čvc</span></span>
+      <span class="jmeno">Izolepa <span class="porad">YC Praha</span></span>
+      <span class="prubeh">bez přihlášek</span>
+      <span><span class="stitek">plánováno</span></span>
+    </a></li>
+    <li><a href="#">
+      <span class="den"><span class="cislo">14</span><span class="mesic">srp</span></span>
+      <span class="jmeno skrtnute">FxCK Cancer <span class="porad">F*CK Cancer</span></span>
+      <span class="prubeh">zrušeno pro vítr</span>
+      <span><span class="stitek">zrušeno</span></span>
+    </a></li>
+  </ul>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

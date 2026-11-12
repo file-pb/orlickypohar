@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Správa webu — Oprávnění</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+:root {
+  --pozadi: #fbfaf8; --papir: #ffffff; --text: #1a1d21; --linka: #e2e0dc;
+  --tlumeny: #6b7280;
+  --ukon-rocniky: #4a6a8a; --ukon-clanky: #7a5a8a; --ukon-opravneni: #a18a4a; --ukon-naklady: #4a8a80;
+}
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--pozadi); color: var(--text); }
+a { color: #1f6b86; }
+a:hover { color: #154b5e; }
+.okno { padding: 1.5rem 2rem 2rem; display: flex; flex-direction: column; gap: 0.85rem; }
+.drobecky { font-size: 0.85rem; color: var(--tlumeny); display: flex; gap: 0.4rem; }
+.drobecky a { text-decoration: none; }
+.drobecky a:hover { text-decoration: underline; }
+.drobecky span[aria-current] { color: var(--text); }
+.dlazdice { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.4rem; }
+.dlazdice a { display: block; padding: 0.35rem 0.7rem 0.35rem 0.8rem; background: var(--papir); border: 1px solid var(--linka); border-left: 4px solid var(--ukon); border-radius: 7px; color: inherit; text-decoration: none; font-size: 0.95rem; font-weight: 600; }
+.dlazdice a:hover { border-color: var(--ukon); }
+.dlazdice a[aria-current="page"] { background: color-mix(in srgb, var(--ukon) 10%, var(--papir)); border-color: color-mix(in srgb, var(--ukon) 45%, var(--linka)); border-left-color: var(--ukon); box-shadow: inset 0 -2px 0 var(--ukon); }
+.radek-nadpisu { display: flex; align-items: baseline; gap: 0.75rem; margin-top: 0.35rem; }
+h1 { margin: 0; font-size: 1.55rem; letter-spacing: -0.015em; font-weight: 500; white-space: nowrap; }
+h1 strong { font-weight: 800; }
+.lano { flex: 1; height: 0.7rem; align-self: center; background: repeating-linear-gradient(115deg, color-mix(in srgb, var(--ukon) 55%, transparent) 0 2px, transparent 2px 7px); border-radius: 2px; }
+.konec { font-size: 0.85rem; color: var(--tlumeny); white-space: nowrap; }
+.poznamka { color: var(--tlumeny); font-size: 0.88rem; margin: 0; }
+.radek-formulare { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 13rem) auto 1fr; gap: 0.6rem; align-items: end; background: var(--papir); border: 1px solid var(--linka); border-radius: 10px; padding: 0.8rem 1rem; }
+label { display: block; font-size: 0.82rem; color: var(--tlumeny); margin-bottom: 0.2rem; }
+input, select { font: inherit; font-size: 0.9rem; width: 100%; box-sizing: border-box; padding: 0.4rem 0.55rem; border: 1px solid var(--linka); border-radius: 7px; background: var(--papir); color: var(--text); }
+button { font: inherit; font-size: 0.85rem; padding: 0.3rem 0.8rem; border-radius: 7px; border: 1px solid var(--linka); background: var(--papir); color: var(--text); cursor: pointer; }
+button.hlavni { background: #1f6b86; border-color: #1f6b86; color: #fff; font-weight: 600; padding: 0.42rem 1.1rem; }
+.vedle { font-size: 0.8rem; color: var(--tlumeny); align-self: center; }
+.tabulka-obal { border: 1px solid var(--linka); border-radius: 10px; overflow: hidden; background: var(--papir); }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th { text-align: left; font-weight: 600; color: var(--tlumeny); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--linka); }
+td { padding: 0.55rem 0.8rem; border-top: 1px solid var(--linka); vertical-align: middle; }
+tbody tr:first-child td { border-top: 0; }
+.kdo { font-weight: 700; }
+.kdo span { display: block; font-weight: 400; font-size: 0.8rem; color: var(--tlumeny); margin-top: 0.1rem; }
+.role { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.stitek { display: inline-block; border: 1px solid var(--linka); border-radius: 999px; padding: 0.1rem 0.6rem; font-size: 0.8rem; color: var(--text); font-weight: 500; white-space: nowrap; background: color-mix(in srgb, var(--ukon-opravneni) 8%, var(--papir)); border-color: color-mix(in srgb, var(--ukon-opravneni) 35%, var(--linka)); }
+.stitek.slaby { background: var(--papir); color: var(--tlumeny); border-color: var(--linka); }
+.akce { text-align: right; white-space: nowrap; }
+</style>
+</helmet>
+<div class="okno">
+  <nav class="drobecky" aria-label="Kde stojím">
+    <a href="#">Domů</a><span aria-hidden="true">»</span>
+    <a href="Sprava.dc.html">Správa</a><span aria-hidden="true">»</span>
+    <span aria-current="page">Oprávnění na celý web</span>
+  </nav>
+
+  <nav aria-label="Co spravuju na celém webu">
+    <ul class="dlazdice">
+      <li style="--ukon: var(--ukon-rocniky)"><a href="Sprava.dc.html">Ročníky</a></li>
+      <li style="--ukon: var(--ukon-clanky)"><a href="Clanky.dc.html">Obecné články</a></li>
+      <li style="--ukon: var(--ukon-opravneni)"><a href="OpravneniWebu.dc.html" aria-current="page">Oprávnění na celý web</a></li>
+      <li style="--ukon: var(--ukon-naklady)"><a href="#">Co web stojí</a></li>
+    </ul>
+  </nav>
+
+  <div class="radek-nadpisu" style="--ukon: var(--ukon-opravneni)">
+    <h1><strong>Správa</strong> <span class="agenda">— Oprávnění na celý web</span></h1>
+    <span class="lano" aria-hidden="true"></span>
+    <span class="konec">3 role · 2 lidé</span>
+  </div>
+  <p class="poznamka">Editor webu píše obecné články mimo ročník. Správce webu smí všechno ve všech ročnících. Role v jednotlivých ročnících se udělují v jejich vlastním okně.</p>
+
+  <form class="radek-formulare">
+    <div>
+      <label for="mail">E-mail</label>
+      <input id="mail" type="email" placeholder="jmeno@example.cz">
+    </div>
+    <div>
+      <label for="role">Role</label>
+      <select id="role"><option>Editor webu</option><option>Správce webu</option></select>
+    </div>
+    <button class="hlavni" type="button">Udělit</button>
+    <span class="vedle">Účet vzniká až prvním přihlášením — rolí se pozvat nedá.</span>
+  </form>
+
+  <div class="tabulka-obal">
+    <table>
+      <thead>
+        <tr><th scope="col">Kdo</th><th scope="col">Role na celém webu</th><th scope="col"><span class="akce">Úkony</span></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="kdo">Filip Burda <span>filipburda75@gmail.com</span></td>
+          <td><span class="role"><span class="stitek">správce webu</span></span></td>
+          <td class="akce"><button type="button">Odebrat</button></td>
+        </tr>
+        <tr>
+          <td class="kdo">Miloš Zvonař <span>mzvonar@centrum.cz</span></td>
+          <td><span class="role"><span class="stitek">správce webu</span><span class="stitek slaby">editor webu</span></span></td>
+          <td class="akce"><button type="button">Odebrat</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="poznamka">Dvě role jednoho člověka stojí na jednom řádku, ne na dvou — odebírá se ta, na kterou klepneš.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
