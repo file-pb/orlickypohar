@@ -415,6 +415,30 @@ header.hlavicka a.znacka svg.logo-mobil { display: none; width: 72px; height: 72
   opacity: 0.07; filter: blur(4px);
 }
 body:has(.uvod) .pozadi-znak { display: none; }
+/* <b>Na úzkém okně se znak zmenší do proužku u hrany</b> (Filip, 12. 11.
+   2026: „kdyby se nám to takto mělo překrýt, tak zmenši to logo do
+   proužku").
+
+   Změřeno na 390 px: znak je 62 vw široký, tedy 242 px, a při `top: 6vh`
+   sahá od 51 px do 293 px — nadpis stránky leží celý uvnitř a překrývá se
+   z 69 % své plochy. Na monitoru se to nestane, protože tam je nadpis
+   vlevo a znak uprostřed daleko nad ním.
+
+   Místo zmenšení doprostřed jde znak <b>k pravé hraně</b>: nadpisy jsou
+   zarovnané vlevo, takže vpravo nahoře je plocha, kde o text nezavadí.
+   Zůstává dekorací, jen přestane soupeřit s tím, co se čte první. */
+@media (max-width: 48rem) {
+  .pozadi-znak {
+    width: min(30vw, 8rem);
+    top: 1rem;
+    left: auto;
+    right: -1.5rem;
+    transform: none;
+    opacity: 0.05;
+  }
+  :root:not([data-rezim="svetly"]) .pozadi-znak,
+  :root[data-rezim="tmavy"] .pozadi-znak { opacity: 0.07; }
+}
 /* Tmavý vzhled loga a vodoznaku — ve dvou podobách, viz začátek souboru.
    Tytéž odstíny jako u znaků tříd: tmavě modrá by na tmavém zmizela.
    Šedá je tu světlejší než u znaku Pod7m, v logu se jinak mezi modrou
@@ -2409,8 +2433,26 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .bok-body { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; }
 .bok-seznam { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
 .bok-seznam a {
-  display: grid; gap: 0.1rem; padding: 0.55rem 0.7rem; color: inherit;
+  display: grid; grid-template-columns: 2.4rem 1fr; align-items: center;
+  gap: 0.1rem 0.6rem; padding: 0.5rem 0.7rem; color: inherit;
   background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+}
+/* Den jako na trhacím kalendáři: číslo nese váhu, měsíc je popisek pod ním.
+   Oddělovač vpravo drží dvojici pohromadě, aby číslo nesplynulo se jménem. */
+.bok-den {
+  display: grid; justify-items: center; line-height: 1.05;
+  padding-right: 0.55rem; border-right: 1px solid var(--linka);
+}
+.bok-den .cislo { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bok-den .mesic {
+  font-size: 0.68rem; color: var(--tlumeny); text-transform: lowercase; letter-spacing: 0.02em;
+}
+.bok-co { display: grid; gap: 0.1rem; min-width: 0; }
+/* Text, který vidí jen čtečka obrazovky — datum celým jménem, protože
+   zkratka „kvě" se předčítá jako slovo. */
+.jen-pro-ctecku {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
 }
 .bok-seznam a:hover { border-color: var(--voda); text-decoration: none; }
 .bok-nazev { font-weight: 600; line-height: 1.35; }

@@ -6,7 +6,7 @@ import {
   poradiSNahradou,
   type ZavodShrnuti,
 } from "@/lib/api";
-import { datumClanku, denAMesic } from "@/app/datum";
+import { datumClanku, denAMesic, denMesicZvlast } from "@/app/datum";
 import { fotkaClanku } from "@/app/fotky";
 import { Stav } from "@/app/stav";
 import { ZnakTridy } from "@/app/tridy";
@@ -325,11 +325,26 @@ export async function BokKalendar({
           {terminy.map((z) => (
             <li key={z.slug}>
               <Link href={`/serie/${slug}/zavody/${z.slug}`}>
-                <span className="bok-nazev">{z.nazev}</span>
-                <span className="detail">
-                  {denAMesic(z.datum)}
-                  {/* Jen ve „Vše": v „Mimo pohár" je akcí všechno. */}
-                  {z.akce && volba === "vse" && " · komunitní akce"} <Stav stav={z.stav} akce={z.akce} />
+                {/* <b>Datum je kotva, ne detail</b> (Filip, 12. 11. 2026:
+                    „udělejme trochu lepší design těch dlaždic"). V kalendáři
+                    se hledá podle dne, kdežto do 12. 11. stálo datum pod
+                    jménem drobným písmem spolu se stavem — tři různé údaje
+                    v jedné šedé řádce. Teď je den vlevo jako na trhacím
+                    kalendáři a jméno s ním drží řádek. */}
+                <span className="bok-den" aria-hidden="true">
+                  <span className="cislo">{denMesicZvlast(z.datum).den}</span>
+                  <span className="mesic">{denMesicZvlast(z.datum).mesic}</span>
+                </span>
+                <span className="bok-co">
+                  <span className="bok-nazev">{z.nazev}</span>
+                  <span className="detail">
+                    {/* Čtečce zůstává datum celým jménem: zkratka „kvě" se
+                        předčítá jako slovo, ne jako měsíc. */}
+                    <span className="jen-pro-ctecku">{denAMesic(z.datum)}</span>
+                    {/* Jen ve „Vše": v „Mimo pohár" je akcí všechno. */}
+                    {z.akce && volba === "vse" && "komunitní akce "}
+                    <Stav stav={z.stav} akce={z.akce} />
+                  </span>
                 </span>
               </Link>
             </li>

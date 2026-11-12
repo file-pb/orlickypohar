@@ -29,6 +29,20 @@ const MESICE = [
   "července", "srpna", "září", "října", "listopadu", "prosince",
 ];
 
+const MESICE_ZKRATKA = [
+  "led", "úno", "bře", "dub", "kvě", "čvn",
+  "čvc", "srp", "zář", "říj", "lis", "pro",
+];
+
+/**
+ * Datum rozdělené na číslo a zkratku měsíce — pro kalendářní kartu, kde
+ * den stojí jako kotva vlevo a oko ho najde dřív než jméno regaty.
+ */
+export function denMesicZvlast(iso: string) {
+  const [, m, d] = iso.slice(0, 10).split("-").map(Number);
+  return { den: String(d), mesic: MESICE_ZKRATKA[m - 1] };
+}
+
 /** „19. září" — rok v téhle větě nikoho nezajímá. */
 export function denAMesic(iso: string) {
   const [, m, d] = iso.slice(0, 10).split("-").map(Number);
