@@ -94,7 +94,7 @@ export default async function SpravaVysledku({
                   <Stav stav={z.stav} />
                   {z.kRevizi.length > 0 && (
                     <span className="stitek vysledek-krevizi">
-                      {z.kRevizi.length}× k revizi
+                      {z.kRevizi.length === 1 ? "1 rozjížďka" : `${z.kRevizi.length} rozjížďky`} k revizi
                     </span>
                   )}
                 </div>

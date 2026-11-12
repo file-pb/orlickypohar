@@ -182,7 +182,7 @@ function coTeď(udelena: Udelena[], serie: string, zastavky: ZastavkaVysledky[])
       popis:
         z.kRevizi.length === 1
           ? `${z.kRevizi[0]}. rozjížďka. Rozhodčí napsal, co je špatně.`
-          : `${z.kRevizi.length}× k revizi. Rozhodčí napsal, co je špatně.`,
+          : `${z.kRevizi.length} rozjížďky k revizi. Rozhodčí napsal, co je špatně.`,
       kam: kRozjizdkam(z.zavod, z.kRevizi),
       role: "Organizator",
     });
@@ -225,7 +225,7 @@ function coTeď(udelena: Udelena[], serie: string, zastavky: ZastavkaVysledky[])
       popis:
         z.kPodpisu.length === 1
           ? `${z.kPodpisu[0]}. rozjížďka čeká na tvůj podpis.`
-          : `${z.kPodpisu.length} z ${z.pocetRozjizdek} rozjížděk čeká na tvůj podpis.`,
+          : `${z.kPodpisu.length} z ${z.pocetRozjizdek} rozjížděk čekají na tvůj podpis.`,
       kam: kRozjizdkam(z.zavod, z.kPodpisu),
       role: "Rozhodci",
     });

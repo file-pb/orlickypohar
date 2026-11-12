@@ -172,7 +172,7 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
               <input type="hidden" name="serie" value={serie} />
               <input type="hidden" name="publikovano" value={rocnik.publikovano ? "ne" : "ano"} />
               <button type="submit" className="maly">
-                {rocnik.publikovano ? "Stáhnout ročník z webu" : "Pustit ročník ven"}
+                {rocnik.publikovano ? "Schovat ročník před veřejností" : "Pustit ročník ven"}
               </button>
             </form>
           )}
@@ -252,8 +252,9 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
       </label>
 
       <label>
-        Konec, u vícedenního závodu
+        Poslední den
         <input type="date" name="datumKonce" defaultValue={zastavka?.datumKonce ?? undefined} />
+        <span className="poznamka">Jen u vícedenní regaty.</span>
       </label>
 
       <label>
@@ -293,7 +294,7 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
       {!akce && (
         <>
           <label>
-            Škrtá se nejhorších
+            Škrtá se nejhorších rozjížděk
             <input
               type="number"
               name="pocetSkrtu"
@@ -334,13 +335,13 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
               úpravě termínu by bylo horší než konzervativní výchozí
               hodnota. */}
           <label>
-            Ukazovat průběžné výsledky
+            Kdy ukazovat průběžné výsledky
             <select
               name="procesniDej"
               defaultValue={(zastavka ? zastavka.procesniDej : true) ? "ano" : "ne"}
             >
-              <option value="ne">Ne — až po publikaci</option>
-              <option value="ano">Ano, i nepodepsané</option>
+              <option value="ne">Až po podpisu rozhodčího</option>
+              <option value="ano">Hned, i nepodepsané</option>
             </select>
             <span className="poznamka">
               Na tabuli a na stránce regaty se objeví i čísla, která ještě

@@ -163,8 +163,13 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
             nadpisy, seznamy, tučné, kurzíva, odkazy a obrázky, zbytek se
             zahodí i s formátováním z Wordu. */}
         <label>
-          <input type="checkbox" name="vlozene" value="1" /> Text je vložený z Wordu nebo z webu
+          <input type="checkbox" name="vlozene" value="1" /> Převzít nadpisy, seznamy a odkazy
+          z vloženého textu
         </label>
+        <p className="poznamka">
+          Zaškrtni, když kopíruješ z Wordu nebo z webové stránky. Formátování —
+          fonty, velikosti, barvy — se zahodí, struktura zůstane.
+        </p>
 
         <button type="submit">Založit jako koncept</button>
         <p className="poznamka">

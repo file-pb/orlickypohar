@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prihlasovaniJde } from "@/lib/oidc";
 import { nactiSerie } from "@/lib/api";
 import { maSezeni, nactiJa } from "@/lib/ja";
+import { prava } from "@/lib/co-smim";
 import { OdkazJinam } from "@/app/odkaz-jinam";
 import { Domu } from "@/app/domu";
 import { Menu } from "@/app/menu";
@@ -48,6 +49,11 @@ export default async function Layout({ children }: { children: React.ReactNode }
   // Cookie bez platného tokenu je vlastní stav, ne „nepřihlášený". Kdyby se
   // slil s ním, nabízel by web přihlášení někomu, kdo se nemůže odhlásit.
   const sezeni = ja ? true : await maSezeni();
+  // Kdo pracuje, nepotřebuje výkladní skříň — viz pás partnerů níž.
+  // Editor v tom není schválně: Filip jmenoval „rozhodčí, pořadatel a výše".
+  const maRoliVeSprave = prava(ja).some((u) =>
+    u.role === "Organizator" || u.role === "Rozhodci" || u.role === "Spravce",
+  );
   // Nejnovější ročník pro odkazy v hlavičce, celý seznam pro pruh ukázky.
   // Výpadek API hlavičku shodit nesmí, odkazy se jen vynechají.
   const serie = await nactiSerie().catch(() => undefined);
@@ -112,7 +118,22 @@ export default async function Layout({ children }: { children: React.ReactNode }
           </div>
         </header>
         <main className="obal">{children}</main>
-        <Partneri />
+        {/* <b>Pořadatel, rozhodčí a správce pás partnerů nevidí nikde</b>
+            (Filip za Miloše, 27. 10. 2026; rozhodnuto konziliem 12. 11.).
+            Ve správě ho vypínala kotva v `sprava/layout.tsx`, jenže Miloš
+            řekl „nikde" — a na veřejnou stránku regaty se dívá právě
+            proto, aby viděl, co vidí závodník.
+
+            Pás je `position: fixed` a drží `--paticka`, tedy 4,75 rem;
+            na telefonu na výšku je to přes desetinu obrazovky, trvale,
+            a rozhodčí u vody pracuje právě na telefonu.
+
+            <b>Váže se to na roli, ne na adresu</b>, a na cachování to vliv
+            nemá: mikrocache pouští požadavek s cookie sezení mimo cache
+            (`deploy/cache/default.conf`), takže se stránka bez pásu
+            nemůže vydat nepřihlášenému. Veřejnost, závodníci i tabule ho
+            vidí dál, takže slib partnerům platí. */}
+        {maRoliVeSprave ? <span className="bez-partneru" hidden /> : <Partneri />}
         {/* Výsledková tabulka bývá dlouhá a hlavička sice drží nahoře, ale
             na začátek stránky se z jejího konce jinak nedostaneš. */}
         <a className="nahoru" href="#nahoru" aria-label="Zpátky nahoru">

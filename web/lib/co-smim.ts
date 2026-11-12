@@ -425,16 +425,16 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
   const vse: Varianta[][] = [
     [
       {
-        nazev: "Výsledky",
-        kratky: "výsledky",
-        popis: "Rozjížďky, zápis z cíle, oprava.",
+        nazev: "Rozjížďky",
+        kratky: "rozjížďky",
+        popis: "Zápis z cíle, oprava, pustit ven.",
         kam: kam("/vysledky"),
         role: "Organizator",
         pozadavek: { role: "Organizator", serie, zavod },
       },
       {
-        nazev: "Výsledky",
-        kratky: "výsledky",
+        nazev: "Rozjížďky",
+        kratky: "rozjížďky",
         // Pustit ven od 27. 10. 2026 rozhodčí smí (`Workflow.KdoSmiPublikovat`);
         // *Potvrzeno* zůstalo správci (`Workflow.KdoSmi`), a to se sem nepíše —
         // je to archivní zámek, ne krok, kvůli kterému se na obrazovku chodí.

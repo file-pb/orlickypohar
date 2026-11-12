@@ -210,8 +210,8 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
             jeho tělo je HTML a odškrtnutím by se z něj staly odstavce
             plné značek. */}
         <label>
-          <input type="checkbox" name="vlozene" value="1" defaultChecked={vlozeny} /> Text je
-          vložený z Wordu nebo z webu
+          <input type="checkbox" name="vlozene" value="1" defaultChecked={vlozeny} /> Převzít
+          nadpisy, seznamy a odkazy z vloženého textu
         </label>
 
         <button type="submit">Uložit</button>

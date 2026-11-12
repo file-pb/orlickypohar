@@ -75,7 +75,12 @@ const NAZVY: Record<Sekce, string> = {
   // v nadpisu, na který vedl.
   vypsani: "Vypsání závodu",
   smernice: "Plachetní směrnice",
-  trat: "Závodní trať",
+  // <b>Předpokládaná, ne závodní</b> (R28, přijato konziliem 12. 11. 2026):
+  // trať se před startem přijímá a za jízdy se smí změnit, takže „Závodní
+  // trať" slibuje hotovou věc. Je to tentýž princip, kvůli kterému se
+  // „Lodě" přejmenovaly na „Startovní listinu" — jméno nesmí tvrdit víc,
+  // než co za ním doopravdy je.
+  trat: "Předpokládaná trať",
   lode: "Startovní listina",
   vysledky: "Výsledky",
 };

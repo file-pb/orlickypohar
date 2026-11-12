@@ -90,7 +90,7 @@ export default async function OpravneniWebu({ searchParams }: Parametry) {
             ))}
           </select>
         </label>
-        <button type="submit">Udělit</button>
+        <button type="submit">Udělit roli</button>
       </form>
 
       <h2>Kdo má roli na celém webu</h2>
