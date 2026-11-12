@@ -6082,7 +6082,10 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
     --ukon-novinky: #9679a4;
   }
 }
-[data-rezim="tmavy"] {
+/* Ruční přepínač musí nést tytéž hodnoty jako systémový tmavý režim —
+   a selektor musí být `:root[...]`, jinak si ho kontrola tokenů nevšimne
+   a ohlásí rozchod (CI, 12. 11. 2026). */
+:root[data-rezim="tmavy"] {
   --ukon-regaty: #6d86a3;
   --ukon-kalendar: #708b62;
   --ukon-novinky: #9679a4;
