@@ -97,6 +97,12 @@ export default async function RozcestnikRocniku({
 
   const ukoly = coTeď(udelena, serie, mojeZastavky);
 
+  // <b>Závodní práce rozhoduje, jestli je prázdno</b>, ne celý seznam.
+  // Otázky k aplikaci visí týdny a jsou úkol jiného druhu: kdyby se
+  // počítaly, nejbližší regata by se neukázala skoro nikdy — a právě ta
+  // je tím, co drží landing neprázdný mimo závodní den.
+  const zavodnich = ukoly.length;
+
   // Otázky k aplikaci jsou fronta, ne agenda — v pruhu nestojí a připomenou
   // se tady (konzilium, 12. 11. 2026). Výpadek téhle části nemá sebrat
   // obrazovku, takže se na ni jen nečeká.
@@ -135,7 +141,7 @@ export default async function RozcestnikRocniku({
             závodní den nevydá `coTeď` nic, a to je většina roku — sedm regat
             z osmi je plánovaných. Prázdná obrazovka by na nejčastější cestě
             roku přidala klepnutí, které měla přestavba ušetřit. */}
-        {ukoly.length === 0 && <NejblizsiRegata serie={serie} zastavky={mojeZastavky} />}
+        {zavodnich === 0 && <NejblizsiRegata serie={serie} zastavky={mojeZastavky} />}
       </ul>
 
       <PataOkna serie={serie} />
