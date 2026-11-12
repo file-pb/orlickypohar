@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ApiNedostupne, nactiPoradi, type PoradiKategorie, type Zastavka } from "@/lib/api";
 import { Vypadek } from "@/app/vypadek";
 import { Boky } from "@/app/boky";
+import { NadpisSerie, PruhSerie } from "@/app/serie/[slug]/pruh-serie";
 import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
 import { body } from "@/app/body";
 
@@ -52,14 +53,16 @@ export default async function Poradi({ params, searchParams }: Parametry) {
       vpravo="akce"
       vpravoDoplnky={["vodocet"]}
     >
-      <p style={{ margin: "0 0 0.5rem" }}>
-        <Link href={`/serie/${slug}`}>← zpět na ročník</Link>
-      </p>
-      <h1>Průběžné pořadí</h1>
-      <p className="podtitulek">
-        {poradi.nazev} · po {poradi.zastavky.length}{" "}
-        {poradi.zastavky.length === 1 ? "odjeté regatě" : "odjetých regatách"}
-      </p>
+      {/* „← zpět na ročník" nahradil pruh částí: zpátky se jde tabem
+          Kalendář, a stejným klepnutím kamkoliv jinam. */}
+      <PruhSerie slug={slug} aktivni="poradi" />
+      <NadpisSerie
+        nazevRocniku={poradi.nazev}
+        cast="poradi"
+        podtitulek={`po ${poradi.zastavky.length} ${
+          poradi.zastavky.length === 1 ? "odjeté regatě" : "odjetých regatách"
+        }`}
+      />
 
       {nic ? (
         <p className="prazdno">Zatím není odjetá žádná regata.</p>

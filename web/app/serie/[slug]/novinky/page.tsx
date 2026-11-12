@@ -4,6 +4,7 @@ import { Vypadek } from "@/app/vypadek";
 import { VypisNovinek } from "@/app/novinky";
 import { Drobecky } from "@/app/drobecky";
 import { Boky } from "@/app/boky";
+import { NadpisSerie, PruhSerie } from "@/app/serie/[slug]/pruh-serie";
 
 export const dynamic = "force-dynamic";
 
@@ -35,14 +36,8 @@ export default async function Novinky({ params }: Parametry) {
 
   return (
     <Boky serie={serie.slug}>
-      <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie.slug}` },
-          { text: "Novinky" },
-        ]}
-      />
-      <h1>Novinky</h1>
+      <PruhSerie slug={serie.slug} aktivni="novinky" />
+      <NadpisSerie nazevRocniku={serie.nazev} cast="novinky" />
 
       {/* Blog je na dvou úrovních: sérii píše organizátor poháru, regatu
           její pořadatel. Ve výpisu jsou pohromadě a odlišuje je štítek —

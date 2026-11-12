@@ -6220,3 +6220,13 @@ body:has(.vybrany-ukon[data-ukon="naklady"]) { --ukon-strany: var(--ukon-uvod); 
 .radek-rocniku .nazev { font-weight: 700; font-size: 1.05rem; }
 .radek-rocniku .role { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 .radek-rocniku .sipka { color: var(--tlumeny); font-size: 1.05rem; }
+
+/* Části veřejného ročníku (konzilium, 12. 11. 2026). Pořadí dědí barvu
+   výsledků, protože je to tatáž agenda o patro výš; Správa ročníku má šeď,
+   protože to není část ročníku, ale cesta jinam. */
+.dlazdice-sekci > li[data-polozka="poradi"] { --ukon: var(--ukon-vysledky); }
+.dlazdice-sekci > li[data-polozka="novinky"] { --ukon: var(--ukon-novinky); }
+.dlazdice-sekci > li[data-polozka="sprava"] { --ukon: var(--ukon-uvod); }
+
+body:has(.vybrany-ukon[data-ukon="poradi"]) { --ukon-strany: var(--ukon-vysledky); }
+body:has(.vybrany-ukon[data-ukon="novinky"]) { --ukon-strany: var(--ukon-novinky); }

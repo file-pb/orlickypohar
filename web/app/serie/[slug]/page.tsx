@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ApiNedostupne, nactiSerii, type Prihlaska, type ZavodShrnuti } from "@/lib/api";
+import { ApiNedostupne, nactiSerii, type ZavodShrnuti } from "@/lib/api";
 import { Vypadek } from "@/app/vypadek";
 import { Stav } from "@/app/stav";
 import { datum } from "@/app/datum";
 import { Boky } from "@/app/boky";
-import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
 import { PrepinacKalendare } from "@/app/kalendar-volba";
+import { NadpisSerie, PruhSerie } from "@/app/serie/[slug]/pruh-serie";
 import { volbaKalendare, zastavkyKalendare, type SAkci, type VolbaKalendare } from "@/lib/kalendar-volba";
-import { nactiJa } from "@/lib/ja";
-import { prava, roleVRocniku } from "@/lib/co-smim";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -18,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 type Parametry = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ kalendar?: string; trida?: string }>;
+  searchParams: Promise<{ kalendar?: string }>;
 };
 
 // Titulek se nesmí stát důvodem, proč stránka spadne. Chyba z API tady
@@ -36,7 +34,7 @@ export async function generateMetadata({ params }: Parametry) {
 
 export default async function Rocnik({ params, searchParams }: Parametry) {
   const { slug } = await params;
-  const { kalendar, trida } = await searchParams;
+  const { kalendar } = await searchParams;
 
   // Výpadek API se ošetřuje tady, ne přes `error.tsx` — viz app/vypadek.tsx.
   let serie;
@@ -53,30 +51,11 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
   const akce = serie.akce ?? [];
   const volba = await volbaKalendare(kalendar);
 
-  // Kdo tu má roli, se do správy dostane odsud, ne jen přes nabídku účtu.
-  // Mikrocache požadavek s cookie sezení nekešuje, takže se odkaz nemůže
-  // dostat k někomu, kdo roli nemá (`deploy/cache/default.conf`).
-  const { ja } = await nactiJa();
-  const maRoli = roleVRocniku(prava(ja), slug).length > 0;
+  // Odkaz do správy se přestěhoval do pruhu částí (`pruh-serie.tsx`), kde
+  // se na roli ptá sám. Mikrocache požadavek s cookie sezení nekešuje,
+  // takže se dlaždice nemůže vydat někomu, kdo roli nemá.
   const zastavky = zastavkyKalendare(serie.zavody, akce, volba);
 
-  // Lodě po kategoriích, v pořadí, které si drží série — abecedně by Nad7m
-  // předběhlo Race bez důvodu.
-  const podleKategorii = serie.kategorie.map((k) => ({
-    nazev: k.nazev,
-    lode: serie.prihlasky.filter((p) => p.kategorie === k.nazev),
-  }));
-  const tridy = podleKategorii.filter((k) => k.lode.length > 0);
-  const aktivniTrida = vyberTridu(tridy.map((k) => k.nazev), trida);
-
-  // Přepnutí třídy nesmí shodit kalendář z odkazu (`?kalendar=`), kvůli
-  // kterému sem čtenář přišel. Odkaz proto nese oba parametry.
-  const odkaz = (t: string) => {
-    const dotaz = new URLSearchParams();
-    if (kalendar) dotaz.set("kalendar", kalendar);
-    dotaz.set("trida", t);
-    return `/serie/${serie.slug}?${dotaz}`;
-  };
 
   return (
     // Kalendář je tady ve středu, takže do boků jdou novinky a plakát akce.
@@ -86,23 +65,12 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
       vpravo="akce"
       vpravoDoplnky={["vodocet"]}
     >
-      <h1>{serie.nazev}</h1>
-      <p className="podtitulek">
-        {serie.zavody.length} regat · {odjete.length} odjetých ·{" "}
-        {serie.prihlasky.length} přihlášených lodí
-      </p>
-
-      <p style={{ margin: "-1.25rem 0 2rem" }}>
-        <Link href={`/serie/${serie.slug}/poradi`}>Průběžné pořadí seriálu →</Link>
-        {" · "}
-        <Link href={`/serie/${serie.slug}/novinky`}>Novinky ročníku →</Link>
-        {maRoli && (
-          <>
-            {" · "}
-            <Link href={`/sprava/${serie.slug}`}>Správa ročníku →</Link>
-          </>
-        )}
-      </p>
+      <PruhSerie slug={slug} aktivni="kalendar" />
+      <NadpisSerie
+        nazevRocniku={serie.nazev}
+        cast="kalendar"
+        podtitulek={`${serie.zavody.length} regat · ${odjete.length} odjetých · ${serie.prihlasky.length} přihlášených lodí`}
+      />
 
       {/* Kalendář je zároveň rozcestník: každá regata nese svůj stav
           a proklikem se jde na její vlastní stránku. Bez stavu vypadá
@@ -121,49 +89,6 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
         <Kalendar slug={serie.slug} zastavky={zastavky} volba={volba} />
       )}
 
-      <h2>Přihlášené lodě</h2>
-
-      {/* Ročník se zveřejňuje jako kalendář dřív, než sezóna začne, takže
-          nula přihlášených lodí je běžný stav, ne chyba dat. Bez tohohle
-          zůstal na stránce samotný nadpis a pod ním nic. */}
-      {tridy.length === 0 ? (
-        <p className="prazdno">Do ročníku se zatím nepřihlásila žádná loď.</p>
-      ) : (
-        <>
-          <TabyTrid
-            kategorie={tridy.map((k) => k.nazev)}
-            aktivni={aktivniTrida}
-            adresa={odkaz}
-          />
-          <NadpisTridy kategorie={tridy.map((k) => k.nazev)} aktivni={aktivniTrida} />
-          {tridy.filter((k) => k.nazev === aktivniTrida).map((k) => (
-            <div key={k.nazev}>
-              <div className="tabulka-obal">
-                <table>
-                  <thead>
-                    <tr>
-                      <th className="lod">Loď</th>
-                      <th style={{ textAlign: "left" }}>Typ</th>
-                      <th style={{ textAlign: "left" }}>Číslo plachty</th>
-                      <th style={{ textAlign: "left" }}>Majitel</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {k.lode.map((p: Prihlaska) => (
-                      <tr key={p.lod}>
-                        <td className="lod">{p.lod}</td>
-                        <td style={{ textAlign: "left" }}>{p.typLodi ?? "—"}</td>
-                        <td style={{ textAlign: "left" }}>{p.cisloPlachty ?? "—"}</td>
-                        <td style={{ textAlign: "left" }}>{p.majitel}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
     </Boky>
   );
 }
