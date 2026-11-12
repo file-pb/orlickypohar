@@ -47,6 +47,7 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 # Verze, od které je dané hlášení zaplátované. Z advisory, ne z odhadu — a
@@ -236,6 +237,49 @@ def zaplatovany(lock, balicek):
     return serazene[0][0] >= ZAPLATY[balicek]
 
 
+def _dalsi_stranka(odpoved):
+    """URL další stránky z `Link` hlavičky, nebo `None`.
+
+    Advisory API stránkuje kurzorem (`after=…`), ne číslem stránky, takže
+    další stránka existuje jen jako odkaz v hlavičce. Nic se nedomýšlí —
+    bere se URL tak, jak ji GitHub poslal.
+    """
+    for cast in (odpoved.headers.get("Link") or "").split(","):
+        if 'rel="next"' in cast:
+            return cast.split(";")[0].strip().strip("<>")
+    return None
+
+
+def vsechna_hlaseni(balicek, strop=10):
+    """Hlášení pro balíček ze **všech** stránek, ne jen z první.
+
+    `per_page=100` není záruka: u balíčku se stovkou hlášení vrátí GitHub
+    první stovku a zbytek nechá v `Link` hlavičce. Dokud ji nikdo nečetl,
+    posuzovalo všech pět kontrol jen výřez — a tiše, což je u hlídky to
+    nejhorší slovo. Přesně tímhle tvarem vady vypsala 6. 11. 2026 „Klid"
+    nad otevřeným high.
+
+    Jméno jde přes `quote`: u páté kontroly se bere ze zámku, takže to může
+    být scoped balíček (`@types/react`) a `@` ani `/` do dotazu holé nepatří.
+
+    Výjimku nechytá — každá kontrola má svou větu o tom, co jí tím uniklo.
+    Vyčerpaný strop je taky selhání načtení, ne hotový výsledek: deset
+    stránek je 1000 hlášení a to u jednoho balíčku znamená, že se pokazilo
+    něco jinde. Hlásí se jako `URLError`, protože to je přesně ono — úplný
+    seznam se načíst nepodařilo.
+    """
+    adresa = ADVISORY + urllib.parse.quote(balicek, safe="")
+    vse = []
+    for _ in range(strop):
+        with urllib.request.urlopen(adresa, timeout=30) as o:
+            vse += json.load(o)
+            adresa = _dalsi_stranka(o)
+        if not adresa:
+            return vse
+    raise urllib.error.URLError(
+        f"hlášení pro `{balicek}` mají víc než {strop} stránek")
+
+
 def hlidej_zod(lock):
     cli = zapis(lock, "@expo/cli")
     if cli is None:
@@ -305,8 +349,7 @@ def hlidej_deepmerge(lock):
 
     # Vyšla záplata? Advisory ji vydává jako `first_patched_version`.
     try:
-        with urllib.request.urlopen(ADVISORY + "deepmerge", timeout=30) as o:
-            data = json.load(o)
+        data = vsechna_hlaseni("deepmerge")
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
         return nalezy + [f"Hlášení pro `deepmerge` se nepodařilo načíst ({e}). Nevím, jestli už nevyšla záplata."]
 
@@ -340,8 +383,7 @@ def hlidej_dopad(balicek, nase, krome=()):
     by hlídka hlásila pokaždé totéž a za měsíc by si jí nikdo nevšímal.
     """
     try:
-        with urllib.request.urlopen(ADVISORY + balicek, timeout=30) as o:
-            data = json.load(o)
+        data = vsechna_hlaseni(balicek)
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
         return [f"Hlášení pro `{balicek}` se nepodařilo načíst ({e}). Nevím, jestli se riziko nezhoršilo."]
 
@@ -545,8 +587,7 @@ def hlidej_tlumene_patche(lock, koren):
             nalezy.append(f"Verzi `{balicek}` ze zámku nepřečtu (`{(z or {}).get('version')}`).")
             continue
         try:
-            with urllib.request.urlopen(ADVISORY + balicek, timeout=30) as o:
-                data = json.load(o)
+            data = vsechna_hlaseni(balicek)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
             nalezy.append(
                 f"Hlášení pro `{balicek}` se nepodařilo načíst ({e}). U téhle rodiny "

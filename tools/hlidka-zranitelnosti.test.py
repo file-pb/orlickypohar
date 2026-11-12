@@ -29,19 +29,49 @@ nekontrolovalo nic. Tohle to kontroluje: sabotáž, ne přečtení kódu.
 skutečná vada první verze — hlídka pak našla 0 sekcí npm `/app`), ignorované
 `update-types` a zmizelý `ignore:`. Každá spadne.
 
+**Cesta se sítí se zkouší od 12. 11. 2026.** Byla to do té doby ta nejtenčí
+část: sabotáže mířily jen na úsudek, takže kdyby `hlidej_tlumene_patche`
+odpověď zahodila nebo se ptala na špatné jméno, zkouška by prošla a hlídka by
+mlčela nad otevřenou zranitelností. `urlopen` se teď podstrčí a sabotáže
+ověřují, že se ptá na obě jména ze zámku, že odpověď dojde do úsudku, že se
+data z jednoho balíčku nepoužijí na druhý, že nedostupné API i odpověď, která
+není JSON, vyjdou jako nález, a že scoped jméno jde do dotazu zakódované.
+Pět rozbití implementace (zahozená data, pevné jméno v dotazu, spolknutá
+chyba sítě, prohozené jméno v úsudku, dotaz jen na první balíček) spadne.
+Šestá sabotáž odhalila skutečnou vadu — jména se berou ze zámku, takže
+`@types/react` šlo do URL holé; proto je v `vsechna_hlaseni`
+`urllib.parse.quote`.
+
+**Stránkování se zkouší od 12. 11. 2026.** `per_page=100` není záruka: další
+stránku dává advisory API jen jako odkaz v `Link` hlavičce, a dokud ji nikdo
+nečetl, posuzovalo se u **všech pěti** kontrol jen prvních sto hlášení. Tichý
+výřez vstupu je přesně ten tvar vady, kvůli kterému hlídka 6. 11. 2026
+vypsala „Klid" nad otevřeným high. Zkouška podstrčí dvě stránky, každou
+s jinou záplatou, a vyžaduje v nálezech obě; čtení `Link` hlavičky je navíc
+jednou změřené proti skutečnému GitHubu (`per_page=1` nad
+`decode-uri-component` prošlo tři stránky a vrátilo stejná tři hlášení jako
+jediný dotaz se stovkou). Pět rozbití spadne: ignorovaná hlavička, zahozené
+předchozí stránky, chybějící strop (zkouška se po padesátém dotazu ptát
+přestane, aby se nezasekla), vyčerpaný strop vydávaný za hotový výsledek
+a odebrané `quote`.
+
 **Co ani tak vidět není** — úspěšná sabotáž dokazuje jen tu část, kam
 zkouška dosáhne:
 
-1. **Cesta se sítí.** Sabotáže míří na `posudek_tlumene` a
-   `utlumene_rodiny`, tedy na úsudek. Že `hlidej_tlumene_patche` pošle dotaz
-   na správné jméno a odpověď úsudku doopravdy předá, nekontroluje nic —
-   kdyby data zahodila, zkouška projde a hlídka bude mlčet.
-2. **Advisory API je jediný zdroj.** Zranitelnost, kterou GitHub v
+1. **Skutečné HTTP.** `urlopen` je podstrčený, takže TLS,
+   třicetisekundový timeout, přesměrování a chování GitHubu při vyčerpaném
+   limitu nezkouší nic. Jediná výjimka je čtení `Link` hlavičky, změřené
+   jednou proti skutečnému GitHubu.
+2. **Víc než deset stránek hlášení.** Strop `vsechna_hlaseni` je deset
+   stránek, tedy 1000 hlášení u jednoho balíčku. Nad ním vyjde nález
+   o nenačtení, ne klid — ale úplný seznam hlídka v takovém případě nemá
+   a nikdo nezkoušel, co se stane, kdyby takový balíček doopravdy existoval.
+3. **Advisory API je jediný zdroj.** Zranitelnost, kterou GitHub v
    `/advisories` nevede, nebo hlášení bez `vulnerable_version_range`,
    pátá kontrola nevidí vůbec.
-3. **Jen `ignore` v sekci npm `/app`** a jen balíčky nahoře v zámku.
+4. **Jen `ignore` v sekci npm `/app`** a jen balíčky nahoře v zámku.
    Tlumení ve `web` nebo v nugetu nehlídá nic, zanořené kopie taky ne.
-4. **Rate limit.** Dnes se ptá na dva balíčky. Kdyby u `expo*` někdo mute
+5. **Rate limit.** Dnes se ptá na dva balíčky. Kdyby u `expo*` někdo mute
    zvolnil na plný, bylo by jich 43 — a neautentizované advisory API dává
    60 dotazů za hodinu. Hlídka by to nahlásila jako chybu načtení, ne jako
    klid, ale nikdo to nezkoušel.
@@ -50,6 +80,7 @@ Pustí se bez argumentů. 0 = v pořádku, 1 = podívej se.
 """
 
 import importlib.util
+import json
 import os
 import sys
 
@@ -254,14 +285,177 @@ def main():
     if not nalezy_prazdne:
         chyby.append("nad `dependabot.yml` bez sekce npm `/app` hlídka mlčí místo nahlášení")
 
+    # --- 8. cesta se siti: dotaz, predani dat, strankovani, selhani ------
+    # Tohle byla do 12. 11. 2026 ta nejtenčí část: sabotáže 5 a 6 míří na
+    # `posudek_tlumene` a `utlumene_rodiny`, tedy na úsudek. Že
+    # `hlidej_tlumene_patche` pošle dotaz na **správné jméno** a odpověď
+    # úsudku doopravdy **předá**, nekontrolovalo nic — kdyby data zahodila,
+    # zkouška by prošla a hlídka by mlčela nad otevřenou zranitelností.
+    # U téhle rodiny je utlumený i patch, takže advisory API je jediná cesta,
+    # jak o záplatě vědět; tichá chyba v ní znamená, že nevíme nic.
+    #
+    # Síť se nedotýká: `urlopen` se podstrčí a vrátí zpátky.
+    class FalesnaOdpoved:
+        def __init__(self, telo, hlavicky=None):
+            self._telo = telo
+            self.headers = hlavicky or {}
+
+        def read(self):
+            return json.dumps(self._telo).encode()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+    def se_siti(odpoved):
+        """Pustí `hlidej_tlumene_patche` s podstrčeným `urlopen`.
+
+        Vrací `(nálezy, dotázané URL)`. `odpoved` dostane URL a vrátí tělo,
+        nebo výjimku k vyhození.
+        """
+        dotazy = []
+
+        def falesny(url, timeout=None):
+            dotazy.append(url)
+            # Strop schválně: kdyby `vsechna_hlaseni` přestalo počítat
+            # stránky, nekonečná smyčka by se projevila jako zaseknutá
+            # zkouška. Takhle spadne.
+            if len(dotazy) > 50:
+                raise RuntimeError("hlídka se ptá bez konce — chybí strop stránek")
+            telo = odpoved(url)
+            if isinstance(telo, Exception):
+                raise telo
+            if isinstance(telo, tuple):
+                return FalesnaOdpoved(*telo)
+            return FalesnaOdpoved(telo)
+
+        puvodni = h.urllib.request.urlopen
+        h.urllib.request.urlopen = falesny
+        try:
+            return h.hlidej_tlumene_patche(lock_rodin, os.path.dirname(KOREN)), dotazy
+        finally:
+            h.urllib.request.urlopen = puvodni
+
+    lock_rodin = {"packages": {
+        "node_modules/react": {"version": "19.2.3"},
+        "node_modules/react-dom": {"version": "19.2.3"},
+    }}
+
+    # a) ptá se na obě jména ze zámku, a na žádné jiné
+    zpravy, dotazy = se_siti(lambda url: [])
+    if len(dotazy) != 2 or not any("affects=react" in d and "react-dom" not in d for d in dotazy) \
+            or not any("affects=react-dom" in d for d in dotazy):
+        chyby.append(f"pátá kontrola se neptá na `react` a `react-dom`, ale na: {dotazy}")
+    if zpravy:
+        chyby.append(f"nad prázdnou odpovědí advisory hlídka něco hlásí: {zpravy}")
+
+    # b) odpoved se doopravdy dostane do usudku — nalez musi jmenovat zaplatu
+    #    z podstrceneho tela. Kdyby `hlidej_tlumene_patche` data zahodila,
+    #    tohle je to misto, kde se to pozna.
+    def pro(url):
+        balicek = url.rsplit("affects=", 1)[-1]
+        return [advisory("<= 19.2.3", "19.2.9", balicek=balicek, tezkost="critical")]
+
+    zpravy, _ = se_siti(pro)
+    if len(zpravy) != 2:
+        chyby.append(f"z odpovědi na dva balíčky vzniklo {len(zpravy)} nálezů, čekány dva: {zpravy}")
+    spojene = " ".join(zpravy)
+    for musi in ("`react` 19.2.3", "`react-dom` 19.2.3", "19.2.9", "critical", "držené řadě"):
+        if musi not in spojene:
+            chyby.append(f"nález z podstrčené odpovědi neříká „{musi}“: {spojene}")
+
+    # c) data z dotazu na jeden balicek se nesmi pouzit na druhy. Odpoved
+    #    mluvi vzdycky o `react`; u `react-dom` musi vyjit prazdno, jinak
+    #    hlidka hlasi cizi balicek jako nas.
+    zpravy, _ = se_siti(lambda url: [advisory("<= 19.2.3", "19.2.9", balicek="react")])
+    if len(zpravy) != 1 or "`react` 19.2.3" not in zpravy[0]:
+        chyby.append(f"odpověď o `react` se u obou balíčků chová jako o obou: {zpravy}")
+
+    # d) selhani siti je nalez, ne klid
+    zpravy, _ = se_siti(lambda url: h.urllib.error.URLError("sit je dole"))
+    if len(zpravy) != 2:
+        chyby.append(f"při nedostupném advisory API hlídka hlásí {len(zpravy)} nálezů, čekány dva: {zpravy}")
+    for musi in ("se nepodařilo načíst", "utlumený i patch"):
+        if musi not in " ".join(zpravy):
+            chyby.append(f"nález o nedostupném API neříká „{musi}“: {zpravy}")
+
+    # e) scoped jmeno jde do dotazu zakodovane. `@types/react` dnes `ignore`
+    #    tlumi jen od minoru vys, takze se na nej kontrola nepta — ale kdyby
+    #    ho nekdo utlumil cely, jmeno se bere ze zamku a `@` ani `/` do URL
+    #    holé nepatří.
+    lock_puvodni = lock_rodin
+    lock_rodin = {"packages": {"node_modules/@types/react": {"version": "19.2.18"}}}
+    vzory_puvodni = h.utlumene_rodiny
+    h.utlumene_rodiny = lambda text: (["@types/react"], [])
+    try:
+        _, dotazy = se_siti(lambda url: [])
+    finally:
+        h.utlumene_rodiny = vzory_puvodni
+        lock_rodin = lock_puvodni
+    if not dotazy or "affects=%40types%2Freact" not in dotazy[0]:
+        chyby.append(f"scoped jméno nejde do dotazu zakódované: {dotazy}")
+
+    # f) rozbita odpoved (ne JSON) taky nesmi vyjit jako klid
+    class Rozbita(FalesnaOdpoved):
+        def read(self):
+            return b"<html>rate limit</html>"
+
+    puvodni_open = h.urllib.request.urlopen
+    h.urllib.request.urlopen = lambda url, timeout=None: Rozbita(None)
+    try:
+        zpravy = h.hlidej_tlumene_patche(lock_rodin, os.path.dirname(KOREN))
+    finally:
+        h.urllib.request.urlopen = puvodni_open
+    if len(zpravy) != 2 or "se nepodařilo načíst" not in " ".join(zpravy):
+        chyby.append(f"nad odpovědí, která není JSON, hlídka nehlásí dva nálezy: {zpravy}")
+
+    # g) druha stranka doopravdy dojde do usudku. `per_page=100` neni
+    #    zaruka: GitHub vrati prvni stovku a zbytek necha v `Link`. Prvni
+    #    stranka tu nese zaplatu 19.2.5, druha 19.2.9 — v nalezech musi byt
+    #    **obe**. Tim spadne i ignorovana hlavicka, i zahozene predchozi
+    #    stranky.
+    DRUHA = "https://api.github.com/advisories?after=kurzor&affects="
+
+    def po_strankach(url):
+        if url.startswith(DRUHA):
+            return [advisory("<= 19.2.3", "19.2.9", balicek=url.rsplit("affects=", 1)[-1],
+                             tezkost="critical")]
+        balicek = url.rsplit("affects=", 1)[-1]
+        return ([advisory("<= 19.2.3", "19.2.5", balicek=balicek)],
+                {"Link": f'<{DRUHA}{balicek}>; rel="next", <https://x/?page=1>; rel="prev"'})
+
+    zpravy, dotazy = se_siti(po_strankach)
+    if len(dotazy) != 4 or sum(1 for d in dotazy if d.startswith(DRUHA)) != 2:
+        chyby.append(f"druhá stránka se nenačítá, dotazy byly: {dotazy}")
+    spojene = " ".join(zpravy)
+    for musi in ("19.2.5", "19.2.9"):
+        if musi not in spojene:
+            chyby.append(f"záplata `{musi}` ze stránkované odpovědi se do nálezů nedostala: {spojene}")
+
+    # h) `Link`, ktera ukazuje porad dal, nesmi hlidku zacyklit ani vyjit
+    #    jako klid — neuplny seznam je selhani nacteni.
+    def bez_konce(url):
+        return ([], {"Link": f'<{DRUHA}react&x={len(url)}>; rel="next"'})
+
+    try:
+        zpravy, dotazy = se_siti(bez_konce)
+        if len(zpravy) != 2 or "se nepodařilo načíst" not in " ".join(zpravy):
+            chyby.append(f"nekonečné stránkování nevyjde jako nález: {zpravy}")
+        if len(dotazy) > 40:
+            chyby.append(f"strop stránek je příliš vysoký, dotazů bylo {len(dotazy)}")
+    except RuntimeError as e:
+        chyby.append(str(e))
+
     if chyby:
         print("Hlídka soudí špatně:\n")
         for c in chyby:
             print(f"- {c}")
         return 1
     print(f"Hlídka soudí správně: prah, {len(pripady)} případů dopadu, text zprávy, "
-          f"všechny kopie, {len(pripady_pata)} případů páté kontroly "
-          f"a čtení `dependabot.yml`.")
+          f"všechny kopie, {len(pripady_pata)} případů páté kontroly, čtení "
+          "`dependabot.yml`, cesta se sítí i stránkování.")
     return 0
 
 
