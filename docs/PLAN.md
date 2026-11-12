@@ -7655,11 +7655,14 @@ odvozené z týchž práv. Patra jsou pak tahle:
 
 | Patro | Taby | Stav |
 |---|---|---|
-| Veřejný ročník | Úvod · Kalendář · Průběžné pořadí · Přihlášené lodě · Novinky | nové |
+| Veřejný ročník | Úvod · Kalendář · Pravidla ročníku · Průběžné pořadí · Lodě ročníku · Novinky | nové |
 | Veřejná regata | Úvod · Vypsání · Směrnice · Trať · Startovka · Výsledky | stojí |
 | Správa webu | Ročníky · Obecné články · Oprávnění · Co web stojí | nové |
-| Správa ročníku | Co teď · Regaty · Kalendář · Výsledky · Lodě · Novinky · Otázky · Oprávnění | nové |
-| Správa regaty | dlaždice úkonů | stojí |
+| Správa ročníku | Co teď · Regaty · Kalendář · Zápis výsledků · Lodě a kapitáni · Novinky · Oprávnění | nové |
+| Správa regaty | dlaždice úkonů (*Výsledky* se jmenují *Rozjížďky*) | stojí |
+
+Složení tabů je po konziliu (níž), ne z prvního návrhu: *Otázky k aplikaci*
+z pruhu ročníku vypadly, veřejnému ročníku přibyla *Pravidla ročníku*.
 
 **Jeden pruh naráz.** Na pracovní obrazovce stojí pruh jejího patra a nic
 víc; nadřazená patra nese drobeček. Jinak by nad výsledky regaty byly tři
@@ -7709,13 +7712,47 @@ Drobečky, odkazy i mikrocache zůstávají, jak jsou.
    úloha s jinou cenou i nejistotou, ne součást té fáze.
 8. **Veřejné menu** (2 a 7) — dvě řešení téhož řádku, rozhodnout najednou.
 
+### Konzilium pěti oborů (12. 11. 2026)
+
+Návrh prošel třemi koly oponentury — ergonomie ovládání, vizuální design, UX,
+názvosloví a čeština, jachting a ČSJ. **Celý závěr je v
+`docs/konzilium/ZAVER.md`**, posudky vedle něj; tady je jen to, co mění plán.
+
+**Patnáct rozhodnutí**, z nichž tři jsou věcné opravy, ne vylepšení:
+
+- **Tabulka průběžného pořadí byla věcně špatně** a přepíše se celá: počítala
+  závodovou stupnicí (vítěz 1 místo 0), ve sloupcích zastávek stály kódy
+  jedné rozjížďky (`DNF`, `OCS`) a **škrtnuté číslo se sčítalo**. Seriál navíc
+  nezná pořadí napříč kategoriemi — kdyby se zobrazilo, někdo podle něj vyhlásí.
+- **Lano nesmí být šrafa.** Šrafa je obsazená publikací a ta druhý kanál nemá.
+- **Dvě barvy úkonů se kryly na hex** (*Oprávnění* = *Směrnice*, *Co web stojí*
+  = *Trať*), takže pravidlo „barva patří agendě" v návrhu samo neplatilo.
+
+Dál: pruh ročníku má **sedm** tabů (*Otázky k aplikaci* se staly úkolem
+v *Co teď*), jména tabů zůstávají **plná** (změřeno: zkrácená mřížka se láme
+dřív než plná), barvu nese **jen vybraná dlaždice** a nevybraná 45 % do
+`--tlumeny`, `--ukon-coted` se ruší a upomínku nese tečka, dotykový cíl je
+**44 px** a práh mřížky **6,6 rem** (jinak má pruh na telefonu čtyři řady
+a 196 px), drobeček **končí patrem, nikdy tabem**, a *Co teď* **nesmí být
+prázdné** — v pilotu nejbližší zastávkou podle data, ve druhé fázi první
+chybějící položkou řady vypsání → směrnice → trať → startovní listina.
+
 ### Co zbývá rozhodnout
 
-- Sedí osm tabů ročníku, nebo se některý (Otázky k aplikaci) schová jinam?
-- Zkrácená jména tabů („Kalendář" místo „Kalendář ročníku") — dlouhé zůstává
-  v bublině pod myší.
-- Na telefonu mřížka tří sloupců se zkratkami; posoudit až na živé stránce.
-- Tmavý režim návrh nekreslí, drží se stávajících tokenů.
+**Filip:**
+
+- Pořadatel jediné zastávky — landing okno ročníku, nebo rovnou okno jeho
+  regaty? (Přesměrování ušetří klepnutí v den regaty a přidá ho po celou
+  předsezónu, protože vypsat regatu jde jen z kalendáře ročníku.)
+- Zůstává tab *Co teď* v pruhu i tomu, komu nikdy nic nevydá?
+- *Legislativa* ve veřejném menu — jazyk navrhuje **Pravidla**.
+
+**Rozhodčí Miloš** (bez jeho odpovědi se tabulka pořadí publikovat nemá):
+
+- Od kolika odjetých zastávek se v ročníku škrtá a kolik škrtů má ročník
+  s osmi? Do odpovědi se **škrt nekreslí vůbec**.
+- Smí průběžné pořadí vyjít jako listina s datem, kategorií a jeho jménem?
+- Platí od 2027 čtyři třídy, a píše se u shody veřejně, co rozhodlo?
 
 ## Koncept z telefonu u zápisu z vody (6. 10. 2026)
 
