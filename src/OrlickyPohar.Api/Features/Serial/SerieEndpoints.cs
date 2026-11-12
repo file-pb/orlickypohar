@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Bodovani;
 
 namespace OrlickyPohar.Api.Features.Serial;
 
@@ -31,7 +32,39 @@ public record SerieDetailDto(
     IReadOnlyList<KategorieDto> Kategorie,
     IReadOnlyList<ZavodShrnutiDto> Zavody,
     IReadOnlyList<PrihlaskaDto> Prihlasky,
-    IReadOnlyList<ZavodShrnutiDto> Akce);
+    IReadOnlyList<ZavodShrnutiDto> Akce,
+    PravidlaRocnikuDto Pravidla);
+
+/// <summary>
+/// Podle čeho se ročník boduje — <b>veřejně, dřív než se loď přihlásí</b>.
+/// <para>
+/// ZPJ 25.1 žádá, aby podmínky byly dostupné před přihláškou, a nález R24
+/// z oponentury říká, že pravidlo, podle kterého loď patří do kategorie,
+/// stojí ve vypsání a nikde jinde. U jednotlivé regaty to vypsání řeší;
+/// u ročníku ekvivalent nebyl — kategorie se vydávaly jako holá jména
+/// a čísla, podle kterých se počítá, zůstala uvnitř aplikace.
+/// </para>
+/// <para>
+/// <b>Čísla jsou z ročníku, ne z poslední podoby kódu.</b> Škrty drží
+/// <c>Serie.PocetSkrtu</c> a zbytek <c>PravidlaBodovani.Podle(verze)</c>,
+/// takže uzavřený ročník vydá to, podle čeho se doopravdy vyhlašoval —
+/// tentýž důvod, kvůli kterému verze pravidel vůbec vznikla (oponentura,
+/// 5. 10. 2026).
+/// </para>
+/// </summary>
+/// <param name="PocetSkrtu">Kolik nejhorších regat se v pořadí seriálu škrtá.</param>
+/// <param name="VerzePravidel">Verze bodovacích pravidel tohohle ročníku.</param>
+/// <param name="BodyZaDiskvalifikaci">Kolik bodů dostane loď za DSQ v celé regatě.</param>
+/// <param name="PrirazkaZaKod">O kolik je kód horší než počet přihlášených v kategorii (ZPJ A5.2).</param>
+/// <param name="PrirazkaZaNapravu">O kolik je náprava horší než poslední dokončivší.</param>
+/// <param name="TrestZfpProcent">Kolik procent přidá bodový trest.</param>
+public record PravidlaRocnikuDto(
+    int PocetSkrtu,
+    int VerzePravidel,
+    int BodyZaDiskvalifikaci,
+    int PrirazkaZaKod,
+    int PrirazkaZaNapravu,
+    int TrestZfpProcent);
 
 /// <summary>
 /// Veřejné čtení ročníku. <b>Nepublikovaný ročník neexistuje</b> — vrací se 404,
@@ -89,7 +122,7 @@ public static class SerieEndpoints
     {
         var serie = await db.Serie
             .Where(s => s.Slug == slug && s.Publikovano)
-            .Select(s => new { s.Id, s.Slug, s.Nazev, s.Rok })
+            .Select(s => new { s.Id, s.Slug, s.Nazev, s.Rok, s.PocetSkrtu, s.VerzePravidel })
             .FirstOrDefaultAsync(ct);
 
         if (serie is null) return TypedResults.NotFound();
@@ -125,7 +158,16 @@ public static class SerieEndpoints
                 p.Kategorie!.Nazev))
             .ToListAsync(ct);
 
+        var pravidla = PravidlaBodovani.Podle(serie.VerzePravidel);
+
         return TypedResults.Ok(new SerieDetailDto(
-            serie.Slug, serie.Nazev, serie.Rok, kategorie, zavody, prihlasky, akce));
+            serie.Slug, serie.Nazev, serie.Rok, kategorie, zavody, prihlasky, akce,
+            new PravidlaRocnikuDto(
+                serie.PocetSkrtu,
+                pravidla.Verze,
+                pravidla.BodyZaDiskvalifikaci,
+                pravidla.PrirazkaZaKod,
+                pravidla.PrirazkaZaNapravu,
+                pravidla.TrestZfpProcent)));
     }
 }

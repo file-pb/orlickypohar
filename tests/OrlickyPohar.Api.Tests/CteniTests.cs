@@ -104,6 +104,35 @@ public class CteniTests(PostgresFixture fixture)
         Assert.Contains(zavod.Lode, l => l.Lod.StartsWith("Anička") && l.Kormidelnik == "Jan Novák");
     }
 
+    /// <summary>
+    /// Podle čeho se ročník boduje, musí být <b>venku dřív, než se loď
+    /// přihlásí</b> (ZPJ 25.1; nález R24 z oponentury). Do 12. 11. 2026
+    /// vydával detail ročníku kategorie jako holá jména a čísla, podle
+    /// kterých se počítá, zůstala uvnitř aplikace.
+    /// </summary>
+    [Fact]
+    public async Task Detail_rocniku_vyda_pravidla_bodovani()
+    {
+        await Nahraj(Rocnik("s-pravidly", publikovano: true));
+        var klient = fixture.CreateClient();
+
+        var detail = await klient.GetFromJsonAsync<SerieDetailDto>("/serie/s-pravidly", Json);
+        Assert.NotNull(detail);
+
+        // Čísla jsou z ročníku a z jeho verze pravidel, ne z poslední podoby
+        // kódu — proto se porovnávají s tou verzí, kterou ročník nese.
+        var podleVerze = PravidlaBodovani.Podle(detail.Pravidla.VerzePravidel);
+        Assert.Equal(podleVerze.BodyZaDiskvalifikaci, detail.Pravidla.BodyZaDiskvalifikaci);
+        Assert.Equal(podleVerze.PrirazkaZaKod, detail.Pravidla.PrirazkaZaKod);
+        Assert.Equal(podleVerze.PrirazkaZaNapravu, detail.Pravidla.PrirazkaZaNapravu);
+        Assert.Equal(podleVerze.TrestZfpProcent, detail.Pravidla.TrestZfpProcent);
+
+        // Škrty drží ročník sám; výchozí je jeden, a kdyby se ta výchozí
+        // hodnota někdy změnila, test to má říct tady, ne až rozhodčí
+        // u vyhlášení.
+        Assert.Equal(1, detail.Pravidla.PocetSkrtu);
+    }
+
     [Fact]
     public async Task Nepublikovany_rocnik_se_ven_nedostane()
     {
