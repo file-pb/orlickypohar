@@ -1178,6 +1178,13 @@ zpátky; totéž dělá odkaz *Zpátky na regatu* místo dřívějšího *Zpátk
 kalendář*. Kalendář zůstává tam, kde je doopravdy nad věcí: u medailonku
 pořadatele, protože ten patří klubu, ne regatě.
 
+**Od 29. 10. 2026 to druhé už neplatí a tahle věta je tu jen jako stopa:**
+regata ve správě **vlastní stránku má** (`/sprava/{ročník}/zavod/{regata}`,
+commit 29c49a7) a je to sjednocené okno s dlaždicemi úkonů nad obsahem.
+Rozcestník ročníku vypisuje regaty jako **řádky**, které na ni vedou
+(79d980a), a drobeček regaty míří tam, ne na kotvu v rozcestníku. Co z toho
+plyne dál, je v oddílu *Ergonomie správy: jedno okno ve čtyřech patrech*.
+
 **Poslední drobeček nikdy není odkaz** a zahazuje se to v `Drobecky`, ne
 u každé stránky: půlka obrazovek správy má „hlavu", která se vykreslí i ve
 stavu „nemáš práva", a nesla by tentýž seznam dvakrát.
@@ -7513,6 +7520,124 @@ a žádnou v ročníku, neviděl ročníkové položky, ačkoliv na ty obrazovky
 a po zadání adresy ho pustily. Dvě místa s vlastní pravdou o právech se
 rozejdou; proto je jedno. Ze stejného důvodu zrušená zastávka nenabízí odkazy,
 které API odmítne — slib naprázdno je horší než chybějící odkaz.
+
+## Ergonomie správy: jedno okno ve čtyřech patrech (12. 11. 2026)
+
+Sezení nad ergonomií, patnáct Filipových postřehů nad snímky obrazovek.
+**Rozhodnuto není nic než směr** — návrh čeká na revizi a teprve po ní se
+staví. Zapsáno proto, aby se zítra nezačínalo od chatu.
+
+Návrh k posouzení, osm obrazovek:
+<https://claude.ai/artifact/C4EacNtk9FyjL7fimg6baP>
+
+### Co Filip řekl
+
+1. Okno veřejné regaty se osvědčilo (*„líbí se mi, jak jsme udělali toto
+   okno"*) — **týž tvar chce pro ročník**: taby Kalendář, Průběžné pořadí,
+   Přihlášené lodě.
+2. Tím se **horní menu zkrátí na Ročník** a *Domů* se nakonec schová pod
+   tlačítko ročníku.
+3. **Okno Správy stejně** — z karet rozcestníku se stanou taby a obsah se
+   vykreslí rovnou pod nimi: *„ušetřili bychom jeden krok."*
+4. Obecné články jsou obsah tabu, ne vlastní stránka.
+5. Oprávnění na celý web totéž.
+6. **Pravidlo se čte z drobečků:** co visí pod *Správa*, je tab Správy; co
+   pod *Ročník*, je tab Ročníku. Taby se vypisují podle práv, takže pruh je
+   zároveň odpověď „co můžu spravovat".
+7. Veřejnou navigaci strukturovat podle toho, kdo přišel — **Závodím /
+   Fandím** — a vedle toho **Legislativa** (Pravidla, Nápověda, Osobní
+   údaje). Do plánu, ne na teď: tabule na televizi **ve dvou provedeních**
+   (pasivní automat, který sám vybírá zajímavé souboje a důležité momenty,
+   a aktivní s pohybem v mapě a fokusem na závodníka), učení toho automatu
+   z toho, jak diváci doopravdy sledují, a appka pro závodníka a posádku co
+   nejdřív.
+8. **Pruh partnerů nevidí správce ani rozhodčí.** (Rozbor i vzorec jsou
+   v `docs/SCENARE-OVLADANI.md`, *Pruh partnerů ve správě*; otevřená otázka
+   „jen `/sprava/**`, nebo i veřejné stránky" je tímhle zodpovězená na
+   druhou možnost — váže se to na roli, ne na adresu.)
+9. Když se značka v záhlaví překryje s nadpisem, **zmenšit ji do proužku**.
+10. Karty regat v kalendáři chtějí lepší design.
+11. **Mapa se občas nevykreslí celá** — chybí dlaždice podkladu, trať
+    a značky se kreslí. Vada, ne ergonomie; vlastní stopa.
+12. Tab **Výsledky ve správě má zavádějící jméno** a nese rozjížďky,
+    workflow, trať, kdo je na vodě i lodě pohromadě. Celé obsahové okno chce
+    revizi; kandidát je master–detail nad rozjížďkami po vzoru prvků trati.
+13. **Zápis rozjížďky** chce přesuny pořadí, shodný čas a kódy přímo
+    v tabulce (když to stav dovolí) a **rozpoznání papírového zápisu
+    z fotky, které navrhne změny** jako asistent, ne jen uloží doklad.
+14. Kalendář je taky tab, i se svými vnitřními taby Pohár / Komunitní akce.
+15. **Design se schvaluje první**, pak se podle něj sjednocuje zbytek.
+
+### Čtyři patra, jeden komponent
+
+Není to nová navigace. `DlazdiceSekci` (`web/app/prepinac-sekci.tsx`) je
+obecná a dnes ji plní `polozkyZastavky`; `polozkyRocniku` (ř. 181
+v `web/lib/co-smim.ts`) a `polozkyWebu` (ř. 455) jsou hotové seznamy
+odvozené z týchž práv. Patra jsou pak tahle:
+
+| Patro | Taby | Stav |
+|---|---|---|
+| Veřejný ročník | Úvod · Kalendář · Průběžné pořadí · Přihlášené lodě · Novinky | nové |
+| Veřejná regata | Úvod · Vypsání · Směrnice · Trať · Startovka · Výsledky | stojí |
+| Správa webu | Ročníky · Obecné články · Oprávnění · Co web stojí | nové |
+| Správa ročníku | Co teď · Regaty · Kalendář · Výsledky · Lodě · Novinky · Otázky · Oprávnění | nové |
+| Správa regaty | dlaždice úkonů | stojí |
+
+**Jeden pruh naráz.** Na pracovní obrazovce stojí pruh jejího patra a nic
+víc; nadřazená patra nese drobeček. Jinak by nad výsledky regaty byly tři
+pruhy pod sebou a u kalendáře čtvrtý.
+
+**Vnitřní přepínač má jiný tvar** — segmentovaná pilulka (Pohár / Komunitní
+akce, kategorie u pořadí), menší a bez barevné hrany. Dva stejné pruhy nad
+sebou splynou v jeden.
+
+**„Co teď" zůstává, jako první tab ročníku.** Vzniklo jako oprava tiché
+předávky zápisu rozhodčímu (8. 10. 2026) a je to jediné místo, které
+rozhodčímu s osmi regatami řekne, u které něco visí. Tím se zároveň
+rozhoduje otevřený *Návrh zrušit rozcestník ročníku* (27. 10.,
+`docs/SCENARE-OVLADANI.md`): rozcestník **nezaniká, mění tvar**, a všechny
+tři námitky proti jeho zrušení padají — stránka nezveřejněné regaty není
+potřeba, „Co teď" zůstává přehledem napříč regatami a věci celého ročníku
+mají pořád kam patřit.
+
+**Co teď a Regaty jsou dva taby, ne jeden slepenec** — jedno jméno nad dvěma
+různými věcmi je přesně vada z postřehu 12.
+
+**Barva patří agendě, ne patru.** Výsledky mají `--ukon-vysledky` v ročníku
+i u regaty, Lodě dědí barvu přihlášek. Nové agendy dostanou vlastní tokeny
+ve stejné sytosti. Výjimka je *Co teď*: teplá cihlová, jediná teplá barva na
+webu, protože to není agenda, ale upomínka.
+
+**Žádná adresa se nemění.** `/sprava/{ročník}/kalendar`, `/vysledky`,
+`/lode`, `/opravneni`, `/clanky` adresy mají; mění se jim hlava, ne cesta.
+Drobečky, odkazy i mikrocache zůstávají, jak jsou.
+
+### Pořadí
+
+1. **Návrh a jeho schválení** — bez kódu (postřeh 15).
+2. **Pilot: okno správy ročníku.** Patro mezi Správou a regatou, takže na
+   něm vyjde najevo, jestli „jeden pruh naráz" drží. Ověřit na rolích
+   pořadatel / rozhodčí / správce.
+3. **Okno správy webu.** Otevřené: dnešní přesměrování při jediném ročníku
+   a žádné roli na web (`web/app/sprava/page.tsx:65`) — doporučeno nechat.
+4. **Veřejný ročník.** Jediná skutečně nová věc v celé řadě je **veřejný
+   seznam přihlášených lodí ročníku** — u regaty existuje, u ročníku ne,
+   takže je to práce i v API.
+5. **Drobnosti** (8, 9, 10) — nezávislé; karty regat až podle schváleného
+   designu.
+6. **Vada mapy** (11) — vlastní stopa, nejdřív reprodukce.
+7. **Velká přestavba obsahu** (12, 13) až po sjednocení navigace, jinak se
+   na tytéž obrazovky sahá dvakrát. Rozpoznání papíru z fotky je samostatná
+   úloha s jinou cenou i nejistotou, ne součást té fáze.
+8. **Veřejné menu** (2 a 7) — dvě řešení téhož řádku, rozhodnout najednou.
+
+### Co zbývá rozhodnout
+
+- Sedí osm tabů ročníku, nebo se některý (Otázky k aplikaci) schová jinam?
+- Zkrácená jména tabů („Kalendář" místo „Kalendář ročníku") — dlouhé zůstává
+  v bublině pod myší.
+- Na telefonu mřížka tří sloupců se zkratkami; posoudit až na živé stránce.
+- Tmavý režim návrh nekreslí, drží se stávajících tokenů.
 
 ## Koncept z telefonu u zápisu z vody (6. 10. 2026)
 
