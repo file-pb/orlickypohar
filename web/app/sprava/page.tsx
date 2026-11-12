@@ -4,6 +4,7 @@ import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { nactiSerie } from "@/lib/api";
 import { nactiJa } from "@/lib/ja";
 import { NAZVY_ROLI, polozkyWebu, prava, roleVRocniku, rocniky } from "@/lib/co-smim";
+import { NadpisWebu, PruhWebu } from "@/app/sprava/pruh-webu";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -69,49 +70,32 @@ export default async function Sprava() {
 
   return (
     <>
-      {hlava}
+      <Drobecky cesta={drobeckySpravy(null)} />
+      <PruhWebu aktivni="rocniky" maRocniky={mam.length > 0} />
+      <NadpisWebu tab="rocniky" />
 
-      {mam.length > 0 && (
-        <>
-          <h2>Ročníky</h2>
-          <ul className="seznam">
-            {mam.map((serie) => (
-              <li key={serie}>
-                <Link className="karta" href={`/sprava/${serie}`}>
-                  <div className="nazev">
-                    {nazev(serie)}
-                    {roleVRocniku(udelena, serie).map((m, i) => (
-                      <span key={`${m.role}-${m.zavod ?? ""}-${i}`} className="stitek">
-                        {NAZVY_ROLI[m.role]}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="detail">Kalendář, výsledky, přihlášky, směrnice.</div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      {web.length > 0 && (
-        <>
-          <h2>Celý web</h2>
-          <ul className="seznam">
-            {web.map((p) => (
-              <li key={p.kam}>
-                <Link className="karta" href={p.kam}>
-                  <div className="nazev">
-                    {p.nazev}
-                    <span className="stitek">{NAZVY_ROLI[p.role]} webu</span>
-                  </div>
-                  <div className="detail">{p.popis}</div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      {/* <b>Řádky, ne karty</b> (konzilium, 12. 11. 2026). Karta nesla jméno
+          a pod ním větu „Kalendář, výsledky, přihlášky, směrnice." — výčet
+          obrazovek, který je o patro níž stejně v pruhu. Řádek nese to, co
+          se o ročníku doopravdy ví zvenčí: jak se jmenuje a čím v něm ten
+          člověk je. */}
+      <ul className="seznam seznam-rocniku">
+        {mam.map((serie) => (
+          <li key={serie}>
+            <Link className="radek-rocniku" href={`/sprava/${serie}`}>
+              <span className="nazev">{nazev(serie)}</span>
+              <span className="role">
+                {roleVRocniku(udelena, serie).map((m, i) => (
+                  <span key={`${m.role}-${m.zavod ?? ""}-${i}`} className="stitek">
+                    {NAZVY_ROLI[m.role]}
+                  </span>
+                ))}
+              </span>
+              <span className="sipka" aria-hidden="true">→</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

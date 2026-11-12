@@ -1,5 +1,6 @@
 import Link from "@/app/sprava/odkaz";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
+import { NadpisWebu, PruhWebu } from "@/app/sprava/pruh-webu";
 import { Vypadek } from "@/app/vypadek";
 import { ROLE_WEBU, nactiPrehledWebu } from "@/lib/sprava";
 import { odeberZWebuAkce, udelNaWebuAkce } from "./akce";
@@ -24,7 +25,7 @@ export default async function OpravneniWebu({ searchParams }: Parametry) {
 
   const hlava = (
     <>
-      <Drobecky cesta={drobeckySpravy(null, [{ text: "Oprávnění na celý web" }])} />
+      <Drobecky cesta={drobeckySpravy(null)} />
       <h1>Oprávnění na celý web</h1>
     </>
   );
@@ -49,9 +50,12 @@ export default async function OpravneniWebu({ searchParams }: Parametry) {
 
   return (
     <>
-      {hlava}
-      <p className="podtitulek">
-        Editor webu píše obecné články mimo ročník. Správce webu smí všechno ve všech ročnících.
+      <Drobecky cesta={drobeckySpravy(null)} />
+      <PruhWebu aktivni="opravneni-webu" />
+      <NadpisWebu tab="opravneni-webu" />
+      <p className="poznamka">
+        Editor webu píše obecné články mimo ročník. Správce webu smí všechno ve všech
+        ročnících. Role v jednom ročníku se udělují v tom ročníku.
       </p>
 
       {zpravy.chyba && (

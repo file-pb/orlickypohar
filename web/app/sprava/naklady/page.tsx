@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import Link from "@/app/sprava/odkaz";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
+import { NadpisWebu, PruhWebu } from "@/app/sprava/pruh-webu";
 import { Vypadek } from "@/app/vypadek";
 import { nactiNaklady, type NakladovaPolozka } from "@/lib/naklady";
 import { GrafDnu } from "./graf";
@@ -35,7 +36,7 @@ export default async function Naklady() {
 
   const hlava = (
     <>
-      <Drobecky cesta={drobeckySpravy(null, [{ text: "Co web stojí" }])} />
+      <Drobecky cesta={drobeckySpravy(null)} />
       <h1>Co web stojí</h1>
     </>
   );
@@ -72,7 +73,9 @@ export default async function Naklady() {
 
   return (
     <>
-      {hlava}
+      <Drobecky cesta={drobeckySpravy(null)} />
+      <PruhWebu aktivni="naklady" />
+      <NadpisWebu tab="naklady" />
       {/* Kolik procent je navíc proti přehledu platformy, se tu nepíše: je to
           obchodní údaj, ne vysvětlení tabulky. Obrazovka je jen pro správce
           webu, ale text se dá poslat dál screenshotem. Ceny přirážku

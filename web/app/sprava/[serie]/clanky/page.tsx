@@ -2,6 +2,7 @@ import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { NadpisRocniku, PruhRocniku } from "@/app/sprava/pruh-rocniku";
+import { NadpisWebu, PruhWebu } from "@/app/sprava/pruh-webu";
 import { Vypadek } from "@/app/vypadek";
 import { datumClanku } from "@/app/datum";
 import { STAVY, jeWeb, nactiPrehled, nazevStavu, type ClanekRadek, type StavClanku } from "@/lib/clanky";
@@ -104,7 +105,11 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
       {/* Obecné články leží mimo ročník, takže pruh ročníku nad nimi
           nestojí — patří o patro výš, ke Správě webu. */}
       {web ? (
-        hlava
+        <>
+          <Drobecky cesta={drobeckySpravy(null)} />
+          <PruhWebu aktivni="clanky" />
+          <NadpisWebu tab="clanky" />
+        </>
       ) : (
         <>
           <Drobecky cesta={drobeckySpravy(serie)} />

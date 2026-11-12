@@ -6189,3 +6189,34 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
 .seznam-regat .prubeh { font-size: 0.85rem; color: var(--tlumeny); }
 .seznam-regat .prubeh .ceka { color: var(--pozor-pismo, var(--text)); font-weight: 600; }
 .seznam-regat .prubeh .klid { color: var(--tlumeny); }
+
+/* =====================================================================
+   OKNO SPRÁVY WEBU (konzilium, 12. 11. 2026)
+
+   Patro nad ročníkem, týž tvar. „Oprávnění na celý web" a „Co web stojí"
+   mají šeď, protože to nejsou agendy mezi agendami — a protože jejich
+   původní barvy v návrhu byly týž hex jako Směrnice a Trať.
+   --------------------------------------------------------------------- */
+
+.dlazdice-sekci > li[data-polozka="rocniky"] { --ukon: var(--ukon-regaty); }
+.dlazdice-sekci > li[data-polozka="opravneni-webu"] { --ukon: var(--ukon-uvod); }
+.dlazdice-sekci > li[data-polozka="naklady"] { --ukon: var(--ukon-uvod); }
+
+body:has(.vybrany-ukon[data-ukon="rocniky"]) { --ukon-strany: var(--ukon-regaty); }
+body:has(.vybrany-ukon[data-ukon="opravneni-webu"]) { --ukon-strany: var(--ukon-uvod); }
+body:has(.vybrany-ukon[data-ukon="naklady"]) { --ukon-strany: var(--ukon-uvod); }
+
+/* Ročník jako řádek, ne karta: karta nesla pod jménem výčet obrazovek,
+   které jsou o patro níž stejně v pruhu. */
+.seznam-rocniku { list-style: none; margin: 0; padding: 0;
+  background: var(--papir); border: 1px solid var(--linka);
+  border-radius: 10px; overflow: hidden; }
+.seznam-rocniku > li + li { border-top: 1px solid var(--linka); }
+.radek-rocniku {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center;
+  gap: 0.9rem; padding: 0.8rem 1rem; color: inherit; text-decoration: none;
+}
+.radek-rocniku:hover { background: var(--zvyrazneni); text-decoration: none; }
+.radek-rocniku .nazev { font-weight: 700; font-size: 1.05rem; }
+.radek-rocniku .role { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.radek-rocniku .sipka { color: var(--tlumeny); font-size: 1.05rem; }
