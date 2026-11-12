@@ -15,7 +15,7 @@ RUN --mount=type=secret,id=sixlabors \
     dotnet publish src/OrlickyPohar.Api/OrlickyPohar.Api.csproj \
     -a $TARGETARCH -c Release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-alpine AS final
 
 # Alpine image nemá ICU a jede s DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true,
 # kde `StringComparer` spadne na ordinální porovnání: `Č` se řadí až za `Z`.
