@@ -6015,3 +6015,135 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   .nahravky audio { width: 100%; }
   .hlas button { width: 100%; }
 }
+
+/* =====================================================================
+   OKNO ROČNÍKU (konzilium, 12. 11. 2026)
+
+   Pruh tabů o patro výš než dlaždice úkonů regaty. Používá tutéž
+   komponentu a tytéž třídy; co je tady navíc, jsou barvy nových agend
+   a tři rozhodnutí konzilia, která platí pro obě patra.
+   --------------------------------------------------------------------- */
+
+:root {
+  --ukon-regaty: #4a6a8a;
+  --ukon-kalendar: #5a7a4a;
+  --ukon-novinky: #7a5a8a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-rezim="svetly"]) {
+    /* Světlejší odrudy: na tmavém papíru drží původní hodnoty jen 2,9 : 1,
+       a hrana je netextový prvek rozhraní — WCAG 1.4.11 chce 3 : 1.
+       Kontrola tokenů to nenajde (hrana je `border-color` nad `color-mix`,
+       kdežto ta páruje jen pravidla s `color` i plným `background`). */
+    --ukon-regaty: #6d86a3;
+    --ukon-kalendar: #708b62;
+    --ukon-novinky: #9679a4;
+  }
+}
+[data-rezim="tmavy"] {
+  --ukon-regaty: #6d86a3;
+  --ukon-kalendar: #708b62;
+  --ukon-novinky: #9679a4;
+}
+
+/* Klíče tabů ročníku. „Co teď" a „Oprávnění" mají šeď, kterou má z téhož
+   důvodu Úvod u regaty: není to agenda mezi agendami. U Oprávnění je to
+   navíc nutnost — původní okrová byla týž hex jako Směrnice (ΔE 0,0). */
+.dlazdice-sekci > li[data-polozka="coted"] { --ukon: var(--ukon-uvod); }
+.dlazdice-sekci > li[data-polozka="regaty"] { --ukon: var(--ukon-regaty); }
+.dlazdice-sekci > li[data-polozka="kalendar"] { --ukon: var(--ukon-kalendar); }
+.dlazdice-sekci > li[data-polozka="lode"] { --ukon: var(--ukon-prihlasky); }
+.dlazdice-sekci > li[data-polozka="clanky"] { --ukon: var(--ukon-novinky); }
+.dlazdice-sekci > li[data-polozka="opravneni"] { --ukon: var(--ukon-uvod); }
+
+body:has(.vybrany-ukon[data-ukon="coted"]) { --ukon-strany: var(--ukon-uvod); }
+body:has(.vybrany-ukon[data-ukon="regaty"]) { --ukon-strany: var(--ukon-regaty); }
+body:has(.vybrany-ukon[data-ukon="kalendar"]) { --ukon-strany: var(--ukon-kalendar); }
+body:has(.vybrany-ukon[data-ukon="lode"]) { --ukon-strany: var(--ukon-prihlasky); }
+body:has(.vybrany-ukon[data-ukon="clanky"]) { --ukon-strany: var(--ukon-novinky); }
+body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod); }
+
+/* <b>Barvu nese vybraná dlaždice, ne všechny</b> (konzilium, bod 3).
+   Osm plných barev vedle sebe je duha, ne soustava: rozptyl L* 15,2
+   a při deuteranopii splynou Regaty s Novinkami na ΔE′ 1,9. V pruhu tabů
+   je jeden vybraný a nese ho podklad, rámeček i spodní linka — barva
+   sedmi nevybraných pak neodpovídá na nic a jen zvedá hustotu nad
+   obsahem, který má být hlavní.
+
+   <b>Platí to jen tam, kde se vybralo.</b> Na rozcestníku regaty žádná
+   dlaždice vybraná není a z pěti rovnocenných úkonů se teprve volí —
+   tam barva pracuje a zůstává plná.
+
+   Míchá se <b>do `--tlumeny`, ne do `--linka`</b>: hrana tím drží
+   4,12–5,31 : 1 místo 1,95–2,37, takže se WCAG 1.4.11 nepodkračuje.
+   Výjimka, kterou by bylo potřeba hájit při každém rozšíření kontroly,
+   je horší než pruh o odstín tmavší. */
+.dlazdice-sekci:has(a[aria-current="page"]) .karta {
+  border-left-color: color-mix(in srgb, var(--ukon, var(--voda)) 45%, var(--tlumeny));
+  background: var(--papir);
+}
+.dlazdice-sekci:has(a[aria-current="page"]) a[aria-current="page"] {
+  border-left-color: var(--ukon, var(--voda));
+  background: color-mix(in srgb, var(--ukon, var(--voda)) 10%, var(--papir));
+}
+
+/* <b>Dotykový cíl 44 px a práh 6,6 rem</b> (konzilium, bod 5).
+   Změřeno proti téhle komponentě: `.obal` nechá na telefonu 350 px,
+   takže při prahu 7,25 rem vyjdou dva sloupce, sedm tabů do čtyř řad
+   a 196 px — skoro čtvrtina displeje navigací na obrazovce, kde se
+   pracuje jednou rukou. Při 6,6 rem jsou tři sloupce, tři řady, 146 px.
+   Okno prahu je úzké (6,53–6,71 rem), takže se tahle hodnota nesmí
+   stěhovat bez měření na 375 i 390 px.
+
+   Cíl 44 px patří sem, do komponenty — ne do jedné obrazovky, jinak má
+   správa regaty cíl o 12 px menší než ročník. */
+@media (pointer: coarse) {
+  .dlazdice-sekci { --min-dlazdice: 6.6rem; }
+  body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 6.6rem; }
+  .dlazdice-sekci .karta {
+    padding: 0.7rem 0.4rem 0.7rem 0.55rem;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  /* Dlouhé jméno se na telefonu zalomí dovnitř dlaždice. Druhé jméno pro
+     tutéž věc se nezavádí: tři slova pro jedno („Oprávnění · Oprávnění na
+     celý web · Práva") jsou přesně ta nesrovnalost, kterou projekt
+     29. 10. 2026 odmítl. */
+  .dlazdice-sekci .nazev { white-space: normal; line-height: 1.15; }
+}
+
+/* <b>Nadpis okna ročníku: váhu má agenda.</b> U regaty je to obráceně
+   schválně — tam se mění agenda nad toutéž regatou a jméno regaty drží
+   obrazovku pohromadě. V ročníku je jméno na všech sedmi tabech totéž
+   a stojí o řádek výš v drobečku, takže nejtěžší typografie na stránce
+   by se při přepnutí tabu nezměnila a oko by změnu nevidělo. */
+.nadpis-ukonu .ctvrt { font-weight: 500; font-size: 0.88em; color: var(--tlumeny); }
+.nadpis-ukonu strong.agenda { font-weight: 700; font-size: 1em; }
+
+/* Úkoly v „Co teď". Karta faktu nese stav regaty nad jménem — a nemá
+   sloveso, protože to není úkol. */
+.ukoly-ted .karta .cim {
+  font-size: 0.8rem;
+  color: var(--tlumeny);
+  margin-bottom: 0.25rem;
+}
+.ukoly-ted .karta.fakt { background: var(--papir); }
+
+/* Pata okna: co leží mimo ročník, plus trvalá cesta k otázkám. */
+.pata-okna {
+  margin: 1rem 0 0;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--linka);
+  font-size: 0.85rem;
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+/* Řádek regaty nese větu o tom, na kom to je. Čeká-li se, je to barva
+   stavu, ne další štítek — štítků už řádek nese dost. */
+.seznam-regat .prubeh { font-size: 0.85rem; color: var(--tlumeny); }
+.seznam-regat .prubeh .ceka { color: var(--pozor-pismo, var(--text)); font-weight: 600; }
+.seznam-regat .prubeh .klid { color: var(--tlumeny); }

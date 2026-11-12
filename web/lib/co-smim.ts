@@ -182,6 +182,49 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
   const kam = (cesta: string) => `/sprava/${encodeURIComponent(serie)}${cesta}`;
 
   const vse: Varianta[][] = [
+    // <b>Co teď a Regaty jsou dva taby, ne jeden slepenec</b> (konzilium,
+    // 12. 11. 2026). Jsou to dvě otázky — „co čeká mně" a „v jakém stavu je
+    // která regata" — a jedno jméno nad oběma by byla tatáž vada, kterou
+    // Filip našel u tabu *Výsledky*: jméno slibuje míň, než za ním je.
+    //
+    // <b>Oba chtějí přehled zastávek</b>, a ten API pouští jen pořadateli
+    // a rozhodčímu (403 → `nesmi`). Čistý editor by dostal tab, který mu
+    // nenaplní nikdy nic — dvě dlaždice, z toho jedna prázdná, se nečtou
+    // jako „mám málo práv", ale jako porucha.
+    [
+      {
+        nazev: "Co teď",
+        popis: "Co čeká zrovna teď, napříč regatami ročníku.",
+        kam: kam(""),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie },
+        kdyz: (u) => poradatelemVRocniku(u, serie),
+      },
+      {
+        nazev: "Co teď",
+        popis: "Co čeká na tvůj podpis a co je hotové a není venku.",
+        kam: kam(""),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
+    [
+      {
+        nazev: "Regaty",
+        popis: "Kdy se která jede a co u ní visí.",
+        kam: kam("/regaty"),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie },
+        kdyz: (u) => poradatelemVRocniku(u, serie),
+      },
+      {
+        nazev: "Regaty",
+        popis: "Stav všech regat ročníku na jednom pohledu.",
+        kam: kam("/regaty"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
     // <b>Vypsat závod není práce rozhodčího</b>, ačkoliv tu tak dlouho
     // stálo: `Kalendar.KdoSmi` dává `Vypsany` a `Odjety` pořadateli té
     // regaty a zbytek řady rozhodčímu. Pořadatel jedné zastávky přitom
@@ -191,14 +234,14 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
     // (audit obsazení, 26. 10. 2026).
     [
       {
-        nazev: "Kalendář ročníku",
+        nazev: "Kalendář",
         popis: "Založit regatu, potvrdit a posunout termín, zrušit.",
         kam: kam("/kalendar"),
         role: "Rozhodci",
         pozadavek: { role: "Rozhodci", serie },
       },
       {
-        nazev: "Kalendář ročníku",
+        nazev: "Kalendář",
         popis: "Vypsat svou regatu a nahlásit, že se odjela.",
         kam: kam("/kalendar"),
         role: "Organizator",
@@ -208,14 +251,14 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
     ],
     [
       {
-        nazev: "Výsledky",
+        nazev: "Zápis výsledků",
         popis: "Zápis z vody, oprava a vypuštění ven.",
         kam: kam("/vysledky"),
         role: "Organizator",
         pozadavek: { role: "Organizator", serie },
       },
       {
-        nazev: "Výsledky",
+        nazev: "Zápis výsledků",
         // Pustit ven od 27. 10. 2026 rozhodčí smí (`Workflow.KdoSmiPublikovat`);
         // *Potvrzeno* zůstalo správci (`Workflow.KdoSmi`), a to se sem nepíše —
         // je to archivní zámek, ne krok, kvůli kterému se na obrazovku chodí.
@@ -233,32 +276,12 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
       pozadavek: { role: "Spravce", serie },
     }],
     [{
-      nazev: "Novinky ročníku",
+      nazev: "Novinky",
       popis: "Články o seriálu a o regatách.",
       kam: kam("/clanky"),
       role: "Editor",
       pozadavek: { role: "Editor", serie },
     }],
-    // <b>Otázky k aplikaci</b> (28. 10. 2026). Sadu dostává rozhodčí
-    // a odpovídá na ni; pořadatel ji čte. Server pouští na čtení obojí
-    // a na zápis jen rozhodčího (`OponenturaEndpoints`), takže podoby jsou
-    // dvě a popis odpovídá tomu, co ten člověk na obrazovce dělá.
-    [
-      {
-        nazev: "Otázky k aplikaci",
-        popis: "Odpovědět na otevřené otázky — zaškrtnutím, textem, nebo hlasem.",
-        kam: kam("/oponentura"),
-        role: "Rozhodci",
-        pozadavek: { role: "Rozhodci", serie },
-      },
-      {
-        nazev: "Otázky k aplikaci",
-        popis: "Co rozhodčí odpověděl a na co ještě ne.",
-        kam: kam("/oponentura"),
-        role: "Organizator",
-        pozadavek: { role: "Organizator", serie },
-      },
-    ],
     // Rozhodčí přiřazuje pořadatele a editora jedné regatě; roli na celý
     // ročník a rozhodčího dává jen správce (`Udeleni.RozhodciSmiUdelit`).
     // Jeden popis pro oba sliboval rozhodčímu dvě role, které mu obrazovka
@@ -284,6 +307,47 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
   return vse
     .map((varianty) => prvniPlatna(udelena, varianty))
     .filter((p): p is Polozka => p !== null);
+}
+
+/**
+ * <b>Otázky k aplikaci — fronta, ne agenda</b> (konzilium, 12. 11. 2026).
+ *
+ * Do pruhu tabů nepatří: pruh odpovídá na otázku „co můžu spravovat", a na
+ * otázky se neodpovídá správou, nýbrž odpovědí. Tab by navíc musel jméno
+ * zkrátit a *Otázky* se v řadě agend čtou jako dotazy závodníků.
+ *
+ * Objeví se tedy <b>jako úkol v „Co teď"</b>, když něco visí, a vedle toho
+ * stojí <b>trvalý odkaz v patě okna</b> — protože pořadatel odpovědi jen
+ * čte (`OponenturaEndpoints` ho na čtení pouští) a bez trvalé cesty by to
+ * byla funkce bez cesty.
+ *
+ * Sadu dostává rozhodčí a odpovídá na ni; pořadatel ji čte. Proto dvě
+ * podoby a popis podle toho, co ten člověk na obrazovce dělá.
+ *
+ * <b>Pořadatel jedné zastávky ji taky má.</b> Varianta pro `Organizator`
+ * nesměla chtít právo na celý ročník — tatáž vada, kvůli které dostal
+ * `kdyz` kalendář (audit obsazení, 26. 10. 2026).
+ */
+export function polozkaOponentury(udelena: Udelena[], serie: string): Polozka | null {
+  const kam = `/sprava/${encodeURIComponent(serie)}/oponentura`;
+
+  return prvniPlatna(udelena, [
+    {
+      nazev: "Otázky k aplikaci",
+      popis: "Odpovědět na otevřené otázky — zaškrtnutím, textem, nebo hlasem.",
+      kam,
+      role: "Rozhodci",
+      pozadavek: { role: "Rozhodci", serie },
+    },
+    {
+      nazev: "Otázky k aplikaci",
+      popis: "Co rozhodčí odpověděl a na co ještě ne.",
+      kam,
+      role: "Organizator",
+      pozadavek: { role: "Organizator", serie },
+      kdyz: (u) => poradatelemVRocniku(u, serie),
+    },
+  ]);
 }
 
 /**

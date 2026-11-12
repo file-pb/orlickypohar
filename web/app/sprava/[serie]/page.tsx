@@ -1,15 +1,16 @@
 import Link from "@/app/sprava/odkaz";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
-import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
+import { NadpisRocniku, PataOkna, PruhRocniku } from "@/app/sprava/pruh-rocniku";
 import { nactiJa } from "@/lib/ja";
+import { nactiSerie } from "@/lib/api";
+import { nactiSady } from "@/lib/oponentura";
 import { nactiZastavky, type ZastavkaVysledky } from "@/lib/vysledky";
 import {
   jenSveZastavky,
   NAZVY_ROLI,
-  polozkyRocniku,
-  polozkyWebu,
+  polozkaOponentury,
   prava,
   roleVRocniku,
   smi,
@@ -95,125 +96,49 @@ export default async function RozcestnikRocniku({
     : zastavky;
 
   const ukoly = coTeď(udelena, serie, mojeZastavky);
-  const rocnikove = polozkyRocniku(udelena, serie);
-  const web = polozkyWebu(udelena);
+
+  // Otázky k aplikaci jsou fronta, ne agenda — v pruhu nestojí a připomenou
+  // se tady (konzilium, 12. 11. 2026). Výpadek téhle části nemá sebrat
+  // obrazovku, takže se na ni jen nečeká.
+  const otazky = await ukolOponentury(udelena, serie);
+  if (otazky) ukoly.push(otazky);
+
+  const nazevRocniku =
+    (await nactiSerie().catch(() => []))?.find((s) => s.slug === serie)?.nazev ?? serie;
 
   return (
     <>
-      {hlava}
-      <p className="podtitulek">
-        {moje.map((m, i) => (
+      <Drobecky cesta={drobeckySpravy(serie)} />
+      <PruhRocniku serie={serie} aktivni="coted" />
+      <NadpisRocniku
+        serie={serie}
+        nazevRocniku={nazevRocniku}
+        tab="coted"
+        podtitulek={moje.map((m, i) => (
           <span key={`${m.role}-${m.zavod ?? ""}-${i}`} className="stitek">
             {NAZVY_ROLI[m.role]}
             {m.zavod ? ` — ${nazevZastavky(zastavky, m.zavod)}` : " ročníku"}
           </span>
         ))}
-      </p>
+      />
 
-      <h2>Co teď</h2>
-      {ukoly.length === 0 ? (
-        <p className="prazdno">
-          Nic nečeká. V den regaty tu bude zápis z cíle; do té doby se chystá{" "}
-          {mojeZastavky.length > 0
-            ? "u regaty níž — přihlášky a směrnice."
-            : "v rozpisu níž."}
-        </p>
-      ) : (
-        <ul className="seznam">
-          {ukoly.map((u) => (
-            <li key={u.kam}>
-              <Link className="karta" href={u.kam}>
-                <div className="nazev">{u.nazev}</div>
-                <div className="detail">{u.popis}</div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="seznam ukoly-ted">
+        {ukoly.map((u) => (
+          <li key={u.kam}>
+            <Link className="karta" href={u.kam}>
+              <div className="nazev">{u.nazev}</div>
+              <div className="detail">{u.popis}</div>
+            </Link>
+          </li>
+        ))}
+        {/* <b>Co teď nesmí být prázdné</b> (konzilium, 12. 11. 2026): mimo
+            závodní den nevydá `coTeď` nic, a to je většina roku — sedm regat
+            z osmi je plánovaných. Prázdná obrazovka by na nejčastější cestě
+            roku přidala klepnutí, které měla přestavba ušetřit. */}
+        {ukoly.length === 0 && <NejblizsiRegata serie={serie} zastavky={mojeZastavky} />}
+      </ul>
 
-      {mojeZastavky.length > 0 && (
-        <>
-          <h2>{jenSve ? "Moje regaty" : "Regaty ročníku"}</h2>
-          <p className="poznamka">
-            U každé je zápis výsledků, přihlášky, směrnice i bóje na trati —
-            všechno, co se k jedné regatě dělá, pohromadě na její stránce.
-          </p>
-          {/* <b>Řádky, ne karty</b> (Filip, 29. 10. 2026: *„tady asi můžeme
-              udělat jen seznam, kterým se proklikneme do sjednoceného okna
-              regaty"*). Karta vznikla v době, kdy regata ve správě vlastní
-              stránku neměla — nesla proto krom jména a termínu i řádek odkazů
-              na jednotlivé úkony, tedy druhou podobu téhož rozcestníku. Od
-              chvíle, kdy nad každým úkonem stojí pruh dlaždic, je ten řádek
-              třetí cesta k téže věci.
-
-              <b>Stav se vrací do štítku.</b> Rámeček karty ho nese proto, že
-              karta je plocha (Filip, 27. 10. 2026) — řádek plocha není a barevná
-              linka kolem něj by se četla jako předěl mezi regatami. Barva
-              i slovo zůstávají tytéž, mění se jen nosič. */}
-          <ul className="seznam seznam-regat">
-            {mojeZastavky.map((z) => (
-              /* Kotva zůstává kvůli starším odkazům: mířily sem v době, kdy
-                 cíl „regata ve správě" nebyl stránkou, ale právě tímhle
-                 řádkem. */
-              <li key={z.zavod} id={z.zavod}>
-                <Link
-                  className="radek-regaty"
-                  href={`/sprava/${encodeURIComponent(serie)}/zavod/${encodeURIComponent(z.zavod)}`}
-                >
-                  <span className={`nazev${z.stav === "Zruseny" ? " skrtnute" : ""}`}>
-                    {z.nazev}
-                  </span>
-                  <Stav stav={z.stav} />
-                  {z.kRevizi.length > 0 && (
-                    <span className="stitek vysledek-krevizi">
-                      {z.kRevizi.length}× k revizi
-                    </span>
-                  )}
-                  <span className="termin">{datum(z.datum)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      {rocnikove.length > 0 && (
-        <>
-          <h2>Celý ročník</h2>
-          <ul className="seznam">
-            {rocnikove.map((p) => (
-              <li key={p.kam}>
-                <Link className="karta" href={p.kam}>
-                  <div className="nazev">
-                    {p.nazev}
-                    <span className="stitek">{NAZVY_ROLI[p.role]}</span>
-                  </div>
-                  <div className="detail">{p.popis}</div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      {web.length > 0 && (
-        <>
-          <h2>Mimo ročník</h2>
-          <ul className="seznam">
-            {web.map((p) => (
-              <li key={p.kam}>
-                <Link className="karta" href={p.kam}>
-                  <div className="nazev">
-                    {p.nazev}
-                    <span className="stitek">{NAZVY_ROLI[p.role]} webu</span>
-                  </div>
-                  <div className="detail">{p.popis}</div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      <PataOkna serie={serie} />
     </>
   );
 }
@@ -321,6 +246,98 @@ function coTeď(udelena: Udelena[], serie: string, zastavky: ZastavkaVysledky[])
 
   return ukoly;
 }
+
+/**
+ * Otázky k aplikaci jako <b>položka fronty</b>, ne jako tab.
+ *
+ * Objeví se, jen když něco visí — sada, která není dokončená. Trvalá cesta
+ * k nim je v patě okna; tohle je připomínka, ne navigace.
+ *
+ * <b>Výpadek téhle části nesmí sebrat obrazovku.</b> Je to doplněk nad
+ * úkoly, které se počítají z přehledu zastávek, takže při jakémkoliv jiném
+ * stavu než `ok` se prostě nic nepřipomene.
+ */
+async function ukolOponentury(udelena: Udelena[], serie: string): Promise<Polozka | null> {
+  const polozka = polozkaOponentury(udelena, serie);
+  if (!polozka) return null;
+
+  const { stav, data } = await nactiSady(serie);
+  if (stav !== "ok" || !data) return null;
+
+  const visi = data.filter((s) => s.stav !== "Odpovezeno");
+  if (visi.length === 0) return null;
+
+  const cekaOtazek = visi.reduce((n, s) => n + (s.pocetOtazek - s.odpovezeno), 0);
+  const prorozhodciho = smi(udelena, { role: "Rozhodci", serie });
+
+  return {
+    ...polozka,
+    nazev: "Odpovědět na otázky k aplikaci",
+    popis: prorozhodciho
+      ? `${cekaOtazek} ${tvarOtazek(cekaOtazek)} čeká na tvou odpověď.`
+      : `${cekaOtazek} ${tvarOtazek(cekaOtazek)} čeká na rozhodčího.`,
+  };
+}
+
+/** „1 otázka · 2 otázky · 5 otázek" — číslovka řídí tvar, ne naopak. */
+const tvarOtazek = (n: number) => (n === 1 ? "otázka" : n < 5 ? "otázky" : "otázek");
+
+/**
+ * Když nic nečeká, stojí tu <b>nejbližší regata</b> — fakt, ne úkol.
+ *
+ * Jméno proto není rozkazovací způsob: rozkaz si drží skutečné úkoly
+ * (*Zapsat dojezdy*, *Pustit ven*), a fakt mezi nimi s vlastním slovesem by
+ * se četl jako další práce. Karta vede do okna té regaty, takže i z prázdné
+ * obrazovky je práce na jedno klepnutí.
+ *
+ * <b>Ve druhé fázi</b> se detail vymění za první chybějící dokument řady
+ * vypsání → směrnice → trať → startovní listina. Dneska na to nejsou data:
+ * `ZastavkaVysledkyDto` nese termín a stav zápisu, o vyvěšení nic.
+ */
+function NejblizsiRegata({
+  serie,
+  zastavky,
+}: {
+  serie: string;
+  zastavky: ZastavkaVysledky[];
+}) {
+  const dnes = new Date().toISOString().slice(0, 10);
+  const dalsi = zastavky
+    .filter((z) => z.stav !== "Zruseny" && z.datum >= dnes)
+    .sort((a, b) => a.datum.localeCompare(b.datum))[0];
+
+  if (!dalsi)
+    return (
+      <li>
+        <p className="prazdno">
+          Teď nic nečeká a žádná další regata v ročníku není. Co je odjeté,
+          najdeš v <Link href={`/sprava/${encodeURIComponent(serie)}/regaty`}>Regatách</Link>.
+        </p>
+      </li>
+    );
+
+  return (
+    <li>
+      <Link
+        className="karta fakt"
+        href={`/sprava/${encodeURIComponent(serie)}/zavod/${encodeURIComponent(dalsi.zavod)}`}
+      >
+        <div className="cim">
+          {dalsi.nazev} · {datum(dalsi.datum)} · {STAV_SLOVEM[dalsi.stav] ?? dalsi.stav}
+        </div>
+        <div className="nazev">Nejbližší regata</div>
+        <div className="detail">Teď nic nečeká.</div>
+      </Link>
+    </li>
+  );
+}
+
+const STAV_SLOVEM: Record<string, string> = {
+  Planovany: "plánováno",
+  Vypsany: "vypsáno",
+  Odjety: "odjeto",
+  Zruseny: "zrušeno",
+};
 
 const nazevZastavky = (zastavky: ZastavkaVysledky[], zavod: string) =>
   zastavky.find((z) => z.zavod === zavod)?.nazev ?? zavod;
