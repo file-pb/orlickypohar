@@ -5980,6 +5980,19 @@ class H(BaseHTTPRequestHandler):
                                "typLodi": LODE[p["lod"]]["typ"],
                                "majitel": jmeno(LODE[p["lod"]]["majitel"]),
                                "kategorie": p["kategorie"]} for p in D["prihlasky"]],
+                # Podle čeho se ročník boduje — ZPJ 25.1 to chce venku dřív,
+                # než se loď přihlásí. Čísla jsou opsaná z `PravidlaBodovani.V1`
+                # a ze `Serie.PocetSkrtu`, stejně jako zbytek bodování v mocku:
+                # pravda leží v C#, tady jen musí sedět tvar a hodnoty, jinak
+                # by se web zkoušel proti jiným číslům, než jaká uvidí.
+                "pravidla": {
+                    "pocetSkrtu": D.get("pocetSkrtu", 1),
+                    "verzePravidel": 1,
+                    "bodyZaDiskvalifikaci": 20,
+                    "prirazkaZaKod": 1,
+                    "prirazkaZaNapravu": 1,
+                    "trestZfpProcent": 20,
+                },
             }
         elif cesta == f'/serie/{D["slug"]}/poradi':
             telo = poradi_serie()
