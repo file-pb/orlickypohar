@@ -7960,6 +7960,20 @@ export interface components {
             /** Format: int32 */
             ciMinut: number;
         };
+        PravidlaRocnikuDto: {
+            /** Format: int32 */
+            pocetSkrtu: number;
+            /** Format: int32 */
+            verzePravidel: number;
+            /** Format: int32 */
+            bodyZaDiskvalifikaci: number;
+            /** Format: int32 */
+            prirazkaZaKod: number;
+            /** Format: int32 */
+            prirazkaZaNapravu: number;
+            /** Format: int32 */
+            trestZfpProcent: number;
+        };
         PrehledClankuDto: {
             serie: string;
             serieNazev: string;
@@ -8253,6 +8267,7 @@ export interface components {
             zavody: components["schemas"]["ZavodShrnutiDto"][];
             prihlasky: components["schemas"]["PrihlaskaDto"][];
             akce: components["schemas"]["ZavodShrnutiDto"][];
+            pravidla: components["schemas"]["PravidlaRocnikuDto"];
         };
         SerieShrnutiDto: {
             slug: string;

@@ -10635,6 +10635,43 @@
                     }
                 }
             },
+            "PravidlaRocnikuDto": {
+                "required": [
+                    "pocetSkrtu",
+                    "verzePravidel",
+                    "bodyZaDiskvalifikaci",
+                    "prirazkaZaKod",
+                    "prirazkaZaNapravu",
+                    "trestZfpProcent"
+                ],
+                "type": "object",
+                "properties": {
+                    "pocetSkrtu": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "verzePravidel": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "bodyZaDiskvalifikaci": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "prirazkaZaKod": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "prirazkaZaNapravu": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "trestZfpProcent": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
             "PrehledClankuDto": {
                 "required": [
                     "serie",
@@ -11779,7 +11816,8 @@
                     "kategorie",
                     "zavody",
                     "prihlasky",
-                    "akce"
+                    "akce",
+                    "pravidla"
                 ],
                 "type": "object",
                 "properties": {
@@ -11816,6 +11854,9 @@
                         "items": {
                             "$ref": "#/components/schemas/ZavodShrnutiDto"
                         }
+                    },
+                    "pravidla": {
+                        "$ref": "#/components/schemas/PravidlaRocnikuDto"
                     }
                 }
             },

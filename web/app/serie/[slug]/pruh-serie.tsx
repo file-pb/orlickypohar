@@ -6,6 +6,9 @@ import { DlazdiceSekci } from "@/app/prepinac-sekci";
 /** Části veřejného ročníku, v pořadí, v jakém stojí v pruhu. */
 const CASTI = [
   { klic: "kalendar", nazev: "Kalendář", cesta: "", popis: "Kdy se která regata jede." },
+  // Pravidla stojí před pořadím schválně: ZPJ 25.1 je chce čitelná dřív,
+  // než se loď přihlásí, a kdo přijde pro pořadí, prochází kolem nich.
+  { klic: "pravidla", nazev: "Pravidla ročníku", cesta: "/pravidla", popis: "Jak se boduje, co se škrtá, co znamenají kódy." },
   { klic: "poradi", nazev: "Průběžné pořadí", cesta: "/poradi", popis: "Jak to vypadá v kategoriích." },
   { klic: "lode", nazev: "Lodě ročníku", cesta: "/lode", popis: "Kdo je přihlášený do seriálu." },
   { klic: "novinky", nazev: "Novinky", cesta: "/novinky", popis: "Co je nového v ročníku." },

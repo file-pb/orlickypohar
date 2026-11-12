@@ -6233,3 +6233,8 @@ body:has(.vybrany-ukon[data-ukon="naklady"]) { --ukon-strany: var(--ukon-uvod); 
 
 body:has(.vybrany-ukon[data-ukon="poradi"]) { --ukon-strany: var(--ukon-vysledky); }
 body:has(.vybrany-ukon[data-ukon="novinky"]) { --ukon-strany: var(--ukon-novinky); }
+
+/* Pravidla ročníku dědí barvu směrnic: je to dokument, podle kterého se
+   jede, jen o patro výš než u jednotlivé regaty. */
+.dlazdice-sekci > li[data-polozka="pravidla"] { --ukon: var(--ukon-smernice); }
+body:has(.vybrany-ukon[data-ukon="pravidla"]) { --ukon-strany: var(--ukon-smernice); }
