@@ -161,6 +161,7 @@ export function VodocetGraf({
           </dd>
           <dd className="vodocet-ted">
             {pritokTed == null ? "teď neznámý" : `právě teď ${f(pritokTed, 1)} m³/s`}
+            <Vybuzeni ted={pritokTed} prumer={prumerCislo(rada?.pritok, vybrany)} />
           </dd>
         </div>
         <div>
@@ -173,6 +174,7 @@ export function VodocetGraf({
           </dd>
           <dd className="vodocet-ted">
             {odtokTed == null ? "teď neznámý" : `právě teď ${f(odtokTed, 1)} m³/s`}
+            <Vybuzeni ted={odtokTed} prumer={prumerCislo(rada?.odtok, vybrany)} />
           </dd>
         </div>
       </dl>
@@ -258,10 +260,66 @@ const SEKUND: Record<string, number> = {
  * nebo u neznámého rozsahu se napíše pomlčka, ne nula — nula by tvrdila,
  * že neteklo, místo aby přiznala, že se to nespočítalo.
  */
-function prumer(objem: number | null | undefined, rozsah: string) {
+function prumerCislo(objem: number | null | undefined, rozsah: string) {
   const sekund = SEKUND[rozsah];
-  if (objem == null || !sekund) return "—";
-  return `${f(objem / sekund, 1)} m³/s`;
+  if (objem == null || !sekund) return null;
+  return objem / sekund;
+}
+
+function prumer(objem: number | null | undefined, rozsah: string) {
+  const p = prumerCislo(objem, rozsah);
+  return p == null ? "—" : `${f(p, 1)} m³/s`;
+}
+
+/** Kolik dílků má sloupec. Osm proto, že se vejdou do výšky dlaždice. */
+const DILKU = 8;
+
+/**
+ * <b>Jak to zrovna teče</b> (Filip, 13. 11. 2026: *„na pravou část té
+ * dlaždice vždy takový ten «indikátor vybuzení», aby bylo vidět hezky, jak
+ * to zrovna teče"*). Sloupec dílků u pravé hrany dlaždice, rozsvícený podle
+ * okamžitého průtoku.
+ *
+ * <b>Škála se řídí průměrem, ne pevným maximem.</b> Orlík pouští vodu
+ * nárazově — dvacet hodin nula a pak skok na 252,93 m³/s (18. 10. 2026) —
+ * takže pevná osa by buď schovala běžný provoz dole, nebo by ji špička
+ * přerostla. Vrchol je proto `max(teď, 2× průměr)`: za normálu stojí průměr
+ * v polovině sloupce a je vidět, o kolik se teď teče víc nebo míň; při
+ * špičce se osa roztáhne na ni a průměr sjede dolů, takže je vidět, jak
+ * mimořádná ta chvíle je.
+ *
+ * <b>Dílek průměru je obtažený</b>, ať má rozsvícená část vůči čemu stát.
+ * Bez téhle rysky říká sloupec jen „něco teče" a nedá se z něj poznat, jestli
+ * je to hodně.
+ *
+ * Pro čtečku je to `aria-hidden`: obě čísla, ze kterých se počítá, stojí
+ * vypsaná hned vedle, takže by jen opakoval, co už bylo řečeno.
+ */
+function Vybuzeni({ ted, prumer }: { ted: number | null; prumer: number | null }) {
+  // Bez okamžité hodnoty není co ukazovat. Prázdný sloupec by tvrdil, že
+  // neteče nic, kdežto pravda je, že to nevíme.
+  if (ted == null) return null;
+
+  const vrchol = Math.max(ted, (prumer ?? 0) * 2, 1);
+  const sviti = Math.round((ted / vrchol) * DILKU);
+  const naPrumeru = prumer == null ? -1 : Math.round((prumer / vrchol) * DILKU) - 1;
+
+  return (
+    <span className="vybuzeni" aria-hidden="true">
+      {Array.from({ length: DILKU }, (_, i) => {
+        // Dílky se kreslí odspodu, pole jde odshora.
+        const poradi = DILKU - 1 - i;
+        return (
+          <i
+            key={poradi}
+            className="dilek"
+            data-sviti={poradi < sviti ? "" : undefined}
+            data-prumer={poradi === naPrumeru ? "" : undefined}
+          />
+        );
+      })}
+    </span>
+  );
 }
 
 /** Jak se rozsah řekne ve větě „…za poslední týden". */

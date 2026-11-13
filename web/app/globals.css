@@ -2562,7 +2562,31 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .vodocet-toky { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0.6rem 0 0; }
 .vodocet-toky div {
   background: var(--papir); border: 1px solid var(--linka); border-radius: 8px;
-  padding: 0.35rem 0.55rem;
+  /* Vpravo je místo pro sloupec vybuzení, jinak by pod něj podtekla čísla. */
+  padding: 0.35rem 1.15rem 0.35rem 0.55rem;
+  /* Kotva pro sloupec vybuzení u pravé hrany. Ten stojí mimo tok textu
+     schválně: do `div` uvnitř `dl` patří jen `dt` a `dd`, takže sloupec
+     bydlí v posledním `dd` a odtud se napozicuje přes celou dlaždici. */
+  position: relative;
+}
+/* Sloupec „jak to zrovna teče" (Filip, 13. 11. 2026). Osm dílků u pravé
+   hrany; proč zrovna tahle škála, stojí u `Vybuzeni` v `vodocet-graf.tsx`. */
+.vybuzeni {
+  position: absolute; right: 0.4rem; top: 0.45rem; bottom: 0.45rem;
+  display: flex; flex-direction: column; justify-content: space-between;
+  gap: 2px; width: 0.5rem;
+}
+.vybuzeni .dilek {
+  flex: 1;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--tlumeny) 22%, transparent);
+}
+.vybuzeni .dilek[data-sviti] { background: var(--voda); }
+/* Dílek, ve kterém leží průměr za vybraný rozsah. Obtažení, ne barva:
+   barvu už nese „svítí", a dvě barvy vedle sebe by si o významy
+   konkurovaly. */
+.vybuzeni .dilek[data-prumer] {
+  box-shadow: inset 0 0 0 1px var(--text);
 }
 .vodocet-toky dt { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tlumeny); }
 .vodocet-toky dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
