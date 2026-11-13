@@ -2011,14 +2011,46 @@ th.vlevo, td.vlevo { text-align: left; }
    bez značky a od úzkého sloupce se jména sama zkracují, takže tam stačí
    114 px. Jedna hodnota pro obojí by buď usekla jména venku, nebo zbytečně
    roztáhla dlaždice uvnitř. */
+/* <b>Myší: šířku dlaždice určuje její jméno, ne mřížka</b> (Filip,
+   13. 11. 2026, nad produkcí: *„ještě tam trochu"* — „Plachetní směrnic"
+   a „Předpokládaná tr" uříznuté na hraně). Mřížka přiděluje všem stejný
+   sloupec z `minmax()`, takže jakmile se nejdelší jméno do toho sloupce
+   nevejde, usekne se — a jestli se vejde, závisí na tom, jak širokým
+   písmem to který prohlížeč vykreslí. Tentýž pruh na témže místě vyšel
+   v jednom prohlížeči čitelně a u Filipa uříznutý, takže doladit práh
+   v pixelech by znamenalo hádat cizí render.
+
+   `flex-wrap` s `flex: 1 0 auto` to řeší bez čísla: základem je obsah,
+   dlaždice se nesmí scvrknout pod něj (`shrink: 0`) a přebytek řádku si
+   rozdělí rovným dílem. Jméno se tedy neusekne nikdy; zaplatí se tím, že
+   řádek může mít různě široké dlaždice.
+
+   `--min-dlazdice` zůstává jako dolní mez pro krátká jména, aby „Úvod"
+   nebyl knoflík vedle „Plachetní směrnice". */
 .dlazdice-sekci {
   gap: 0.4rem;
   --min-dlazdice: 13rem;
+  display: flex;
+  flex-wrap: wrap;
+}
+/* <b>Ve správě zůstává mřížka</b>, a to kvůli zkratkám: krátké jméno se
+   zapíná container query podle šířky dlaždice (`.jmeno-uzke` níž), takže
+   dlaždice, která si šířku bere podle svého plného jména, by zkratku
+   nespustila nikdy a celý ten mechanismus by umřel. Veřejná stránka
+   zkratky nemá a jména má dlouhá, proto tam rozhoduje obsah. */
+body:has(.bez-partneru) .dlazdice-sekci {
+  --min-dlazdice: 7.25rem;
+  display: grid;
   grid-template-columns: repeat(auto-fit, minmax(var(--min-dlazdice), 1fr));
 }
-body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 7.25rem; }
+body:has(.bez-partneru) .dlazdice-sekci > li { flex: none; min-width: 0; }
 /* Dlaždice drží výšku celé buňky, aby řádek nebyl zubatý. */
-.dlazdice-sekci > li { display: grid; }
+.dlazdice-sekci > li {
+  display: grid;
+  flex: 1 0 auto;
+  min-width: min(var(--min-dlazdice), 100%);
+  max-width: 100%;
+}
 .dlazdice-sekci .karta { padding: 0.3rem 0.7rem 0.3rem 0.8rem; border-radius: 7px; }
 /* <b>Barevný proužek místo vlajky</b> (Filip, 29. 10. 2026: „zkus místo
    vlajky dát doleva do dlaždice jen nějakou barvičku" — a „včetně těch
@@ -6148,7 +6180,15 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
    Cíl 44 px patří sem, do komponenty — ne do jedné obrazovky, jinak má
    správa regaty cíl o 12 px menší než ročník. */
 @media (pointer: coarse) {
-  .dlazdice-sekci { --min-dlazdice: 10rem; }
+  /* <b>Na dotyku zůstává mřížka.</b> Jména se tu zalamují dovnitř dlaždice
+     (níž), takže se uříznout nemají čím — a pod palcem je pravidelná dvojice
+     sloupců víc než dlaždice po délce jména, která by řádky rozházela. */
+  .dlazdice-sekci {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--min-dlazdice), 1fr));
+    --min-dlazdice: 10rem;
+  }
+  .dlazdice-sekci > li { flex: none; min-width: 0; }
   body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 10rem; }
   .dlazdice-sekci .karta {
     padding: 0.7rem 0.4rem 0.7rem 0.55rem;
