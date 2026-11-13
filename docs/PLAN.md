@@ -3416,7 +3416,7 @@ nevyzkoušené.
 | operace | `zaznam.ts` | zakládání, zápis dávky, ukončení, ostříhání, přehled |
 | úloha na pozadí | `uloha.ts` | `expo-location` + `expo-task-manager`, služba na popředí |
 | simulovaná plavba | `simulace.ts` | syntetický zdroj do **téhož** zápisu jako GPS |
-| vývoz | `gpx.ts` | GPX ke sdílení — zatím jediná cesta, jak se trasa dostane z telefonu |
+| vývoz | `gpx.ts` | GPX ke sdílení — tehdy jediná cesta, jak se trasa dostala z telefonu. **Dnes už to neplatí:** appka ji průběžně posílá na server (`nahravani.ts`, dávka po minutě a doposlání po dojezdu) a veřejně ji vydává `Features/Polohy`. Opraveno 13. 11. 2026, když se podle téhle věty psaly zásady o poloze |
 
 Tři rozhodnutí, která z toho stojí za zapsání:
 

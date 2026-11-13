@@ -513,18 +513,25 @@ def uloz(obraz, jmeno, velikost=S):
 def main():
     mark = znacka()
 
-    # Web bere tutéž značku: jedna kresba, ne dvě podobné. Průhledné pozadí,
-    # protože v hlavičce stojí na papíru stránky.
+    # <b>Tahle značka je od 22. 9. 2026 „původní logo".</b> V hlavičce je
+    # logo Orlik Yacht Series od rozhodčího a soubory k téhle značce leží
+    # ve `web/public/logo/puvodni/`. Skript proto zapisuje tam, ne do
+    # `web/public/logo.png` a `web/app/icon.png`, kde ty soubory bývaly:
+    # ty dva jsou dnes živé soubory webu a přepisovat je znamenalo pokaždé
+    # vracet změnu, kterou nikdo nechtěl (README v té složce to vedlo jako
+    # známou vadu; opraveno 13. 11. 2026).
     web = "../web"
+    puvodni = f"{web}/public/logo/puvodni"
     if os.path.isdir(web):
-        mark.resize((512, 512), Image.LANCZOS).save(f"{web}/public/logo.png")
-        print(f"  {web}/public/logo.png  512×512")
+        os.makedirs(puvodni, exist_ok=True)
+        mark.resize((512, 512), Image.LANCZOS).save(f"{puvodni}/logo.png")
+        print(f"  {puvodni}/logo.png  512×512")
 
-        # Favicon webu — s podkladem, aby byl vidět i na tmavém panelu.
+        # Značka s podkladem, aby byla vidět i na tmavém panelu.
         ikona_webu = Image.new("RGB", (S, S), PAPIR)
         ikona_webu.paste(mark, (0, 0), mark)
-        ikona_webu.resize((512, 512), Image.LANCZOS).save(f"{web}/app/icon.png")
-        print(f"  {web}/app/icon.png  512×512")
+        ikona_webu.resize((512, 512), Image.LANCZOS).save(f"{puvodni}/icon.png")
+        print(f"  {puvodni}/icon.png  512×512")
 
         # Znaky lodních tříd. Soubor se jmenuje podle kategorie bez
         # diakritiky a malými písmeny — tak ho web najde podle názvu.
@@ -546,10 +553,9 @@ def main():
 
         # Tatáž loga a znaky tříd jako samostatné SVG v křivkách, pro tisk
         # a další úpravy. Leží v public, takže jdou stáhnout i z webu.
-        os.makedirs(f"{web}/public/logo", exist_ok=True)
         for verze in ("monitor", "mobil"):
             for odstin in ("svetle", "tmave"):
-                cesta = f"{web}/public/logo/orlicky-pohar-{verze}{'-tmave' if odstin == 'tmave' else ''}.svg"
+                cesta = f"{puvodni}/orlicky-pohar-{verze}{'-tmave' if odstin == 'tmave' else ''}.svg"
                 with open(cesta, "w", encoding="utf-8") as soubor:
                     soubor.write(logo_svg(verze, odstin))
                 print(f"  {cesta}")

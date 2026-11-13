@@ -16,6 +16,10 @@ jako ikonu i splash.
 
 **Zdroj je kód, ne tyhle soubory.** Tvary kreslí `app/scripts/ikona.py`
 a do webu zapisuje `app/znacka-loga.ts`; komponenta je
-`web/app/logo-puvodni.tsx`. Pozor: skript pořád zapisuje i do starých cest
-(`web/public/logo.png`, `web/app/icon.png`, `web/public/logo/orlicky-pohar-*.svg`),
-takže po jeho spuštění je potřeba ty tři věci vrátit, dokud se neupraví.
+`web/app/logo-puvodni.tsx`. Skript zapisuje rovnou sem (opraveno 13. 11.
+2026); do starých cest `web/public/logo.png` a `web/app/icon.png` už
+nesahá, ty jsou dnes živé soubory webu.
+
+Co po jeho spuštění **přepsané zůstane**, je `app/assets/images/*`: ty
+soubory mu patří, jen je jiná verze Pillow uloží s jinou kompresí. Pixely
+jsou tytéž, takže ten rozdíl patří zahodit, ne commitnout.
