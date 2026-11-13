@@ -5173,6 +5173,30 @@ značení, barva, tvar, `PostavenaV` u každého — uloží je **jednou
 transakcí** a vrátí `PrvekDto`. Prvek tím přestane být sekvencí tří volání
 a stane se **jedním požadavkem, který jde podržet**.
 
+**Postavené 13. 11. 2026.** `PrvkySprava.PostavAsync`, vstupy
+`PostavPrvekVstup` a `BodPrvkuVstup`, endpoint v `TratEndpoints`, migrace
+`KlicPrvku`. Čtyři věci, které u toho padly:
+
+- **Pravidla se nečtou dvakrát.** Každý bod projde `Pipnuti.ProcNejde`
+  jako obyčejné pípnutí — přesnost nad sto metrů, poloha mimo Orlík,
+  barva u plavidla. Prvek sám projde `Prvky.ProcNejdePostavit`, a to je
+  tatáž `ProcNejde` se zástupným id druhého konce: ta funkce se u něj ptá
+  jen na to, **jestli** nějaký bude, ne které bóji patří.
+- **Kolik bodů který typ má, říká server.** `Prvky.KolikBodu` je táž
+  odpověď, jakou dává `TYPY` v průvodci. Kdyby se rozešly, appka by
+  stavěla prvky, které server odmítne, a poznalo by se to u vody.
+- **Pořadí značek se počítá jednou a zvyšuje.** Dotaz na každou zvlášť by
+  oběma koncům brány dal totéž číslo — ani jeden z nich v tu chvíli ještě
+  není uložený.
+- **Zamčená trať nenechá po pokusu ani značky.** Transakce se zahodí
+  celá; kdyby se bóje zapsaly a prvek ne, stály by ve vodě záznamy, které
+  si nikdo neobjednal.
+
+**Mock a klienti zatím ne.** `tools/fake-api.py` tuhle cestu nemá, protože
+ji nikdo nevolá, a `schema.d.ts` se generuje z **běžícího** API — tvary
+tedy přibudou do klientů až po nasazení. Je to ta dvoukroková změna
+kontraktu, co platí u každé jiné.
+
 **Proč tohle a ne fronta nad dnešním API:** fronta by musela umět
 „počkej na id z předchozího volání a dosaď ho do dalšího". To je malý
 orchestrátor v telefonu, který se musí chovat správně i po zabití procesu,
@@ -5222,10 +5246,12 @@ na stránce regaty samotné, ne v panelu.
    a čím déle je sám, tím spíš do něj něco webového proteče — a přesně
    proti tomu ho jeho vlastní doc komentář chrání. Kontrola v CI je ta
    část, která to udrží; bez ní se dvě kopie rozejdou do měsíce.
-2. **Atomický `prvky/postav` s klíčem od klienta.** Dny, ne týdny, a dá se
-   nasadit samostatně — **prospěje i webu**: tři volání se změní v jedno
-   a polovičatý prvek přestane být možný i tam. **Tohle nesmí přijít
-   pozdě**, protože obrazovka v appce bez něj je slepá ulička.
+2. ~~**Atomický `prvky/postav` s klíčem od klienta.**~~ **Hotové
+   13. 11. 2026** (viz výš). Dá se nasadit samostatně a **prospěje i
+   webu**: tři volání se můžou změnit v jedno a polovičatý prvek přestane
+   být možný i tam. **Web se na něj ale zatím nepřepojuje** — jeho
+   průvodce funguje a přepsat ho bez důvodu by byla změna za změnu;
+   přijde to, až se bude ta obrazovka stejně otevírat.
 3. **Obrazovka průvodce v appce** s frontou, bez fotek a bez mapy.
 
 **Doporučení: 1 a 2 do května ano, 3 jen tehdy, když budou hotová

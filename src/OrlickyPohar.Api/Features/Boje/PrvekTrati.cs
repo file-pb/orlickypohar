@@ -223,6 +223,23 @@ public class PrvekTrati
     /// neexistují.
     /// </summary>
     public bool MaDruhyKonec => BojeBId is not null;
+
+    /// <summary>
+    /// Klíč od klienta u prvku postaveného jedním požadavkem.
+    /// <c>null</c> u všech, které založila obrazovka po krocích.
+    ///
+    /// <para>
+    /// <b>Proč to musí být na prvku a ne jen v hlavičce požadavku.</b>
+    /// Appka drží prvek ve frontě, dokud ho nemá kam odeslat, a na vodě
+    /// se stává, že požadavek dojde a odpověď se ztratí. Telefon pak neví,
+    /// jestli se prvek postavil, a pošle ho znovu — bez klíče by na trati
+    /// vznikl dvakrát, se dvěma sadami značek, a nikdo by nepoznal, která
+    /// z nich je ta ve vodě. Je to tatáž úvaha jako u nahrávání trasy:
+    /// nic se nemaže, dokud to server nepotvrdí, a druhé poslání nesmí
+    /// nic zdvojit.
+    /// </para>
+    /// </summary>
+    public Guid? Klic { get; set; }
 }
 
 /// <summary>
@@ -325,4 +342,45 @@ public static class Prvky
 
         return null;
     }
+
+    /// <summary>
+    /// Kolik bodů se u tohohle typu pípá. <b>Táž otázka, na kterou odpovídá
+    /// <c>TYPY</c> v průvodci</b> — jen tady je to pravidlo serveru, které
+    /// klient obejít nemůže.
+    /// </summary>
+    public static int KolikBodu(TypPrvku typ) => Dvoukonec(typ) ? 2 : 1;
+
+    /// <summary>
+    /// Proč nejde postavit prvek, jehož značky se teprve zakládají — tedy
+    /// celý prvek jedním požadavkem.
+    ///
+    /// <para>
+    /// <b>Proti <see cref="ProcNejde"/> se liší jediným:</b> druhý konec
+    /// ještě nemá id, protože vzniká spolu s prvkem. Ta funkce se ale
+    /// u druhého konce ptá jen na to, <b>jestli</b> nějaký bude, ne které
+    /// bóji patří, takže se jí dosadí zástupná hodnota a zbytek pravidel
+    /// platí beze změny. Opsat je podruhé by znamenalo dva výklady téhož.
+    /// </para>
+    /// </summary>
+    public static string? ProcNejdePostavit(
+        TypPrvku typ, int pocetBodu, StranaPrvku? strana, string? poznamka = null,
+        SvetovaStrana? smer = null, DruhStartu? druhStartu = null)
+    {
+        var kolik = KolikBodu(typ);
+        if (pocetBodu != kolik)
+            return kolik == 2
+                ? "Tenhle prvek se staví ze dvou bodů — pípni oba konce."
+                : "Tenhle prvek je jedna značka, takže se staví z jednoho bodu.";
+
+        return ProcNejde(
+            typ, kolik == 2 ? ZastupneId : null, null, null, null, strana, poznamka,
+            smer, druhStartu);
+    }
+
+    /// <summary>
+    /// Zástupné id druhého konce pro <see cref="ProcNejdePostavit"/>. Nikdy
+    /// se neuloží — do databáze jde až id značky, která se tím požadavkem
+    /// založí.
+    /// </summary>
+    private const int ZastupneId = -1;
 }

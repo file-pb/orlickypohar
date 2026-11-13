@@ -32,6 +32,10 @@ public class SchemaTests
     [InlineData(typeof(ObrazekDto))]
     [InlineData(typeof(BojeDto))]
     [InlineData(typeof(PipnutiVstup))]
+    // Prvek stavěný jedním požadavkem: nese `Guid Klic` a seznam bodů,
+    // tedy přesně tvary, na kterých exportér 9. 10. 2026 spadl.
+    [InlineData(typeof(PostavPrvekVstup))]
+    [InlineData(typeof(BodPrvkuVstup))]
     public void Schema_tvaru_jde_vyrobit(Type tvar)
     {
         var schema = Json.GetJsonSchemaAsNode(tvar);

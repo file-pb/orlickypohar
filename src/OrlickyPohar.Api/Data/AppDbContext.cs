@@ -278,6 +278,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         prvek.Property(x => x.Poznamka).HasMaxLength(Features.Boje.Prvky.PoznamkaNejvic);
         // Prvky se čtou vždycky celé pro jednu trať, a v pořadí.
         prvek.HasIndex(x => new { x.TratId, x.Poradi });
+        // <b>Klíč od klienta je unikátní, a to je ta záruka.</b> Kontrola
+        // v paměti sama nestačí: mezi „tenhle klíč tu ještě není" a zápisem
+        // je mezera, do které se vejde druhý požadavek z téhož telefonu,
+        // který jen posílá znovu. Filtr je úspora, ne podmínka správnosti —
+        // Postgres by prázdné hodnoty za shodné nepovažoval tak jako tak,
+        // ale prvky stavěné po krocích klíč nemají a do indexu nepatří.
+        prvek.HasIndex(x => x.Klic).IsUnique().HasFilter("\"Klic\" IS NOT NULL");
         prvek.HasOne(x => x.Trat).WithMany().HasForeignKey(x => x.TratId)
             .OnDelete(DeleteBehavior.Cascade);
         // Bóje se nemaže ani při sebrání, takže kaskáda tu nemá co dělat —

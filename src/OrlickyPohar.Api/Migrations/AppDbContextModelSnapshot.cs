@@ -116,6 +116,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int?>("DruhStartu")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("Klic")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Poradi")
                         .HasColumnType("integer");
 
@@ -140,6 +143,10 @@ namespace OrlickyPohar.Api.Migrations
                     b.HasIndex("BojeAId");
 
                     b.HasIndex("BojeBId");
+
+                    b.HasIndex("Klic")
+                        .IsUnique()
+                        .HasFilter("\"Klic\" IS NOT NULL");
 
                     b.HasIndex("TratId", "Poradi");
 

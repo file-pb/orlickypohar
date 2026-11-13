@@ -214,4 +214,83 @@ public class PrvkyTests
     /// <summary>Strana, která je u toho typu přípustná — jinak <c>null</c>.</summary>
     private static StranaPrvku? Strana(TypPrvku typ) =>
         Prvky.StranaPatri(typ) ? StranaPrvku.PoLeve : null;
+
+    /// <summary>
+    /// Kolik bodů se u typu pípá. <b>Táž odpověď, jakou dává průvodce</b>
+    /// v <c>web/lib/stavba-prvku.ts</c> — jen tady je to pravidlo serveru.
+    /// Kdyby se ty dva rozešly, appka by stavěla prvky, které server
+    /// odmítne, a poznalo by se to až u vody.
+    /// </summary>
+    [Theory]
+    [InlineData(TypPrvku.OtocnaBoje, 1)]
+    [InlineData(TypPrvku.PrujezdniBoje, 1)]
+    [InlineData(TypPrvku.Brana, 2)]
+    [InlineData(TypPrvku.OtocnaBrana, 2)]
+    [InlineData(TypPrvku.OtocnaZona, 2)]
+    [InlineData(TypPrvku.Odskok, 2)]
+    [InlineData(TypPrvku.Start, 2)]
+    [InlineData(TypPrvku.Cil, 2)]
+    public void Kolik_bodu_se_pipa(TypPrvku typ, int kolik)
+    {
+        Assert.Equal(kolik, Prvky.KolikBodu(typ));
+    }
+
+    /// <summary>
+    /// Prvek stavěný jedním požadavkem musí dostat přesně tolik bodů,
+    /// kolik jeho typ potřebuje. <b>Víc ani míň</b> — půlka brány je přesně
+    /// ta nedodělanost, kvůli které atomický zápis vznikl.
+    /// </summary>
+    [Theory]
+    [InlineData(TypPrvku.OtocnaBoje, 2)]
+    [InlineData(TypPrvku.Brana, 1)]
+    [InlineData(TypPrvku.Start, 3)]
+    [InlineData(TypPrvku.Cil, 0)]
+    public void Postaveni_se_spatnym_poctem_bodu_neprojde(TypPrvku typ, int bodu)
+    {
+        Assert.NotNull(Prvky.ProcNejdePostavit(typ, bodu, Strana(typ)));
+    }
+
+    /// <summary>
+    /// Se správným počtem bodů projde každý typ. Druhý konec přitom ještě
+    /// nemá id — a právě to se tu ověřuje, protože <c>ProcNejde</c> by na
+    /// chybějícím <c>bojeBId</c> jinak spadla.
+    /// </summary>
+    [Theory]
+    [InlineData(TypPrvku.OtocnaBoje)]
+    [InlineData(TypPrvku.PrujezdniBoje)]
+    [InlineData(TypPrvku.Brana)]
+    [InlineData(TypPrvku.OtocnaBrana)]
+    [InlineData(TypPrvku.OtocnaZona)]
+    [InlineData(TypPrvku.Odskok)]
+    public void Postaveni_se_spravnym_poctem_bodu_projde(TypPrvku typ)
+    {
+        Assert.Null(Prvky.ProcNejdePostavit(typ, Prvky.KolikBodu(typ), Strana(typ)));
+    }
+
+    /// <summary>
+    /// U startu a cíle platí i při stavbě jedním požadavkem, že se uvádí
+    /// směr průjezdu — a u startu navíc, čím je vytyčený.
+    /// </summary>
+    [Fact]
+    public void Postaveni_startu_a_cile_nese_smer()
+    {
+        Assert.Null(Prvky.ProcNejdePostavit(
+            TypPrvku.Start, 2, null, null, SvetovaStrana.J, DruhStartu.PevnaLinie));
+        Assert.Null(Prvky.ProcNejdePostavit(TypPrvku.Cil, 2, null, null, SvetovaStrana.S));
+
+        // Čím je start vytyčený, se u cíle neptá — cíl se neotevírá za lodí.
+        Assert.NotNull(Prvky.ProcNejdePostavit(
+            TypPrvku.Cil, 2, null, null, SvetovaStrana.S, DruhStartu.PevnaLinie));
+    }
+
+    /// <summary>
+    /// Strana se při stavbě posuzuje stejně jako jinde: u brány si ji volí
+    /// loď, takže zapsat ji by znamenalo vydávat rozhodnutí posádky za
+    /// pravidlo trati.
+    /// </summary>
+    [Fact]
+    public void Postaveni_brany_se_stranou_neprojde()
+    {
+        Assert.NotNull(Prvky.ProcNejdePostavit(TypPrvku.Brana, 2, StranaPrvku.PoLeve));
+    }
 }

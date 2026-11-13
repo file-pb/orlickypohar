@@ -549,4 +549,244 @@ public class PrvkySpravaTests(PostgresFixture fixture)
         Assert.NotNull(await prvky.SmazAsync(zavod.Id, naPrijate.Id, default, prvni.Id));
         Assert.True(await db.PrvkyTrati.AnyAsync(x => x.Id == naPrijate.Id));
     }
+
+    /// <summary>Bod prvku, který se pípne spolu s ním.</summary>
+    private static BodPrvkuVstup Znacka(
+        string nazev, double sirka = 49.516, double delka = 14.165,
+        DateTimeOffset? postavenaV = null) =>
+        new(nazev, sirka, delka, PresnostM: 5, PostavenaV: postavenaV);
+
+    /// <summary>
+    /// <b>Buď celý prvek, nebo nic.</b> Jedním požadavkem vzniknou obě
+    /// značky i prvek nad nimi — to je ten rozdíl proti stavbě po krocích,
+    /// kde se mezi pípnutími dá ztratit signál a ve vodě zůstane značka,
+    /// kterou žádný prvek nepoužívá.
+    /// </summary>
+    [Fact]
+    public async Task Postaveni_zalozi_prvek_i_obe_jeho_znacky()
+    {
+        var (db, boje, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (prvek, chyba, opakovane) = await prvky.PostavAsync(
+            zavod.Id,
+            new PostavPrvekVstup(
+                Guid.CreateVersion7(), TypPrvku.Brana,
+                [Znacka("brána 1 vlevo"), Znacka("brána 1 vpravo", 49.517, 14.166)]),
+            kdo.Id, default);
+
+        Assert.Null(chyba);
+        Assert.False(opakovane);
+        Assert.NotNull(prvek);
+        Assert.Equal(TypPrvku.Brana, prvek!.Typ);
+        Assert.Equal(1, prvek.Poradi);
+
+        // Obě značky stojí ve vodě a prvek na ně ukazuje.
+        Assert.Equal("brána 1 vlevo", prvek.A.Nazev);
+        Assert.Equal("brána 1 vpravo", prvek.B!.Nazev);
+        Assert.Equal(49.517, prvek.B.Sirka, 3);
+
+        var naTrati = await boje.SeznamAsync(zavod.Id, iHistorie: false, default);
+        Assert.Equal(2, naTrati.Count);
+
+        // <b>Značky mají každá své pořadí.</b> Dokud se počítalo dotazem
+        // na každou zvlášť, dostaly by oba konce brány totéž číslo —
+        // žádný z nich v tu chvíli ještě není uložený.
+        Assert.Equal([1, 2], naTrati.Select(b => b.Poradi).Order());
+    }
+
+    /// <summary>
+    /// <b>Stavba začíná první značkou.</b> Regata bez jediné bóje trať
+    /// nemá, a prvek postavený jedním požadavkem jí ji musí založit —
+    /// jinak by první prvek neměl do čeho spadnout.
+    /// </summary>
+    [Fact]
+    public async Task Postaveni_zalozi_trat_regate_bez_boji()
+    {
+        var (db, _, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+        Assert.False(await db.Trate.AnyAsync(t => t.ZavodId == zavod.Id));
+
+        var (prvek, chyba, _) = await prvky.PostavAsync(
+            zavod.Id,
+            new PostavPrvekVstup(
+                Guid.CreateVersion7(), TypPrvku.OtocnaBoje, [Znacka("otočná 1")],
+                Strana: StranaPrvku.PoLeve),
+            kdo.Id, default);
+
+        Assert.Null(chyba);
+        Assert.NotNull(prvek);
+        Assert.True(await db.Trate.AnyAsync(t => t.ZavodId == zavod.Id));
+    }
+
+    /// <summary>
+    /// <b>Opakované odeslání téhož klíče nic nezdvojí.</b> Na vodě požadavek
+    /// dojde a odpověď se ztratí; telefon pak neví, jestli prvek stojí,
+    /// a pošle ho znovu. Bez klíče by na trati vznikl dvakrát, se dvěma
+    /// sadami značek, a nikdo by nepoznal, která je ta ve vodě.
+    /// </summary>
+    [Fact]
+    public async Task Opakovane_odeslani_tehoz_klice_postavi_jeden_prvek()
+    {
+        var (db, boje, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var klic = Guid.CreateVersion7();
+        PostavPrvekVstup Vstup() => new(
+            klic, TypPrvku.Start, [Znacka("start levobok"), Znacka("start pravobok", 49.518)],
+            Smer: SvetovaStrana.J, DruhStartu: DruhStartu.PevnaLinie);
+
+        var (poprve, chybaPoprve, bylOpakovany) = await prvky.PostavAsync(
+            zavod.Id, Vstup(), kdo.Id, default);
+        var (podruhe, chybaPodruhe, opakovane) = await prvky.PostavAsync(
+            zavod.Id, Vstup(), kdo.Id, default);
+
+        Assert.Null(chybaPoprve);
+        Assert.Null(chybaPodruhe);
+        Assert.False(bylOpakovany);
+
+        // <b>Druhé odeslání není chyba, je to táž odpověď.</b> Odmítnout ho
+        // konfliktem by znamenalo, že fronta v telefonu zůstane stát na
+        // prvku, který už dávno stojí ve vodě.
+        Assert.True(opakovane);
+        Assert.Equal(poprve!.Id, podruhe!.Id);
+
+        Assert.Single(await prvky.SeznamAsync(zavod.Id, default));
+        Assert.Equal(2, (await boje.SeznamAsync(zavod.Id, iHistorie: true, default)).Count);
+    }
+
+    /// <summary>
+    /// <b>Klíč od cizí regaty se nevrací.</b> Trefa do cizího klíče je
+    /// buď vada klienta, nebo pokus; vydat prvek jiné regaty by byl únik.
+    /// </summary>
+    [Fact]
+    public async Task Klic_patrici_jine_regate_se_nevrati()
+    {
+        var (db, _, _, prvky) = Sluzby();
+        var (prvni, kdo) = await RegataAsync(db);
+        var (druha, _) = await RegataAsync(db);
+
+        var klic = Guid.CreateVersion7();
+        await prvky.PostavAsync(
+            prvni.Id,
+            new PostavPrvekVstup(klic, TypPrvku.OtocnaBoje, [Znacka("otočná 1")]),
+            kdo.Id, default);
+
+        var (prvek, chyba, _) = await prvky.PostavAsync(
+            druha.Id,
+            new PostavPrvekVstup(klic, TypPrvku.OtocnaBoje, [Znacka("otočná 1")]),
+            kdo.Id, default);
+
+        Assert.Null(prvek);
+        Assert.NotNull(chyba);
+        Assert.Empty(await prvky.SeznamAsync(druha.Id, default));
+    }
+
+    /// <summary>
+    /// <b>Do přijaté trati se nepostaví ani jedním požadavkem</b> — a co je
+    /// důležitější, <b>nezůstanou po tom pokusu značky</b>. Kdyby se bóje
+    /// zapsaly a prvek ne, stály by ve vodě záznamy, které si nikdo
+    /// neobjednal, a obrazovka by je hlásila jako „mimo trať".
+    /// </summary>
+    [Fact]
+    public async Task Postaveni_do_prijate_trati_nenecha_ani_znacky()
+    {
+        var (db, boje, trate, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (a, _) = await boje.PipniAsync(zavod.Id, Bod("bóje 1"), kdo.Id, default);
+        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, a!.Id), kdo.Id, default);
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+
+        var (prvek, chyba, _) = await prvky.PostavAsync(
+            zavod.Id,
+            new PostavPrvekVstup(
+                Guid.CreateVersion7(), TypPrvku.Brana,
+                [Znacka("brána 1 vlevo"), Znacka("brána 1 vpravo", 49.517)]),
+            kdo.Id, default);
+
+        Assert.Null(prvek);
+        Assert.NotNull(chyba);
+        Assert.Single(await prvky.SeznamAsync(zavod.Id, default));
+        Assert.Single(await boje.SeznamAsync(zavod.Id, iHistorie: true, default));
+    }
+
+    /// <summary>
+    /// <b>Čas pípnutí je ten z telefonu, ne čas nahrání.</b> Prvek z fronty
+    /// dorazí, až telefon chytí síť; serverový čas by tvrdil, že se bóje
+    /// postavila tehdy. Platí na to tatáž váha jako jinde —
+    /// <c>CasKlienta</c> přijme jen čas v okně kolem serverového.
+    /// </summary>
+    [Fact]
+    public async Task Postaveni_vezme_cas_z_telefonu()
+    {
+        var (db, boje, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        // Půl hodiny zpátky: tolik může prvek čekat ve frontě, než se
+        // telefon dostane k signálu.
+        var pipnuto = DateTimeOffset.UtcNow.AddMinutes(-30);
+
+        var (prvek, chyba, _) = await prvky.PostavAsync(
+            zavod.Id,
+            new PostavPrvekVstup(
+                Guid.CreateVersion7(), TypPrvku.OtocnaBoje,
+                [Znacka("otočná 1", postavenaV: pipnuto)]),
+            kdo.Id, default);
+
+        Assert.Null(chyba);
+        var zapsana = await db.Boje.FirstAsync(b => b.Id == prvek!.A.Id);
+        Assert.Equal(pipnuto, zapsana.PostavenaV, TimeSpan.FromSeconds(1));
+        Assert.Equal(OrlickyPohar.Api.Features.Spolecne.CasKlienta.Posun.Prijat, zapsana.PosunCasu);
+
+        // A zápis je pozdější než postavení — jedno je měření, druhé doručení.
+        Assert.True(zapsana.ZapsanaV > zapsana.PostavenaV);
+    }
+
+    /// <summary>
+    /// <b>Bez klíče se nestaví.</b> Požadavek, který se z fronty dá poslat
+    /// znovu, a nemá podle čeho poznat, že je to totéž, je past: druhé
+    /// odeslání by postavilo druhý prvek.
+    /// </summary>
+    [Fact]
+    public async Task Postaveni_bez_klice_neprojde()
+    {
+        var (db, _, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (prvek, chyba, _) = await prvky.PostavAsync(
+            zavod.Id,
+            new PostavPrvekVstup(Guid.Empty, TypPrvku.OtocnaBoje, [Znacka("otočná 1")]),
+            kdo.Id, default);
+
+        Assert.Null(prvek);
+        Assert.NotNull(chyba);
+    }
+
+    /// <summary>
+    /// <b>Pravidla pípnutí platí i tady.</b> Poloha mimo Orlík je nejčastěji
+    /// prohozená šířka s délkou a postavila by bóji v Africe; nesmí projít
+    /// jen proto, že přišla jinou cestou.
+    /// </summary>
+    [Fact]
+    public async Task Postaveni_mimo_Orlik_neprojde_ani_tady()
+    {
+        var (db, boje, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (prvek, chyba, _) = await prvky.PostavAsync(
+            zavod.Id,
+            new PostavPrvekVstup(
+                Guid.CreateVersion7(), TypPrvku.Brana,
+                [Znacka("brána 1 vlevo"), Znacka("brána 1 vpravo", 14.165, 49.516)]),
+            kdo.Id, default);
+
+        Assert.Null(prvek);
+        Assert.NotNull(chyba);
+
+        // A ani první značka se nezapsala — pravidla se posoudí dřív, než
+        // se do databáze sáhne.
+        Assert.Empty(await boje.SeznamAsync(zavod.Id, iHistorie: true, default));
+    }
 }

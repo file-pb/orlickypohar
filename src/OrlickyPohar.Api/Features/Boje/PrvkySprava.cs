@@ -52,6 +52,62 @@ public record PrvekVstup(
     DruhZnaceni? KonecBZnaceni = null);
 
 /// <summary>
+/// Jeden bod prvku, který se staví zároveň s ním. <b>Je to pípnutí</b> —
+/// tytéž údaje, která nese <see cref="PipnutiVstup"/>, protože i tady
+/// vznikne záznam značky a platí na něj tatáž pravidla.
+///
+/// <para>
+/// <b>Čas z telefonu je tu důležitější než u pípnutí po krocích.</b> Prvek
+/// z fronty dorazí, až telefon chytí síť, takže serverový čas zápisu by
+/// byl čas nahrání. <see cref="Spolecne.CasKlienta"/> rozhodne, jestli se
+/// čas z telefonu vezme.
+/// </para>
+/// </summary>
+public record BodPrvkuVstup(
+    string? Nazev,
+    double Sirka,
+    double Delka,
+    double? PresnostM = null,
+    ZdrojPolohy? Zdroj = null,
+    BarvaBoje? Barva = null,
+    TvarBoje? Tvar = null,
+    DruhZnaceni? Znaceni = null,
+    string? Popis = null,
+    DateTimeOffset? PostavenaV = null);
+
+/// <summary>
+/// Celý prvek i se svými značkami, jedním požadavkem.
+///
+/// <para>
+/// <b>Proč to existuje.</b> Po krocích se prvek skládá ze serverových id:
+/// pípni bóji, přečti id, pípni druhou, přečti id, pošli prvek. Taková
+/// sekvence se nedá podržet ve frontě, protože každý krok čeká na odpověď
+/// toho předchozího — a appka u vody signál nemá. Když se navíc přeruší
+/// uprostřed, zůstane ve vodě značka, kterou žádný prvek nepoužívá, a
+/// stavitel je mezitím o kilometr dál.
+/// </para>
+///
+/// <para>
+/// <b>Pořadí ani jména nejsou na vstupu.</b> Pořadí na trati počítá server
+/// pod touž transakcí, která prvek ukládá — klient počítá z toho, co měl
+/// zrovna načtené, a to bývá o krok pozadu. Jména bodů si průvodce skládá
+/// z typu a pořadí, takže je posílá, ale nic nového nevymýšlí.
+/// </para>
+/// </summary>
+/// <param name="Klic">
+/// Klíč vyrobený v telefonu, aby opakované odeslání téhož prvku nepostavilo
+/// dva. <b>Povinný</b>: bez něj je požadavek, který se dá opakovat, past.
+/// </param>
+public record PostavPrvekVstup(
+    Guid Klic,
+    TypPrvku Typ,
+    IReadOnlyList<BodPrvkuVstup> Body,
+    StranaPrvku? Strana = null,
+    string? Poznamka = null,
+    SvetovaStrana? Smer = null,
+    DruhStartu? DruhStartu = null);
+
+/// <summary>
 /// Prvky trati: čára, brána, odskok a značka.
 ///
 /// <para>
@@ -120,6 +176,178 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
         return (await JedenAsync(prvek.Id, ct), null);
     }
 
+    /// <summary>
+    /// Postaví prvek i s jeho značkami <b>jednou transakcí</b>. Vrací prvek,
+    /// důvod proč to nejde, a jestli to bylo opakované odeslání téhož klíče.
+    ///
+    /// <para>
+    /// <b>Buď celý prvek, nebo nic.</b> To je ten rozdíl proti stavbě po
+    /// krocích: neúplný prvek nechá ve vodě značku, kterou nikdo nepoužívá,
+    /// a veřejná trať o ní pak musí říct „stojí mimo trať". Stavitel na
+    /// motoráku to nemá jak dohnat.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Opakované odeslání nic nezdvojí.</b> Prvek nese klíč od klienta
+    /// a je nad ním unikátní index, takže druhé poslání po ztracené
+    /// odpovědi vrátí týž prvek. Souběh dvou stejných požadavků skončí na
+    /// indexu, ne na kontrole v paměti — mezi čtením a zápisem je jinak
+    /// mezera, do které se druhý vejde.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Značky se zakládají, nepřebírají.</b> Kdo chce prvek nad bójemi,
+    /// které už stojí, má <see cref="ZalozAsync"/> — tohle je cesta pro
+    /// stavitele, který právě pípl.
+    /// </para>
+    /// </summary>
+    public async Task<(PrvekDto? Prvek, string? Chyba, bool Opakovane)> PostavAsync(
+        int zavodId, PostavPrvekVstup vstup, Guid kdo, CancellationToken ct, int? tratId = null)
+    {
+        if (vstup.Klic == Guid.Empty)
+            return (null, "Prvek postavený jedním požadavkem musí mít klíč, "
+                          + "jinak by ho opakované odeslání postavilo dvakrát.", false);
+
+        if (vstup.Body is null || vstup.Body.Count == 0)
+            return (null, "Prvek bez jediného bodu se postavit nedá.", false);
+
+        // Nejdřív se zeptáme, jestli už tu ten klíč není. Nestačí to —
+        // souběh dvou stejných požadavků projde oběma kontrolami —, ale
+        // ušetří to obvyklý případ, kdy telefon jen posílá znovu, protože
+        // se ztratila odpověď.
+        var (hotovy, cizi) = await PodleKliceAsync(zavodId, vstup.Klic, ct);
+        if (cizi) return (null, "Ten klíč už patří prvku jiné regaty.", false);
+        if (hotovy is not null) return (hotovy, null, true);
+
+        if (Prvky.ProcNejdePostavit(
+                vstup.Typ, vstup.Body.Count, vstup.Strana, vstup.Poznamka, vstup.Smer,
+                vstup.DruhStartu) is { } chybaPrvku)
+            return (null, chybaPrvku, false);
+
+        // Pravidla pípnutí platí beze změny: přesnost nad sto metrů, poloha
+        // mimo Orlík, barva u plavidla. Opsat je sem by znamenalo dva
+        // výklady téhož, takže se každý bod zkontroluje jako pípnutí.
+        foreach (var bod in vstup.Body)
+            if (Pipnuti.ProcNejde(JakoPipnuti(bod)) is { } chybaBodu)
+                return (null, chybaBodu, false);
+
+        await using var transakce = await db.Database.BeginTransactionAsync(ct);
+
+        if (await trate.ProcNejdeStavetAsync(zavodId, ct, tratId) is { } zamceno)
+            return (null, zamceno, false);
+
+        // Stavba začíná první značkou, stejně jako u pípnutí — bez téhle
+        // věty by první prvek regaty neměl do čeho spadnout. S vybranou
+        // tratí se nic nezakládá: cizí id má vrátit chybu, ne novou trať.
+        var trat = tratId is null
+            ? await trate.ZalozPokudChybiAsync(zavodId, ct)
+            : await trate.VybranaAsync(zavodId, tratId, ct);
+
+        if (trat is null) return (null, "Taková trať u téhle regaty není.", false);
+        await db.SaveChangesAsync(ct);
+
+        var ted = cas.GetUtcNow();
+        // Pořadí značek se počítá jednou a pak se zvyšuje: každý dotaz zvlášť
+        // by oběma koncům brány dal totéž číslo, protože ani jeden z nich
+        // v tu chvíli ještě není uložený.
+        var poradiZnacky = await DalsiPoradiZnackyAsync(zavodId, ct);
+        var znacky = new List<Boje>();
+
+        foreach (var bod in vstup.Body)
+        {
+            var (postaveno, posun) = Spolecne.CasKlienta.Kdy(bod.PostavenaV, ted);
+            var znacka = new Boje
+            {
+                ZavodId = zavodId,
+                Nazev = bod.Nazev!.Trim(),
+                Poradi = poradiZnacky++,
+                Sirka = bod.Sirka,
+                Delka = bod.Delka,
+                PresnostM = bod.PresnostM,
+                Zdroj = bod.Zdroj ?? ZdrojPolohy.Telefon,
+                Barva = bod.Barva,
+                Tvar = bod.Tvar,
+                Znaceni = bod.Znaceni,
+                Popis = string.IsNullOrWhiteSpace(bod.Popis) ? null : bod.Popis.Trim(),
+                PostavenaV = postaveno,
+                ZapsanaV = ted,
+                PosunCasu = posun,
+                PostavilId = kdo,
+            };
+
+            znacky.Add(znacka);
+            db.Boje.Add(znacka);
+        }
+
+        var prvek = new PrvekTrati
+        {
+            TratId = trat.Id,
+            Typ = vstup.Typ,
+            Poradi = await DalsiPoradiAsync(trat.Id, ct),
+            Strana = vstup.Strana,
+            Poznamka = string.IsNullOrWhiteSpace(vstup.Poznamka) ? null : vstup.Poznamka.Trim(),
+            Smer = vstup.Smer,
+            DruhStartu = vstup.DruhStartu,
+            Klic = vstup.Klic,
+            BojeA = znacky[0],
+            BojeB = znacky.Count > 1 ? znacky[1] : null,
+        };
+
+        db.PrvkyTrati.Add(prvek);
+
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Souběh: druhý požadavek s týmž klíčem doběhl první a zarazil
+            // ho unikátní index. Transakce se zahodí i se značkami, které
+            // v ní vznikly, a vrátí se prvek, který uspěl — pro telefon je
+            // to táž odpověď jako napoprvé.
+            await transakce.RollbackAsync(ct);
+            var (zavedeny, _) = await PodleKliceAsync(zavodId, vstup.Klic, ct);
+            if (zavedeny is not null) return (zavedeny, null, true);
+
+            // Jiná vada zápisu. Spolknout ji tady by znamenalo tvrdit, že
+            // prvek stojí, i když nestojí.
+            throw;
+        }
+
+        await transakce.CommitAsync(ct);
+        return (await JedenAsync(prvek.Id, ct), null, false);
+    }
+
+    /// <summary>
+    /// Prvek s tímhle klíčem, pokud už existuje. Druhá položka říká, že
+    /// klíč patří <b>jiné regatě</b> — takový prvek se vrátit nesmí, i když
+    /// se klíč trefil.
+    /// </summary>
+    private async Task<(PrvekDto? Prvek, bool Cizi)> PodleKliceAsync(
+        int zavodId, Guid klic, CancellationToken ct)
+    {
+        var nalez = await db.PrvkyTrati
+            .Where(p => p.Klic == klic)
+            .Select(p => new { p.Id, Zavod = p.Trat!.ZavodId })
+            .FirstOrDefaultAsync(ct);
+
+        if (nalez is null) return (null, false);
+        if (nalez.Zavod != zavodId) return (null, true);
+
+        return (await JedenAsync(nalez.Id, ct), false);
+    }
+
+    /// <summary>Bod prvku jako pípnutí, aby se pravidla nečetla dvakrát.</summary>
+    private static PipnutiVstup JakoPipnuti(BodPrvkuVstup b) => new(
+        b.Nazev, 0, b.Sirka, b.Delka, b.PresnostM, null, b.Zdroj, b.Barva, b.Tvar,
+        b.Znaceni, b.Popis, b.PostavenaV);
+
+    /// <summary>Za poslední stojící značku regaty, stejně jako u pípnutí.</summary>
+    private async Task<int> DalsiPoradiZnackyAsync(int zavodId, CancellationToken ct) =>
+        (await db.Boje
+            .Where(b => b.ZavodId == zavodId && b.NahrazenaV == null && b.SebranaV == null)
+            .MaxAsync(b => (int?)b.Poradi, ct) ?? 0) + 1;
+
     /// <summary>Přepíše prvek. Vrací ho, nebo důvod, proč to nejde.</summary>
     public async Task<(PrvekDto? Prvek, string? Chyba)> UpravAsync(
         int zavodId, int prvekId, PrvekVstup vstup, Guid kdo, CancellationToken ct,
@@ -174,10 +402,7 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
         if (v.BojeBId is not null) return v.BojeBId;
         if (v.KonecBSirka is not { } sirka || v.KonecBDelka is not { } delka) return null;
 
-        // Za poslední stojící značku, stejně jako u pípnutí.
-        var poradi = (await db.Boje
-            .Where(b => b.ZavodId == zavodId && b.NahrazenaV == null && b.SebranaV == null)
-            .MaxAsync(b => (int?)b.Poradi, ct) ?? 0) + 1;
+        var poradi = await DalsiPoradiZnackyAsync(zavodId, ct);
 
         var znacka = new Boje
         {

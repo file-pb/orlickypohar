@@ -106,6 +106,17 @@ public static class TratEndpoints
                 "Organizátor regaty, nebo rozhodčí ročníku. Do přijaté trati nejde — "
                 + "prvek je rozhodnutí o trati, takže platí tentýž zámek jako u pípnutí.");
 
+        g.MapPost("/prvky/postav", PostavPrvekAsync)
+            .Produces<PrvekDto>(StatusCodes.Status201Created)
+            .Produces<PrvekDto>()
+            .WithTags("Bóje")
+            .WithSummary("Postaví prvek i s jeho značkami jednou transakcí")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Cesta pro appku: prvek se "
+                + "nedá skládat ze serverových id, když se odesílá z fronty bez signálu. "
+                + "Buď vznikne celý, nebo nic. `klic` je povinný — opakované odeslání "
+                + "téhož klíče vrátí týž prvek s kódem 200, nový dostane 201.");
+
         g.MapPut("/prvky/{prvek:int}", UpravPrvekAsync)
             .Produces<PrvekDto>()
             .WithTags("Bóje")
@@ -443,6 +454,33 @@ public static class TratEndpoints
         return chyba is not null
             ? Results.BadRequest(new { error = chyba })
             : Results.Created((string?)null, prvek);
+    }
+
+    /// <summary>
+    /// Celý prvek jedním požadavkem — cesta pro appku, která ho drží ve
+    /// frontě, dokud nemá signál.
+    ///
+    /// <para>
+    /// <b>Opakování vrací 200, ne chybu.</b> Telefon posílá znovu právě
+    /// tehdy, když neví, jestli to poprvé prošlo; odpovědět mu konfliktem
+    /// by znamenalo, že fronta zůstane stát na prvku, který už dávno
+    /// stojí ve vodě.
+    /// </para>
+    /// </summary>
+    private static async Task<IResult> PostavPrvekAsync(
+        string serie, string zavod, PostavPrvekVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, PrvkySprava prvky, CancellationToken ct, int? trat = null)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        var (prvek, chyba, opakovane) = await prvky.PostavAsync(
+            rozsah!.ZavodId!.Value, vstup, uzivatel, ct, trat);
+
+        if (chyba is not null) return Results.BadRequest(new { error = chyba });
+        return opakovane ? Results.Ok(prvek) : Results.Created((string?)null, prvek);
     }
 
     private static async Task<IResult> UpravPrvekAsync(
