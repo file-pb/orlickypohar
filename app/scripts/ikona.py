@@ -510,6 +510,86 @@ def uloz(obraz, jmeno, velikost=S):
     print(f"  {cesta}  {velikost}×{velikost}")
 
 
+# Listing v Google Play. Rozměry nejsou na výběr: ikona přesně 512×512,
+# feature graphic přesně 1024×500 (support.google.com/googleplay/
+# android-developer/answer/9866151). Kreslí se tady ze stejné značky jako
+# ikona appky — jinak by se obchod a telefon časem rozešly.
+PLAY_TLUMENY = (96, 118, 138)  # námořní zesvětlená do papíru, na podtitulek
+
+
+def obchod():
+    """Ikona a feature graphic do listingu."""
+    from PIL import ImageFont
+
+    os.makedirs("listing", exist_ok=True)
+    mark = znacka()
+
+    # Ikona: neprůhledná, na papíru. Play si ji maskuje sám, takže se
+    # nezaobluje tady.
+    ikona = Image.new("RGB", (S, S), PAPIR)
+    ikona.paste(mark, (0, 0), mark)
+    ikona.resize((512, 512), Image.LANCZOS).save("listing/ikona-512.png")
+    print("  listing/ikona-512.png  512×512")
+
+    # Kreslí se ve dvojnásobku a zmenšuje, stejně jako všechno ostatní tady.
+    SIR, VYS = 2048, 1000
+    # Okraj je bezpečnostní: Play obrázek v některých místech ořezává a
+    # překrývá tlačítkem, takže u kraje nesmí stát nic, co je potřeba číst.
+    OKRAJ = 150
+    plato = Image.new("RGB", (SIR, VYS), PAPIR)
+
+    znak_vel = 700
+    znak = mark.resize((znak_vel, znak_vel), Image.LANCZOS)
+    plato.paste(znak, (OKRAJ, (VYS - znak_vel) // 2), znak)
+
+    k = ImageDraw.Draw(plato)
+    x = OKRAJ + znak_vel + 60
+    sirka = SIR - OKRAJ - x
+
+    def vejde(text, strop):
+        """Největší velikost, při které se nápis ještě vejde do šířky.
+        Počítá se, ne odhaduje — po změně textu nebo značky to sedne samo.
+        Devadesát procent šířky, ne sto: nápis natažený až k okraji vypadá
+        jako chyba sazby, a Play obrázek navíc ořezává."""
+        vel = strop
+        while vel > 12:
+            f = ImageFont.truetype(PISMO, vel)
+            if k.textlength(text, font=f) <= sirka * 0.9:
+                return f
+            vel -= 2
+        return ImageFont.truetype(PISMO, 12)
+
+    nadpis = vejde("ORLICKÝ", 240)
+    podtitulek = vejde("Seriál závodů plachetnic na Orlíku", 72)
+
+    # <b>Řádky se skládají podle skutečné stopy písmen, ne podle velikosti
+    # písma ani podle výšky verzálek.</b> České čárky a háčky stojí nad
+    # verzálkou, takže blok počítaný z verzálek sedí vysoko a čárka nad Á
+    # v POHÁR se dotkne řádku nad sebou. `textbbox` vrátí, kam až písmena
+    # doopravdy sahají — i s diakritikou.
+    radky = [
+        ("ORLICKÝ", nadpis, NAMORNI),
+        ("POHÁR", nadpis, NAMORNI),
+        ("Seriál závodů plachetnic na Orlíku", podtitulek, PLAY_TLUMENY),
+    ]
+    stopy = [k.textbbox((0, 0), text, font=f, anchor="lt") for text, f, _ in radky]
+    vysky = [y1 - y0 for _, y0, _, y1 in stopy]
+
+    verzalka = nadpis.size * VERZALKY
+    mezery = [verzalka * 0.18, verzalka * 0.5]  # mezi řádky nápisu, a nad podtitulkem
+    celek = sum(vysky) + sum(mezery)
+
+    y = (VYS - celek) / 2
+    for (text, f, barva), (_, y0, _, _), vyska, mezera in zip(
+        radky, stopy, vysky, [*mezery, 0]
+    ):
+        k.text((x, y - y0), text, font=f, fill=barva, anchor="lt")
+        y += vyska + mezera
+
+    plato.resize((1024, 500), Image.LANCZOS).save("listing/feature-1024x500.png")
+    print("  listing/feature-1024x500.png  1024×500")
+
+
 def main():
     mark = znacka()
 
@@ -581,6 +661,8 @@ def main():
     plachta(k, h, r, p, BILA, lem, spodek)
     oblouk(k, *OBLOUK[:2], OBLOUK[2], OBLOUK[3], BILA)
     uloz(usad(silueta, podil=0.58, posun=0.0), "android-icon-monochrome.png")
+
+    obchod()
 
 
 if __name__ == "__main__":
