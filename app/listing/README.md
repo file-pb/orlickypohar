@@ -4,13 +4,30 @@ Texty a grafika pro stránku appky v obchodě. Leží to tady, aby se to
 nevymýšlelo v konzoli v jedenáct večer a aby bylo v diffu vidět, co se
 změnilo — stejný důvod, proč se značka kreslí kódem.
 
-**Grafiku nedělej ručně.** `ikona-512.png` i `feature-1024x500.png` kreslí
-`scripts/ikona.py` ze stejné značky jako ikonu appky; po každé úpravě
-značky stačí skript pustit znovu:
+**Grafiku nedělej ručně:**
 
 ```bash
-cd app && python3 scripts/ikona.py
+cd app && python3 scripts/listing.py
 ```
+
+**Na banneru je logo Orlik Yacht Series**, to samé, co má web vlevo nahoře
+(Filip, 13. 11. 2026). Značka s plachtami je *původní* logo poháru
+(`web/app/logo-puvodni.tsx`, od 22. 9. 2026 nepoužité) a do obchodu nepatří
+— lidé mají poznat to, co znají z webu. Skript proto čte křivky přímo
+z `web/app/znacka-orlik-yacht-series.ts` a `web/app/znacka-napis.ts`, aby
+se obchod s hlavičkou nemohl rozejít. Vzniká z toho i `feature-1024x500.svg`;
+PNG je jen jeho převod.
+
+**Ikona 512 je naproti tomu ikona appky**, ne logo série, a je to schválně:
+na stránce v obchodě má stát totéž, co uživatel uvidí po instalaci na ploše.
+Kdyby měla být i tam kulatá značka, je to změna ikony aplikace (`ikona.py`),
+ne jen obchodu — a to je rozhodnutí, které nikdo neudělal.
+
+**Nedořešené: pod jakým jménem appka v obchodě vystupuje.** Banner říká
+*Orlická série*, název aplikace a všechny texty níž říkají *Orlický pohár*.
+Obojí je dnes pravda — web se jmenuje jedním a appka druhým — ale na jedné
+stránce v obchodě to vedle sebe bude vypadat jako nedodělek. Patří to
+Milošovi, ne nám.
 
 ## Než se dá nahrát cokoliv
 
