@@ -6132,19 +6132,32 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
   background: color-mix(in srgb, var(--ukon, var(--voda)) 10%, var(--papir));
 }
 
-/* <b>Dotykový cíl 44 px a práh 6,6 rem</b> (konzilium, bod 5).
-   Změřeno proti téhle komponentě: `.obal` nechá na telefonu 350 px,
-   takže při prahu 7,25 rem vyjdou dva sloupce, sedm tabů do čtyř řad
-   a 196 px — skoro čtvrtina displeje navigací na obrazovce, kde se
-   pracuje jednou rukou. Při 6,6 rem jsou tři sloupce, tři řady, 146 px.
-   Okno prahu je úzké (6,53–6,71 rem), takže se tahle hodnota nesmí
-   stěhovat bez měření na 375 i 390 px.
+/* <b>Dotykový cíl 44 px a práh 10 rem</b> (Filip, 13. 11. 2026 — fotka
+   pruhu z mobilu: „ta jména nejsou úplně fengšuej").
+
+   <b>Konzilium tu mělo 6,6 rem a mýlilo se v tom, co měřilo</b> (bod 5).
+   Počítalo šířku dlaždice — tři sloupce po 107 px místo dvou po 164 px,
+   tedy 146 px navigace místo 196 px — a zalomené jméno k tomu vzalo jako
+   přijatelnou cenu. Jenže rozhoduje <b>místo na text</b>, a toho dlaždice
+   nechá o 43 px míň, než je sama široká: při 107 px je to <b>64 px</b>.
+   Tam se nevejde ani `Novinky`, natož zkratky, které si pruh regaty bere
+   z `uzky` — `P. směrnice` měří 84 px. Práh 6,6 rem tedy nezlomil jen
+   dlouhá jména; rozbil i tu úspornou podobu, která se na úzkou dlaždici
+   zapíná právě proto, aby se nelámalo nic.
+
+   Při 10 rem jsou dva sloupce po 164 px, tedy 121 px na text, a celá
+   jména se vejdou — `Zápis výsledků` 108 px, `Lodě a kapitáni` 109 px,
+   `Průběžné pořadí` 119 px. Stojí to těch 50 px navíc, které konzilium
+   šetřilo. Změřeno v prohlížeči na 375 px, ne odhadnuto.
+
+   Okno prahu je (6,7–10,4 rem]: nad 10,4 rem by se dlaždice zúžily zpátky
+   na jeden sloupec. Hodnota se nesmí stěhovat bez měření na 375 i 390 px.
 
    Cíl 44 px patří sem, do komponenty — ne do jedné obrazovky, jinak má
    správa regaty cíl o 12 px menší než ročník. */
 @media (pointer: coarse) {
-  .dlazdice-sekci { --min-dlazdice: 6.6rem; }
-  body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 6.6rem; }
+  .dlazdice-sekci { --min-dlazdice: 10rem; }
+  body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 10rem; }
   .dlazdice-sekci .karta {
     padding: 0.7rem 0.4rem 0.7rem 0.55rem;
     display: flex;
@@ -6152,10 +6165,12 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
     min-height: 44px;
     box-sizing: border-box;
   }
-  /* Dlouhé jméno se na telefonu zalomí dovnitř dlaždice. Druhé jméno pro
-     tutéž věc se nezavádí: tři slova pro jedno („Oprávnění · Oprávnění na
-     celý web · Práva") jsou přesně ta nesrovnalost, kterou projekt
-     29. 10. 2026 odmítl. */
+  /* Co se ani do dvou sloupců nevejde, se zalomí dovnitř dlaždice. Po
+     rozšíření na 10 rem jsou to tři jména z osmnácti — `Oprávnění na celý
+     web` a ve veřejné regatě `Plachetní směrnice` a `Předpokládaná trať`.
+     Druhé jméno pro tutéž věc se jim nezavádí: tři slova pro jedno
+     („Oprávnění · Oprávnění na celý web · Práva") jsou přesně ta
+     nesrovnalost, kterou projekt 29. 10. 2026 odmítl. */
   .dlazdice-sekci .nazev { white-space: normal; line-height: 1.15; }
 }
 

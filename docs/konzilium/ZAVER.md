@@ -103,6 +103,29 @@ maket** — jinak má správa regaty, která „už stojí", cíl o 12 px menš�
 ročník. Práh i cíl jdou v jednom commitu a musí se vidět na 375 i 390 px: okno
 prahu je 2,9 px široké.
 
+> **Práh 6,6 rem padl 13. 11. 2026** — Filip poslal fotku pruhu z mobilu
+> („ta jména nejsou úplně fengšuej"): ze sedmi dlaždic se dvě lámaly do dvou
+> řádků a řady měly nestejnou výšku.
+>
+> Čísla v tabulce výše sedí (dva sloupce vyšly na 195 px, konzilium psalo 196),
+> ale **měřila se šířka dlaždice, ne místo na text**, a toho nechá dlaždice
+> o 43 px míň, než je sama široká. Při 107 px zbude **64 px** — méně, než měří
+> `P. směrnice` (84 px). Práh 6,6 rem tedy nezlomil jen dlouhá jména; vyřadil
+> i úspornou podobu z `uzky`, která se na úzkou dlaždici zapíná právě proto,
+> aby se nelámalo nic. Celý mechanismus krátkých jmen byl na telefonu k ničemu
+> a nikdo si toho nevšiml, protože se kontrolovalo, kolik sloupců vyjde.
+>
+> Při **10 rem** jsou dva sloupce po 164 px, tedy 121 px na text: pruh správy
+> ročníku je 7/7 na jeden řádek, veřejný ročník 6/6, správa webu 3/4.
+> Stojí to 50 px, které konzilium šetřilo. Jména se neměnila žádná — rozhodnutí
+> o názvosloví z bodů 9 a 11 platí dál.
+>
+> **Dvouřádkové zůstávají tři jména z osmnácti** a u všech je to zapsané
+> rozhodnutí, ne přehlédnutí: `Oprávnění na celý web` (druhé jméno pro tutéž
+> věc se nezavádí) a ve veřejné regatě `Plachetní směrnice`
+> a `Předpokládaná trať` — tam dlaždice nese ještě signální vlajku, která
+> ukrojí asi 40 px, a plná jména jsou Milošův slovník (29. 10. 2026).
+
 ### 6. *Co teď* nesmí být prázdné, a výchozí tab se nemění
 
 Nejdražší nález kola 1 (1-ergonomie): přistání na prázdném *Co teď* přidává
