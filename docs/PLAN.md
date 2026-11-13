@@ -10160,6 +10160,43 @@ nasazení, nehlídá nic — rušit ji ale nebude důvod, protože nic nestojí:
 to jedna podmínka ve stávajícím kroku, ne nový job ani další minuta
 Actions.
 
+## Ochrana potřebuje pojmenovanou cestu skrz (9. 11. 2026)
+
+**Každá ochrana, která něco zamyká, musí mít výslovnou cestu skrz sebe — a ta
+cesta se musí sama zúžit.** Bez ní se systém dá zamknout zvenčí a zpátky vede
+jen tajemství na serveru nebo ruční SQL. S cestou, která se nezúží, není
+ochrana ochranou.
+
+Vzniklo to ve čtyřech místech, ve třech různých podobách, každé zvlášť a z jiné
+pohnutky. Teprve pohromadě je vidět, že je to jeden vzor:
+
+| Ochrana | Cesta skrz | Čím se zužuje |
+|---|---|---|
+| Oprávnění v ročníku uděluje jen jeho správce | Udělení **prvního** správce projde na importní token | Jen dokud v té sérii žádný správce není. První správce cestu zamkne za sebou — `Features/Sprava/Udeleni.cs`, oddíl *Čím pokračovat ve fázi 5* |
+| Role na celý web uděluje jen správce webu | Prvního pustí tentýž importní token | Totéž podmínkou. Filip udělen 22. 9. 2026, od té doby je ta cesta mrtvá — oddíl *Obecné články a rozsah „celý web“* |
+| Nasazení neodešle commit, který je předkem běžícího | Ruční spuštění s volbou `obnova` přiloží `X-Deploy-Obnova: ano` | Jen ruční spuštění; z `main` se tam nedá dostat — `.github/workflows/build-deploy.yml` |
+| Import odmítne dávku, co by přepsala provozní výsledky | Režim `oprava` to udělá vědomě | Jen s otiskem z náhledu, takže musí předcházet `nahled`, který ukázal, co se přepíše — oddíl *Zastaralý soubor ročníku* |
+
+**Proč se to zapisuje teprve teď.** Pravidlo „sdílet až po třetí kopii“ platí
+i na vzory, ne jen na kód. Dvě místa hranici nedají, čtyři ano — a všechna
+čtyři se liší právě tím, čím se zužují: podmínkou v databázi, ruční obsluhou,
+nebo předchozím krokem. Zúžení je tedy to, co abstrahovat nejde, a proto
+tohle zůstává pravidlem a nestane se z toho knihovna.
+
+**Co z toho plyne pro pátou ochranu.** Až vznikne, patří k ní v plánu tři věty:
+co zamyká, kudy vede cesta skrz, a co tu cestu zavře. Když třetí věta nejde
+napsat, je ta ochrana buď zbytečná, nebo past — a past se pozná až ve chvíli,
+kdy je pozdě, protože do té doby se tváří jako bezpečí.
+
+**Co do vzoru nepatří, i když to tak vypadá.** `puvodniSlug` u importu není
+výjimka z ochrany, ale vstup, který ochraně dodá chybějící informaci:
+idempotence podle slugu by při přejmenování regaty selhala, a `puvodniSlug` jí
+řekne, pod kterou adresou ta regata už leží. Ochrana zůstává v platnosti pro
+všechny a nic se nezužuje. Stejně tak `X-Deploy-Sha` a `X-Deploy-Poradi`
+nejsou cesty skrz zámek na serveru — jsou to data, bez kterých by zámek
+nemohl rozhodnout. Rozdíl je v tom, jestli ochranu obcházíš, nebo ji
+zpravuješ.
+
 ## Fronta k 20. 10. 2026
 
 <b>Proč je tenhle oddíl v plánu, a ne v hlavě.</b> Filip, 19. 10. 2026:
