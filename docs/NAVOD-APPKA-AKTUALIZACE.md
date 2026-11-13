@@ -1,9 +1,22 @@
 # Příručka: jak si Miloš přeinstaluje appku
 
-**Platí pro APK vydané 8. 11. 2026** (build `17d1b684`, versionCode 10,
+**Platí pro APK vydané 12. 11. 2026** (build `dcff9cef`, versionCode 11,
 otisk `0759d5bd…`, zapsané v `app/vydane-apk.json`; produkce na `/appka`
-ho rozdává, ověřeno 8. 11.). Až vyjde další, projdi text znovu — a zkontroluj
+ho rozdává od 12. 11.). Až vyjde další, projdi text znovu — a zkontroluj
 hlavně to, co appce slibuje.
+
+**Build 11 do tabulky níž nepatří**, a to je na něm to podstatné: má
+**tentýž otisk** jako build 10 (ověřeno 13. 11. 2026 spočítáním otisku
+nad `main` — vyšel `0759d5bd…`, tedy ten zapsaný). Kdo měl v telefonu
+build 10, dostal jeho novinky **po síti** a nic neinstaloval. Tabulka je
+soupis okamžiků, kdy ruční instalace nutná byla; tenhle mezi ně nepatří.
+
+**Mezi 12. a 13. 11. 2026 o tom ale repozitář lhal:** adresa nového APK se
+zapsala do `deploy/docker-compose.yml`, kdežto `app/vydane-apk.json`
+zůstal na buildu 10. Stránka `/appka` tedy rozdávala jedenáctku, zatímco
+záznam i tenhle návod tvrdily desítku — a stahovat šlo dál, takže si toho
+nikdo nevšiml. Kontrola v CI to hlásila varováním, které je v zelené úloze
+snadné přehlédnout.
 
 **Pět instalací**, a za každou stojí posunutý nativní otisk — ne novinka
 v appce:
