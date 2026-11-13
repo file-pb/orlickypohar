@@ -104,14 +104,16 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
         <OdkazJinam obycejny href="/moje-lode">
           Moje lodě
         </OdkazJinam>
-        {/* Věci mimo ročníky. Zůstávají v nabídce, protože rozcestník ročníku
-            je o ročníku a tyhle do něj nepatří. Jmenuje je `co-smim`, ať se
-            nabídka a rozcestník nemůžou rozejít. */}
-        {web.map((p) => (
-          <OdkazJinam obycejny key={p.kam} href={p.kam}>
-            {p.nazev}
-          </OdkazJinam>
-        ))}
+        {/* <b>Věci mimo ročníky tu už nejsou</b> (Filip, 13. 11. 2026, nad
+            snímkem s otevřenou nabídkou vedle pruhu Správy, kde stály tytéž
+            tři položky dvakrát: *„ještě tady to také zjednodušíme"*). Obecné
+            články, Oprávnění na celý web a Co web stojí jsou dlaždice na
+            `/sprava`; nabídka vede na rozcestník a ten je vypíše. Důvod je
+            týž, kvůli kterému odsud 6. 10. 2026 zmizel seznam ročníků: tahle
+            nabídka má dovést dovnitř, ne být druhým rozcestníkem.
+
+            `polozkyWebu` se dál čte kvůli `maSpravu` — kdo má roli jen na
+            celý web a v žádném ročníku, musí na Správu dojít taky. */}
         {/* Účet spravuje poskytovatel, ne my: heslo naší aplikací neprojde
             a změna e-mailu se ověřuje poštou. Odsud se tam jen odchází —
             do nové karty, aby člověk nepřišel o rozdělanou stránku. */}
