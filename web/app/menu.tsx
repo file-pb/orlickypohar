@@ -39,9 +39,16 @@ export function Menu({
             </OdkazJinam>
           </>
         )}
-        {/* Tabule do hospody. Vede na rozcestník, ne na konkrétní závod:
-            hlavička by jinak musela na každé stránce zjišťovat, co se jede. */}
-        <OdkazJinam href="/tabule">Tabule na telku</OdkazJinam>
+        {/* <b>Tabule tu nestojí</b> (Filip, 13. 11. 2026: *„tady máme
+            zdvojení, volání, tak to nechme jen od té regaty"*). Vedly na ni
+            dvě cesty — tahle a odkaz u regaty — a tahle navíc přes
+            rozcestník, který si musel dotáhnout ročník i jeho závody, aby
+            zjistil, kam vlastně poslat. Tabule patří závodu, takže se na ni
+            chodí od závodu.
+
+            Adresa `/tabule` zůstala: na televizi v hospodě se jeden krátký
+            řetězec naťuká, kdežto celá cesta se závodem ne. Není to druhá
+            cesta v nabídce, je to zkratka pro toho, kdo ji zná z nápovědy. */}
         <OdkazJinam href="/historie">Historie</OdkazJinam>
         <OdkazJinam href="/pravidla">Pravidla</OdkazJinam>
         <OdkazJinam href="/napoveda">Nápověda</OdkazJinam>

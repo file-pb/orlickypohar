@@ -542,8 +542,15 @@ export default function Napoveda() {
       <h2 id="tabule">Tabule na telku</h2>
       <p>
         Tabule je obrazovka pro hospodu a klubovnu. <b>Nic se na ni
-        nepřihlašuje</b> a má vlastní adresu u každé regaty; v nabídce je pod{" "}
-        <i>Tabule na telku</i> rozcestník, který vede na tu, co se zrovna jede.
+        nepřihlašuje</b> a má vlastní adresu u každé regaty — jde se na ni
+        od té regaty, jejíž tabule to má být.
+      </p>
+      <p>
+        <b>Na televizi se nic proklikávat nemusí.</b> Adresa{" "}
+        <Link href="/tabule">orlickypohar.klihovka.cz/tabule</Link> vede rovnou
+        na tabuli toho závodu, co se zrovna jede — a když se dnes nejede, na
+        nejbližší příští. Jeden řetězec, který se dá naťukat dálkovým
+        ovladačem.
       </p>
       <p>
         <b>Přepíná se sama podle toho, kde je den.</b> Nejsou to čtyři
