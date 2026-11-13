@@ -1,8 +1,6 @@
 import Link from "next/link";
 import type { VerejnaTrat, ZavodDetail } from "@/lib/api";
 import { Drobecky } from "@/app/drobecky";
-import { ZnackaPuvodni } from "@/app/logo-puvodni";
-import { VlajkaIkona, type Vlajka } from "@/app/vlajky";
 import { nactiJa } from "@/lib/ja";
 import { polozkyZastavky, prava, roleVRocniku } from "@/lib/co-smim";
 import { nactiBlesky } from "@/lib/blesky";
@@ -83,26 +81,6 @@ const NAZVY: Record<Sekce, string> = {
   trat: "Předpokládaná trať",
   lode: "Startovní listina",
   vysledky: "Výsledky",
-};
-
-/**
- * Signální vlajka u každé sekce (Filip, 11. 10. 2026: *„ať je to živější"*).
- * Vybraná podle toho, co vlajka doopravdy znamená v Závodních signálech —
- * proč a která, viz `app/vlajky.tsx`. Úvod vlajku nemá: žádný signál
- * neznamená „tady je řeč o celé regatě", a tak nese značku poháru, stejně
- * jako ji v tabech tříd nese pořadí celého pole.
- */
-const VLAJKY: Record<Sekce, Vlajka | null> = {
-  uvod: null,
-  // <b>Vypsání vlajku nemá</b>, a ze stejného důvodu jako Úvod: žádný
-  // závodní signál neznamená „tady se vypisuje závod" — vypsání se vydává
-  // týdny předem na břehu. Vymyslet mu vlajku by rozbilo přesně tu
-  // znalost, kvůli které vlajky u tabů jsou (`app/vlajky.tsx`).
-  vypsani: null,
-  smernice: "L",
-  trat: "M",
-  lode: "P",
-  vysledky: "modra",
 };
 
 /** Které sekce ta která regata má. Pořadí je pořadí tabů. */
@@ -205,8 +183,14 @@ export async function HlavaZastavky({
           s akordeonem na úzkém displeji — mřížka se zalomí sama, takže
           akordeon, který vznikl kvůli nálezu R10, přestal být potřeba.
 
-          Vlajky zůstávají: tady jsou obsahem stránky, ne navigací nad ní,
-          a nesou význam ze Závodních signálů. */}
+          <b>Signální vlajky u sekcí skončily</b> (Filip, 13. 11. 2026:
+          *„vlajky už ne, ty jsme zavrhli… nahraď je těmi barevnými kraji"*).
+          Vznikly 11. 10. 2026 jako oživení a vybíraly se podle toho, co
+          vlajka doopravdy znamená v Závodních signálech — jenže na poháru
+          se vlajky nevyvěšují vůbec, signalizuje se megafonem (nález R16,
+          `docs/PLAN.md`). Byl to tedy slovník, kterým se na téhle regatě
+          nemluví. Sekci teď rozlišuje barevná hrana dlaždice, stejná jako
+          ve správě. */}
       <DlazdiceSekci
         popisek="Části regaty"
         aktivni={aktivni}
@@ -214,7 +198,6 @@ export async function HlavaZastavky({
           klic: sekce,
           nazev: NAZVY[sekce],
           kam: adresaSekce(serie, zavod, sekce),
-          znacka: VLAJKY[sekce] ? <VlajkaIkona vlajka={VLAJKY[sekce]} /> : <ZnackaPuvodni />,
         }))}
       />
 

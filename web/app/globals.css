@@ -2027,9 +2027,11 @@ body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 7.25rem; }
    kdežto obdélník na hraně by se o kulaté rohy otíral a musel by si je
    kopírovat sám.
 
-   Barva je u všech táž. Podle sekce ji nedávám schválně — signální vlajky
-   úkonů jsou ze tří pětin modré (modrá, P, M), takže by se proužky
-   nerozlišily a tvářily by se, že nesou význam, který nenesou. */
+   <b>Barva je podle sekce</b> (Filip, 29. 10. 2026: „ty barvy nahrazují ty
+   vlajky kvůli šířce, takže klidně různé"). Původní poznámka tvrdila opak —
+   že barva je u všech táž, protože vlajky jsou ze tří pětin modré — jenže
+   barvy per sekci přibyly ještě týž den o kousek níž a 13. 11. 2026 vlajky
+   skončily úplně. Odstíny a jejich meze jsou u tokenů `--ukon-*` nahoře. */
 /* <b>Mírný podklad v téže barvě</b> (Filip, 29. 10. 2026): hrana sama je
    pět pixelů a v řadě pěti dlaždic se ztrácí. Osm procent barvy v papíru
    stačí, aby se dlaždice odlišily plochou, a je to pořád tak málo, že text
@@ -2128,16 +2130,6 @@ body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 7.25rem; }
   box-shadow: inset 0 -2px 0 var(--voda);
   background: var(--zvyrazneni);
 }
-
-.dlazdice-sekci .vlajka {
-  height: 0.95rem;
-  width: 1.425rem;
-  flex: none;
-  border: 1px solid var(--linka);
-  border-radius: 1px;
-}
-/* Úvod nese značku poháru místo vlajky; srovnat ji do stejné výšky. */
-.dlazdice-sekci .znak-celkem { height: 1.3rem; width: auto; }
 
 /* ---------------------------------------------------------------------
    Obrazovky správy stojí těsněji (Filip, 29. 10. 2026: „docela dost
