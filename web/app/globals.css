@@ -6157,12 +6157,21 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
     min-height: 44px;
     box-sizing: border-box;
   }
-  /* Co se ani do dvou sloupců nevejde, se zalomí dovnitř dlaždice. Po
-     rozšíření na 10 rem jsou to tři jména z osmnácti — `Oprávnění na celý
-     web` a ve veřejné regatě `Plachetní směrnice` a `Předpokládaná trať`.
-     Druhé jméno pro tutéž věc se jim nezavádí: tři slova pro jedno
-     („Oprávnění · Oprávnění na celý web · Práva") jsou přesně ta
-     nesrovnalost, kterou projekt 29. 10. 2026 odmítl. */
+  /* Zbytek po rozšíření na 10 rem řeší krátká jména, ne zalomení (Filip,
+     13. 11. 2026: „Zkrať je"). Zůstalo jediné: `Oprávnění na celý web`
+     měří 163 px a dlaždice nechá na text 143. Krátká podoba je v `uzky`
+     v `co-smim.ts` a pravidlo pod sebou ji přepíná podle šířky dlaždice.
+
+     Dvojí jméno pro tutéž věc tím projekt připustil — do 13. 11. 2026 se
+     odmítalo (29. 10.: „Oprávnění · Oprávnění na celý web · Práva").
+     Rozdíl je v tom, že zkratka plné jméno nenahrazuje: vykreslují se obě
+     a nadpis okna nese to celé vždycky.
+
+     <b>Ve veřejné regatě se krátká jména nakonec nezaváděla.</b> Lámala se
+     tam čtyři z šesti, ale příčinou nebyla jejich délka — 30 px ze 143
+     brala signální vlajka. Ta 13. 11. 2026 skončila z úplně jiného důvodu
+     (na poháru se nevyvěšují, signalizuje se megafonem), a Milošova celá
+     jména se tím vešla sama. Zkratka by je teď jen zbytečně nahradila. */
   .dlazdice-sekci .nazev { white-space: normal; line-height: 1.15; }
 }
 

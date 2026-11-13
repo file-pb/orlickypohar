@@ -558,6 +558,13 @@ export function polozkyWebu(udelena: Udelena[]): Polozka[] {
     },
     {
       nazev: "Oprávnění na celý web",
+      // Na telefonu se celé jméno nevejde ani do dvou sloupců: měří 163 px
+      // a dlaždice nechá 143. „Na celý web" odpadá jako první — rozsah
+      // nese nadpis okna i drobeček, kdežto `Oprávnění` je to slovo, podle
+      // kterého se dlaždice hledá. Do 13. 11. 2026 se tu druhé jméno
+      // zavést nesmělo; Filip to pravidlo zrušil, když viděl zalomené
+      // dlaždice na mobilu.
+      uzky: "Oprávnění",
       popis: "Role, které platí ve všech ročnících.",
       kam: "/sprava/opravneni-webu",
       role: "Spravce",

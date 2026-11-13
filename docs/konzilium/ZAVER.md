@@ -120,11 +120,23 @@ prahu je 2,9 px široké.
 > Stojí to 50 px, které konzilium šetřilo. Jména se neměnila žádná — rozhodnutí
 > o názvosloví z bodů 9 a 11 platí dál.
 >
-> **Dvouřádkové zůstávají tři jména z osmnácti** a u všech je to zapsané
-> rozhodnutí, ne přehlédnutí: `Oprávnění na celý web` (druhé jméno pro tutéž
-> věc se nezavádí) a ve veřejné regatě `Plachetní směrnice`
-> a `Předpokládaná trať` — tam dlaždice nese ještě signální vlajku, která
-> ukrojí asi 40 px, a plná jména jsou Milošův slovník (29. 10. 2026).
+> **Pět jmen se nevešlo ani do dvou sloupců** a Filip je týž den nechal
+> zkrátit („Zkrať je"): `Oprávnění na celý web` a ve veřejné regatě
+> `Vypsání závodu`, `Plachetní směrnice`, `Předpokládaná trať`
+> a `Startovní listina`.
+>
+> **Zkrácené nakonec bylo jen to první.** U regaty nebyla příčinou délka
+> jmen, ale signální vlajka: ze 143 px na text jich brala 30. Vlajky týž
+> den skončily z jiného důvodu — na poháru se nevyvěšují, signalizuje se
+> megafonem (R16) — a Milošova celá jména se vešla sama. Zkratka by je už
+> jen nahradila, takže se zahodila.
+>
+> **U `Oprávnění na celý web` padlo pravidlo „druhé jméno pro tutéž věc se
+> nezavádí"** (29. 10. 2026, kvůli trojici „Oprávnění · Oprávnění na celý
+> web · Práva"). Padlo jen pro tenhle tvar: krátká podoba plné jméno
+> nenahrazuje, vykreslují se obě a nadpis okna nese celé jméno vždycky —
+> což byla ta původní nesrovnalost, kvůli které zkratky 28. 10. 2026
+> ve veřejné regatě skončily poprvé.
 
 ### 6. *Co teď* nesmí být prázdné, a výchozí tab se nemění
 
