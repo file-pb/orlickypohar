@@ -3947,13 +3947,14 @@ pořadí na vodě a čitelnou mapu.
   záznam, ne přepis — během dne se trať mění a trasa musí jít porovnat se
   stavem, který zrovna platil. Je to totéž pravidlo jako u směrnice.
 - **Bóje patří k zastávce a mají pořadí**, aby z nich šla složit trať a kola.
-- **Jde to i bez signálu:** appka pípnutí podrží a odešle později. **Tohle
-  dnešní API neunese** (8. 10. 2026): `PipnutiVstup` čas nenese
-  (`Features/Boje/Boje.cs`) a `PostavenaV` se bere ze serverových
-  hodin v okamžiku zápisu (`cas.GetUtcNow()` v `PipniAsync`), takže
-  podržené pípnutí by se uložilo s časem nahrání, ne s časem postavení —
-  a čas z první odrážky je tím pádem taky serverový, ne z GPS. Pole s časem
-  z telefonu je tedy podmínka, ne detail.
+- **Jde to i bez signálu:** appka pípnutí podrží a odešle později.
+  ~~**Tohle dnešní API neunese** (8. 10. 2026): `PipnutiVstup` čas nenese.~~
+  **Vyřešené** — `PipnutiVstup.PostavenaV` existuje (`Boje.cs:343`)
+  a `PipniAsync` ho zváží přes `CasKlienta.Kdy` (`BojeSprava.cs:71`):
+  dvě minuty dopředu a dva dny zpět se přijmou, jinak platí serverový čas
+  a `Posun` řekne proč. **Podržet jedno pípnutí tedy jde; podržet celý
+  prvek pořád ne**, a to z úplně jiného důvodu — viz *Stavitel trati
+  v appce* níž.
 - **Smí organizátor té regaty nebo rozhodčí**, stejně jako u směrnice.
 
 **Hotové API (5. 10. 2026):** `Features/Boje/` — pípnutí, seznam, sebrání;
@@ -3969,8 +3970,10 @@ pořadatel dostane souřadnice i **přesnost, kterou telefon hlásí**, a
 tlačítko se odemkne, až je poloha k něčemu. Historie stojí pod tratí,
 aby bylo vidět, že přenastavením nic nezmizelo.
 
-**Co obrazovka vědomě neumí:** pípnout bez signálu (viz odrážka výš —
-API nenese čas z telefonu). Mapka trati nad seznamem je od 9. 10. 2026,
+**Co obrazovka vědomě neumí:** pípnout bez signálu. Není to už tím, že by
+API nemělo kam zapsat čas z telefonu (odrážka výš) — je to tím, že
+**prohlížeč nemá kde pípnutí podržet**, jakmile se stránka zavře. To je
+přesně ta hranice, za kterou začíná appka. Mapka trati nad seznamem je od 9. 10. 2026,
 stejně jako zadání polohy z mapy a fotky u bóje. Mock bóje umí včetně
 pravidel a role, takže se dá zkoušet lokálně i ve zkoušce s pořadatelem.
 
@@ -4165,6 +4168,10 @@ a jaké atributy dávají smysl, ano. Až appka začne zapisovat, přestěhuje
 se ten soubor do balíčku sdíleného oběma klienty, jako dnes
 `schema.d.ts`; do té doby se do něj nesmí dostat nic webového, jinak ta
 cesta zmizí.
+
+**Pozor na to „jako dnes `schema.d.ts`":** ten sdílený balíček **není**,
+je to generovaná kopie do obou stromů — a je to tak schválně. Jak se to
+tedy stěhuje doopravdy, řeší *Stavitel trati v appce* níž.
 
 **Pípnutí jedné bóje zůstává**, ale jako cesta pro zvláštní případ —
 přenastavení, bóje mimo prvek, zápis za někoho od počítače.
@@ -4978,6 +4985,279 @@ Bod 2 (polohu dojezdu zapisovat) zůstává levnou pojistkou, kterou lze přidat
 kdykoliv; dokud se nezvolí cesta, nemá smysl ho dělat na slepo. Kdyby se
 hendikepová regata se sebraným dojezdem objevila dřív, než se rozhodne, platí
 cesta 1 jako nouzová — pořadí bez přepočtu a věta ve směrnici.
+
+#### Stavitel trati v appce (návrh, 13. 11. 2026)
+
+Filip: *„pojďme tedy využít zkušenosti z webu a pojďme postavit Stavitel
+trati v appce."*
+
+**Jedna věta, ze které plyne zbytek:** appka nepřidá nad prohlížeč
+obrazovky, přidá **offline**. Pípání v prohlížeči na telefonu dnes jede —
+`stavba.tsx` bere polohu přes `navigator.geolocation` (řádek 701) a fotku
+přes výběr souboru. Přenést tutéž obrazovku do React Native bez fronty by
+vyrobilo druhou implementaci téhož, jen hůř udržovanou; je to tatáž věta,
+která v plánu stojí od 11. 10. 2026 v oddílu *Co je v appce důležité*.
+
+**A jedna překážka, kterou to celé drží.** Prvek se dnes skládá ze
+**serverových id**: `PrvekVstup.BojeAId` (`PrvkySprava.cs:38`) je číslo,
+které vrátí až zápis bóje. Web proto volá třikrát za sebou — pípnutí
+(`stavba.tsx:211`), druhé pípnutí, pak složení prvku (`:292`) — a každé
+další volání potřebuje odpověď toho předchozího. **Taková sekvence se do
+fronty uložit nedá.** Příklad už v repozitáři je a je popsaný stejnými
+slovy: `ohlasRozjizdku` (`app/src/lib/api.ts:777`) — *„Číslo určuje server,
+ne appka, a proto tohle jediné z úkonů startu nejde podržet ve frontě."*
+
+Návrh je tedy z větší části o tomhle, ne o obrazovce.
+
+##### 1. Co se přenese: `stavba-prvku.ts` jako kopie, ne jako balíček
+
+**Doporučení: jeden zdroj a rozkopírování skriptem, ne `npm workspaces`.**
+
+Plán to od 10. 10. 2026 popisuje jako *„přestěhuje se do balíčku sdíleného
+oběma klienty, jako dnes `schema.d.ts`"*. Jenže `schema.d.ts` **žádný
+sdílený balíček není** — `packages/api-client/generuj.sh` píše dvě kopie
+a v komentáři u toho stojí proč: *„workspace se symlinky by musel obsloužit
+Next i Metro a zatím by to byla složitost navíc."* Ten důvod platí beze
+změny a dnes je dokonce silnější: `app/` má **vlastní `package-lock.json`**,
+v kořeni repozitáře žádný `package.json` není a úloha `appka` v CI dělá
+`npm ci` a `npx tsc --noEmit` s `working-directory: app`
+(`build-deploy.yml:260`). Workspace by znamenal přepsat instalaci, cache
+balíčků i `watchFolders` Metra — kvůli jednomu souboru o 479 řádcích.
+
+**Co se udělá konkrétně:**
+
+| Krok | Co to je |
+|---|---|
+| zdroj | `packages/stavba/stavba-prvku.ts` |
+| rozkopírování | krok v `packages/api-client/generuj.sh`, nebo vlastní `rozkopiruj.sh` |
+| cíle | `web/lib/stavba-prvku.ts`, `app/src/lib/stavba-prvku.ts` |
+| kontrola | krok v CI: pustit skript a `git diff --exit-code` |
+
+**Soubor se přitom mění na třech místech a pak je v obou stromech
+bajt po bajtu stejný:**
+
+1. Typy se berou ze `./schema` místo z `@/lib/boje` a `@/lib/trat`. Jsou to
+   pouhé aliasy nad vygenerovaným schématem (`web/lib/trat.ts:158`,
+   `web/lib/boje.ts:29`) a **`schema.d.ts` leží v obou klientech jako
+   sourozenec** — `web/lib/` i `app/src/lib/`. Relativní cesta tedy vyjde
+   stejně v Next i v Metru.
+2. `vzdalenostM` jde dovnitř, nebo vedle jako druhý kopírovaný soubor.
+   `web/lib/geo.ts` má 22 řádků a žádné závislosti; jeho vlastní komentář
+   říká, že existuje právě proto, aby šel spustit v holém Node.
+3. `dvaBody` je dvouřádková funkce (`web/lib/trat.ts:193`) a patří k typům
+   prvku, ne k webu.
+
+**Relativní import není detail.** Zavaděč testů appky
+(`app/testy/hook.mjs`) domýšlí `.ts` jen u importů začínajících tečkou
+a alias `@/` neřeší vůbec — sdílený soubor adresovaný přes `@/` by v CI
+appky neprošel.
+
+**Co se nepřenáší:** všechno, co kreslí. `ikona-prvku.tsx`,
+`nahled-prvku.tsx` a `znak-boje.tsx` jsou SVG v DOM a v React Native se
+nepoužijí. Cartoon náhled prvku se v appce musí nakreslit znovu
+(`react-native-svg`, nebo `View` s okraji); **rozhodování o tom, co se
+kreslí, zůstává v `Stopa` ve sdíleném modulu** — překreslí se obrázek, ne
+pravidlo.
+
+**Co to udělá s buildem:** nic. Ani jeden klient nedostane novou závislost
+a otisk nativní části appky se nehne, takže `runtimeVersion` zůstává
+a vydané APK se dál aktualizuje samo.
+
+##### 2. Co musí být na telefonu jinak
+
+**Poloha se bere při každém doteku, a to je past, ne odrážka.**
+`Location.getCurrentPositionAsync` odpoví podle toho, jestli má GPS družice
+— v appce se to už měří a doba odpovědi je sama o sobě údaj (`propichni()`
+v `app/src/lib/tracker/uloha.ts:228`, komentář: *„když GPS odpoví za dvě
+sekundy, má družice; když za třicet, hledá je"*). Jenže systém umí vrátit
+i **uloženou polohu z minulé chvíle**, a protože se mezi dvěma body
+popojede, položila by druhou značku tam, kde stála první. Nic na obrazovce
+by o tom neřeklo.
+
+**Doporučení:** po dobu, co je obrazovka průvodce otevřená, držet odběr
+(`watchPositionAsync`, `Accuracy.High`) a při doteku vzít poslední fix
+**s kontrolou jeho `timestamp`**. Starší než pár vteřin se nebere —
+obrazovka řekne „čekám na polohu" a zapíše následující. Odběr zároveň řeší
+to, co obrazovka stejně potřebuje: ukazovat přesnost **před** dotekem, ne
+po něm.
+
+**Přesnost.** Server odmítne nad 100 m (`Pipnuti.NejhorsiPresnostM`,
+`Boje.cs:368`) a to pravidlo zůstává. Na telefonu k němu přibývá rozdíl,
+který web nemá: **stavitel nemůže zkusit znovu od stolu.** Obrazovka proto
+přesnost ukazuje velkým číslem a barvou, ale pod sto metry **nic
+neblokuje** — bóje se čtyřicetimetrovou přesností je pořád k něčemu, kdežto
+zamčené tlačítko by znamenalo odjet bez záznamu. Je to tatáž lekce jako
+*Zamčená tlačítka vypadají jako chybějící funkce* z 11. 10. 2026.
+
+**Rukavice, mokré prsty, ostré slunce, jedna ruka.** Z toho plynou čtyři
+věci, všechny už jednou rozhodnuté na webu a tady jen zpřísněné:
+
+- **Jedno velké tlačítko dole**, na dosah palce. Pípnutí je jediná akce,
+  která se na vodě dělá často.
+- **Žádná gesta.** Na webu už platí, že se přibližuje tlačítky, protože
+  *„dvěma prsty v rukavicích nikdo nic nezvětší"*. V appce to platí na celou
+  obrazovku: žádné tažení, žádné přejetí, žádné dlouhé podržení.
+- **Kontrast.** Appka na to má `lib/kontrast.ts` a vlastní test
+  (`app/testy/kontrast.test.ts`); na slunci je to rozdíl mezi čitelným
+  a nečitelným.
+- **Krok průvodce je celá obrazovka**, ne sekce na dlouhé stránce. Typ →
+  předpis → pípat je pořadí z `TYPY` a `VOLBY`; sdílený modul ho určuje
+  a appka ho jen vykreslí po jednom.
+
+**Výběr bodu z mapy se nepřenáší.** Na webu vznikl výslovně pro někoho
+**u počítače** — *„ten, kdo staví bóje, nebude zdatný je pípnout
+z telefonu"*. Na vodě telefon měří, takže mapa by byla druhá cesta k témuž
+a navíc ta horší. Místo ní řeší appka ten jediný případ, kvůli kterému by
+mapa na vodě chyběla: **konec, který není bóje** — start mezi plavidlem
+komise a molem. Předvolby `Plavidlo` a `ObjektNaBrehu` ve sdíleném modulu
+už existují, takže se k molu dojede a pípne se. Je to to jediné, co
+telefon umí líp než stůl.
+
+**Fotky u bóje v první verzi nebudou.** Appka dnes nemá ani výběr obrázku,
+ani kameru, ani odeslání `multipart` — v `app/src/` není jediný `FormData`.
+Přidat je znamená **novou nativní závislost**, tedy posun `runtimeVersion`,
+a ten podle hlídky v CI (`build-deploy.yml:307`) znamená, že se vydané APK
+**přestane aktualizovat a nikdo si toho nevšimne**, dokud se nepřeinstaluje
+ručně. Na fotku u bóje to není cena, kterou stojí za to zaplatit; fotka je
+podle plánu doklad navíc, ne podmínka, a pořadatel má telefon s foťákem
+tak jako tak.
+
+##### 3. Zápis a autorizace
+
+**Žádný zvláštní endpoint pro telefon.** Appka volá tytéž cesty jako web:
+`POST /sprava/serie/{serie}/zastavky/{zavod}/boje` a
+`…/trat/prvky`. Je to tatáž úvaha, podle které appka čte trať veřejnou
+cestou (`app/src/app/serie/[slug]/zavody/[zavod]/trat.tsx`): *„zvláštní
+endpoint pro telefon by znamenal, že rozhodčí může vidět jinou trať než ta,
+podle které se pluje"*. U stavby je to stejné — stavitel nesmí postavit
+trať, kterou web neumí přečíst.
+
+**Práva se nikam nepřidávají.** Server už rozhoduje
+(`BojeEndpoints.cs:237–240`): organizátor **té regaty**, nebo rozhodčí
+ročníku. Appka přitom tytéž dvě role zná — `role.ts:23` má
+`VELI = {Rozhodci, Organizator}` a `kdeVeli()` umí najít, kde ten člověk
+velí. Obrazovka se tedy ukáže tomu, kdo `veliNekde`, a **rozhoduje dál
+server**; appka jen neukazuje tlačítko tomu, komu nepatří — tatáž věta jako
+u procedury startu.
+
+**Čím se to liší od webu:** web jde přes serverové akce (`akce.ts`), appka
+volá API přímo přes `posliZaSebe` (`app/src/lib/api.ts:129`), které už
+Bearer token i rozlišení „odmítnuto serverem" versus „nedoletělo" umí
+(`OdmitnutoServerem`, `:110`). Nic nového.
+
+**Appka musí posílat `PostavenaV`.** Pole existuje
+(`Boje.cs:343`) a server ho zváží přes `CasKlienta.Kdy`
+(`BojeSprava.cs:71`): přijme ho dvě minuty dopředu a dva dny zpět, jinak
+platí serverový čas. **Tím je překážka z 8. 10. 2026 vyřešená** — odstavec
+výš v tomhle oddílu, který říká, že *„dnešní API tohle neunese"*, platil do
+doby, než `CasKlienta` vznikl. Web pole neposílá a nemusí; pro appku je to
+celý smysl věci.
+
+##### 4. Offline: nepotřebuje outbox, potřebuje jeden atomický zápis
+
+**Bez fronty je stavitel v appce k ničemu** — a není to o pohodlí. Když
+dojde signál uprostřed prvku, zapíše se bóje A a bóje B se ztratí. Na vodě
+pak stojí značka, kterou žádný prvek nepoužívá; veřejná trať ji hlásí větou
+*„na vodě stojí i …, není součástí trati"* a stavitel je mezitím o kilometr
+dál. Web to snese, protože staví od stolu se signálem.
+
+**Řešení není obecný outbox** (ten zůstává „velké, nezačaté"), ale **jeden
+nový koncový bod**:
+
+```
+POST /sprava/serie/{serie}/zastavky/{zavod}/trat/prvky/postav
+```
+
+Vezme prvek **i s jeho jedním nebo dvěma body** — poloha, přesnost, zdroj,
+značení, barva, tvar, `PostavenaV` u každého — uloží je **jednou
+transakcí** a vrátí `PrvekDto`. Prvek tím přestane být sekvencí tří volání
+a stane se **jedním požadavkem, který jde podržet**.
+
+**Proč tohle a ne fronta nad dnešním API:** fronta by musela umět
+„počkej na id z předchozího volání a dosaď ho do dalšího". To je malý
+orchestrátor v telefonu, který se musí chovat správně i po zabití procesu,
+a odměnou je přesně ten polovičatý prvek, kterému se chceme vyhnout.
+Transakce na serveru je proti tomu pár řádků — `PrvkySprava` už dnes
+kontroluje, že obě bóje stojí u téhle regaty (`:234`), a plán to ostatně
+**už jednou rozhodl**: *„Prvek a jeho polohy se musí uložit jednou
+transakcí a neúplný prvek nesmí projít přijetím trati."*
+
+**K požadavku patří klíč od klienta** (`Guid` vyrobený v telefonu)
+a unikátní index nad ním. Bez něj by opakované odeslání po ztracené
+odpovědi postavilo prvek dvakrát. Je to tentýž vzor, na kterém stojí
+nahrávání trasy: *„nic se nemaže, dokud to server nepotvrdí … protože je
+server idempotentní, druhé poslání nic nezdvojí"*
+(`app/src/lib/tracker/nahravani.ts`).
+
+**Co z toho appka potřebuje postavit:**
+
+- **Úložiště na disku, ne v paměti.** Appka už SQLite má a má ho
+  vyzkoušené na zabití procesu — `expo-sqlite`, WAL, synchronní zápis
+  (`app/src/lib/tracker/db.ts:23` a přejímací podmínka č. 2). Fronta prvků
+  je další tabulka, ne nová technologie.
+- **Odesílání striktně po jednom a v pořadí.** Pořadí prvku na trati
+  počítá server (`Poradi: 0` znamená „za poslední"), takže dvě paralelní
+  odeslání by trať zamíchala. Jeden požadavek v letu, FIFO.
+- **Odmítnutí není důvod k opakování.** Rozdíl už je v kódu
+  (`OdmitnutoServerem`): nedoletělo → zkoušej dál, odmítl server → ukaž
+  větu a přestaň. Je to tu důležitější než u startu, protože nejpravděpodobnější
+  odmítnutí je **zámek trati** — rozhodčí ji mezitím přijal
+  (`TratSprava.ProcNejdeStavetAsync`) a telefon drží prvky, které už se
+  nikam nevejdou. To se musí říct, ne tiše opakovat.
+- **Na obrazovce je vidět, kolik čeká.** Proužek spojení appka má
+  (`components/prouzek-spojeni.tsx`, stav z `sit.ts`), počet nedoručených
+  taky umí ukázat (`nedoslano` u odpočtu startu).
+
+**Kudy se do stavitele vejde.** Dnešní vstupy komise u vody visí na panelu
+odpočtu (`zavody/[zavod]/index.tsx:507` a `:512`) a ten se ukazuje, jen
+když se startuje nebo jede. **Trať se staví předtím**, takže vchod musí být
+na stránce regaty samotné, ne v panelu.
+
+##### 5. Co do 15. 5. 2027
+
+**Pořadí, ve kterém to dává smysl dělat, a proč.**
+
+1. **Sdílený modul a kontrola kopií v CI.** Hodiny práce. Udělat **i
+   kdyby obrazovka nakonec nebyla**: `stavba-prvku.ts` na webu dál roste
+   a čím déle je sám, tím spíš do něj něco webového proteče — a přesně
+   proti tomu ho jeho vlastní doc komentář chrání. Kontrola v CI je ta
+   část, která to udrží; bez ní se dvě kopie rozejdou do měsíce.
+2. **Atomický `prvky/postav` s klíčem od klienta.** Dny, ne týdny, a dá se
+   nasadit samostatně — **prospěje i webu**: tři volání se změní v jedno
+   a polovičatý prvek přestane být možný i tam. **Tohle nesmí přijít
+   pozdě**, protože obrazovka v appce bez něj je slepá ulička.
+3. **Obrazovka průvodce v appce** s frontou, bez fotek a bez mapy.
+
+**Doporučení: 1 a 2 do května ano, 3 jen tehdy, když budou hotová
+upozornění a zbude týden.** Důvod není opatrnost, ale pořadí, které Filip
+sám určil 11. 10. 2026: *„nejdůležitější věci v app je tracker, pushky,
+stavy rozjížděk, rychlé protesty, přihlášky, posádky a správa lodi,
+startování rozjížděk, cílová funkcionalita a stavění trati"* — **stavění
+trati je na tom seznamu poslední.** A pípání z prohlížeče na telefonu
+mezitím funguje, takže nejde o to, že by stavitel 15. 5. neměl čím pípnout;
+jde jen o to, že bez signálu přijde o rozdělaný prvek.
+
+**Jedno měření rozhodne víc než tahle úvaha.** Jestli je na Orlíku v místě
+stavby signál, nikdo neověřil. Appka to umí změřit bez jediného řádku navíc:
+`stavSite()` zapisuje, jestli dotaz doletěl, a tracker zapisuje body
+s časem. **Jedna jízda s běžícím záznamem** při stavbě odpoví, jestli je
+fronta nutnost, nebo pojistka — a tím, jestli bod 3 má jít před
+upozornění, nebo za ně.
+
+**Co vědomě počká, a proč:**
+
+| Odloženo | Důvod |
+|---|---|
+| fotka u bóje z appky | nativní závislost → `runtimeVersion` → ruční přeinstalace APK |
+| výběr bodu z mapy | vznikl pro člověka u počítače; na vodě telefon měří |
+| přenastavení a sebrání z appky | plán je vede jako cestu pro zvláštní případ, ne pro stavbu |
+| stavy trati a přijetí z appky | přijetí je rozhodnutí rozhodčího a dělá se u obrazovky, ne na motoráku |
+| klonování a výběr trati | *„úkoly od stolu"*, rozhodnuté 11. 10. 2026 |
+
+**Pevné datum, aby se o tom nerozhodovalo na poslední chvíli:** když bod 3
+nezačne do **1. 4. 2027**, před závodem už se nezačíná. Obrazovka stavitele
+vyzkoušená poprvé ráno 15. 5. je horší než prohlížeč, o kterém aspoň víme,
+jak se chová.
 
 ### Připojení k lodi přes QR (Filip, 4. 10. 2026)
 
@@ -10237,8 +10517,13 @@ i v Dependabot secrets, ověřeno tím, že jeho PR poprvé prošly buildem.
 
 1. <b>Protesty a penalizace</b> — zbytek fáze 5. Stojí na chybějícím
    poli pro číslo pravidla a na rozhodčím.
-2. <b>Outbox / offline fronta</b> — v kódu není nic. Blokuje push
+2. <b>Outbox / offline fronta</b> — obecná v kódu není. Blokuje push
    „déšť do hodiny" i to, čím má appka překonat prohlížeč na telefonu.
+   <b>Jednoúčelové fronty ale už dvě jsou</b> a jsou to vzory, ne
+   náhrada: `cekajici-start.ts` drží úkon procedury a
+   `tracker/nahravani.ts` dávku bodů. <b>Stavitel trati obecný outbox
+   nepotřebuje</b> — potřebuje atomický zápis prvku, viz *Stavitel trati
+   v appce*.
 3. <b>Tracker a pushky</b> — jediné dvě věci z jeho seznamu, které se
    mimo nativní appku udělat nedají.
 
