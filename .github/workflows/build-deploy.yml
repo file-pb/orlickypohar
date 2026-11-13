@@ -235,6 +235,9 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-cache.outputs.tags }}
           labels: ${{ steps.meta-cache.outputs.labels }}
+          # Commit do image: konfigurace mikrocache je její obsah.
+          build-args: |
+            VERZE=${{ github.sha }}
           cache-from: type=gha,scope=cache
           cache-to: type=gha,mode=max,scope=cache
 

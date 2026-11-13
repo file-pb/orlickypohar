@@ -20,4 +20,12 @@ COPY default.conf /etc/nginx/conf.d/default.conf
 # Chyba v konfiguraci má shodit build, ne nasazení.
 RUN nginx -t
 
+# Z jakého commitu je tahle image (bod 7 kontraktu platformy). Cizí základ,
+# ale `default.conf` je zapečená dovnitř, ne připojená zvenčí — takže
+# commit tady říká právě to, z jaké verze té konfigurace mikrocache běží.
+# Přehled platformy hodnotu čte z `docker inspect`, proto `ENV`, a stejně
+# jako u API až na konci, aby neshazovala vrstvy nad sebou z cache.
+ARG VERZE=neznama
+ENV VERZE=$VERZE
+
 EXPOSE 8080
