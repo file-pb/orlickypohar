@@ -32,6 +32,16 @@ ENV GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR \
     GDAL_CACHEMAX=64 \
     PYTHONUNBUFFERED=1
 
+# Z jakého commitu je tahle image. U úlohy bez HTTP je to jediná cesta, jak
+# se zvenčí dá zjistit, z čeho běží — API má `/verze`, tahle nemá port ani
+# endpoint a podle kontraktu `scheduled-job` je mít nemá. Platforma hodnotu
+# čte z `docker inspect`, takže úloha neimplementuje nic. Výpočet se mění
+# (okna, prahy oblačnosti) a čísla v API jsou neověřený odhad, takže první
+# otázka nad divným číslem je „z čeho to počítalo"; čas běhu to neřekne,
+# protože úloha dopočítává historii zpětně.
+ARG VERZE=neznama
+ENV VERZE=$VERZE
+
 # Stejné UID jako aplikace: tajemství v /run/secrets patří jemu.
 USER 1654
 CMD ["python", "uloha.py"]

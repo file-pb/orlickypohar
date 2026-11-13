@@ -216,6 +216,9 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-landsat.outputs.tags }}
           labels: ${{ steps.meta-landsat.outputs.labels }}
+          # Commit do image: u úlohy bez HTTP se jinak zvenčí zjistit nedá.
+          build-args: |
+            VERZE=${{ github.sha }}
           cache-from: type=gha,scope=landsat
           cache-to: type=gha,mode=max,scope=landsat
 
