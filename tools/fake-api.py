@@ -599,9 +599,41 @@ NAKLADY_ZDROJ = {
                  32.2, 31.5, 30.9, 30.1, 29.4, 30.6, 31.8, 32.4, 31.1, 30.7],
             )
         ],
+        # Kolik už projekt stál dohromady, od prvního zaplaceného měsíce.
+        # Na serveru to počítá přehled platformy (`prehled-stav.sh`), tady se
+        # to dopočítá z měsíčních částek, aby se mock nerozešel se sebou,
+        # kdyby někdo sazbu v tomhle souboru změnil. `od` je skutečné datum
+        # prvního zaplaceného měsíce předplatného.
+        "zatim": {"od": "2026-09-23", "dnu": None},
     }],
 }
 NAKLADY_PRIRAZKA = 7.0
+
+
+def _naklady_zatim():
+    """Doplní kumulativní částky do `zatim` podle dnešního dne.
+
+    Dny se počítají ke dnešku, ne k pevnému datu: mock se používá měsíce
+    a zamrzlé číslo by při zkoušení vypadalo jako rozbitý výpočet.
+    """
+    import datetime as _dt
+
+    p = NAKLADY_ZDROJ["projekty"][0]
+    z = p["zatim"]
+    od = _dt.date.fromisoformat(z["od"])
+    z["dnu"] = max((_dt.date.today() - od).days, 0)
+
+    mesicu = z["dnu"] / 30.44
+    z["provoz_kc"] = round(sum(x["kc_mesicne"] for x in p["provoz"]) * mesicu, 2)
+    z["servis_kc"] = round(sum(x["kc_mesicne"] for x in p["servis"]) * mesicu, 2)
+    z["celkem_kc"] = round(z["provoz_kc"] + z["servis_kc"], 2)
+    z["poznamka"] = (
+        f"Od {z['od']}, tedy {z['dnu']} dní. Podíl na předplatném se v čase "
+        "mění, takže je to dopočet z dnešní měsíční částky, ne součet faktur."
+    )
+
+
+_naklady_zatim()
 
 
 def naklady_dto():
@@ -639,6 +671,14 @@ def naklady_dto():
         # než tabulka nad ním a vypadalo by to jako pokles.
         "historie": [{"den": d["den"], "provozKcMesicne": d["provoz_kc_mesicne"] * nasobek}
                      for d in p["historie"]],
+        # Kumulativní částky nesou přirážku jako všechno ostatní; poznámka
+        # ne — ta popisuje, jak k číslu došla platforma, a přirážka se na
+        # obrazovce nikde nejmenuje.
+        "zatim": {"od": p["zatim"]["od"], "dnu": p["zatim"]["dnu"],
+                  "provozKc": p["zatim"]["provoz_kc"] * nasobek,
+                  "servisKc": p["zatim"]["servis_kc"] * nasobek,
+                  "celkemKc": p["zatim"]["celkem_kc"] * nasobek,
+                  "poznamka": p["zatim"]["poznamka"]},
     }
 # Druhý zapisovatel u cíle. Mock zná jen jedno přihlášení, takže snímek
 # „toho druhého" se nasadí do dat — bez něj by nebylo co porovnávat.

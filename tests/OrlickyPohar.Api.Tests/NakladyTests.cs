@@ -42,7 +42,9 @@ public class NakladyTests
               "historie": [
                 { "den": "2026-09-22", "provoz_kc_mesicne": 100.00, "podil_procent": 17.0 },
                 { "den": "2026-09-23", "provoz_kc_mesicne": 200.00, "podil_procent": 34.0 }
-              ]
+              ],
+              "zatim": { "od": "2026-09-23", "dnu": 51, "provoz_kc": 100.00, "servis_kc": 900.00, "celkem_kc": 1000.00,
+                         "poznamka": "Od 2026-09-23, tedy 51 dní. Provoz je ze skutečných denních čísel za 20 dní." }
             },
             {
               "projekt": "stack",
@@ -204,6 +206,34 @@ public class NakladyTests
     {
         // Obrazovka pak nemusí řešit null, jen krátký seznam.
         Prepocet.ZeJsonu(Vzorek, "stack", 0m).ShouldNotBeNull().Historie.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Zatim_nese_tutez_prirazku_jako_zbytek_tabulky()
+    {
+        // Kdyby ji kumulativní částka nenesla, byla by na obrazovce jediné
+        // číslo počítané jinak než všechna ostatní — a poznala by se z něj
+        // přirážka, která se nikde nejmenuje.
+        var zatim = Naklady().Zatim.ShouldNotBeNull();
+
+        zatim.Od.ShouldBe("2026-09-23");
+        zatim.Dnu.ShouldBe(51);
+        zatim.ProvozKc.ShouldBe(107m);
+        zatim.ServisKc.ShouldBe(963m);
+        zatim.CelkemKc.ShouldBe(1070m);
+        // Poznámka popisuje, jak k číslu došla platforma. Přirážka v ní není
+        // a dopisovat ji sem nesmíme: je to obchodní údaj, ne vysvětlení.
+        zatim.Poznamka.ShouldContain("51 dní");
+    }
+
+    [Fact]
+    public void Bez_bloku_zatim_je_null_a_ne_nula()
+    {
+        // „Neví se, odkdy se platí" a „zaplaceno nic" jsou dvě různé věci
+        // a obrazovka je nesmí splést. Platí to i pro starší soubor, který
+        // blok ještě nemá — a takový na serveru leží, dokud se přehled
+        // nepřenasadí.
+        Prepocet.ZeJsonu(Vzorek, "stack", 0m).ShouldNotBeNull().Zatim.ShouldBeNull();
     }
 
     [Fact]

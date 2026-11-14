@@ -30,6 +30,34 @@ public record NakladovaPolozka(
 public record PraceDto(decimal StavbaH, decimal Udrzba30H, int CiMinut);
 
 /// <summary>
+/// <b>Kolik už projekt stál dohromady</b>, od prvního zaplaceného měsíce
+/// dodnes — ne kolik by stál za rok.
+/// <para>
+/// Roční částka je dvanáctinásobek dneška, a 95 % z ní je předplatné, které
+/// jde vypovědět po měsíci; je to tedy závazek, který nikdo neudělal
+/// (Filip, 13. 11. 2026: <i>„tady to každého vyděsí"</i>).
+/// </para>
+/// <para>
+/// <b>Počítá to platforma, ne pohár.</b> Rozpočítání podílu na předplatném,
+/// kurz a dělení měsíce na dny jsou v <c>prehled-stav.sh</c>; druhá
+/// implementace tady by se rozešla první změnou sazby. Odsud přibude jen
+/// přirážka, stejně jako u každé jiné položky.
+/// </para>
+/// </summary>
+/// <param name="Od">První zaplacený den, <c>YYYY-MM-DD</c>.</param>
+/// <param name="Dnu">Kolik dní od <paramref name="Od"/> uplynulo.</param>
+/// <param name="Poznamka">Čím to číslo přesně je — kolik dní stojí na
+/// skutečných denních číslech a kolik je dopočteno z dnešní sazby. Bez ní
+/// by to vypadalo přesněji, než to je.</param>
+public record ZatimDto(
+    string Od,
+    int Dnu,
+    decimal ProvozKc,
+    decimal ServisKc,
+    decimal CelkemKc,
+    string Poznamka);
+
+/// <summary>
 /// Jeden den vývoje provozu: kolik by stál měsíc, kdyby celý vypadal jako
 /// ten den. Servis v tom není — předplatné se dnem nehýbe a historii ho
 /// platforma nevede.
@@ -54,7 +82,8 @@ public record NakladyDto(
     decimal CelkemKcMesicne,
     decimal CelkemKcRocne,
     PraceDto? Prace,
-    IReadOnlyList<DenNakladu> Historie);
+    IReadOnlyList<DenNakladu> Historie,
+    ZatimDto? Zatim);
 
 /// <summary>
 /// Tvar souboru, který vedle své stránky zapisuje <c>prehled-stav.sh</c>
@@ -74,7 +103,8 @@ internal record ZdrojProjekt(
     [property: JsonPropertyName("provoz")] IReadOnlyList<ZdrojPolozka>? Provoz,
     [property: JsonPropertyName("servis")] IReadOnlyList<ZdrojPolozka>? Servis,
     [property: JsonPropertyName("prace")] ZdrojPrace? Prace,
-    [property: JsonPropertyName("historie")] IReadOnlyList<ZdrojDen>? Historie);
+    [property: JsonPropertyName("historie")] IReadOnlyList<ZdrojDen>? Historie,
+    [property: JsonPropertyName("zatim")] ZdrojZatim? Zatim = null);
 
 internal record ZdrojPolozka(
     [property: JsonPropertyName("polozka")] string Polozka,
@@ -87,6 +117,20 @@ internal record ZdrojPrace(
     [property: JsonPropertyName("stavba_h")] decimal StavbaH,
     [property: JsonPropertyName("udrzba30_h")] decimal Udrzba30H,
     [property: JsonPropertyName("ci_minut")] int CiMinut);
+
+/// <summary>
+/// <b>Všechno nullable, a je to tak schválně.</b> Když platforma nezná den,
+/// odkdy se platí, vydá celý blok prázdný i s poznámkou proč — číslo
+/// spočítané z vymyšleného začátku by vypadalo stejně důvěryhodně jako to
+/// pravé. Pohár tedy nedostává nulu, ale nic.
+/// </summary>
+internal record ZdrojZatim(
+    [property: JsonPropertyName("od")] string? Od,
+    [property: JsonPropertyName("dnu")] int? Dnu,
+    [property: JsonPropertyName("provoz_kc")] decimal? ProvozKc,
+    [property: JsonPropertyName("servis_kc")] decimal? ServisKc,
+    [property: JsonPropertyName("celkem_kc")] decimal? CelkemKc,
+    [property: JsonPropertyName("poznamka")] string? Poznamka);
 
 internal record ZdrojDen(
     [property: JsonPropertyName("den")] string Den,
@@ -156,8 +200,33 @@ public static class Prepocet
             // jiná čísla než tabulka nad ním a vypadalo by to jako pokles.
             (p.Historie ?? [])
                 .Select(d => new DenNakladu(d.Den, d.ProvozKcMesicne * nasobek))
-                .ToList());
+                .ToList(),
+            Zatim(p.Zatim, nasobek));
     }
+
+    /// <summary>
+    /// Kumulativní částky s přirážkou, nebo <c>null</c>.
+    /// <para>
+    /// <b>Buď celý blok, nebo nic.</b> Platforma při chybějícím datu vydá
+    /// prázdná pole i s poznámkou proč; půlka bloku by na obrazovce dala
+    /// větu „zaplaceno zatím 0 Kč", což není totéž co „neví se".
+    /// </para>
+    /// <para>
+    /// <b>Poznámka se nemění.</b> Popisuje, jak platforma k číslu došla —
+    /// přirážka v něm není a nikde na obrazovce se nejmenuje, stejně jako
+    /// u ostatních položek.
+    /// </para>
+    /// </summary>
+    private static ZatimDto? Zatim(ZdrojZatim? z, decimal nasobek) =>
+        z is { Od: { } od, Dnu: { } dnu, CelkemKc: { } celkem }
+            ? new ZatimDto(
+                od,
+                dnu,
+                (z.ProvozKc ?? 0m) * nasobek,
+                (z.ServisKc ?? 0m) * nasobek,
+                celkem * nasobek,
+                z.Poznamka ?? "")
+            : null;
 
     private static List<NakladovaPolozka> Polozky(
         IReadOnlyList<ZdrojPolozka>? zdroj, decimal? kurz, decimal prirazkaProcent)
