@@ -6890,6 +6890,73 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/prvky/postav": {
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Postav\u00ed prvek i s jeho zna\u010dkami jednou transakc\u00ed",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Cesta pro appku: prvek se ned\u00e1 skl\u00e1dat ze serverov\u00fdch id, kdy\u017e se odes\u00edl\u00e1 z fronty bez sign\u00e1lu. Bu\u010f vznikne cel\u00fd, nebo nic. `klic` je povinn\u00fd \u2014 opakovan\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e kl\u00ed\u010de vr\u00e1t\u00ed t\u00fd\u017e prvek s k\u00f3dem 200, nov\u00fd dostane 201.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PostavPrvekVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrvekDto"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrvekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/prvky/{prvek}": {
             "put": {
                 "tags": [
@@ -7715,6 +7782,90 @@
                             "number"
                         ],
                         "format": "double"
+                    }
+                }
+            },
+            "BodPrvkuVstup": {
+                "required": [
+                    "nazev",
+                    "sirka",
+                    "delka"
+                ],
+                "type": "object",
+                "properties": {
+                    "nazev": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "sirka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "presnostM": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "zdroj": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ZdrojPolohy"
+                            }
+                        ]
+                    },
+                    "barva": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BarvaBoje"
+                            }
+                        ]
+                    },
+                    "tvar": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/TvarBoje"
+                            }
+                        ]
+                    },
+                    "znaceni": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhZnaceni"
+                            }
+                        ]
+                    },
+                    "popis": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "postavenaV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -9205,7 +9356,8 @@
                     "celkemKcMesicne",
                     "celkemKcRocne",
                     "prace",
-                    "historie"
+                    "historie",
+                    "zatim"
                 ],
                 "type": "object",
                 "properties": {
@@ -9268,6 +9420,16 @@
                         "items": {
                             "$ref": "#/components/schemas/DenNakladu"
                         }
+                    },
+                    "zatim": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ZatimDto"
+                            }
+                        ]
                     }
                 }
             },
@@ -10568,6 +10730,65 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 1
+                    }
+                }
+            },
+            "PostavPrvekVstup": {
+                "required": [
+                    "klic",
+                    "typ",
+                    "body"
+                ],
+                "type": "object",
+                "properties": {
+                    "klic": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "typ": {
+                        "$ref": "#/components/schemas/TypPrvku"
+                    },
+                    "body": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BodPrvkuVstup"
+                        }
+                    },
+                    "strana": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/StranaPrvku"
+                            }
+                        ]
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "smer": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SvetovaStrana"
+                            }
+                        ]
+                    },
+                    "druhStartu": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhStartu"
+                            }
+                        ]
                     }
                 }
             },
@@ -14467,6 +14688,41 @@
                             "type": "integer",
                             "format": "int32"
                         }
+                    }
+                }
+            },
+            "ZatimDto": {
+                "required": [
+                    "od",
+                    "dnu",
+                    "provozKc",
+                    "servisKc",
+                    "celkemKc",
+                    "poznamka"
+                ],
+                "type": "object",
+                "properties": {
+                    "od": {
+                        "type": "string"
+                    },
+                    "dnu": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "provozKc": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "servisKc": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "celkemKc": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "poznamka": {
+                        "type": "string"
                     }
                 }
             },

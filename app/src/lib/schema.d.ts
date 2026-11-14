@@ -6584,6 +6584,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/prvky/postav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Postaví prvek i s jeho značkami jednou transakcí
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Cesta pro appku: prvek se nedá skládat ze serverových id, když se odesílá z fronty bez signálu. Buď vznikne celý, nebo nic. `klic` je povinný — opakované odeslání téhož klíče vrátí týž prvek s kódem 200, nový dostane 201.
+         */
+        post: {
+            parameters: {
+                query?: {
+                    trat?: number;
+                };
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PostavPrvekVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrvekDto"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrvekDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/trat/prvky/{prvek}": {
         parameters: {
             query?: never;
@@ -7225,6 +7282,22 @@ export interface components {
             /** Format: double */
             objem?: null | number;
         };
+        BodPrvkuVstup: {
+            nazev: null | string;
+            /** Format: double */
+            sirka: number;
+            /** Format: double */
+            delka: number;
+            /** Format: double */
+            presnostM?: null | number;
+            zdroj?: null | components["schemas"]["ZdrojPolohy"];
+            barva?: null | components["schemas"]["BarvaBoje"];
+            tvar?: null | components["schemas"]["TvarBoje"];
+            znaceni?: null | components["schemas"]["DruhZnaceni"];
+            popis?: null | string;
+            /** Format: date-time */
+            postavenaV?: null | string;
+        };
         BodVypsani: {
             bod: string;
             nadpis: string;
@@ -7620,6 +7693,7 @@ export interface components {
             celkemKcRocne: number;
             prace: null | components["schemas"]["PraceDto"];
             historie: components["schemas"]["DenNakladu"][];
+            zatim: null | components["schemas"]["ZatimDto"];
         };
         NapovedaLodiDto: {
             lod: string;
@@ -7940,6 +8014,16 @@ export interface components {
              * @default 1
              */
             verzePravidel: number;
+        };
+        PostavPrvekVstup: {
+            /** Format: uuid */
+            klic: string;
+            typ: components["schemas"]["TypPrvku"];
+            body: components["schemas"]["BodPrvkuVstup"][];
+            strana?: null | components["schemas"]["StranaPrvku"];
+            poznamka?: null | string;
+            smer?: null | components["schemas"]["SvetovaStrana"];
+            druhStartu?: null | components["schemas"]["DruhStartu"];
         };
         PozvaniVstup: {
             jmeno: null | string;
@@ -8968,6 +9052,18 @@ export interface components {
             kRevizi: number[];
             kPodpisu: number[];
             kPublikaci: number[];
+        };
+        ZatimDto: {
+            od: string;
+            /** Format: int32 */
+            dnu: number;
+            /** Format: double */
+            provozKc: number;
+            /** Format: double */
+            servisKc: number;
+            /** Format: double */
+            celkemKc: number;
+            poznamka: string;
         };
         ZavodDetailDto: {
             slug: string;

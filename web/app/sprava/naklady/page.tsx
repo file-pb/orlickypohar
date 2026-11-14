@@ -85,16 +85,37 @@ export default async function Naklady() {
         něm dalo dělat.
       </p>
 
+      {/* <b>Druhá dlaždice není roční částka</b> (Filip, 13. 11. 2026: *„tady
+          to každého vyděsí, předělej to na poměrovou část co už bylo celkem
+          za vývoj spáleno + ta naše přirážka"*).
+
+          Roční číslo je dvanáctinásobek dneška a 95 % z něj je předplatné
+          Claude Code, které jde vypovědět po měsíci — je to tedy závazek,
+          který nikdo neudělal. „Zaplaceno zatím" je proti tomu fakt: kolik
+          už od prvního zaplaceného měsíce padlo.
+
+          Ročně z tabulky nezmizelo, jen přestalo být tím prvním, co člověk
+          uvidí. Kdo ho hledá, najde ho o kus níž v součtu.
+
+          Počítá to platforma, ne pohár — a dokud se její přehled
+          nepřenasadí, `zatim` v odpovědi není a dlaždice zůstává ročním
+          číslem. Je to pravda o datech, ne výpadek: líp než vymyslet si,
+          odkdy se platí. */}
       <div className="naklady-souhrn">
         <div>
           <span className="popis">Celkem za měsíc</span>
           <b>{kc(naklady.celkemKcMesicne)}</b>
         </div>
         <div>
-          <span className="popis">Celkem za rok</span>
-          <b>{kc(naklady.celkemKcRocne)}</b>
+          <span className="popis">{naklady.zatim ? "Zaplaceno zatím" : "Celkem za rok"}</span>
+          <b>{kc(naklady.zatim ? naklady.zatim.celkemKc : naklady.celkemKcRocne)}</b>
         </div>
       </div>
+
+      {/* Čím to číslo přesně je, říká platforma — za kolik dní to je a kolik
+          z toho je dopočet z dnešní sazby místo součtu faktur. Bez té věty
+          by vypadalo přesněji, než je. */}
+      {naklady.zatim && <p className="poznamka">{naklady.zatim.poznamka}</p>}
 
       <Tabulka
         nadpis="Provoz"
