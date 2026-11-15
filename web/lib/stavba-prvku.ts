@@ -1,8 +1,10 @@
-import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
-import { dvaBody } from "@/lib/trat";
-import { vzdalenostM } from "@/lib/geo";
+// NEEDITUJ TENHLE SOUBOR. Je to kopie z `packages/stavba/stavba-prvku.ts`,
+// kterou vyrábí `packages/stavba/rozkopiruj.sh`. Změna patří do zdroje;
+// tahle kopie se při příštím běhu přepíše a CI rozdíl ohlásí.
+import { vzdalenostM } from "./geo";
+import type { components } from "./schema";
+
 export { vzdalenostM };
-import type { StranaPrvku, SvetovaStrana, TypPrvku } from "@/lib/trat";
 
 /**
  * Pravidla průvodce stavbou prvku.
@@ -30,11 +32,50 @@ import type { StranaPrvku, SvetovaStrana, TypPrvku } from "@/lib/trat";
  * </para>
  *
  * <para>
- * Až appka začne zapisovat, přestěhuje se tenhle soubor do balíčku
- * sdíleného oběma klienty, jako dnes `schema.d.ts`. Do té doby je tady
- * a **nesmí se do něj dostat nic webového**, jinak ta cesta zmizí.
+ * <b>Zdroj je `packages/stavba/`, tohle je kopie.</b> Needituj ji —
+ * `packages/stavba/rozkopiruj.sh` ji přepíše a CI to pozná. Proč kopie
+ * a ne balíček ve workspace, stojí v tom skriptu; krátce: appka má
+ * vlastní `package-lock.json` a workspace se symlinky by musel obsloužit
+ * Next i Metro. Je to tatáž cesta, jakou chodí `schema.d.ts`.
+ * </para>
+ *
+ * <para>
+ * <b>Nesmí se sem dostat nic, co zná jen jeden klient.</b> Importovat jde
+ * jedině `./schema` a `./geo`, protože ty leží jako sourozenci v obou
+ * stromech. Jediný import z `@/` nebo z `react-native` tu kopii v druhém
+ * klientovi rozbije — a pozná se to až u něj.
  * </para>
  */
+
+/**
+ * Typy z OpenAPI dokumentu. <b>Odvozují se tady znovu</b>, a ne importem
+ * z `lib/boje` nebo `lib/trat`: ty existují jen ve webu. Pravdou je
+ * `schema.d.ts`, které má každý klient u sebe a generuje ho tentýž
+ * `packages/api-client/generuj.sh`, takže dvě jména pro tentýž tvar se
+ * nemají jak rozejít.
+ */
+type S = components["schemas"];
+type BarvaBoje = S["BarvaBoje"];
+type TvarBoje = S["TvarBoje"];
+type DruhZnaceni = S["DruhZnaceni"];
+type TypPrvku = S["TypPrvku"];
+type StranaPrvku = S["StranaPrvku"];
+type SvetovaStrana = S["SvetovaStrana"];
+
+/**
+ * Co o typu potřebuje vědět formulář. <b>Dva body, nebo jedna bóje</b> —
+ * Filip, 10. 10. 2026: *„Tady bude vždy potřeba definovat dva body, na
+ * rozdíl od ostatních typů."*
+ *
+ * <para>
+ * <b>Bydlí tady, protože to je pravidlo prvku, ne webu.</b> Web si ho
+ * dál bere z `lib/trat`, které ho odsud vyváží dál — jinak by se musela
+ * přepsat pětice obrazovek, které ho tam čekají.
+ * </para>
+ */
+export function dvaBody(typ: TypPrvku): boolean {
+  return typ !== "OtocnaBoje" && typ !== "PrujezdniBoje";
+}
 
 /** Který krok průvodce zrovna běží. */
 export type Krok = "typ" | "jak" | "body" | "hotovo";

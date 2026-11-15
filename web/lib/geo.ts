@@ -1,3 +1,6 @@
+// NEEDITUJ TENHLE SOUBOR. Je to kopie z `packages/stavba/geo.ts`,
+// kterou vyrábí `packages/stavba/rozkopiruj.sh`. Změna patří do zdroje;
+// tahle kopie se při příštím běhu přepíše a CI rozdíl ohlásí.
 /**
  * Geometrie na vodě bez jakýchkoli závislostí.
  *

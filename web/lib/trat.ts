@@ -189,10 +189,12 @@ export const NAZVY_TYPU: Record<TypPrvku, string> = {
  * Co o typu potřebuje vědět formulář. <b>Dva body, nebo jedna bóje</b> —
  * Filip, 10. 10. 2026: *„Tady bude vždy potřeba definovat dva body, na
  * rozdíl od ostatních typů."*
+ *
+ * <b>Bydlí to ve sdíleném modulu</b> (`packages/stavba/stavba-prvku.ts`),
+ * protože totéž pravidlo potřebuje appka. Tady se jen vyváží dál, aby
+ * obrazovky, které ho čekají v `lib/trat`, nemusely měnit import.
  */
-export function dvaBody(typ: TypPrvku): boolean {
-  return typ !== "OtocnaBoje" && typ !== "PrujezdniBoje";
-}
+export { dvaBody } from "./stavba-prvku";
 
 /** Uvádí se u typu strana? U brány si ji volí loď, u čar rozhoduje směr. */
 export function stranaPatri(typ: TypPrvku): boolean {

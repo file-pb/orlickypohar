@@ -275,6 +275,15 @@ jobs:
           cache: 'npm'
           cache-dependency-path: app/package-lock.json
 
+      # Pravidla průvodce stavbou prvku jsou v obou klientech jako kopie
+      # jednoho zdroje (`packages/stavba/`) — workspace se symlinky by
+      # musel obsloužit Next i Metro, viz komentář v tom skriptu. Kopii
+      # drží poctivou tahle kontrola, ne dobrá vůle: bez ní se dvě kopie
+      # rozejdou do měsíce a pozná se to až na vodě. Nepotřebuje žádné
+      # závislosti, takže stojí před instalací.
+      - name: Sedí kopie sdílených pravidel?
+        run: ./packages/stavba/rozkopiruj.sh --zkouska
+
       - name: Závislosti appky
         run: npm ci
         working-directory: app

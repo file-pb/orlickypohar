@@ -4164,14 +4164,19 @@ takže držet jedno měření by druhou bóji položilo tam, kde stála první.
 (`web/lib/stavba-prvku.ts`), protože **tentýž průvodce má jít do appky**
 (Filip tamtéž). Appka je React Native, takže z webové obrazovky se tam
 nepřenese nic — ale kolik bodů který typ potřebuje, jak se pojmenují
-a jaké atributy dávají smysl, ano. Až appka začne zapisovat, přestěhuje
+a jaké atributy dávají smysl, ano. ~~Až appka začne zapisovat, přestěhuje
 se ten soubor do balíčku sdíleného oběma klienty, jako dnes
-`schema.d.ts`; do té doby se do něj nesmí dostat nic webového, jinak ta
-cesta zmizí.
+`schema.d.ts`.~~
 
-**Pozor na to „jako dnes `schema.d.ts`":** ten sdílený balíček **není**,
-je to generovaná kopie do obou stromů — a je to tak schválně. Jak se to
-tedy stěhuje doopravdy, řeší *Stavitel trati v appce* níž.
+**Přestěhované 16. 11. 2026**, a to dřív, než appka začala zapisovat:
+zdrojem je `packages/stavba/`, v obou klientech leží kopie a drží je
+kontrola v CI. **Balíček to ale není** — `schema.d.ts` taky žádný není,
+je to generovaná kopie do obou stromů, a je to tak schválně. Podrobně
+v *Stavitel trati v appce* níž, oddíl 1.
+
+Co platí dál: **do sdíleného modulu se nesmí dostat nic, co zná jen
+jeden klient.** Dřív to byla kázeň, dnes to pozná překlad druhého
+klienta — ale až u něj, takže na kázni pořád záleží.
 
 **Pípnutí jedné bóje zůstává**, ale jako cesta pro zvláštní případ —
 přenastavení, bóje mimo prvek, zápis za někoho od počítače.
@@ -5063,6 +5068,31 @@ pravidlo.
 a otisk nativní části appky se nehne, takže `runtimeVersion` zůstává
 a vydané APK se dál aktualizuje samo.
 
+**Postavené 16. 11. 2026.** Zdroj je `packages/stavba/`
+(`stavba-prvku.ts` a `geo.ts`), rozkopírovává `rozkopiruj.sh` do
+`web/lib/` a `app/src/lib/`, kontrolu dělá krok *Sedí kopie sdílených
+pravidel?* v úloze `appka`. Čtyři věci, které u toho padly jinak, než
+jak to stálo výš:
+
+- **`geo.ts` se kopíruje taky, místo aby se vzdálenost vtáhla dovnitř.**
+  Důvod je `web/lib/rezie-tabule.ts`, který ji importuje jako `./geo.ts`
+  a běží v holém Node (`web/testy/rezie.test.ts`). Kdyby `vzdalenostM`
+  seděla ve `stavba-prvku.ts`, přitáhl by si ten test celý modul —
+  přesně to, před čím varuje komentář v `geo.ts` od začátku.
+- **Hlavičku „needituj" přidává až skript**, ne zdroj. Ve zdroji by to
+  byla věta, která posílá sama k sobě.
+- **Seznam souborů se bere z adresáře.** Vypsaný v ruce by znamenal, že
+  nové pravidlo ve zdroji se tiše nerozkopíruje; takhle o něm kontrola ví.
+  Co to naopak nepozná, je **smazání** ze zdroje — kopie po něm v obou
+  klientech zůstanou viset. Je to napsané ve skriptu, ne spolehnuto.
+- **`dvaBody` vyváží `lib/trat` dál.** Pět webových obrazovek ho tam
+  čeká a měnit jim import kvůli stěhování by byla změna za změnu.
+
+**Kontrola je vyzkoušená porouchaná, ne jen zelená.** Tři sabotáže, každá
+zvlášť: ruční zásah do kopie v appce, změna jen ve zdroji (kopie zastará)
+a nový soubor ve zdroji, který se nerozkopíroval. Všechny tři skončily
+návratovým kódem 1 a pojmenovaly soubor.
+
 ##### 2. Co musí být na telefonu jinak
 
 **Poloha se bere při každém doteku, a to je past, ne odrážka.**
@@ -5241,11 +5271,11 @@ na stránce regaty samotné, ne v panelu.
 
 **Pořadí, ve kterém to dává smysl dělat, a proč.**
 
-1. **Sdílený modul a kontrola kopií v CI.** Hodiny práce. Udělat **i
-   kdyby obrazovka nakonec nebyla**: `stavba-prvku.ts` na webu dál roste
-   a čím déle je sám, tím spíš do něj něco webového proteče — a přesně
-   proti tomu ho jeho vlastní doc komentář chrání. Kontrola v CI je ta
-   část, která to udrží; bez ní se dvě kopie rozejdou do měsíce.
+1. ~~**Sdílený modul a kontrola kopií v CI.**~~ **Hotové 16. 11. 2026**
+   (viz výš). Mělo se to udělat **i kdyby obrazovka nakonec nebyla**:
+   `stavba-prvku.ts` na webu dál rostl a čím déle byl sám, tím spíš do
+   něj něco webového proteče — a přesně proti tomu ho jeho vlastní doc
+   komentář chrání. Kontrola v CI je ta část, která to udrží.
 2. ~~**Atomický `prvky/postav` s klíčem od klienta.**~~ **Hotové
    13. 11. 2026** (viz výš). Dá se nasadit samostatně a **prospěje i
    webu**: tři volání se můžou změnit v jedno a polovičatý prvek přestane
