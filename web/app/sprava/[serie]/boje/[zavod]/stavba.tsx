@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { BARVY, NAZVY_BAREV, NAZVY_TVARU, ZnakVRadku } from "@/app/znak-boje";
 import { POPIS_NEJVIC } from "@/lib/boje";
 import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
-import { NAZVY_SMERU, type DruhStartu, type SvetovaStrana } from "@/lib/trat";
+import { NAZVY_SMERU, type SvetovaStrana } from "@/lib/trat";
 import {
   TYPY,
   VOLBY,
@@ -301,7 +301,7 @@ export function Stavba({
         bojeBId: body[1]?.id ?? null,
         strana: volba.strana,
         smer: patriSmer(typ) ? smer : null,
-        druhStartu: patriDruhStartu(typ) ? druhStartuZVolby(volba) : null,
+        druhStartu: patriDruhStartu(typ) ? (volba.druhStartu ?? null) : null,
       }, tratId);
 
       if (chybaPrvku) {
@@ -685,15 +685,6 @@ export function Stavba({
  */
 function popisZnacek(znacky: ZnackaNahledu[]): string {
   return znacky.map((z) => z.jmeno + (z.cekajici ? " (čeká)" : "")).join(" a ");
-}
-
-/**
- * Druh startu z předpisu. <b>Je to tentýž výběr</b> — „pevná linie" nebo
- * „otevírající se brána" je u startu zároveň odpověď na to, jak se jede,
- * takže se neptáme dvakrát.
- */
-function druhStartuZVolby(volba: Volba): DruhStartu {
-  return volba.jmeno === "Otevírající se brána" ? "OtevirajiciSeBrana" : "PevnaLinie";
 }
 
 /** Poloha z telefonu, nebo text chyby. */

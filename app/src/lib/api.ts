@@ -443,6 +443,47 @@ export const nactiTrat = (serie: string, zavod: string, rozjizdka: number) =>
   );
 
 /**
+ * <b>Rozestavěná trať a její prvky.</b> Tohle veřejná cesta vydat nesmí —
+ * dokud ji rozhodčí nepřijme, trať neexistuje pro nikoho kromě stavitele
+ * (`VerejnaAsync` nepřijatou nevydá vůbec). Stavitel ji ale vidět musí,
+ * jinak by stavěl poslepu a nepoznal, co už stojí.
+ *
+ * <para>
+ * `null` znamená „regata zatím nemá ani jednu značku, takže ani trať" —
+ * což je u stavby běžný výchozí stav, ne chyba.
+ * </para>
+ */
+export type TratSpravy = S['TratDto'];
+export type PrvekSpravy = S['PrvekDto'];
+
+export const nactiRozestavenouTrat = (serie: string, zavod: string) =>
+  nactiZaSebe<TratSpravy>(`/sprava/serie/${serie}/zastavky/${zavod}/trat`);
+
+export const nactiPrvkySpravy = (serie: string, zavod: string) =>
+  nactiZaSebe<PrvekSpravy[]>(`/sprava/serie/${serie}/zastavky/${zavod}/trat/prvky`);
+
+/**
+ * <b>Postaví celý prvek i s jeho značkami jedním požadavkem.</b>
+ *
+ * Po krocích to nejde: prvek se skládá ze serverových id, takže by každý
+ * krok čekal na odpověď toho předchozího — a na vodě signál není. Server
+ * zapíše značky i prvek jednou transakcí, takže nevznikne půlka brány.
+ *
+ * <para>
+ * <b>`klic` je povinný</b> a opakované odeslání téhož klíče vrátí týž
+ * prvek (200 místo 201), ne konflikt. Telefon totiž posílá znovu právě
+ * tehdy, když neví, jestli to poprvé prošlo.
+ * </para>
+ */
+export type PostavPrvek = S['PostavPrvekVstup'];
+
+export const postavPrvek = (serie: string, zavod: string, vstup: PostavPrvek) =>
+  posliZaSebe<PrvekSpravy>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/trat/prvky/postav`,
+    vstup,
+  );
+
+/**
  * <b>Co komise za jízdy vyhlásila</b> — změna úseku (ZPJ 33) a chybějící
  * značka (34).
  */

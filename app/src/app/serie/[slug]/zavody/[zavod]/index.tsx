@@ -485,6 +485,19 @@ export default function Zastavka() {
             />
           ) : null}
 
+          {/* <b>Stavba trati se dělá před startem</b>, takže vchod do ní
+              nemůže viset na panelu odpočtu kousek níž — ten se ukazuje,
+              až když se startuje nebo jede. Značky se přitom staví ráno,
+              kdy panel nic nekreslí. */}
+          {veliNekde(ja ?? null) ? (
+            <Karta onPress={() => router.push(`/serie/${slug}/zavody/${zavod}/stavba`)}>
+              <Text style={{ color: t.text, fontWeight: '600' }}>Stavba trati</Text>
+              <Text style={{ color: t.tlumeny, marginTop: 2 }}>
+                Pípni značky z lodi. Bez signálu počkají ve frontě.
+              </Text>
+            </Karta>
+          ) : null}
+
           {/* Panel startu se ukáže sám, jen když se zrovna startuje nebo jede.
               Jindy nevykreslí nic — stránka regaty tím zůstává tím, čím je. */}
           <Odpocet
