@@ -153,7 +153,11 @@ function zAdresy(adresa: URL): { poloha: Poloha; jak: string } | null {
   }
 
   // Google: `/maps/search/49.49,+14.18`, `@49.49,14.18,17z`, `?q=…`, `!3d…!4d…`
-  if (host.endsWith("google.com") || host === "maps.app.goo.gl") {
+  // Shoda s tečkou, ne `endsWith("google.com")`: tomu odpovídá i
+  // `evilgoogle.com`, a čísla z cizí adresy by se pak četla jako od
+  // Googlu. Ostatní testy v souboru porovnávají hostitele přesně.
+  // (CodeQL `js/incomplete-url-substring-sanitization`, 14. 11. 2026.)
+  if (host === "google.com" || host.endsWith(".google.com") || host === "maps.app.goo.gl") {
     const cely = adresa.href;
     const vzory: [RegExp, string][] = [
       [/\/maps\/search\/(-?\d+\.\d+),\+?(-?\d+\.\d+)/, "bod z Google Maps"],

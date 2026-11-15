@@ -73,6 +73,24 @@ export const POPIS_NEJVIC = 200;
 const cesta = (serie: string, zavod: string) =>
   `${API}/sprava/serie/${encodeURIComponent(serie)}/zastavky/${encodeURIComponent(zavod)}/boje`;
 
+/** Hláška, když se do cesty má složit něco, co číslo bóje být nemůže. */
+const SPATNE_CISLO = "Tohle není platné číslo bóje.";
+
+/**
+ * Číslo bóje jako kus cesty. <b>Ověřuje se tady, u odchozího
+ * požadavku</b>, ačkoliv každá serverová akce tutéž podmínku hlídá už
+ * dřív, aby člověk dostal hlášku u tlačítka.
+ *
+ * <b>Proč dvakrát:</b> `boje: number` je slib překladače, ne záruka za
+ * běhu — hodnota přitéká z formuláře přes `Number(…)`, takže se sem může
+ * dostat `NaN`, `Infinity` i desetinné číslo, a příští volající téhle
+ * funkce o kontrole v akci nemusí vědět. Je to jedna podmínka na jednom
+ * řádku; rozejít se nemá jak. (CodeQL `js/request-forgery`, 14. 11. 2026.)
+ */
+function cisloBoje(boje: number): string | null {
+  return Number.isSafeInteger(boje) && boje > 0 ? String(boje) : null;
+}
+
 async function hlaska(odpoved: Response) {
   try {
     const telo = (await odpoved.json()) as { error?: string };
@@ -202,8 +220,11 @@ export async function seber(
   const t = await tokenZeSezeni();
   if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
 
+  const c = cisloBoje(boje);
+  if (!c) return SPATNE_CISLO;
+
   try {
-    const odpoved = await fetch(`${cesta(serie, zavod)}/${boje}/sebrana`, {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/${c}/sebrana`, {
       method: "POST",
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
@@ -230,8 +251,11 @@ export async function zahodZaznam(
   const t = await tokenZeSezeni();
   if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
 
+  const c = cisloBoje(boje);
+  if (!c) return SPATNE_CISLO;
+
   try {
-    const odpoved = await fetch(`${cesta(serie, zavod)}/${boje}`, {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/${c}`, {
       method: "DELETE",
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
@@ -263,11 +287,14 @@ export async function nahrajFotku(
   const t = await tokenZeSezeni();
   if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
 
+  const c = cisloBoje(boje);
+  if (!c) return SPATNE_CISLO;
+
   const telo = new FormData();
   telo.set("soubor", soubor, soubor.name);
 
   try {
-    const odpoved = await fetch(`${cesta(serie, zavod)}/${boje}/fotky`, {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/${c}/fotky`, {
       method: "POST",
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       body: telo,
@@ -291,9 +318,12 @@ export async function odeberFotku(
   const t = await tokenZeSezeni();
   if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
 
+  const c = cisloBoje(boje);
+  if (!c) return SPATNE_CISLO;
+
   try {
     const odpoved = await fetch(
-      `${cesta(serie, zavod)}/${boje}/fotky/${encodeURIComponent(fotka)}`,
+      `${cesta(serie, zavod)}/${c}/fotky/${encodeURIComponent(fotka)}`,
       {
         method: "DELETE",
         headers: { authorization: `Bearer ${t}`, accept: "application/json" },
