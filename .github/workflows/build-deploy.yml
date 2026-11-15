@@ -156,6 +156,9 @@ jobs:
           # Na pull requestu se image jen postaví, aby se ověřil Dockerfile.
           # Do registru jde teprve po sloučení do main.
           push: ${{ github.event_name != 'pull_request' }}
+          # Na pull requestu navíc do místního démona, aby ji šlo spustit
+          # (krok „Nastartuje se API image doopravdy?" hned pod buildy).
+          load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           # Commit do image, ať po nasazení jde ověřit, co doopravdy běží.
@@ -243,6 +246,83 @@ jobs:
             VERZE=${{ github.sha }}
           cache-from: type=gha,scope=cache
           cache-to: type=gha,mode=max,scope=cache
+
+      # <b>Postavená image se taky spustí.</b> Do 16. 11. 2026 se u pull
+      # requestu jen postavila a zahodila, takže zelená neříkala nic o tom,
+      # jestli kontejner vůbec naběhne.
+      #
+      # Změřeno na PR #538 (`aspnet` z `10.0-alpine` na `11.0-alpine`):
+      # `build` pass, `integrace` pass, celé zelené — a runtime o řadu výš
+      # přitom aplikaci cílenou na `net10.0` nespustí vůbec. Není to
+      # o .NET: stejně tiše projde chybějící `icu-libs`, špatný `USER`,
+      # překlep v `ENTRYPOINT` i základ, který se přejmenoval. Všechno se
+      # to pozná až po výměně produkce.
+      #
+      # Krok, ne vlastní úloha — stejný důvod jako u kontroly tokenů výš:
+      # nový job platí celý svůj start kvůli dvěma minutám běhu.
+      #
+      # **Jen na pull requestu.** Tam se nikam nepushuje, takže image může
+      # do místního démona (`load`). Na `main` se pushuje do registru
+      # a `load` by k tomu byl druhý výstup; jestli to buildx snese, jsem
+      # nezkoušel a tenhle krok není místo, kde to zkoušet. Do `main` se
+      # chodí přes pull request, takže hrana je úzká — a po nasazení ji
+      # kryje `Ověřit, co doopravdy běží`, byť až po výměně produkce.
+      #
+      # Databáze musí být: migrace se pouští **před** `app.RunAsync()`
+      # (Program.cs), takže bez ní se server nedostane k poslouchání
+      # a `/health` by nic neznamenal. Čte se `/health/ready`, ne
+      # `/health` — ten je liveness s `Predicate = _ => false` a vrátil by
+      # Healthy i kdyby schéma neodpovídalo.
+      - name: Nastartuje se API image doopravdy?
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          TAGY: ${{ steps.meta.outputs.tags }}
+          POSTGRES: ghcr.io/${{ github.repository }}/zrcadlo/postgres:17-alpine-${{ env.ZRCADLO_ZNACKA }}
+        run: |
+          set -euo pipefail
+          obraz=$(printf '%s\n' "$TAGY" | head -1)
+          echo "::notice::Zkouší se $obraz"
+
+          docker network create smoke >/dev/null
+          docker run -d --name smoke-db --network smoke \
+            -e POSTGRES_USER=smoke -e POSTGRES_PASSWORD=smoke -e POSTGRES_DB=pohar \
+            "$POSTGRES" >/dev/null
+
+          for _ in $(seq 1 30); do
+            docker exec smoke-db pg_isready -U smoke -d pohar >/dev/null 2>&1 && break
+            sleep 1
+          done
+          docker exec smoke-db pg_isready -U smoke -d pohar
+
+          # Tajemství souborem, ne proměnnou prostředí — tak to čte
+          # `AddKeyPerFile("/run/secrets")` i na produkci.
+          mkdir -p /tmp/smoke/secrets
+          printf '%s' 'Host=smoke-db;Port=5432;Database=pohar;Username=smoke;Password=smoke' \
+            > /tmp/smoke/secrets/ConnectionStrings__Postgres
+
+          docker run -d --name smoke-api --network smoke \
+            -v /tmp/smoke/secrets:/run/secrets:ro -p 8080:8080 "$obraz" >/dev/null
+
+          hotovo=ne
+          for _ in $(seq 1 40); do
+            if curl -fsS --max-time 3 http://127.0.0.1:8080/health/ready >/dev/null 2>&1; then
+              hotovo=ano
+              break
+            fi
+            # Spadlý kontejner nemá smysl čekat do konce.
+            if [ "$(docker inspect -f '{{.State.Running}}' smoke-api)" != true ]; then
+              break
+            fi
+            sleep 3
+          done
+
+          if [ "$hotovo" != ano ]; then
+            echo "::error::API image nenaběhla: /health/ready neodpovědělo."
+            echo "=== log kontejneru ==="
+            docker logs smoke-api 2>&1 | tail -40
+            exit 1
+          fi
+          echo "::notice::/health/ready odpovědělo, kontejner běží."
 
 
   # Testy proti reálnému PostgreSQL přes Testcontainers. Běží VEDLE buildu,
