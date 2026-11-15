@@ -158,5 +158,10 @@ updates:
       # zvedne se `TargetFramework` a Dockerfile pojede s ním. Patch
       # a minor (`10.0` → `10.1`) chodí dál a to jsou právě bezpečnostní
       # záplaty base image.
-      - dependency-name: "mcr.microsoft.com/dotnet/*"
+      # <b>Jméno je bez registru.</b> `mcr.microsoft.com/dotnet/*` tu stálo
+      # první a nedělalo nic: Dependabot si závislost vede pod jménem
+      # z `updated-dependencies` ve vlastním commitu, a tam je
+      # `dependency-name: dotnet/aspnet` — bez `mcr.microsoft.com/`.
+      # Pravidlo tedy neodpovídalo ničemu a vypadalo přitom správně.
+      - dependency-name: "dotnet/*"
         update-types: ["version-update:semver-major"]
