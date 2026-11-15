@@ -857,6 +857,24 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
   border: 1px solid var(--linka); border-radius: 999px; padding: 0.05rem 0.5rem;
   margin-left: 0.4rem; vertical-align: 0.1em;
 }
+
+/* Role jako odebíratelný štítek (konzilium, bod 15). Každý je vlastní
+   formulář, aby obrazovka zůstala bez javascriptu, takže řadu drží mřížka
+   kolem nich a ne `margin` na štítku — ten se tu proto nuluje.
+
+   Tlačítko je větší než obyčejný štítek schválně: pod `.stitek` má výšku
+   přes 1 rem a to je na dotykový cíl málo. Na dotykových obrazovkách se
+   zvětšuje na 2,2 rem níž v `pointer: coarse`.
+
+   Červená až na hover a focus. Trvale červený štítek by vypadal jako stav
+   („tahle role je špatně"), kdežto on jen maže. */
+.role-stitky { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+button.stitek-role {
+  margin-left: 0; cursor: pointer; background: none; font-family: inherit;
+  padding: 0.3rem 0.6rem; line-height: 1.2;
+}
+button.stitek-role:hover,
+button.stitek-role:focus-visible { color: var(--stav-zruseny); border-color: currentColor; }
 /* Kód k připojení na lodi: velký, s mezerou po trojicích, ať se dá opsat
    z obrazovky přes půl mola. QR vedle něj je SVG vykreslené na serveru. */
 .kod-velky {
@@ -6204,6 +6222,10 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
    Cíl 44 px patří sem, do komponenty — ne do jedné obrazovky, jinak má
    správa regaty cíl o 12 px menší než ročník. */
 @media (pointer: coarse) {
+  /* Štítek role je na dotyk cíl, ne jen popisek — 2,2 rem je minimum,
+     pod kterým se do něj na telefonu trefuje palcem na dvakrát. */
+  button.stitek-role { min-height: 2.2rem; padding: 0.45rem 0.75rem; font-size: 0.8rem; }
+
   /* <b>Na dotyku zůstává mřížka.</b> Jména se tu zalamují dovnitř dlaždice
      (níž), takže se uříznout nemají čím — a pod palcem je pravidelná dvojice
      sloupců víc než dlaždice po délce jména, která by řádky rozházela. */

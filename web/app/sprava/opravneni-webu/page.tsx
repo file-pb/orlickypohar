@@ -2,7 +2,7 @@ import Link from "@/app/sprava/odkaz";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { NadpisWebu, PruhWebu } from "@/app/sprava/pruh-webu";
 import { Vypadek } from "@/app/vypadek";
-import { ROLE_WEBU, nactiPrehledWebu } from "@/lib/sprava";
+import { ROLE_WEBU, nactiPrehledWebu, type Radek } from "@/lib/sprava";
 import { odeberZWebuAkce, udelNaWebuAkce } from "./akce";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +13,24 @@ type Parametry = {
 };
 
 const nazev = (role: string) => ROLE_WEBU.find((r) => r.role === role)?.nazev ?? role;
+
+/**
+ * Oprávnění po lidech, ne po záznamech. API vydává řádek za každou udělenou
+ * roli, takže kdo má editora i správce, stál v tabulce dvakrát — jednou se
+ * jménem a jednou s týmž jménem, a nic neříkalo, že je to jeden člověk.
+ *
+ * Pořadí je to, ve kterém řádky přišly z API; první výskyt člověka určuje,
+ * kde v tabulce stojí.
+ */
+function poLidech(radky: Radek[]) {
+  const lide = new Map<string, { zobrazovane: string; email: string | null; role: Radek[] }>();
+  for (const r of radky) {
+    const clovek = lide.get(r.uzivatelId);
+    if (clovek) clovek.role.push(r);
+    else lide.set(r.uzivatelId, { zobrazovane: r.zobrazovane, email: r.email, role: [r] });
+  }
+  return [...lide.entries()];
+}
 
 /**
  * Role na celém webu (od 22. 9. 2026). Menší bratr obrazovky oprávnění
@@ -107,29 +125,54 @@ export default async function OpravneniWebu({ searchParams }: Parametry) {
               <tr>
                 <th className="lod">Kdo</th>
                 <th style={{ textAlign: "left" }}>Role</th>
-                <th />
               </tr>
             </thead>
             <tbody>
-              {prehled.opravneni.map((r) => (
-                <tr key={r.id}>
+              {poLidech(prehled.opravneni).map(([uzivatelId, clovek]) => (
+                <tr key={uzivatelId}>
                   <td className="lod">
-                    {r.zobrazovane}
-                    {r.email && <div className="majitel">{r.email}</div>}
+                    {clovek.zobrazovane}
+                    {clovek.email && <div className="majitel">{clovek.email}</div>}
                   </td>
-                  <td>{nazev(r.role)}</td>
+                  {/* <b>Odebírá se klepnutím na roli</b> (konzilium, bod 15).
+                      Sloupec s tlačítkem „Odebrat" zmizel: u člověka se
+                      dvěma rolemi nešlo z řádku poznat, kterou z nich to
+                      tlačítko sundá — a sundalo by obě, protože každá měla
+                      vlastní řádek.
+
+                      Štítek je `button`, ne odkaz: odebrání je zápis a
+                      vlastní formulář kolem každého z nich drží tu stránku
+                      bez javascriptu. Jméno pro odečítač nese celou větu,
+                      protože samotné „Správce webu ×" neřekne, co se stane
+                      ani komu. */}
                   <td>
-                    <form action={odeberZWebuAkce}>
-                      <input type="hidden" name="id" value={r.id} />
-                      <input type="hidden" name="kdo" value={r.zobrazovane} />
-                      <button type="submit">Odebrat</button>
-                    </form>
+                    <div className="role-stitky">
+                      {clovek.role.map((o) => (
+                        <form key={o.id} action={odeberZWebuAkce}>
+                          <input type="hidden" name="id" value={o.id} />
+                          <input type="hidden" name="kdo" value={clovek.zobrazovane} />
+                          <button
+                            type="submit"
+                            className="stitek stitek-role"
+                            aria-label={`Odebrat roli ${nazev(o.role)} — ${clovek.zobrazovane}`}
+                          >
+                            {nazev(o.role)} <span aria-hidden="true">×</span>
+                          </button>
+                        </form>
+                      ))}
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+      {prehled.opravneni.length > 0 && (
+        /* Znění od 4-jazyk. Stojí pod tabulkou, protože štítek s křížkem je
+           sice obvyklý vzor, ale tady je za ním nevratný zápis — a tahle
+           obrazovka se otevírá párkrát do roka. */
+        <p className="poznamka">Klepnutím na roli ji odebereš.</p>
       )}
     </>
   );

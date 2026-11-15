@@ -77,11 +77,19 @@ export async function zalozAkce(formular: FormData) {
   const druh = tab(formular);
   const vstup = vstupZFormulare(formular);
 
-  if (!vstup.nazev) redirect(kam(serie, { chyba: "Vyplň název.", druh }));
-  if (!vstup.datum) redirect(kam(serie, { chyba: "Vyplň termín.", druh }));
+  // `kde` drží zakládání otevřené, až se chyba vrátí na obrazovku: formulář
+  // je od 16. 11. 2026 sbalený a bez téhle značky by se zavřel i s chybou,
+  // kterou má člověk opravit. Rozlišit to podle `chyba` nejde — tu samou
+  // hlásí i úprava termínu jiné regaty.
+  const kdeZalozeni = { druh, kde: "zalozeni" };
+
+  if (!vstup.nazev) redirect(kam(serie, { chyba: "Vyplň název.", ...kdeZalozeni }));
+  if (!vstup.datum) redirect(kam(serie, { chyba: "Vyplň termín.", ...kdeZalozeni }));
 
   const chyba = await zaloz(serie, vstup);
-  redirect(kam(serie, chyba ? { chyba, druh } : { stav: "zalozeno", co: vstup.nazev, druh }));
+  redirect(
+    kam(serie, chyba ? { chyba, ...kdeZalozeni } : { stav: "zalozeno", co: vstup.nazev, druh }),
+  );
 }
 
 export async function ulozAkce(formular: FormData) {
