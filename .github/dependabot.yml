@@ -121,3 +121,42 @@ updates:
     open-pull-requests-limit: 3
     commit-message:
       prefix: "docker"
+    ignore:
+      # **Číslo řady .NET drží `TargetFramework`, ne ta image.** Je to týž
+      # případ jako `expo*` výš: verze stojí na třech místech, která musí
+      # souhlasit — `net10.0` v obou csproj, `sdk:` na prvním řádku
+      # Dockerfile a `aspnet:` na osmnáctém — a Dependabot vidí jen ty dva
+      # poslední. Major bump proto změní dvě ze tří a vyrobí kontejner,
+      # který aplikaci nespustí.
+      #
+      # Změřeno 13. 11. 2026, třemi pokusy proti sobě (hostfxr je stejný
+      # napříč platformami, tak to šlo o řadu níž, lokálně):
+      #
+      # | aplikace | runtime | nastavení | výsledek |
+      # |---|---|---|---|
+      # | `net9.0` | 10.0.14 | výchozí | `You must install or update .NET` |
+      # | `net10.0` | 10.0.14 | výchozí | běží |
+      # | `net9.0` | 10.0.14 | `DOTNET_ROLL_FORWARD=Major` | běží |
+      #
+      # Druhý řádek říká, že prostředí bylo zdravé; třetí, že příčinou je
+      # právě politika roll-forward a nic jiného. Projekt ji nikde nemění
+      # (žádný `RollForward` v csproj, žádný `runtimeconfig.template.json`,
+      # žádná `DOTNET_*` v compose), takže platí výchozí.
+      #
+      # **SDK samo by přitom prošlo** — SDK 10 postaví `net9.0` bez
+      # varování, takže bump build stage nic nerozbije. Pravidlo přesto
+      # platí na obě image: rozdělovat je znamená pamatovat si, která
+      # z těch dvou je ta nebezpečná.
+      #
+      # <b>A CI to neodhalí.</b> PR #538 (`aspnet` 10 → 11) i #539 (`sdk`)
+      # byly celé zelené — `build` pass, `integrace` pass — protože se
+      # image na pull requestu jen staví a nikdy nespouští. Zelená tady
+      # o spustitelnosti kontejneru neříká nic; to spraví až smoke test
+      # v build jobu, který je samostatně.
+      #
+      # Přechod na .NET 11 tím není zakázaný, jen přestává chodit robotem:
+      # zvedne se `TargetFramework` a Dockerfile pojede s ním. Patch
+      # a minor (`10.0` → `10.1`) chodí dál a to jsou právě bezpečnostní
+      # záplaty base image.
+      - dependency-name: "mcr.microsoft.com/dotnet/*"
+        update-types: ["version-update:semver-major"]
