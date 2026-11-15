@@ -536,11 +536,15 @@ const styly = (t: Barvy) =>
       gap: 6,
       marginBottom: 10,
     },
+    // Dvanáct, ne osm: s řádkem textu to dělá 44 pt, tedy mez, kterou
+    // hlídá `tools/kontrola-dotyku.py`. Osm jich dalo 36 a kontrola to
+    // chytila — v rukavicích je rozdíl mezi 36 a 44 pt rozdíl mezi
+    // „trefím" a „trefím to vedlejší".
     chip: {
       borderWidth: 1,
       borderRadius: 999,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
     },
     radek: {
       borderWidth: 1,
