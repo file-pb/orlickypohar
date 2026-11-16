@@ -26,3 +26,11 @@ node --experimental-strip-types ./udalosti.test.ts
 echo
 echo "== Rozcestník regaty =="
 node --experimental-strip-types ./rozcestnik.test.ts
+
+echo
+echo "== Čtení souřadnic z adresy =="
+node --experimental-strip-types ./souradnice.test.ts
+
+echo
+echo "== Hranice rozbalování zkratek =="
+node --experimental-strip-types ./zkratky.test.ts
