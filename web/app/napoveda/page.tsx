@@ -506,10 +506,13 @@ export default function Napoveda() {
               <td>pořadatel regaty</td>
               <td>zapsáno, dá se opravovat</td>
             </tr>
+            {/* <b>Jeden stupeň, ne dva.</b> Stávalo tu „Ověřeno · Schváleno";
+                nález K3 (7. 11. 2026) ověření zrušil, protože ověřoval
+                i schvaloval tentýž rozhodčí hned po sobě. */}
             <tr>
-              <td>Ověřeno · Schváleno</td>
+              <td>Schváleno</td>
               <td>rozhodčí ročníku</td>
-              <td>čísla platí</td>
+              <td>pořadí v cíli sedí, rozhodčí ho podepsal</td>
             </tr>
             <tr>
               <td>K revizi</td>
@@ -521,9 +524,13 @@ export default function Napoveda() {
               <td>správce ročníku</td>
               <td>uzavřeno</td>
             </tr>
+            {/* Publikaci má od 27. 10. 2026 <b>rozhodčí</b>, ne správce
+                (`Workflow.KdoSmiPublikovat`): správce není ani v jedné z pěti
+                sestav, které k vodě jezdí, takže poslední krok po regatě
+                dělal někdo, kdo u ní nebyl. */}
             <tr>
               <td>Pustit ven</td>
-              <td>správce ročníku</td>
+              <td>rozhodčí ročníku</td>
               <td>veřejnost vidí výsledky</td>
             </tr>
           </tbody>

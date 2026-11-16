@@ -2274,9 +2274,17 @@ def bez_diakritiky_slug(text):
 
 # --- Workflow výsledků ------------------------------------------------------
 # Opsané z `Features/Zavody/Workflow.cs`, ze stejného důvodu jako bodování.
-RADA_VYSLEDKU = ["Navrzeno", "Overeno", "Schvaleno", "Potvrzeno"]
+# <b>Tři stupně, ne čtyři.</b> `Overeno` zrušil nález K3 (7. 11. 2026)
+# a migrace `SlouceniOverenoSchvaleno` přepsala uložené jedničky na dvojky.
+# Mock ho nabízel dál ještě 16. 11. 2026 — a protože `STAVY` ve
+# `web/lib/vysledky.ts` je `Record<StavVysledku, …>`, kde ten klíč po K3
+# chybí, spadla obrazovka výsledků na pětistovku, jakmile rozjížďka
+# vylezla z `Potvrzeno`. Na hotové regatě se to nepoznalo: `mozneStavy`
+# z `Potvrzeno` vedou jen na `KRevizi` a `Eliminovano`, které karta
+# odfiltruje dřív, než sáhne do `STAVY`.
+RADA_VYSLEDKU = ["Navrzeno", "Schvaleno", "Potvrzeno"]
 VSECHNY_VYSLEDKY = RADA_VYSLEDKU + ["KRevizi", "Eliminovano"]
-NAZVY_VYSLEDKU = {"Navrzeno": "Navrženo", "Overeno": "Ověřeno", "Schvaleno": "Schváleno",
+NAZVY_VYSLEDKU = {"Navrzeno": "Navrženo", "Schvaleno": "Schváleno",
                   "Potvrzeno": "Potvrzeno", "KRevizi": "K revizi",
                   "Eliminovano": "Eliminováno"}
 
@@ -2315,7 +2323,7 @@ def kdo_smi_na_stav(ze, na):
         return "Organizator" if ze in OTEVRENY else "Rozhodci"
     if na == "Navrzeno":
         return "Organizator"
-    if na in ("Overeno", "Schvaleno", "KRevizi"):
+    if na in ("Schvaleno", "KRevizi"):
         return "Rozhodci"
     return "Spravce"
 
@@ -6258,7 +6266,7 @@ class H(BaseHTTPRequestHandler):
                      # Schválená sem od 27. 10. 2026 nepatří — podepsaná je
                      # a čeká na vypuštění ven, tedy o řádek níž.
                      "kPodpisu": sorted(r["cislo"] for r in z["rozjizdky"]
-                                        if r["stavVysledku"] in ("Navrzeno", "Overeno")),
+                                        if r["stavVysledku"] == "Navrzeno"),
                      "kPublikaci": sorted(r["cislo"] for r in z["rozjizdky"]
                                           if r["stavVysledku"] in ("Schvaleno", "Potvrzeno")
                                           and not r["publikovano"])}

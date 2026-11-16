@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { NEJVIC_MB } from "@/lib/fotky";
+import { prohodVRade } from "@/lib/presun";
 import { nahrajPapir, odeberPapir, ulozZapis, type KodVysledku, type ZapisRadek } from "@/lib/vysledky";
 
 /**
@@ -37,17 +38,18 @@ const zakoduj = (radky: ZapisRadek[]) =>
     .map((r) => `${r.prihlaskaId}~${r.poradiVCili ?? ""}~${r.kod ?? ""}`)
     .join(".");
 
-export async function zapisAkce(formular: FormData) {
-  const serie = String(formular.get("serie") ?? "");
-  const zavod = String(formular.get("zavod") ?? "");
-  const cislo = Number(formular.get("cislo") ?? 0);
-
+/**
+ * Řádky z formuláře. Sdílí je uložení i přesun, protože obojí posílá
+ * celou tabulku — tlačítko přesunu je `submit` téhož formuláře, jen
+ * s vlastní akcí.
+ */
+function radkyZFormulare(formular: FormData): ZapisRadek[] {
   const ids = String(formular.get("lode") ?? "")
     .split(",")
     .filter(Boolean)
     .map(Number);
 
-  const radky: ZapisRadek[] = ids.map((id) => {
+  return ids.map((id) => {
     const poradi = String(formular.get(`poradi-${id}`) ?? "").trim();
     const kod = String(formular.get(`kod-${id}`) ?? "");
 
@@ -57,6 +59,53 @@ export async function zapisAkce(formular: FormData) {
       kod: kod ? (kod as KodVysledku) : null,
     };
   });
+}
+
+/**
+ * Posun lodi o místo nahoru nebo dolů.
+ *
+ * <b>Neukládá nic</b> — jen prohodí dvě čísla a vrátí celou tabulku zpátky
+ * do formuláře adresou, stejně jako to po chybě dělá `zapisAkce`. Jinak by
+ * každé klepnutí na šipku bylo zápisem do databáze a rozjížďka by se
+ * ukládala patnáctkrát, než pořadí sedne.
+ *
+ * Samotné prohození je čistá funkce `prohodVRade` i s testy — tady
+ * zbývá jen formulář, adresa a přesměrování.
+ *
+ * <b>Směr a loď chodí svázané, ne z tlačítka.</b> `name`/`value` na
+ * `submit` s `formAction` míří na serverovou akci, a tam se submitter do
+ * `FormData` nedostane — změřeno 16. 11. 2026: v akci dorazilo
+ * `presun = null`, zatímco ostatní pole formuláře přišla celá. Tam, kde
+ * `action` formuláře je ta samá akce, to funguje a projekt toho jinde
+ * využívá (zakládání rozjížďky v kalendáři tak volí mezi cílovou
+ * obrazovkou a formulářem).
+ */
+export async function presunAkce(smer: "nahoru" | "dolu", id: number, formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const cislo = Number(formular.get("cislo") ?? 0);
+
+  const radky = radkyZFormulare(formular);
+  const posun = prohodVRade(radky, id, smer);
+
+  // Mimo řadu, na kraji, nebo nesmyslný vstup: vrátí se, co přišlo.
+  // Chybová hláška by tu byla k ničemu — obrazovka tu šipku nenabídla.
+  if (!posun) redirect(kam(serie, zavod, cislo, { navrh: zakoduj(radky) }));
+
+  redirect(
+    kam(serie, zavod, cislo, {
+      navrh: zakoduj(posun.radky),
+      prohozeno: posun.prohozeno.join("-"),
+    }),
+  );
+}
+
+export async function zapisAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const cislo = Number(formular.get("cislo") ?? 0);
+
+  const radky = radkyZFormulare(formular);
 
   // Prohlížeč číslo v poli hlídá sám, ale formulář jde odeslat i jinak —
   // a NaN by API dostalo jako null, tedy tiše jako „bez výsledku".

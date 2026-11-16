@@ -10,7 +10,7 @@ import {
   type KodVysledku,
   type ZapisLod,
 } from "@/lib/vysledky";
-import { odeberPapirAkce, papirAkce, zapisAkce } from "./akce";
+import { odeberPapirAkce, papirAkce, presunAkce, zapisAkce } from "./akce";
 import { KonceptVZapisu } from "./koncept-v-zapisu";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -20,7 +20,13 @@ export const metadata = { title: "Zápis rozjížďky — správa" };
 
 type Parametry = {
   params: Promise<{ serie: string; zavod: string; cislo: string }>;
-  searchParams: Promise<{ chyba?: string; stav?: string; navrh?: string }>;
+  searchParams: Promise<{
+    chyba?: string;
+    stav?: string;
+    navrh?: string;
+    /** `id-id` dvojice, kterou právě prohodila šipka. */
+    prohozeno?: string;
+  }>;
 };
 
 /**
@@ -104,6 +110,31 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
 
   const navrh = rozkoduj(zpravy.navrh);
   const kategorie = poKategoriich(zapis.lode);
+  /** Pořadí, které má řádek teď — z rozepsaného zápisu, jinak z uloženého. */
+  const ted = (l: ZapisLod) => (navrh ? navrh.get(l.prihlaskaId) : l)?.poradiVCili ?? null;
+
+  // <b>Řada je napříč kategoriemi</b>, i když tabulka je po nich: pořadí
+  // v cíli je pořadí dojezdu a s kategorií nemá nic společného. Slouží
+  // jen k tomu, aby šipka na kraji řady neukazovala nikam.
+  const vRade = zapis.lode
+    .map((l) => ({ id: l.prihlaskaId, poradi: ted(l) }))
+    .filter((r): r is { id: number; poradi: number } => r.poradi !== null)
+    .sort((a, b) => a.poradi - b.poradi);
+  const kraje = new Map(
+    vRade.map((r, i) => [r.id, { prvni: i === 0, posledni: i === vRade.length - 1 }]),
+  );
+
+  // <b>Co se prohodilo, se musí dát přečíst.</b> Soused v řadě bývá
+  // v jiné kategorii, tedy o kus výš nebo níž v tabulce — bez téhle věty
+  // by klepnutí na šipku změnilo číslo někde mimo obrazovku.
+  const prohozeno = (() => {
+    if (!zpravy.prohozeno) return null;
+    const [a, b] = zpravy.prohozeno.split("-").map(Number);
+    const lod = (id: number) => zapis.lode.find((l) => l.prihlaskaId === id);
+    const [prvni, druha] = [lod(a), lod(b)];
+    if (!prvni || !druha) return null;
+    return `Prohozeno: ${prvni.lod} je ${navrh?.get(a)?.poradiVCili}., ${druha.lod} ${navrh?.get(b)?.poradiVCili}. Uloží se to až tlačítkem.`;
+  })();
 
   return (
     <>
@@ -137,6 +168,11 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
       {zpravy.stav && !zpravy.chyba && (
         <p className="hlaska hotovo" role="status">
           {hotovo(zpravy.stav, zapis.stavVysledku === "KRevizi")}
+        </p>
+      )}
+      {prohozeno && (
+        <p className="hlaska" role="status">
+          {prohozeno}
         </p>
       )}
 
@@ -208,16 +244,47 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
                           {l.cisloPlachty && <div className="majitel">{l.cisloPlachty}</div>}
                         </td>
                         <td>
-                          <input
-                            type="number"
-                            name={`poradi-${l.prihlaskaId}`}
-                            min={1}
-                            step={1}
-                            inputMode="numeric"
-                            aria-label={`Pořadí v cíli — ${l.lod}`}
-                            defaultValue={hodnota?.poradiVCili ?? ""}
-                            disabled={!zapis.smiZapisovat}
-                          />
+                          <div className="poradi-s-presunem">
+                            <input
+                              type="number"
+                              name={`poradi-${l.prihlaskaId}`}
+                              min={1}
+                              step={1}
+                              inputMode="numeric"
+                              aria-label={`Pořadí v cíli — ${l.lod}`}
+                              defaultValue={hodnota?.poradiVCili ?? ""}
+                              disabled={!zapis.smiZapisovat}
+                            />
+                            {/* <b>Přesun řádkem</b> (Filip, postřeh 13):
+                                posunout loď o místo výš znamenalo přepsat
+                                čísla všem mezi — u čtyřiceti lodí ručně.
+                                `formAction` pošle celou tabulku akci, která
+                                nic neukládá, jen prohodí dvě čísla a vrátí
+                                formulář rozepsaný. Lodě bez pořadí šipky
+                                nemají: nejsou v řadě, kterou by posouvaly. */}
+                            {zapis.smiZapisovat && kraje.has(l.prihlaskaId) && (
+                              <span className="presun">
+                                <button
+                                  type="submit"
+                                  formAction={presunAkce.bind(null, "nahoru", l.prihlaskaId)}
+                                  disabled={kraje.get(l.prihlaskaId)!.prvni}
+                                  title="O místo nahoru"
+                                  aria-label={`O místo nahoru — ${l.lod}`}
+                                >
+                                  ↑
+                                </button>
+                                <button
+                                  type="submit"
+                                  formAction={presunAkce.bind(null, "dolu", l.prihlaskaId)}
+                                  disabled={kraje.get(l.prihlaskaId)!.posledni}
+                                  title="O místo níž"
+                                  aria-label={`O místo níž — ${l.lod}`}
+                                >
+                                  ↓
+                                </button>
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td>
                           <select

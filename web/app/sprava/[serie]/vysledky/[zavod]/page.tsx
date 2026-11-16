@@ -99,6 +99,7 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
     seznamTrati.map((t) => t.cisloRozjizdky).filter((c): c is number => c !== null),
   );
 
+
   // Které rozjížďky jedou totéž co která. Počítá se z otisku předpisu,
   // takže jakmile se jedna trať upraví, dvojice se rozpadne — a právě to
   // má ta věta u rozjížďky říct (Filip, 15. 10. 2026: „to samé můžeme dát
@@ -185,6 +186,21 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
       </>
     );
 
+  // <b>Regata se může táhnout přes dva dny</b> (Filip, 16. 11. 2026):
+  // nejen 24hodinovka, ale i okruhová nebo dálková, podle toho, jak je
+  // naplánovaná. Okruhová jich přitom podle počasí odjede klidně šest.
+  // Pak samotná hodina u rozjížďky neřekne, co bylo včera a co se jede
+  // teď — a kdo přijde druhý den dopsat zápis, nepozná to odnikud.
+  // U jednodenní regaty by datum u každého řádku jen překáželo, takže
+  // se přidává, teprve když se dny doopravdy liší.
+  const dny = new Set(
+    prehled.rozjizdky
+      .map((r) => r.startV)
+      .filter((v): v is string => v !== null)
+      .map((v) => new Date(v).toLocaleDateString("cs-CZ", { timeZone: "Europe/Prague" })),
+  );
+  const vicDnu = dny.size > 1;
+
   return (
     <>
       <Drobecky
@@ -258,6 +274,7 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
                 trat={podleRozjizdky.get(r.cislo)}
                 stejnaTrat={stejnaTrat.get(r.cislo) ?? []}
                 naVyber={naVyber}
+                vicDnu={vicDnu}
               />
             </li>
           ))}
@@ -313,6 +330,7 @@ function Rozjizdka({
   trat,
   stejnaTrat,
   naVyber,
+  vicDnu,
 }: {
   serie: string;
   zavod: string;
@@ -324,6 +342,8 @@ function Rozjizdka({
   stejnaTrat: number[];
   /** Postavené tratě regaty na výběr. */
   naVyber: { id: number; popis: string }[] | null;
+  /** Táhne se regata přes víc dní? Pak se u startu píše i den. */
+  vicDnu: boolean;
 }) {
   const skryta = ["Navrzeno", "Schvaleno"] as const;
 
@@ -356,6 +376,16 @@ function Rozjizdka({
       </div>
 
       <div className="detail">
+        {/* <b>Kdy se jela</b> — čas startu posílá API v řádku od začátku
+            (`RozjizdkaSpravaRadek.startV`), obrazovka ho do 16. 11. 2026
+            nevypisovala vůbec. U šesti rozjížděk ve dvou dnech je to
+            jediné, čím se od sebe liší; číslo rozjížďky den neprozradí. */}
+        {rozjizdka.startV && (
+          <>
+            start {zacatek(rozjizdka.startV, vicDnu)}
+            {" · "}
+          </>
+        )}
         {rozjizdka.pocetVysledku === 0
           ? "zatím bez zapsaných výsledků"
           : `${rozjizdka.pocetVysledku} zapsaných výsledků`}
@@ -415,7 +445,12 @@ function Rozjizdka({
       {rozjizdka.protestniLimit && !rozjizdka.limitUplynul && (
         <p className="poznamka">
           <b>Protestní limit běží</b> do{" "}
+          {/* <b>Bez `timeZone` tu stál čas serveru</b>, a ten jede v UTC —
+              `deploy/docker-compose.yml` žádné `TZ` nenastavuje —, takže
+              se limit v létě ukazoval o dvě hodiny dřív, než doopravdy
+              uplyne. Zbytek webu píše `Europe/Prague` všude. */}
           {new Date(rozjizdka.protestniLimit).toLocaleTimeString("cs-CZ", {
+            timeZone: "Europe/Prague",
             hour: "2-digit",
             minute: "2-digit",
           })}{" "}
@@ -588,6 +623,21 @@ function Rozjizdka({
         )}
     </div>
   );
+}
+
+/**
+ * Kdy rozjížďka startovala.
+ *
+ * Den jen u regaty přes víc dní — viz `vicDnu` výš. Časová zóna natvrdo,
+ * protože web běží v kontejneru bez `TZ` a bez ní by psal UTC.
+ */
+function zacatek(iso: string, sDnem: boolean) {
+  return new Date(iso).toLocaleString("cs-CZ", {
+    timeZone: "Europe/Prague",
+    ...(sDnem ? { weekday: "short", day: "numeric", month: "numeric" } : {}),
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 /** Věta po zápisu. Skládá se tady, protože akce zná jen čísla a slugy. */

@@ -1812,6 +1812,21 @@ th.vlevo, td.vlevo { text-align: left; }
 .zapis td input:disabled, .zapis td select:disabled {
   border-color: transparent; background: transparent; color: var(--text); appearance: none;
 }
+
+/* <b>Šipky přesunu stojí u pořadí</b>, ne u lodi: posouvá se číslo.
+   Do 16. 11. 2026 se pořadí psalo jen ručně, takže posunout loď o místo
+   výš znamenalo přepsat čísla všem mezi — a opisuje se jich z papíru
+   čtyřicet. Vzor i rozměry jsou od prvků trati (`.presun-radkem`), ať
+   stejný úkon nevypadá na dvou obrazovkách jinak. */
+.zapis .poradi-s-presunem { display: flex; align-items: center; gap: 0.3rem; }
+.zapis .presun { display: inline-flex; gap: 0.15rem; flex: none; }
+.zapis .presun button {
+  font: inherit; width: 1.9rem; height: 1.9rem; padding: 0; line-height: 1;
+  border: 1px solid var(--linka); border-radius: 6px;
+  background: var(--pozadi); color: var(--tlumeny); cursor: pointer;
+}
+.zapis .presun button:hover:not(:disabled) { color: var(--voda); border-color: var(--voda); }
+.zapis .presun button:disabled { opacity: 0.3; cursor: default; }
 .zapis-akce { margin-top: 1rem; }
 .zapis-akce > button, .pridat > button {
   font: inherit; font-weight: 600; cursor: pointer;
@@ -6225,6 +6240,13 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
   /* Štítek role je na dotyk cíl, ne jen popisek — 2,2 rem je minimum,
      pod kterým se do něj na telefonu trefuje palcem na dvakrát. */
   button.stitek-role { min-height: 2.2rem; padding: 0.45rem 0.75rem; font-size: 0.8rem; }
+
+  /* <b>Šipka přesunu je pod palcem cíl jako každý jiný</b> — 44 px.
+     Pole pořadí se k tomu zužuje: víc než dvojciferné číslo do něj
+     u startovního pole téhle velikosti nepřijde, a ušetřená šířka je
+     přesně to, co šipky v řádku potřebují. */
+  .zapis .presun button { width: 44px; height: 44px; }
+  .zapis td input { width: 3.2rem; }
 
   /* <b>Na dotyku zůstává mřížka.</b> Jména se tu zalamují dovnitř dlaždice
      (níž), takže se uříznout nemají čím — a pod palcem je pravidelná dvojice

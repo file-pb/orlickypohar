@@ -34,3 +34,7 @@ node --experimental-strip-types ./souradnice.test.ts
 echo
 echo "== Hranice rozbalování zkratek =="
 node --experimental-strip-types ./zkratky.test.ts
+
+echo
+echo "== Přesun lodi v zápisu =="
+node --experimental-strip-types ./presun.test.ts
