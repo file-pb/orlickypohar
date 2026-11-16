@@ -204,19 +204,12 @@ export function stranaPatri(typ: TypPrvku): boolean {
 export type SvetovaStrana = components["schemas"]["SvetovaStrana"];
 export type DruhStartu = components["schemas"]["DruhStartu"];
 
-/** Osm směrů, ne stupně: na vodě se člověk řídí rozhledem. */
-export const SMERY: NonNullable<SvetovaStrana>[] = ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"];
-
-export const NAZVY_SMERU: Record<NonNullable<SvetovaStrana>, string> = {
-  S: "na sever",
-  SV: "na severovýchod",
-  V: "na východ",
-  JV: "na jihovýchod",
-  J: "na jih",
-  JZ: "na jihozápad",
-  Z: "na západ",
-  SZ: "na severozápad",
-};
+/**
+ * Osm směrů a jejich jména. <b>Bydlí ve sdíleném modulu</b>
+ * (`packages/stavba/stavba-prvku.ts`), protože růžici ukazuje web
+ * i appka. Tady se jen vyváží dál, ať obrazovky nemění import.
+ */
+export { SMERY, NAZVY_SMERU } from "./stavba-prvku";
 
 export const NAZVY_DRUHU_STARTU: Record<NonNullable<DruhStartu>, string> = {
   PevnaLinie: "pevná linie",

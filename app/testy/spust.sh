@@ -118,3 +118,16 @@ TEST_DB=":memory:" "${NODE[@]}" ./opravneni.test.ts
 echo
 echo "== Přeskok v ukázce =="
 "${NODE[@]}" ./preskok.test.ts
+
+# Kdy se poloha smí vzít jako pípnutí. Stáří fixu je to podstatné:
+# uložená poloha vypadá na obrazovce stejně jako čerstvá a položila by
+# druhou značku tam, kde stála první.
+echo
+echo "== Poloha při stavbě trati =="
+"${NODE[@]}" ./poloha.test.ts
+
+# Fronta prvků drží pořadí stavby a po odmítnutí se nepokračuje dál —
+# pořadí na trati určuje server podle pořadí, v jakém prvky dorazí.
+echo
+echo "== Fronta prvků trati =="
+TEST_DB=":memory:" "${NODE[@]}" ./fronta.test.ts

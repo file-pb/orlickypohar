@@ -290,6 +290,20 @@ sloupci, `Clanky` má *Nový článek* pod `<details>` — dva tvary téhož vzo
 Scénář E5 je práce v pravé tabulce, formulář při ní zabírá půlku šířky.
 Srovnat podle článků; rozbalené jen tehdy, když v ročníku žádná regata není.
 
+> **Hotovo 16. 11. 2026, ale vzor byl jiný.** `Clanky` žádné `<details>`
+> nemá — *Nový článek* je tam `h2` úplně stejně jako v kalendáři, takže to
+> nebyly dva tvary téhož vzorce, ale jeden tvar na dvou místech. Srovnávat
+> se podle čeho nedalo.
+>
+> Vzorem je proto přihlašování lodí (`details.uprava-samostatna`), kde
+> sbalený formulář pro výjimečný případ už existuje i s CSS. Závěr platí
+> beze změny, jen se odvozuje odjinud.
+>
+> Co závěr neřešil: formulář se musí po chybě otevřít zpátky. Značka
+> `chyba` na to nestačí, tu samou nese i úprava termínu jiné regaty —
+> proto `kde=zalozeni`. Články zůstávají rozbalené; srovnat i je je další
+> rozhodnutí, ne důsledek tohohle.
+
 ### 15. Dvě role, jedno tlačítko *Odebrat*
 
 1-ergonomie: v `OpravneniWebu` má Miloš na řádku dvě role, jedno tlačítko
@@ -297,6 +311,20 @@ Srovnat podle článků; rozbalené jen tehdy, když v ročníku žádná regata
 protichůdné nabídky nad **nevratným** úkonem, kterým si navíc jde zavřít dveře.
 Ovládacím prvkem je **štítek role** (každý s vlastním ×), tlačítko v řádku
 zmizí. Znění (4-jazyk): *„Klepnutím na roli ji odebereš."*
+
+> **Hotovo 16. 11. 2026; popsaná vada ale neexistovala.** V `OpravneniWebu`
+> byl řádek na **jedno oprávnění**, ne na člověka: kdo měl dvě role, stál
+> v tabulce dvakrát a každý řádek měl vlastní tlačítko *Odebrat*, které
+> sundalo právě tu svoji. Věta „odebírá se ta, na kterou klepneš" v kódu
+> nikdy nebyla — v historii webu se nevyskytuje. Dvě protichůdné nabídky
+> tedy nad sebou nestály.
+>
+> „Zavřít si dveře" hlídá API od dřív: `StavOdebrani.PosledniSpravce`
+> odmítne odebrat posledního správce webu i ročníku.
+>
+> Skutečná vada byla jiná a závěr ji opravuje taky: tentýž člověk dvakrát
+> pod sebou, bez čehokoli, co by řeklo, že je to jeden účet. Teď je řádek
+> na člověka a role jsou štítky s ×, dotykový cíl 35 px na telefonu.
 
 ## Co se nemění
 

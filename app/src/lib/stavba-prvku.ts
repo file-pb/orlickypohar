@@ -61,6 +61,7 @@ type DruhZnaceni = S["DruhZnaceni"];
 type TypPrvku = S["TypPrvku"];
 type StranaPrvku = S["StranaPrvku"];
 type SvetovaStrana = S["SvetovaStrana"];
+type DruhStartu = S["DruhStartu"];
 
 /**
  * Co o typu potřebuje vědět formulář. <b>Dva body, nebo jedna bóje</b> —
@@ -123,6 +124,18 @@ export type Volba = {
   /** Strana, pokud ji ten typ nese. U bran je vždycky `null` — volí ji loď. */
   strana: StranaPrvku;
   stopa: Stopa;
+  /**
+   * Čím je start vytyčený. <b>Je to tentýž výběr</b> — „pevná linie"
+   * nebo „otevírající se brána" je u startu zároveň odpověď na to, jak
+   * se jede, takže se neptáme dvakrát. Jinde `undefined`.
+   *
+   * <para>
+   * Dřív si to web odvozoval porovnáním `jmeno === "Otevírající se
+   * brána"`. Fungovalo to, dokud byl klient jeden: přejmenování volby
+   * by ten výběr tiše obrátilo na pevnou linii a nic by nespadlo.
+   * </para>
+   */
+  druhStartu?: NonNullable<DruhStartu>;
   /** Jak se pojmenují body, když jméno závisí na předpisu. */
   jmena?: ((poradi: number) => string)[];
 };
@@ -278,6 +291,7 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
       typ: "Start",
       strana: null,
       stopa: "startSipka",
+      druhStartu: "PevnaLinie",
     },
     {
       jmeno: "Otevírající se brána",
@@ -285,6 +299,7 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
       typ: "Start",
       strana: null,
       stopa: "startSipka",
+      druhStartu: "OtevirajiciSeBrana",
     },
   ],
   cil: [
@@ -417,7 +432,25 @@ export function jeBoje(id: DruhZnaceni): boolean {
   return id !== "Plavidlo" && id !== "ObjektNaBrehu";
 }
 
-const SMERY: NonNullable<SvetovaStrana>[] = ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"];
+/** Osm směrů, ne stupně: na vodě se člověk řídí rozhledem. */
+export const SMERY: NonNullable<SvetovaStrana>[] = ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"];
+
+/**
+ * Jak se směr řekne. <b>Patří sem, ne do obrazovky</b> — růžici ukazuje
+ * web i appka a osm řetězců opsaných na dvou místech je přesně ten druh
+ * kopie, která se rozejde: stačí, aby jeden klient říkal „na jih" a druhý
+ * „jižně", a stavitel s rozhodčím si nerozumí.
+ */
+export const NAZVY_SMERU: Record<NonNullable<SvetovaStrana>, string> = {
+  S: "na sever",
+  SV: "na severovýchod",
+  V: "na východ",
+  JV: "na jihovýchod",
+  J: "na jih",
+  JZ: "na jihozápad",
+  Z: "na západ",
+  SZ: "na severozápad",
+};
 
 /**
  * Azimut spojnice dvou bodů ve stupních od severu.

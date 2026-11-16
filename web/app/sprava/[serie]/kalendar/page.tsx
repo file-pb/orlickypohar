@@ -33,6 +33,7 @@ type Parametry = {
     co?: string;
     nastav?: StavZavodu;
     druh?: string;
+    kde?: string;
   }>;
 };
 
@@ -180,8 +181,23 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
       )}
 
       {prehled.smiZalozit && (
-        <>
-          <h2>{naAkcich ? "Nová akce" : "Nová regata"}</h2>
+        /* <b>Zakládání se sbaluje</b> (konzilium, bod 14). Scénář E5 je
+           práce v seznamu regat pod tím a trvale rozbalený formulář při ní
+           zabíral půlku šířky. Rozbalené zůstává, dokud ročník nemá jedinou
+           regatu — tehdy je zakládání to jediné, proč sem člověk přišel.
+
+           Závěr konzilia říkal „srovnat podle článků". To neplatí: `Nový
+           článek` je pořád `h2` úplně stejně jako tady (ověřeno 16. 11.
+           2026). Vzorem je proto přihlašování lodí, kde
+           `details.uprava-samostatna` dělá totéž a má hotové CSS.
+
+           <b>Po chybě se otevírá zpátky</b> — podle `kde=zalozeni` v adrese.
+           Samotná `chyba` se na to použít nedá: tu samou nese i úprava
+           termínu jiné regaty, která se zakládání netýká. Bez toho by se
+           formulář po odmítnutí sbalil i s chybou, kterou má člověk
+           opravit. */
+        <details className="uprava-samostatna" open={zastavky.length === 0 || zpravy.kde === "zalozeni"}>
+          <summary>{naAkcich ? "Nová akce" : "Nová regata"}</summary>
           {/* Jen název a termín jsou povinné. Nová regata je vždycky
               plánovaná a nezveřejněná — potvrdit termín i pustit ji ven
               jsou dvě další rozhodnutí. */}
@@ -199,7 +215,7 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
               <Link href="/napoveda#vypsat-regatu">Co přijde potom</Link>
             </p>
           </form>
-        </>
+        </details>
       )}
 
       <h2>{naAkcich ? "Akce" : "Regaty"}</h2>

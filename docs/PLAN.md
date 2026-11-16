@@ -5267,6 +5267,72 @@ odpočtu (`zavody/[zavod]/index.tsx:507` a `:512`) a ten se ukazuje, jen
 když se startuje nebo jede. **Trať se staví předtím**, takže vchod musí být
 na stránce regaty samotné, ne v panelu.
 
+##### Obrazovka v appce je postavená (16. 11. 2026)
+
+`app/src/app/serie/[slug]/zavody/[zavod]/stavba.tsx`, fronta
+`lib/stavba/fronta.ts`, odesílání `lib/stavba/odesilani.ts`, pravidla
+polohy `lib/stavba/poloha.ts`, odběr `hooks/use-poloha.ts`. Vchod je
+dlaždice na stránce regaty, viditelná tomu, kdo velí.
+
+**Stavěla se dřív, než doporučoval oddíl 5** — ten říká „až po
+upozorněních a až změření ukáže, jestli je v místě stavby signál". Filip
+řekl stavět, tak se staví; měření tím ale nezmizelo z fronty, jen už
+nerozhoduje o tom, **jestli** obrazovka bude, ale o tom, jak moc na ní
+bude záležet.
+
+**Vchod nemůže být v panelu odpočtu.** Cíl i trať za jízdy tam visí,
+protože se dělají za jízdy; panel se ukazuje, jen když se startuje nebo
+jede. Značky se staví ráno, kdy panel nekreslí nic — dlaždice proto
+stojí na stránce regaty samotné.
+
+**Pět věcí, které se rozhodly až u psaní:**
+
+- **Zámek se ukazuje nahoře, ne až jako chyba od serveru.** Do přijaté
+  trati se stavět nesmí a appka to ví z `GET …/trat`. Dozvědět se to
+  z odmítnutého prvku by znamenalo, že ten prvek do té doby sedí ve
+  frontě a **drží ji celou**.
+- **Meze polohy jsou opsané ze serveru** (`Pipnuti.NejhorsiPresnostM`,
+  hranice Orlíku). Je to kopie, a vědomá: prvek, který by server odmítl,
+  by frontu zastavil, takže je lepší ho neuložit. Když se čísla rozejdou,
+  rozhoduje server.
+- **Stáří fixu se posuzuje dřív než poloha.** Jinak by stará poloha
+  z Prahy hlásila „nejsi na Orlíku" — pravda o špatné věci, po které
+  stavitel čeká na signál družic, co má.
+- **Jméno značky se počítá i z fronty**, ne jen z prvků na serveru. Bez
+  toho by dvě značky postavené bez signálu dostaly totéž jméno.
+- **Druh startu přestal být porovnáním jmen.** Web si ho odvozoval jako
+  `volba.jmeno === "Otevírající se brána"`; se dvěma klienty by
+  přejmenování volby ten výběr tiše obrátilo na pevnou linii a nic by
+  nespadlo. Je to teď pole `druhStartu` na `Volba` ve sdíleném modulu
+  a web čte totéž. Tamtéž se přestěhovaly `SMERY` a `NAZVY_SMERU` —
+  osm řetězců opsaných na dvou místech je kopie, která se rozejde.
+
+**Co obrazovka vědomě neumí**, a proč, stojí v oddílech 2 a 5: fotku
+u značky (nativní závislost → posunutý otisk → ruční přeinstalace APK),
+výběr bodu z mapy (vznikl pro člověka u počítače) a přenastavení či
+sebrání značky (cesta pro zvláštní případ, zůstává na webu). Značení se
+vybírá jedním dotykem z předvoleb, ale **barva a tvar se u „naší bóje"
+nedají přebrat** jako na webu — předvolba dá žlutou se sférickým vrškem
+a kdo chce růžového plameňáka, přepíše to od stolu.
+
+**Čím je to ověřené.** Dvacet dva kontrol navíc v `app/testy/`
+(`poloha.test.ts`, `fronta.test.ts`) a obě měří to, co se dá splést tak,
+že se to pozná až na vodě: že se za zaseknutým prvkem nepokračuje, že
+nedoručení není odmítnutí, a že uložená poloha neprojde, i když vypadá
+platně. Odesílací smyčka bere posílání jako parametr právě proto, aby
+šla zkusit bez sítě. **Otisk nativní části se nehnul**
+(`0759d5bd…`, změřeno 16. 11.), takže obrazovka dojede do telefonů
+aktualizací po síti a nikdo nic neinstaluje.
+
+**Co tím pořád není hotové:** obrazovka neběžela na skutečném telefonu
+u vody. Zkoušelo se to na Node a překladem, ne na motoráku — a `tracker`
+má přejímací podmínky napsané právě proto, že tyhle dvě věci nejsou
+totéž. Co na telefonu projít stojí v [docs/ZKOUSKA-STAVITELE.md](ZKOUSKA-STAVITELE.md);
+zkouška je tam rozdělená podle místa, protože **pípnout jde jen uvnitř
+hranic Orlíku** — mimo ně dojde průvodce ke kroku *Pípni* a odmítne
+polohu, takže na suchu doma se dá ověřit všechno kromě samotného
+pípnutí.
+
 ##### 5. Co do 15. 5. 2027
 
 **Pořadí, ve kterém to dává smysl dělat, a proč.**
@@ -5282,7 +5348,8 @@ na stránce regaty samotné, ne v panelu.
    být možný i tam. **Web se na něj ale zatím nepřepojuje** — jeho
    průvodce funguje a přepsat ho bez důvodu by byla změna za změnu;
    přijde to, až se bude ta obrazovka stejně otevírat.
-3. **Obrazovka průvodce v appce** s frontou, bez fotek a bez mapy.
+3. ~~**Obrazovka průvodce v appce** s frontou, bez fotek a bez mapy.~~
+   **Hotová 16. 11. 2026** (viz výš) — dřív, než tenhle oddíl radil.
 
 **Doporučení: 1 a 2 do května ano, 3 jen tehdy, když budou hotová
 upozornění a zbude týden.** Důvod není opatrnost, ale pořadí, které Filip
