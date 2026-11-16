@@ -3983,7 +3983,7 @@ pravidel a role, takže se dá zkoušet lokálně i ve zkoušce s pořadatelem.
 | sebrání je razítko, ne smazání | bez bóje se trasa z té doby nedá přečíst |
 | přesnost z telefonu se ukládá | iPhone s vypnutou přesnou polohou hlásí i 65 m a bez čísla by to vypadalo stejně jako 5 m |
 | nad 100 m se pípnutí odmítne | to už není poloha z družic, ale ze sítě |
-| poloha mimo Orlík se odmítne | prohozená šířka a délka je nejčastější překlep a postavila by bóji v Africe |
+| poloha mimo Česko se odmítne | prohozená šířka a délka je nejčastější překlep a postavila by bóji v Africe (do 16. 11. 2026 to byl Orlík — viz níž) |
 | u polohy **z mapy** nesmí přijít přesnost | mapa nic neměří; číslo u ní by bylo vymyšlené |
 
 #### Když pípnout nejde (Filip, 9. 10. 2026)
@@ -4009,7 +4009,7 @@ pravdivé bez dopisování.
 
 | Vstup | Kde je poloha |
 |---|---|
-| `49.4957253N, 14.1841419E` i holá dvojice | šířka na Orlíku je 49,2–49,8 a délka 14,0–14,5, takže se nedají prohodit |
+| `49.4957253N, 14.1841419E` i holá dvojice | šířka v Česku je 48,5–51,1 a délka 12,0–18,9; intervaly se nepřekrývají, takže se nedají prohodit |
 | `mapy.com/…?source=coor&id=14.1841,49.4957` | `id` je ten bod a má **délku první**; `x`/`y` je jen střed mapy |
 | `mapy.com/s/lasupogahe` (i z QR) | zkratka, rozbalí se až na serveru |
 | `maps.app.goo.gl/nUMo8…` | rozbalí se na `google.com/maps/search/49.495688,+14.183463` — **šířku první** |
@@ -5208,7 +5208,7 @@ a stane se **jedním požadavkem, který jde podržet**.
 `KlicPrvku`. Čtyři věci, které u toho padly:
 
 - **Pravidla se nečtou dvakrát.** Každý bod projde `Pipnuti.ProcNejde`
-  jako obyčejné pípnutí — přesnost nad sto metrů, poloha mimo Orlík,
+  jako obyčejné pípnutí — přesnost nad sto metrů, poloha mimo meze,
   barva u plavidla. Prvek sám projde `Prvky.ProcNejdePostavit`, a to je
   tatáž `ProcNejde` se zástupným id druhého konce: ta funkce se u něj ptá
   jen na to, **jestli** nějaký bude, ne které bóji patří.
@@ -5292,11 +5292,13 @@ stojí na stránce regaty samotné.
   z odmítnutého prvku by znamenalo, že ten prvek do té doby sedí ve
   frontě a **drží ji celou**.
 - **Meze polohy jsou opsané ze serveru** (`Pipnuti.NejhorsiPresnostM`,
-  hranice Orlíku). Je to kopie, a vědomá: prvek, který by server odmítl,
+  hranice území). Je to kopie, a vědomá: prvek, který by server odmítl,
   by frontu zastavil, takže je lepší ho neuložit. Když se čísla rozejdou,
-  rozhoduje server.
+  rozhoduje server. Hranice samy se 16. 11. 2026 přestěhovaly do
+  sdíleného modulu a rozvolnily na Česko — oddíl *Hranice hlídají
+  překlep, ne území* níž.
 - **Stáří fixu se posuzuje dřív než poloha.** Jinak by stará poloha
-  z Prahy hlásila „nejsi na Orlíku" — pravda o špatné věci, po které
+  z ciziny hlásila „nejsi v Česku" — pravda o špatné věci, po které
   stavitel čeká na signál družic, co má.
 - **Jméno značky se počítá i z fronty**, ne jen z prvků na serveru. Bez
   toho by dvě značky postavené bez signálu dostaly totéž jméno.
@@ -5327,11 +5329,41 @@ aktualizací po síti a nikdo nic neinstaluje.
 **Co tím pořád není hotové:** obrazovka neběžela na skutečném telefonu
 u vody. Zkoušelo se to na Node a překladem, ne na motoráku — a `tracker`
 má přejímací podmínky napsané právě proto, že tyhle dvě věci nejsou
-totéž. Co na telefonu projít stojí v [docs/ZKOUSKA-STAVITELE.md](ZKOUSKA-STAVITELE.md);
-zkouška je tam rozdělená podle místa, protože **pípnout jde jen uvnitř
-hranic Orlíku** — mimo ně dojde průvodce ke kroku *Pípni* a odmítne
-polohu, takže na suchu doma se dá ověřit všechno kromě samotného
-pípnutí.
+totéž. Co na telefonu projít stojí v [docs/ZKOUSKA-STAVITELE.md](ZKOUSKA-STAVITELE.md).
+
+##### Hranice hlídají překlep, ne území (16. 11. 2026)
+
+Psaní toho checklistu narazilo na pravidlo, které **nikdo nezadal, ale
+chovalo se jako zákaz**: pípnutí se odmítalo mimo obdélník 49,2–49,8 /
+14,0–14,5, tedy Orlík s rezervou. Stavitele trati tím nebylo kde
+vyzkoušet — průvodce došel ke kroku *Pípni* a odmítl polohu, protože
+telefon byl v Praze. Zkouška na suchu je přitom jediné, co jde udělat
+dřív, než se vypluje.
+
+**Odkud se to vzalo.** Commit `474c78a` (5. 10. 2026, pípnutí bóje) ho
+zavedl s jediným cílem: chytit prohozenou šířku a délku. Mapy.com dávají
+v `id` délku první, Google šířku — a bóje z prohozené dvojice leží
+v Africe, kde si jí nikdo nevšimne, protože na mapě trati prostě není.
+V tabulce pravidel výš to tak stálo od začátku; obdélník kolem přehrady
+byl jen mnohem přísnější, než ten úkol potřebuje.
+
+**Rozvolněno na Česko** (48,5–51,1 / 12,0–18,9), a to kontrolu
+nezeslabuje: **ty dva intervaly se nepřekrývají**, takže žádné číslo
+nemůže být zároveň platnou šířkou i platnou délkou a prohozená dvojice
+se pozná stejně jednoznačně jako dřív. Na téhle vlastnosti stojí čtení
+dvojice bez udaného pořadí (`podleCeska` ve webu), takže ji hlídá vlastní
+test na obou stranách — `Rozsah_sirky_a_delky_se_neprekryva` a tentýž
+v `web/testy/souradnice.test.ts`. **Kdyby se hranice rozšiřovaly dál,
+tohle je to, co se zlomí jako první** — a ne hlučně, ale tak, že se bod
+tiše přečte naruby.
+
+**Čtvrtá kopie se přitom zrušila.** Tatáž čtyři čísla ležela v API, ve
+webu, v appce a v mocku. Web s appkou je teď berou z
+`packages/stavba/hranice.ts`, který se rozkopírovává jako zbytek
+sdíleného modulu; server a mock zůstávají vlastní (jiné jazyky) a server
+je autorita. Klientská kopie tu je proto, aby prvek, který by server
+odmítl, v appce vůbec nevznikl — ve frontě by **zastavil celou stavbu**,
+dokud by ho někdo ručně nezahodil.
 
 ##### 5. Co do 15. 5. 2027
 

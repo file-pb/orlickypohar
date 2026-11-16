@@ -765,12 +765,13 @@ public class PrvkySpravaTests(PostgresFixture fixture)
     }
 
     /// <summary>
-    /// <b>Pravidla pípnutí platí i tady.</b> Poloha mimo Orlík je nejčastěji
+    /// <b>Pravidla pípnutí platí i tady.</b> Poloha mimo meze je nejčastěji
     /// prohozená šířka s délkou a postavila by bóji v Africe; nesmí projít
-    /// jen proto, že přišla jinou cestou.
+    /// jen proto, že přišla jinou cestou. Dvojice níž je obrácená naruby,
+    /// takže zůstává mimo i po rozvolnění hranic na Česko (16. 11. 2026).
     /// </summary>
     [Fact]
-    public async Task Postaveni_mimo_Orlik_neprojde_ani_tady()
+    public async Task Postaveni_mimo_meze_neprojde_ani_tady()
     {
         var (db, boje, _, prvky) = Sluzby();
         var (zavod, kdo) = await RegataAsync(db);

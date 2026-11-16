@@ -30,13 +30,43 @@ public class PipnutiTests
     }
 
     [Fact]
-    public void Poloha_mimo_Orlik_se_odmitne()
+    public void Poloha_mimo_meze_se_odmitne()
     {
         // Nejčastější překlep je prohozená šířka a délka — ta by bóji
-        // postavila někam do Afriky a nikdo by si toho nevšiml.
+        // postavila někam do Afriky a nikdo by si toho nevšiml. Zůstane
+        // mimo i po rozvolnění hranic na Česko: šířka 14,165 neexistuje
+        // nikde v republice.
         Assert.NotNull(Pipnuti.ProcNejde(Bod(sirka: 14.165, delka: 49.516)));
-        Assert.NotNull(Pipnuti.ProcNejde(Bod(sirka: 50.1)));
-        Assert.NotNull(Pipnuti.ProcNejde(Bod(delka: 16.8)));
+
+        // Cizina taky ne — Vídeň a Berlín.
+        Assert.NotNull(Pipnuti.ProcNejde(Bod(sirka: 48.21, delka: 16.37)));
+        Assert.NotNull(Pipnuti.ProcNejde(Bod(sirka: 52.52, delka: 13.40)));
+    }
+
+    /// <summary>
+    /// <b>Co se 16. 11. 2026 změnilo.</b> Do té doby meze kopírovaly
+    /// přehradu, takže pípnout nešlo nikde jinde — a stavitele trati
+    /// v appce nebylo kde vyzkoušet na suchu. Meze hlídají překlep, ne
+    /// území; Praha i Brno proto projdou.
+    /// </summary>
+    [Fact]
+    public void Poloha_v_Cesku_mimo_Orlik_projde()
+    {
+        Assert.Null(Pipnuti.ProcNejde(Bod(sirka: 50.0755, delka: 14.4378)));
+        Assert.Null(Pipnuti.ProcNejde(Bod(sirka: 49.1951, delka: 16.6068)));
+    }
+
+    /// <summary>
+    /// <b>Rozsah šířky a délky se nesmí překrýt.</b> Web na tom staví
+    /// čtení dvojice čísel bez udaného pořadí (`podleCeska`): když žádné
+    /// číslo nemůže být obojí, projde nanejvýš jedna kombinace. Rozšířit
+    /// hranice dál by tuhle vlastnost zlomilo — a ne hlučně, ale tak, že
+    /// se bod tiše přečte naruby.
+    /// </summary>
+    [Fact]
+    public void Rozsah_sirky_a_delky_se_neprekryva()
+    {
+        Assert.True(Pipnuti.SirkaOd > Pipnuti.DelkaDo);
     }
 
     [Fact]

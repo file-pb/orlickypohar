@@ -1181,8 +1181,8 @@ UKON_ID = [0]
 # na něm hlášky nedají zkoušet.
 NAZEV_NEJVIC = 60
 NEJHORSI_PRESNOST_M = 100
-SIRKA_OD, SIRKA_DO = 49.2, 49.8
-DELKA_OD, DELKA_DO = 14.0, 14.5
+SIRKA_OD, SIRKA_DO = 48.5, 51.1
+DELKA_OD, DELKA_DO = 12.0, 18.9
 
 
 def proc_pipnuti_nejde(vstup):
@@ -1207,9 +1207,9 @@ def proc_pipnuti_nejde(vstup):
     sirka, delka = vstup.get("sirka"), vstup.get("delka")
     if sirka is None or delka is None \
             or not SIRKA_OD <= sirka <= SIRKA_DO or not DELKA_OD <= delka <= DELKA_DO:
-        return ("Tahle poloha není na Orlíku. Zkontroluj, že telefon má signál z družic."
+        return ("Tahle poloha není v Česku. Zkontroluj, že telefon má signál z družic."
                 if zdroj == "Telefon" else
-                "Tahle poloha není na Orlíku. "
+                "Tahle poloha není v Česku. "
                 "Zkontroluj, že se v odkazu neprohodila šířka s délkou.")
 
     return None

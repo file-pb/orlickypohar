@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu, metruNaPixel, zPixelu } from "@/lib/mapa";
-import { naOrliku } from "@/lib/souradnice";
+import { vCesku } from "@/lib/souradnice";
 
 /**
  * Výběr bodu z mapy.
@@ -128,11 +128,11 @@ export function MapkaVyber({
   const naMetr = metruNaPixel(kde.sirka, z);
 
   /**
-   * <b>Mimo Orlík řekne tlačítko, ne až API.</b> Mez hlídá i server, ale
+   * <b>Mimo meze řekne tlačítko, ne až API.</b> Mez hlídá i server, ale
    * jeho věta mluví o prohozené šířce a délce — u křížku na mapě je to
    * nesmysl, protože prohodit se tam nedá nic.
    */
-  const jeNaOrliku = naOrliku(kde.sirka, kde.delka);
+  const jeVCesku = vCesku(kde.sirka, kde.delka);
 
   return (
     <div className="vyber-mapy">
@@ -205,9 +205,9 @@ export function MapkaVyber({
         type="button"
         className="velke"
         onClick={() => vyber(kde)}
-        disabled={cekam || !jeNaOrliku}
+        disabled={cekam || !jeVCesku}
       >
-        {cekam ? "Zapisuji…" : jeNaOrliku ? "Vzít tenhle bod" : "Mimo Orlík — posuň mapu"}
+        {cekam ? "Zapisuji…" : jeVCesku ? "Vzít tenhle bod" : "Mimo meze — posuň mapu"}
       </button>
       <button type="button" className="zrusit" onClick={zrus} disabled={cekam}>
         Zpět

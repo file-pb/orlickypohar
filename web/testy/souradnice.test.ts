@@ -9,7 +9,7 @@
  */
 import assert from 'node:assert/strict';
 
-import { jeZkratka, precti } from '../lib/souradnice.ts';
+import { DELKA_DO, SIRKA_OD, jeZkratka, precti } from '../lib/souradnice.ts';
 
 let prosly = 0;
 function zkus(nazev: string, f: () => void) {
@@ -61,6 +61,32 @@ zkus('zadané souřadnice a stupně se čtou dál', () => {
   assert.equal(precti('49.4957N, 14.1841E').stav, 'poloha');
   assert.equal(precti(`49°29'44.6"N 14°11'2.8"E`).stav, 'poloha');
   assert.equal(precti('mapy.com/s/zluty').stav, 'zkratka');
+});
+
+zkus('rozsah šířky a délky se nepřekrývá', () => {
+  // Na tomhle stojí čtení dvojice bez udaného pořadí: když žádné číslo
+  // nemůže být zároveň platnou šířkou i platnou délkou, projde nanejvýš
+  // jedna z obou kombinací. Rozvolnění hranic na Česko tu vlastnost
+  // zachovalo; kdyby se rozšiřovaly dál, tohle je to, co se rozbije jako
+  // první — a ne hlučně, ale tak, že se bod tiše přečte naruby.
+  assert.ok(SIRKA_OD > DELKA_DO, `šířka od ${SIRKA_OD} musí být nad délku do ${DELKA_DO}`);
+});
+
+zkus('prohozená dvojice se přiřadí správně, ať přijde v jakémkoli pořadí', () => {
+  for (const text of ['49.4957, 14.1841', '14.1841, 49.4957']) {
+    const c = precti(text);
+    assert.equal(c.stav, 'poloha', text);
+    if (c.stav !== 'poloha') return;
+    assert.ok(Math.abs(c.poloha.sirka - 49.4957) < 1e-6, text + ' → šířka');
+    assert.ok(Math.abs(c.poloha.delka - 14.1841) < 1e-6, text + ' → délka');
+  }
+});
+
+zkus('bod v Česku mimo Orlík se přečte, bod v cizině ne', () => {
+  // Rozvolněno 16. 11. 2026: meze hlídají překlep, ne území. Praha projde,
+  // Vídeň ne — a kdyby prošla, byl by to bod, který API stejně odmítne.
+  assert.equal(precti('50.0755N, 14.4378E').stav, 'poloha');
+  assert.equal(precti('48.2082N, 16.3738E').stav, 'nic');
 });
 
 console.log('\n' + prosly + ' prošlo');

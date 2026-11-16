@@ -9,7 +9,9 @@
  *
  * <para>
  * <b>Meze jsou opsané ze serveru</b> (`Pipnuti` v `Features/Boje/Boje.cs`:
- * `NejhorsiPresnostM`, `SirkaOd`…`DelkaDo`). Opisují se schválně: prvek,
+ * `NejhorsiPresnostM`, `SirkaOd`…`DelkaDo`); hranice území přišly do
+ * sdíleného modulu `lib/hranice.ts`, protože je potřebuje i web. Opisují
+ * se schválně: prvek,
  * který by server odmítl, by se jinak zařadil do fronty a <b>zastavil ji
  * celou</b>, dokud ho někdo ručně nezahodí. Lepší je neuložit ho. Když se
  * čísla jednou rozejdou, rozhoduje server — tyhle jen šetří cestu.
@@ -18,6 +20,7 @@
  * Čisté funkce, bez `expo-location` — dají se zkoušet na Node
  * (`app/testy/poloha.test.ts`).
  */
+import { vCesku } from '../hranice';
 
 /** Nad tuhle přesnost poloha není z družic a server ji odmítne. */
 export const NEJHORSI_PRESNOST_M = 100;
@@ -36,10 +39,7 @@ export const PRESNOST_K_ZAMYSLENI_M = 25;
  */
 export const NEJSTARSI_FIX_MS = 4000;
 
-export const SIRKA_OD = 49.2;
-export const SIRKA_DO = 49.8;
-export const DELKA_OD = 14.0;
-export const DELKA_DO = 14.5;
+export { SIRKA_OD, SIRKA_DO, DELKA_OD, DELKA_DO } from '../hranice';
 
 /** Jedna poloha z telefonu. `kdy` je čas zaměření, ne čas čtení. */
 export type Fix = {
@@ -87,13 +87,8 @@ export function posud(fix: Fix | null, ted: number): Posudek {
         'ne z družic. Počkej na lepší signál.',
     };
 
-  if (
-    fix.sirka < SIRKA_OD ||
-    fix.sirka > SIRKA_DO ||
-    fix.delka < DELKA_OD ||
-    fix.delka > DELKA_DO
-  )
-    return { ok: false, proc: 'Tahle poloha není na Orlíku. Zkontroluj signál z družic.' };
+  if (!vCesku(fix.sirka, fix.delka))
+    return { ok: false, proc: 'Tahle poloha není v Česku. Zkontroluj signál z družic.' };
 
   if (fix.presnostM == null)
     return { ok: true, varovani: 'Telefon nehlásí přesnost.' };
