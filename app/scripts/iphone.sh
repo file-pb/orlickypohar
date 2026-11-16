@@ -87,5 +87,20 @@ if [ -z "$TELEFON" ]; then
   exit 0
 fi
 
-xcrun devicectl device install app --device "$TELEFON" "$APP"
+# <b>Připojený kabelem neznamená spárovaný.</b> `devicectl` zařízení vidí
+# jako `available` a instalace přesto skončí na „The device must be paired
+# before it can be connected" (16. 11. 2026).
+#
+# <b>Rozhoduje výsledek instalace, ne výpis.</b> Nabízelo se spárovat jen
+# tehdy, když `list devices` neukazuje `paired`, jenže ten výpis je
+# vrtkavý: totéž zařízení je během jednoho večera `unavailable`,
+# `available`, `available (paired)` i `connected`, a sloupec *Reality*
+# mezitím mizí a vrací se. Číst z něj stav znamená psát podmínku, která
+# někdy platí a nikdo neví kdy — proto se instalace prostě zkusí a páruje
+# se teprve tehdy, když neprojde.
+if ! xcrun devicectl device install app --device "$TELEFON" "$APP"; then
+  echo "Instalace neprošla, zkouším spárovat — potvrď to na telefonu."
+  xcrun devicectl manage pair --device "$TELEFON"
+  xcrun devicectl device install app --device "$TELEFON" "$APP"
+fi
 echo "Nainstalováno na $TELEFON ($BUNDLE)."
