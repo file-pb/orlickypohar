@@ -5327,7 +5327,11 @@ aktualizací po síti a nikdo nic neinstaluje.
 **Co tím pořád není hotové:** obrazovka neběžela na skutečném telefonu
 u vody. Zkoušelo se to na Node a překladem, ne na motoráku — a `tracker`
 má přejímací podmínky napsané právě proto, že tyhle dvě věci nejsou
-totéž.
+totéž. Co na telefonu projít stojí v [docs/ZKOUSKA-STAVITELE.md](ZKOUSKA-STAVITELE.md);
+zkouška je tam rozdělená podle místa, protože **pípnout jde jen uvnitř
+hranic Orlíku** — mimo ně dojde průvodce ke kroku *Pípni* a odmítne
+polohu, takže na suchu doma se dá ověřit všechno kromě samotného
+pípnutí.
 
 ##### 5. Co do 15. 5. 2027
 
