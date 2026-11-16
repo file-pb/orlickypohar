@@ -9009,6 +9009,92 @@ upozornění — a druhý zdroj výš ho obchází úplně.
 SDK 58.** Co dnes zůstává, je jediná odložená věc: `decode-uri-component`
 mimo tuhle šestici, kde override 0.5.1 drží místo přechodu na `expo-router` 58.
 
+## Lint appky je mrtvý a nikdo si toho nevšiml (16. 11. 2026)
+
+`npm run lint` v appce **nezkontroluje ani jeden soubor** — spadne dřív, než
+k tomu dojde. Vyšlo to z otázky, co s PR #532 (`eslint-config-expo` 57 → 58),
+a je to větší nález než ta otázka: ten PR nemá co rozbít ani co spravit,
+protože lint neběží tak ani tak.
+
+### Změřeno čtyřmi kombinacemi proti sobě
+
+Vždycky `npm install --no-save` v `app/` a čistý `npm ci` zpátky:
+
+| typescript | eslint | eslint-config-expo | `npm run lint` |
+|---|---|---|---|
+| 6.0.3 | 9.39.5 | 57.0.2 | **projde** — 340 nálezů |
+| 6.0.3 | 10.13.0 | 58.0.4 | padá: `contextOrFilename.getFilename is not a function` |
+| 7.0.2 | 9.39.5 | 57.0.2 | padá: `Cannot read properties of undefined (reading 'Intrinsic')` |
+| 7.0.2 | 10.13.0 | 57.0.2 i 58.0.4 | padá: totéž |
+
+První řádek je kontrola, že lint sám dávno funkční byl. Druhý a třetí dělí
+**dva nezávislé blokátory** — každý z jednoho majoru, který do
+`app/package.json` dojel:
+
+1. **ESLint 10** (PR #518, `9.39.5` → `10.13.0`). ESLint 10 zrušil starou
+   podobu `context` a `eslint-plugin-react`, který si `eslint-config-expo`
+   přibaluje do vlastního `node_modules`, s ní pořád pracuje. Z appky se to
+   přebít nedá: tu verzi drží konfigurace, ne náš zámek.
+2. **TypeScript 7** (`~6.0.3` → `~7.0.2`). `ts-api-utils` 2.5.0 čte z `ts.*`
+   věc, kterou TypeScript 7 nemá; TS 7 umí teprve `3.0.0-rc.1`, tedy
+   prerelease. Tohle platí **bez ohledu na ESLint** — třetí řádek tabulky je
+   právě to oddělení.
+
+Z těch 340 nálezů na prvním řádku je 250 `import/no-unresolved`
+a `import/namespace`, tedy nefunkční resolver, ne nálezy o kódu. Zbytek
+(`react-hooks/refs`, `react-hooks/purity`, `react-hooks/set-state-in-effect`,
+`@typescript-eslint/no-unused-vars`) vypadá na skutečné věci. **Lint tady
+tedy nikdy nebyl zelený** — i před oběma majory byl hlučný a nikdo ho nečetl.
+
+### Proč to prošlo bez povšimnutí
+
+**`eslint` neběžel v CI vůbec** — před tímhle commitem nevracel
+`grep -rn lint .github/workflows/` ani jeden výskyt. Web se tím netrefí: ten
+`eslint` nemá vůbec (žádný skript, žádná závislost, žádná konfigurace), takže
+tam není co pouštět ani co pokazit — jediná stopa je vzor `eslint-config-next`
+ve skupině `next` v `dependabot.yml`, který nematchuje nic. V appce ale skript
+je, pouštěl se ručně nebo vůbec, a Dependabot mu mezitím zvedal závislosti
+dál. Je to týž
+vzorec jako u oddílu *Appka se rozešla s modelem, protože není v CI* výš:
+nástroj bez kontroly v CI se rozbije potichu a pozná se to náhodou.
+
+### Co s tím teď
+
+**Past v jobu `appka`**, krok *Jde už lint appky?* — pustí lint a hlídá, až
+ten pád přestane. Tři větve, každá ověřená sabotáží (16. 11. 2026, skript
+vytažený přímo z workflow, ne jeho kopie):
+
+| stav | co krok udělá |
+|---|---|
+| padá na `Intrinsic` nebo `getFilename` | `notice` s příčinou, nic víc |
+| lint se rozběhne | `warning` + souhrn: zapnout naostro, zahodit past |
+| padá něčím jiným | `warning` + souhrn: **tenhle oddíl je zastaralý** |
+
+Třetí větev je ta podstatná. Bez ní by past potvrzovala záznam, který už
+neplatí — a to je přesně ta chyba, kterou oddíl *Tlumené majory v appce*
+popisuje na připomínce, co zmizela, zrovna když přestala být pravdivá.
+`continue-on-error`, stejně jako krok o ruční instalaci pod ním: mrtvý lint
+nemá co brzdit nasazení.
+
+**Ignore pravidlo na `eslint-config-expo` se nepřidalo.** Nabízelo se,
+protože se jmenuje jako řada vedle — ale důvod, který tlumí `expo*`, tady
+neplatí: `npm view` ukazuje, že na `expo` nemá peer závislost žádnou
+(`peerDependencies = { eslint: '>=8.10' }` u 57.0.2 i 58.0.4) a mezi
+57.0.2 a 58.0.4 se v závislostech mění jediná věc, `eslint-plugin-expo`
+`^1.1.0` → `^1.2.1`. Je to devDependency, do APK nejde a za běhu neexistuje.
+Pravidlo napsané na jméno, a ne na to, co verzi doopravdy drží, je zrovna ta
+vada, která tenhle týden stála dva PR (#544 → #549).
+
+### Spoušť
+
+1. **`ts-api-utils` 3.0.0 vyjde stabilně.** Pak padá jen blokátor ESLintu.
+2. **`eslint-config-expo` přibalí `eslint-plugin-react`, který umí ESLint 10.**
+3. **Past hlásí `warning`.** Obě předchozí spouště hlídá ta past sama, takže
+   ruční kontrola verzí není potřeba; tenhle bod je ten skutečný signál.
+
+Až lint obživne, zbude rozhodnutí, co s těmi ~90 nálezy o kódu a s rozbitým
+resolverem — teprve pak má smysl ho zapínat naostro.
+
 ## PR od Dependabota nemůžou být zelené (14. 10. 2026)
 
 Všech osm otevřených PR (#247–#254) mělo `build` i `integrace` červené —
