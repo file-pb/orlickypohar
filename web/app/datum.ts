@@ -1,7 +1,7 @@
 /**
  * Data česky na jednom místě.
  *
- * Vzniklo to podle pravidla z CLAUDE.md: sdílet se začíná až u **třetí**
+ * Vzniklo to podle pravidla z AGENTS.md: sdílet se začíná až u **třetí**
  * kopie. `datum` byl doslova týž ve stránce ročníku i regaty a novinky
  * by ho okopírovaly potřetí — teď je to jeden slovník, ne abstrakce.
  * Obě funkce se sem přestěhovaly beze změny chování; sjednocovat je do

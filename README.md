@@ -4,11 +4,11 @@ Seriál závodů plachetnic na Orlíku — web, veřejné výsledky, administrac
 a mobilní přístup. .NET 10, Minimal API, PostgreSQL, vertikální řezy.
 
 **Přicházíš sem poprvé nebo z jiného stroje?** Začni oddílem
-[Rozjezd na jiném stroji](CLAUDE.md#rozjezd-na-jiném-stroji) — je tam,
+[Rozjezd na jiném stroji](AGENTS.md#rozjezd-na-jiném-stroji) — je tam,
 co doklonovat, co musí být nainstalované a jak ověřit, že to drží.
 
 Doménový model, stav a co dál jsou v [docs/PLAN.md](docs/PLAN.md), konvence
-kódu v [CLAUDE.md](CLAUDE.md). Co dělat, když o závodním víkendu něco leží,
+kódu v [AGENTS.md](AGENTS.md). Co dělat, když o závodním víkendu něco leží,
 je v [docs/DEN-ZAVODU.md](docs/DEN-ZAVODU.md). Provoz, server a poučení
 z chyb žijí v repozitáři
 [file-pb/platform](https://github.com/file-pb/platform).
