@@ -104,3 +104,12 @@ if ! xcrun devicectl device install app --device "$TELEFON" "$APP"; then
   xcrun devicectl device install app --device "$TELEFON" "$APP"
 fi
 echo "Nainstalováno na $TELEFON ($BUNDLE)."
+
+# <b>Čerstvě podepsaná appka se napoprvé nespustí.</b> iOS hlásí
+# „Nedůvěryhodný vývojář" a certifikát osobního týmu musí člověk ručně
+# uznat — a protože profil platí sedm dní, opakuje se to při každé
+# obnově, ne jen při první instalaci (16. 11. 2026).
+echo
+echo "Na telefonu ještě potvrď důvěru, jinak appka nepůjde spustit:"
+echo "  Nastavení → Obecné → VPN a správa zařízení → Vývojářská aplikace"
+echo "  → Apple Development: … → Důvěřovat"
