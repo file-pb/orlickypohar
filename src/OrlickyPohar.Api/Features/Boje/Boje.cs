@@ -368,13 +368,31 @@ public static class Pipnuti
     public const double NejhorsiPresnostM = 100;
 
     /// <summary>
-    /// Orlík i s rezervou. Překlep v souřadnicích (prohozená šířka a délka)
-    /// by jinak postavil bóji v Africe a nikdo by si toho nevšiml.
+    /// Česko i s rezervou. <b>Je to kontrola překlepu, ne vymezení území:</b>
+    /// prohozená šířka a délka by postavila bóji v Africe a nikdo by si toho
+    /// nevšiml, protože na mapě trati prostě není.
+    ///
+    /// <para>
+    /// <b>Do 16. 11. 2026 tu stál obdélník kolem Orlíku</b> (49,2–49,8 /
+    /// 14,0–14,5). Na odhalení prohozené dvojice je to mnohem přísnější, než
+    /// je potřeba, a ta přísnost měla vedlejší účinek, který nikdo nezadal:
+    /// pípnout nešlo nikde jinde než u přehrady, takže stavitele trati
+    /// v appce nebylo kde vyzkoušet na suchu.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Kontrolu to nezeslabuje.</b> Rozsah šířky (48,5–51,1) a délky
+    /// (12,0–18,9) se nepřekrývá, takže žádné číslo nemůže být obojí
+    /// a prohození se pozná stejně jednoznačně jako dřív. Web na tom staví
+    /// čtení dvojice bez udaného pořadí (`web/lib/hranice.ts`); kdyby se
+    /// hranice rozšiřovaly dál, tohle je ta vlastnost, která se musí
+    /// ohlídat.
+    /// </para>
     /// </summary>
-    public const double SirkaOd = 49.2;
-    public const double SirkaDo = 49.8;
-    public const double DelkaOd = 14.0;
-    public const double DelkaDo = 14.5;
+    public const double SirkaOd = 48.5;
+    public const double SirkaDo = 51.1;
+    public const double DelkaOd = 12.0;
+    public const double DelkaDo = 18.9;
 
     /// <summary>Proč pípnutí nejde — nebo <c>null</c>, když jde.</summary>
     public static string? ProcNejde(PipnutiVstup vstup)
@@ -409,8 +427,8 @@ public static class Pipnuti
         // světě a prohozená šířka s délkou jsou v mapách běžná past.
         if (vstup.Sirka is < SirkaOd or > SirkaDo || vstup.Delka is < DelkaOd or > DelkaDo)
             return zdroj == ZdrojPolohy.Telefon
-                ? "Tahle poloha není na Orlíku. Zkontroluj, že telefon má signál z družic."
-                : "Tahle poloha není na Orlíku. Zkontroluj, že se v odkazu neprohodila šířka s délkou.";
+                ? "Tahle poloha není v Česku. Zkontroluj, že telefon má signál z družic."
+                : "Tahle poloha není v Česku. Zkontroluj, že se v odkazu neprohodila šířka s délkou.";
 
         return null;
     }

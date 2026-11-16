@@ -3983,7 +3983,7 @@ pravidel a role, takže se dá zkoušet lokálně i ve zkoušce s pořadatelem.
 | sebrání je razítko, ne smazání | bez bóje se trasa z té doby nedá přečíst |
 | přesnost z telefonu se ukládá | iPhone s vypnutou přesnou polohou hlásí i 65 m a bez čísla by to vypadalo stejně jako 5 m |
 | nad 100 m se pípnutí odmítne | to už není poloha z družic, ale ze sítě |
-| poloha mimo Orlík se odmítne | prohozená šířka a délka je nejčastější překlep a postavila by bóji v Africe |
+| poloha mimo Česko se odmítne | prohozená šířka a délka je nejčastější překlep a postavila by bóji v Africe (do 16. 11. 2026 to byl Orlík — viz níž) |
 | u polohy **z mapy** nesmí přijít přesnost | mapa nic neměří; číslo u ní by bylo vymyšlené |
 
 #### Když pípnout nejde (Filip, 9. 10. 2026)
@@ -4009,7 +4009,7 @@ pravdivé bez dopisování.
 
 | Vstup | Kde je poloha |
 |---|---|
-| `49.4957253N, 14.1841419E` i holá dvojice | šířka na Orlíku je 49,2–49,8 a délka 14,0–14,5, takže se nedají prohodit |
+| `49.4957253N, 14.1841419E` i holá dvojice | šířka v Česku je 48,5–51,1 a délka 12,0–18,9; intervaly se nepřekrývají, takže se nedají prohodit |
 | `mapy.com/…?source=coor&id=14.1841,49.4957` | `id` je ten bod a má **délku první**; `x`/`y` je jen střed mapy |
 | `mapy.com/s/lasupogahe` (i z QR) | zkratka, rozbalí se až na serveru |
 | `maps.app.goo.gl/nUMo8…` | rozbalí se na `google.com/maps/search/49.495688,+14.183463` — **šířku první** |
@@ -5208,7 +5208,7 @@ a stane se **jedním požadavkem, který jde podržet**.
 `KlicPrvku`. Čtyři věci, které u toho padly:
 
 - **Pravidla se nečtou dvakrát.** Každý bod projde `Pipnuti.ProcNejde`
-  jako obyčejné pípnutí — přesnost nad sto metrů, poloha mimo Orlík,
+  jako obyčejné pípnutí — přesnost nad sto metrů, poloha mimo meze,
   barva u plavidla. Prvek sám projde `Prvky.ProcNejdePostavit`, a to je
   tatáž `ProcNejde` se zástupným id druhého konce: ta funkce se u něj ptá
   jen na to, **jestli** nějaký bude, ne které bóji patří.
@@ -5292,11 +5292,13 @@ stojí na stránce regaty samotné.
   z odmítnutého prvku by znamenalo, že ten prvek do té doby sedí ve
   frontě a **drží ji celou**.
 - **Meze polohy jsou opsané ze serveru** (`Pipnuti.NejhorsiPresnostM`,
-  hranice Orlíku). Je to kopie, a vědomá: prvek, který by server odmítl,
+  hranice území). Je to kopie, a vědomá: prvek, který by server odmítl,
   by frontu zastavil, takže je lepší ho neuložit. Když se čísla rozejdou,
-  rozhoduje server.
+  rozhoduje server. Hranice samy se 16. 11. 2026 přestěhovaly do
+  sdíleného modulu a rozvolnily na Česko — oddíl *Hranice hlídají
+  překlep, ne území* níž.
 - **Stáří fixu se posuzuje dřív než poloha.** Jinak by stará poloha
-  z Prahy hlásila „nejsi na Orlíku" — pravda o špatné věci, po které
+  z ciziny hlásila „nejsi v Česku" — pravda o špatné věci, po které
   stavitel čeká na signál družic, co má.
 - **Jméno značky se počítá i z fronty**, ne jen z prvků na serveru. Bez
   toho by dvě značky postavené bez signálu dostaly totéž jméno.
@@ -5327,7 +5329,41 @@ aktualizací po síti a nikdo nic neinstaluje.
 **Co tím pořád není hotové:** obrazovka neběžela na skutečném telefonu
 u vody. Zkoušelo se to na Node a překladem, ne na motoráku — a `tracker`
 má přejímací podmínky napsané právě proto, že tyhle dvě věci nejsou
-totéž.
+totéž. Co na telefonu projít stojí v [docs/ZKOUSKA-STAVITELE.md](ZKOUSKA-STAVITELE.md).
+
+##### Hranice hlídají překlep, ne území (16. 11. 2026)
+
+Psaní toho checklistu narazilo na pravidlo, které **nikdo nezadal, ale
+chovalo se jako zákaz**: pípnutí se odmítalo mimo obdélník 49,2–49,8 /
+14,0–14,5, tedy Orlík s rezervou. Stavitele trati tím nebylo kde
+vyzkoušet — průvodce došel ke kroku *Pípni* a odmítl polohu, protože
+telefon byl v Praze. Zkouška na suchu je přitom jediné, co jde udělat
+dřív, než se vypluje.
+
+**Odkud se to vzalo.** Commit `474c78a` (5. 10. 2026, pípnutí bóje) ho
+zavedl s jediným cílem: chytit prohozenou šířku a délku. Mapy.com dávají
+v `id` délku první, Google šířku — a bóje z prohozené dvojice leží
+v Africe, kde si jí nikdo nevšimne, protože na mapě trati prostě není.
+V tabulce pravidel výš to tak stálo od začátku; obdélník kolem přehrady
+byl jen mnohem přísnější, než ten úkol potřebuje.
+
+**Rozvolněno na Česko** (48,5–51,1 / 12,0–18,9), a to kontrolu
+nezeslabuje: **ty dva intervaly se nepřekrývají**, takže žádné číslo
+nemůže být zároveň platnou šířkou i platnou délkou a prohozená dvojice
+se pozná stejně jednoznačně jako dřív. Na téhle vlastnosti stojí čtení
+dvojice bez udaného pořadí (`podleCeska` ve webu), takže ji hlídá vlastní
+test na obou stranách — `Rozsah_sirky_a_delky_se_neprekryva` a tentýž
+v `web/testy/souradnice.test.ts`. **Kdyby se hranice rozšiřovaly dál,
+tohle je to, co se zlomí jako první** — a ne hlučně, ale tak, že se bod
+tiše přečte naruby.
+
+**Čtvrtá kopie se přitom zrušila.** Tatáž čtyři čísla ležela v API, ve
+webu, v appce a v mocku. Web s appkou je teď berou z
+`packages/stavba/hranice.ts`, který se rozkopírovává jako zbytek
+sdíleného modulu; server a mock zůstávají vlastní (jiné jazyky) a server
+je autorita. Klientská kopie tu je proto, aby prvek, který by server
+odmítl, v appce vůbec nevznikl — ve frontě by **zastavil celou stavbu**,
+dokud by ho někdo ručně nezahodil.
 
 ##### 5. Co do 15. 5. 2027
 
@@ -9004,6 +9040,92 @@ upozornění — a druhý zdroj výš ho obchází úplně.
 **Žádná ze šesti rodin tedy dnes nedrží zranitelnost dosažitelnou jedině přes
 SDK 58.** Co dnes zůstává, je jediná odložená věc: `decode-uri-component`
 mimo tuhle šestici, kde override 0.5.1 drží místo přechodu na `expo-router` 58.
+
+## Lint appky je mrtvý a nikdo si toho nevšiml (16. 11. 2026)
+
+`npm run lint` v appce **nezkontroluje ani jeden soubor** — spadne dřív, než
+k tomu dojde. Vyšlo to z otázky, co s PR #532 (`eslint-config-expo` 57 → 58),
+a je to větší nález než ta otázka: ten PR nemá co rozbít ani co spravit,
+protože lint neběží tak ani tak.
+
+### Změřeno čtyřmi kombinacemi proti sobě
+
+Vždycky `npm install --no-save` v `app/` a čistý `npm ci` zpátky:
+
+| typescript | eslint | eslint-config-expo | `npm run lint` |
+|---|---|---|---|
+| 6.0.3 | 9.39.5 | 57.0.2 | **projde** — 340 nálezů |
+| 6.0.3 | 10.13.0 | 58.0.4 | padá: `contextOrFilename.getFilename is not a function` |
+| 7.0.2 | 9.39.5 | 57.0.2 | padá: `Cannot read properties of undefined (reading 'Intrinsic')` |
+| 7.0.2 | 10.13.0 | 57.0.2 i 58.0.4 | padá: totéž |
+
+První řádek je kontrola, že lint sám dávno funkční byl. Druhý a třetí dělí
+**dva nezávislé blokátory** — každý z jednoho majoru, který do
+`app/package.json` dojel:
+
+1. **ESLint 10** (PR #518, `9.39.5` → `10.13.0`). ESLint 10 zrušil starou
+   podobu `context` a `eslint-plugin-react`, který si `eslint-config-expo`
+   přibaluje do vlastního `node_modules`, s ní pořád pracuje. Z appky se to
+   přebít nedá: tu verzi drží konfigurace, ne náš zámek.
+2. **TypeScript 7** (`~6.0.3` → `~7.0.2`). `ts-api-utils` 2.5.0 čte z `ts.*`
+   věc, kterou TypeScript 7 nemá; TS 7 umí teprve `3.0.0-rc.1`, tedy
+   prerelease. Tohle platí **bez ohledu na ESLint** — třetí řádek tabulky je
+   právě to oddělení.
+
+Z těch 340 nálezů na prvním řádku je 250 `import/no-unresolved`
+a `import/namespace`, tedy nefunkční resolver, ne nálezy o kódu. Zbytek
+(`react-hooks/refs`, `react-hooks/purity`, `react-hooks/set-state-in-effect`,
+`@typescript-eslint/no-unused-vars`) vypadá na skutečné věci. **Lint tady
+tedy nikdy nebyl zelený** — i před oběma majory byl hlučný a nikdo ho nečetl.
+
+### Proč to prošlo bez povšimnutí
+
+**`eslint` neběžel v CI vůbec** — před tímhle commitem nevracel
+`grep -rn lint .github/workflows/` ani jeden výskyt. Web se tím netrefí: ten
+`eslint` nemá vůbec (žádný skript, žádná závislost, žádná konfigurace), takže
+tam není co pouštět ani co pokazit — jediná stopa je vzor `eslint-config-next`
+ve skupině `next` v `dependabot.yml`, který nematchuje nic. V appce ale skript
+je, pouštěl se ručně nebo vůbec, a Dependabot mu mezitím zvedal závislosti
+dál. Je to týž
+vzorec jako u oddílu *Appka se rozešla s modelem, protože není v CI* výš:
+nástroj bez kontroly v CI se rozbije potichu a pozná se to náhodou.
+
+### Co s tím teď
+
+**Past v jobu `appka`**, krok *Jde už lint appky?* — pustí lint a hlídá, až
+ten pád přestane. Tři větve, každá ověřená sabotáží (16. 11. 2026, skript
+vytažený přímo z workflow, ne jeho kopie):
+
+| stav | co krok udělá |
+|---|---|
+| padá na `Intrinsic` nebo `getFilename` | `notice` s příčinou, nic víc |
+| lint se rozběhne | `warning` + souhrn: zapnout naostro, zahodit past |
+| padá něčím jiným | `warning` + souhrn: **tenhle oddíl je zastaralý** |
+
+Třetí větev je ta podstatná. Bez ní by past potvrzovala záznam, který už
+neplatí — a to je přesně ta chyba, kterou oddíl *Tlumené majory v appce*
+popisuje na připomínce, co zmizela, zrovna když přestala být pravdivá.
+`continue-on-error`, stejně jako krok o ruční instalaci pod ním: mrtvý lint
+nemá co brzdit nasazení.
+
+**Ignore pravidlo na `eslint-config-expo` se nepřidalo.** Nabízelo se,
+protože se jmenuje jako řada vedle — ale důvod, který tlumí `expo*`, tady
+neplatí: `npm view` ukazuje, že na `expo` nemá peer závislost žádnou
+(`peerDependencies = { eslint: '>=8.10' }` u 57.0.2 i 58.0.4) a mezi
+57.0.2 a 58.0.4 se v závislostech mění jediná věc, `eslint-plugin-expo`
+`^1.1.0` → `^1.2.1`. Je to devDependency, do APK nejde a za běhu neexistuje.
+Pravidlo napsané na jméno, a ne na to, co verzi doopravdy drží, je zrovna ta
+vada, která tenhle týden stála dva PR (#544 → #549).
+
+### Spoušť
+
+1. **`ts-api-utils` 3.0.0 vyjde stabilně.** Pak padá jen blokátor ESLintu.
+2. **`eslint-config-expo` přibalí `eslint-plugin-react`, který umí ESLint 10.**
+3. **Past hlásí `warning`.** Obě předchozí spouště hlídá ta past sama, takže
+   ruční kontrola verzí není potřeba; tenhle bod je ten skutečný signál.
+
+Až lint obživne, zbude rozhodnutí, co s těmi ~90 nálezy o kódu a s rozbitým
+resolverem — teprve pak má smysl ho zapínat naostro.
 
 ## PR od Dependabota nemůžou být zelené (14. 10. 2026)
 

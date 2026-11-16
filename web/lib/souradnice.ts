@@ -11,24 +11,22 @@
  * „souřadnice" nebo „adresu z Mapy.com" — a ptát se ho na to je práce
  * navíc, kterou umí udělat kód.
  *
- * <b>Co se nedá splést:</b> na Orlíku je šířka 49,2–49,8 a délka
- * 14,0–14,5, takže se dvojice čísel přiřadí jednoznačně i tam, kde zdroj
- * pořadí neříká. Mapy.com dávají v `id` **délku první**, Google ve
- * `/maps/search/` **šířku** — bez téhle kontroly by se prohození
- * nepoznalo.
+ * <b>Co se nedá splést:</b> v Česku je šířka 48,5–51,1 a délka
+ * 12,0–18,9, a ty dva intervaly se nepřekrývají — dvojice čísel se proto
+ * přiřadí jednoznačně i tam, kde zdroj pořadí neříká. Mapy.com dávají
+ * v `id` **délku první**, Google ve `/maps/search/` **šířku** — bez téhle
+ * kontroly by se prohození nepoznalo. Proč zrovna Česko, a ne přehrada,
+ * stojí v `hranice.ts`.
  */
 
-/** Tytéž meze jako `Pipnuti.SirkaOd`… v API. Hlídá se i tam. */
-export const SIRKA_OD = 49.2;
-export const SIRKA_DO = 49.8;
-export const DELKA_OD = 14.0;
-export const DELKA_DO = 14.5;
+export { SIRKA_OD, SIRKA_DO, DELKA_OD, DELKA_DO, vCesku } from "./hranice.ts";
+import { vCesku } from "./hranice.ts";
 
 export type Poloha = { sirka: number; delka: number };
 
 /** Tatáž věta jako v API u polohy z mapy (`Pipnuti.ProcNejde`). */
-export const MIMO_ORLIK =
-  "Tahle poloha není na Orlíku. Zkontroluj, že se v odkazu neprohodila šířka s délkou.";
+export const MIMO_CESKO =
+  "Tahle poloha není v Česku. Zkontroluj, že se v odkazu neprohodila šířka s délkou.";
 
 /** Co se z textu povedlo přečíst, nebo proč ne. */
 export type Cteni =
@@ -37,21 +35,16 @@ export type Cteni =
   | { stav: "nic"; duvod: string };
 
 /**
- * Leží bod na Orlíku? <b>Exportované, protože tutéž mez potřebuje i výběr
- * bodu z mapy</b> — a čtyři konstanty skládané do podmínky na dvou místech
- * se jednou rozejdou.
- */
-export const naOrliku = (sirka: number, delka: number) =>
-  sirka >= SIRKA_OD && sirka <= SIRKA_DO && delka >= DELKA_OD && delka <= DELKA_DO;
-
-/**
- * Dvojice čísel bez udaného pořadí. Vrací tu kombinaci, která leží na
- * Orlíku — a když ani jedna, nevrací nic: bod odjinud je skoro jistě
+ * Dvojice čísel bez udaného pořadí. Vrací tu kombinaci, která leží
+ * v Česku — a když ani jedna, nevrací nic: bod odjinud je skoro jistě
  * překlep a API by ho stejně odmítlo.
+ *
+ * <b>Stojí to na tom, že se rozsah šířky a délky nepřekrývá</b>, takže
+ * nanejvýš jedna z obou kombinací projde. Viz `hranice.ts`.
  */
-function podleOrliku(a: number, b: number): Poloha | null {
-  if (naOrliku(a, b)) return { sirka: a, delka: b };
-  if (naOrliku(b, a)) return { sirka: b, delka: a };
+function podleCeska(a: number, b: number): Poloha | null {
+  if (vCesku(a, b)) return { sirka: a, delka: b };
+  if (vCesku(b, a)) return { sirka: b, delka: a };
   return null;
 }
 
@@ -86,7 +79,7 @@ function cisloSeSmerem(text: string): { hodnota: number; smer: string } | null {
  * Holá dvojice souřadnic z textu — s N/E i bez nich, desetinně i ve
  * stupních. Oddělovač je čárka nebo mezera.
  */
-function zDvojice(text: string): Poloha | "mimoOrlik" | null {
+function zDvojice(text: string): Poloha | "mimoCesko" | null {
   const kusy = text.includes(",") && !/^\s*-?\d+[.,]\d+\s+-?\d+[.,]\d+\s*$/.test(text)
     ? text.split(",")
     : text.trim().split(/\s+/);
@@ -101,20 +94,20 @@ function zDvojice(text: string): Poloha | "mimoOrlik" | null {
   const druhy = cisloSeSmerem(spojene[1]);
   if (!prvni || !druhy) return null;
 
-  // Odsud dál jsou to dvě čísla. Když neleží na Orlíku, není to nečitelný
+  // Odsud dál jsou to dvě čísla. Když neleží v Česku, není to nečitelný
   // vstup, ale špatné místo — a to se musí říct jinak, jinak člověk hledá
   // překlep v zápisu, který je v pořádku.
 
-  // Když světové strany přišly, platí ony; jinak rozhodne poloha na Orlíku.
+  // Když světové strany přišly, platí ony; jinak rozhodne poloha v Česku.
   const sirka = [prvni, druhy].find((c) => c.smer === "N" || c.smer === "S");
   const delka = [prvni, druhy].find((c) => c.smer === "E" || c.smer === "W");
   if (sirka && delka && sirka !== delka) {
     const s = sirka.smer === "S" ? -sirka.hodnota : sirka.hodnota;
     const d = delka.smer === "W" ? -delka.hodnota : delka.hodnota;
-    return naOrliku(s, d) ? { sirka: s, delka: d } : "mimoOrlik";
+    return vCesku(s, d) ? { sirka: s, delka: d } : "mimoCesko";
   }
 
-  return podleOrliku(prvni.hodnota, druhy.hodnota) ?? "mimoOrlik";
+  return podleCeska(prvni.hodnota, druhy.hodnota) ?? "mimoCesko";
 }
 
 /** Hostitelé, jejichž zkratku umíme rozbalit. Nic jiného se nestahuje. */
@@ -140,14 +133,14 @@ function zAdresy(adresa: URL): { poloha: Poloha; jak: string } | null {
     const id = dotaz.get("id");
     if (id) {
       const [delka, sirka] = id.split(",").map((c) => Number(c));
-      if (Number.isFinite(sirka) && Number.isFinite(delka) && naOrliku(sirka, delka))
+      if (Number.isFinite(sirka) && Number.isFinite(delka) && vCesku(sirka, delka))
         return { poloha: { sirka, delka }, jak: "bod z Mapy.com" };
     }
 
     const x = Number(dotaz.get("x"));
     const y = Number(dotaz.get("y"));
     if (Number.isFinite(x) && Number.isFinite(y)) {
-      const poloha = podleOrliku(y, x);
+      const poloha = podleCeska(y, x);
       if (poloha) return { poloha, jak: "střed mapy z Mapy.com — ne bod, zkontroluj ho" };
     }
   }
@@ -168,7 +161,7 @@ function zAdresy(adresa: URL): { poloha: Poloha; jak: string } | null {
     for (const [vzor, jak] of vzory) {
       const m = vzor.exec(cely);
       if (!m) continue;
-      const poloha = podleOrliku(Number(m[1]), Number(m[2]));
+      const poloha = podleCeska(Number(m[1]), Number(m[2]));
       if (poloha) return { poloha, jak };
     }
   }
@@ -177,7 +170,7 @@ function zAdresy(adresa: URL): { poloha: Poloha; jak: string } | null {
   for (const klic of ["q", "ll", "coords", "point"]) {
     const hodnota = dotaz.get(klic);
     const poloha = hodnota ? zDvojice(hodnota) : null;
-    if (poloha && poloha !== "mimoOrlik") return { poloha, jak: "souřadnice z adresy" };
+    if (poloha && poloha !== "mimoCesko") return { poloha, jak: "souřadnice z adresy" };
   }
 
   return null;
@@ -216,7 +209,7 @@ export function precti(vstup: string): Cteni {
   }
 
   const poloha = zDvojice(text);
-  if (poloha === "mimoOrlik") return { stav: "nic", duvod: MIMO_ORLIK };
+  if (poloha === "mimoCesko") return { stav: "nic", duvod: MIMO_CESKO };
   if (poloha) return { stav: "poloha", poloha, jak: "zadané souřadnice" };
 
   return {

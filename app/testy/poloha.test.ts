@@ -83,16 +83,31 @@ zkus('neznámá přesnost pípnutí nebrání, jen se o ní ví', () => {
   assert.ok(p.ok && p.varovani);
 });
 
-zkus('poloha mimo Orlík neprojde, včetně prohozené šířky a délky', () => {
+zkus('prohozená šířka a délka neprojde', () => {
+  // To je jediné, co meze hlídají: dvojice obrácená naruby. Šířka 14,165
+  // neexistuje nikde v Česku, takže se překlep pozná.
   assert.equal(posud(naOrliku({ sirka: 14.165, delka: 49.516 }), TED).ok, false);
-  assert.equal(posud(naOrliku({ sirka: 50.08 }), TED).ok, false);
+});
+
+zkus('poloha mimo Česko neprojde', () => {
+  assert.equal(posud(naOrliku({ sirka: 48.21, delka: 16.37 }), TED).ok, false); // Vídeň
+  assert.equal(posud(naOrliku({ sirka: 52.52, delka: 13.4 }), TED).ok, false); // Berlín
+});
+
+zkus('poloha v Česku mimo Orlík projde', () => {
+  // Kvůli tomuhle se meze 16. 11. 2026 rozvolnily: do té doby se stavitel
+  // nedal vyzkoušet nikde než u přehrady, protože průvodce došel ke kroku
+  // „Pípni" a odmítl polohu. Praha i Brno musí projít.
+  assert.equal(posud(naOrliku({ sirka: 50.08, delka: 14.43 }), TED).ok, true);
+  assert.equal(posud(naOrliku({ sirka: 49.195, delka: 16.606 }), TED).ok, true);
 });
 
 zkus('stáří se posuzuje dřív než poloha', () => {
-  // Jinak by stará poloha z Prahy hlásila „nejsi na Orlíku" — pravdu
+  // Jinak by stará poloha z ciziny hlásila „nejsi v Česku" — pravdu
   // o špatné věci. Stavitel by hledal signál družic a čekal na něco,
-  // co se samo nespraví.
-  const p = posud({ sirka: 50.08, delka: 14.43, presnostM: 5, kdy: TED - 60_000 }, TED);
+  // co se samo nespraví. Bod je schválně mimo meze: s pražským by test
+  // prošel i tehdy, kdyby se pořadí otázek obrátilo.
+  const p = posud({ sirka: 48.21, delka: 16.37, presnostM: 5, kdy: TED - 60_000 }, TED);
   assert.equal(p.ok, false);
   assert.match(p.ok ? '' : p.proc, /stará/);
 });

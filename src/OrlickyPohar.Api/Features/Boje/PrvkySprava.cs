@@ -225,7 +225,7 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
             return (null, chybaPrvku, false);
 
         // Pravidla pípnutí platí beze změny: přesnost nad sto metrů, poloha
-        // mimo Orlík, barva u plavidla. Opsat je sem by znamenalo dva
+        // mimo meze, barva u plavidla. Opsat je sem by znamenalo dva
         // výklady téhož, takže se každý bod zkontroluje jako pípnutí.
         foreach (var bod in vstup.Body)
             if (Pipnuti.ProcNejde(JakoPipnuti(bod)) is { } chybaBodu)
