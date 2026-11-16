@@ -379,6 +379,84 @@ jobs:
         run: npm run testy
         working-directory: app
 
+      # <b>Lint appky neběží — padne, než něco zkontroluje.</b> Tenhle krok
+      # ho pouští právě proto: ne aby hlídal kód, ale aby bylo vidět, až
+      # ten pád přestane. Měřeno 16. 11. 2026, čtyři kombinace proti sobě
+      # (`npm install --no-save`, vždycky čistý `npm ci` zpátky):
+      #
+      # | typescript | eslint | eslint-config-expo | `npm run lint` |
+      # |---|---|---|---|
+      # | 6.0.3 | 9.39.5 | 57.0.2 | **projde** (340 nálezů) |
+      # | 6.0.3 | 10.13.0 | 58.0.4 | padá: `getFilename is not a function` |
+      # | 7.0.2 | 9.39.5 | 57.0.2 | padá: `reading 'Intrinsic'` |
+      # | 7.0.2 | 10.13.0 | 57.0.2 i 58.0.4 | padá: totéž |
+      #
+      # První řádek říká, že lint sám funkční je; druhý a třetí dělí dva
+      # nezávislé blokátory, každý z jednoho majoru v `app/package.json`:
+      # ESLint 10 (#518) rozbije `eslint-plugin-react`, který si
+      # `eslint-config-expo` přibaluje a my ho nepřebijeme, a TypeScript 7
+      # rozbije `ts-api-utils` 2.5.0 (TS 7 umí teprve 3.0.0-rc.1).
+      #
+      # <b>Proč to nikdo nepoznal:</b> `eslint` neběžel v CI vůbec — ani
+      # v appce, ani ve webu. Skript `lint` v `package.json` byl, nikdo ho
+      # nepouštěl, a Dependabot zvedal jeho závislosti dál. Tenhle krok je
+      # právě ta chybějící věta: `zpráva, ne vrátný` (`continue-on-error`,
+      # stejně jako krok o ruční instalaci pod ním), protože mrtvý lint
+      # nemá co brzdit nasazení — ale až obživne, chceme to vědět hned.
+      #
+      # Podrobně v `docs/PLAN.md`, oddíl *Lint appky je mrtvý a nikdo si
+      # toho nevšiml*.
+      - name: Jde už lint appky?
+        id: lint
+        continue-on-error: true
+        working-directory: app
+        run: |
+          set -uo pipefail
+          vystup=$(npm run lint 2>&1 || true)
+
+          if ! printf '%s' "$vystup" | grep -qF 'Oops! Something went wrong'; then
+            echo "::warning::Lint appky se rozběhl. Zapni ho do CI a zahoď tenhle krok."
+            {
+              echo "### Lint appky už nepadá"
+              echo ""
+              echo "Pouštěl se jen jako past na tohle. Teď projde, takže má smysl"
+              echo "ho zapnout naostro: nahradit tenhle krok za \`npm run lint\`"
+              echo "a smazat oddíl *Lint appky je mrtvý a nikdo si toho nevšiml*"
+              echo "z \`docs/PLAN.md\`."
+              echo ""
+              echo '```'
+              printf '%s\n' "$vystup" | tail -30
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if printf '%s' "$vystup" | grep -qF "reading 'Intrinsic'"; then
+            echo "::notice::Lint appky pořád padá na ts-api-utils vs TypeScript 7. Čeká se na ts-api-utils 3.0."
+            exit 0
+          fi
+
+          if printf '%s' "$vystup" | grep -qF 'getFilename is not a function'; then
+            echo "::notice::Lint appky pořád padá na eslint-plugin-react vs ESLint 10 (uvnitř eslint-config-expo)."
+            exit 0
+          fi
+
+          # <b>Třetí možnost je ta nebezpečná:</b> padá dál, ale jinak než
+          # na co máme záznam. Pak je ten záznam zastaralý a notice by ho
+          # jen potvrdila.
+          echo "::warning::Lint appky padá na něčem jiném, než co je zapsané v PLAN.md — záznam je zastaralý."
+          {
+            echo "### Lint appky padá novou chybou"
+            echo ""
+            echo "Ani \`reading 'Intrinsic'\`, ani \`getFilename is not a function\`."
+            echo "Oddíl *Lint appky je mrtvý a nikdo si toho nevšiml* v \`docs/PLAN.md\`"
+            echo "tedy popisuje něco, co už neplatí."
+            echo ""
+            echo '```'
+            printf '%s\n' "$vystup" | tail -30
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       # <b>Žádá tahle verze ruční instalaci?</b> (Filip, 28. 10. 2026:
       # *„pokud bude potreba apku znovu instalovat, tak to potrebuji
       # rict"*.) Aktualizace přes `expo-updates` vezou jen JavaScript;
