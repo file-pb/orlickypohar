@@ -39,6 +39,34 @@ permissions:
 jobs:
   zrcadlo:
     runs-on: ubuntu-latest
+    # <b>Seznam obrazů je tu nahoře, protože ho čtou dva kroky.</b> Dokud
+    # stál jen v tom prvním, nebylo kde vzít druhý pohled: přesyn ověří,
+    # že z té řady přišla záplata, ale ne že ta řada ještě žije. To jsou
+    # dvě různé otázky a dnes na ně odpovídají dva kroky z jednoho zdroje.
+    env:
+      # `odkud|pod jakým jménem u nás`
+      OBRAZY: |
+        docker.io/nginxinc/nginx-unprivileged:1.30-alpine|nginx-unprivileged:1.30-alpine
+        docker.io/library/postgres:17-alpine|postgres:17-alpine
+        docker.io/library/node:22-alpine|node:22-alpine
+        docker.io/library/python:3.13-slim|python:3.13-slim
+      # `jméno|produkt na endoflife.date|cyklus`. Cyklus se schválně
+      # nevyvozuje ze značky: u .NET je značka `10.0-alpine`, ale cyklus
+      # `10`, takže odvozovací pravidlo by u jednoho z pěti lhalo.
+      #
+      # <b>Je tu i `dotnet/aspnet`, který se nezrcadlí</b> — MCR limit na
+      # IP nemá, takže ho přesyn nepotřebuje. Hlídat ho ale potřeba je,
+      # a to víc než ty čtyři: u něj jsme 13. 11. 2026 vědomě vypnuli
+      # automatické majory (`dependabot.yml`, sekce docker). Tím se
+      # bezpečnostní záplaty opřely o to, že řada 10 pořád žije — a přesně
+      # tohle tenhle krok ověřuje. Bez něj by vypnutý major znamenal, že
+      # konec podpory nepozná nikdo.
+      RADY: |
+        nginx-unprivileged:1.30-alpine|nginx|1.30
+        postgres:17-alpine|postgresql|17
+        node:22-alpine|nodejs|22
+        python:3.13-slim|python|3.13
+        dotnet/aspnet:10.0-alpine|dotnet|10
     steps:
       - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
@@ -58,11 +86,10 @@ jobs:
           datum=$(date -u +%Y-%m)
           zmeny=0
 
-          for par in \
-            "docker.io/nginxinc/nginx-unprivileged:1.30-alpine|nginx-unprivileged:1.30-alpine" \
-            "docker.io/library/postgres:17-alpine|postgres:17-alpine" \
-            "docker.io/library/node:22-alpine|node:22-alpine" \
-            "docker.io/library/python:3.13-slim|python:3.13-slim"
+          # Dělení na slova je tu schválně: v seznamu `OBRAZY` mezera
+          # není, takže každý řádek vyjde jako jedna položka. `while read`
+          # by se sem nehodil — `imagetools` čte stdin a rouru by si vzal.
+          for par in $OBRAZY
           do
             zdroj="${par%%|*}"
             jmeno="${par##*|}"
@@ -125,3 +152,94 @@ jobs:
             echo
             echo "Je to jeden malý pull request, který CI postaví a ověří — tedy viditelná a recenzovatelná aktualizace základu."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # <b>Přesyn ověří, že záplata přišla — ne že ta řada ještě žije.</b>
+      # To je rozdíl, který se pozná pozdě: až série skončí, přestanou
+      # chodit záplaty, ale přesyn poběží dál a každý měsíc poctivě
+      # zkopíruje tentýž zmrazený obraz. Souhrn by hlásil „nic se
+      # nezměnilo", což je zároveň pravda a nejhorší možná zpráva.
+      #
+      # Proto se tady každý měsíc ptáme na konec podpory. Čte to tentýž
+      # seznam jako přesyn (`OBRAZY` vs. `RADY`, kontrola hned na začátku
+      # kroku), takže se ty dva nemůžou rozejít potichu.
+      #
+      # <b>Mrtvá řada shodí běh</b>, blížící se konec jen varuje. Mrtvá
+      # řada je totiž jediný stav, kde měsíční „nic se nezměnilo" lže,
+      # a ten si zaslouží červenou. Když se odpověď nedá zjistit vůbec,
+      # spadne to taky: kontrola, která nic nezjistila, nesmí vypadat
+      # jako kontrola, která nic nenašla.
+      - name: Žijí ještě ty řady?
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import json, os, sys, urllib.request
+          from datetime import date, datetime
+
+          BLIZKO = 180  # dní
+
+          rady = [r.strip() for r in os.environ["RADY"].splitlines() if r.strip()]
+          obrazy = [o.strip() for o in os.environ["OBRAZY"].splitlines() if o.strip()]
+
+          znam = {r.split("|")[0] for r in rady}
+          chybi = [o.split("|")[1] for o in obrazy if o.split("|")[1] not in znam]
+          if chybi:
+              print(f"::error::Zrcadlí se obraz, který nemá řádek v RADY: {', '.join(chybi)}")
+              sys.exit(1)
+
+          dnes = date.today()
+          radky, mrtve, nezjisteno = [], [], []
+
+          for r in rady:
+              jmeno, produkt, cyklus = r.split("|")
+              try:
+                  with urllib.request.urlopen(
+                      f"https://endoflife.date/api/{produkt}.json", timeout=20
+                  ) as odpoved:
+                      data = json.load(odpoved)
+                  nalez = next(c for c in data if str(c.get("cycle")) == cyklus)
+              except Exception as e:
+                  print(f"::warning::{jmeno}: konec podpory se nepodařilo zjistit ({e}).")
+                  nezjisteno.append(jmeno)
+                  radky.append(f"| `{jmeno}` | {produkt} {cyklus} | **nezjištěno** | {e} |")
+                  continue
+
+              eol = nalez.get("eol")
+              posledni = nalez.get("latest", "?")
+              if eol is False or eol is None:
+                  radky.append(f"| `{jmeno}` | {produkt} {cyklus} | bez ohlášeného konce | {posledni} |")
+                  continue
+
+              if eol is True:
+                  konec = dnes
+              else:
+                  konec = datetime.strptime(str(eol), "%Y-%m-%d").date()
+              zbyva = (konec - dnes).days
+
+              if zbyva <= 0:
+                  print(f"::error::{jmeno}: řada {cyklus} skončila {konec}. Přesyn dál kopíruje zmrazený obraz, záplaty už nechodí.")
+                  mrtve.append(jmeno)
+                  radky.append(f"| `{jmeno}` | {produkt} {cyklus} | **skončila {konec}** | {posledni} |")
+              elif zbyva <= BLIZKO:
+                  print(f"::warning::{jmeno}: řada {cyklus} končí {konec}, zbývá {zbyva} dní.")
+                  radky.append(f"| `{jmeno}` | {produkt} {cyklus} | končí {konec} (za {zbyva} dní) | {posledni} |")
+              else:
+                  radky.append(f"| `{jmeno}` | {produkt} {cyklus} | končí {konec} (za {zbyva} dní) | {posledni} |")
+
+          souhrn = os.environ.get("GITHUB_STEP_SUMMARY")
+          if souhrn:
+              with open(souhrn, "a", encoding="utf-8") as f:
+                  f.write("\n## Podpora základních řad\n\n")
+                  f.write("| obraz | řada | konec podpory | poslední v řadě |\n|---|---|---|---|\n")
+                  f.write("\n".join(radky) + "\n")
+                  if mrtve:
+                      f.write(
+                          "\n**Zvednout řadu.** U mrtvé řady se měsíční „nic se nezměnilo"
+                          " nedá číst jako dobrá zpráva — záplaty už nevznikají.\n"
+                      )
+
+          if len(nezjisteno) == len(rady):
+              print("::error::Nepodařilo se zjistit konec podpory ani u jedné řady — tahle kontrola nic neověřila.")
+              sys.exit(1)
+          if mrtve:
+              sys.exit(1)
+          PY

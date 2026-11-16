@@ -158,6 +158,13 @@ updates:
       # zvedne se `TargetFramework` a Dockerfile pojede s ním. Patch
       # a minor (`10.0` → `10.1`) chodí dál a to jsou právě bezpečnostní
       # záplaty base image.
+      #
+      # <b>Tím se ale celá bezpečnost opřela o to, že řada 10 žije.</b>
+      # Až skončí, přestanou chodit i ty patche — a tiše, protože major
+      # je utlumený a nic jiného by se neozvalo. Od 16. 11. 2026 se na to
+      # jednou měsíčně ptá krok *Žijí ještě ty řady?* v `zrcadlo.yml`;
+      # `dotnet/aspnet` je v jeho seznamu `RADY` schválně, i když se
+      # nezrcadlí.
       # <b>Jméno je bez registru.</b> `mcr.microsoft.com/dotnet/*` tu stálo
       # první a nedělalo nic: Dependabot si závislost vede pod jménem
       # z `updated-dependencies` ve vlastním commitu, a tam je
@@ -165,3 +172,26 @@ updates:
       # Pravidlo tedy neodpovídalo ničemu a vypadalo přitom správně.
       - dependency-name: "dotnet/*"
         update-types: ["version-update:semver-major"]
+
+  # <b>Upozornění tady chodila, PR ne.</b> Rozdíl je v tom, odkud každé
+  # z toho vzniká: upozornění dělá graf závislostí, a ten `pypi` vidí
+  # (SBOM repozitáře hlásí `rasterio 1.5.1` a `numpy 2.5.3`, změřeno
+  # 16. 11. 2026). Aktualizační PR ale vznikají z tohohle souboru, a
+  # sekce `pip` v něm do dneška nebyla. Výsledek: advisory by přišlo,
+  # oprava by nepřišla a čekala by na člověka — zrovna u úlohy, která
+  # běží bez dozoru jednou denně.
+  #
+  # <b>Žádné `ignore` tu není schválně.</b> Obraz úlohy se staví v CI
+  # i na pull requestu (třetí image v jobu `build`, `build-deploy.yml`)
+  # a ten build dělá `pip install -r requirements.txt` a hned nato
+  # `python -c "import uloha"` — takže kolo, které nesedne na Python
+  # v obrazu, shodí PR rovnou. Tlumení majorů jako u `expo*` nebo
+  # `dotnet/*` by tu tedy tlumilo něco, co CI chytá samo.
+  - package-ecosystem: pip
+    directory: "/jobs/landsat"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "landsat"
