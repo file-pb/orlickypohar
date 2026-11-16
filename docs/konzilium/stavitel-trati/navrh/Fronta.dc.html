@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Stavitel trati — bez signálu a zádrhel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+a { color: #1f6f8b; } a:hover { color: #175264; }
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #fbfaf8; color: #1a1d21; display: flex; flex-direction: column">
+
+  <div style="padding: 52px 16px 10px 16px">
+    <div style="font-size: 20px; font-weight: 700; letter-spacing: -0.3px">Stavba trati</div>
+    <div style="font-size: 13px; color: #5d666f; margin-top: 1px">Radavská regata · 2. rozjížďka</div>
+  </div>
+
+  <div style="margin: 6px 16px 0 16px; padding: 10px 14px; border-radius: 10px; background: #ffffff; border: 1px solid #e2e0dc; display: flex; align-items: center; gap: 10px">
+    <span style="width: 12px; height: 12px; border-radius: 999px; background: #2f6b4f; flex: none"></span>
+    <span style="font-size: 17px; font-weight: 700">±6 m</span>
+    <span style="font-size: 15px; color: #5d666f">poloha je čerstvá · bez sítě</span>
+  </div>
+
+  <div style="margin: 10px 16px 0 16px; padding: 14px; border-radius: 12px; background: #ffffff; border: 2px solid #a8433a">
+    <div style="display: flex; align-items: flex-start; gap: 10px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a8433a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px" role="img" aria-label="zádrhel"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.01"></path></svg>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 17px; font-weight: 700; color: #a8433a">Stavba stojí na prvku 5</div>
+        <div style="font-size: 15px; color: #1a1d21; margin-top: 4px">Server ho odmítl: „Tahle trať je už přijatá."</div>
+        <div style="font-size: 14px; color: #5d666f; margin-top: 6px">Dokud ho nezahodíš, další prvky nepůjdou odeslat — pořadí na trati se řídí pořadím, v jakém dorazí.</div>
+      </div>
+    </div>
+    <a href="Main.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 52px; margin-top: 12px; border-radius: 10px; background: #a8433a; color: #ffffff; text-decoration: none; font-size: 17px; font-weight: 700">Zahodit prvek 5</a>
+  </div>
+
+  <div style="padding: 18px 16px 6px 16px; display: flex; align-items: baseline; justify-content: space-between">
+    <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #5d666f">Čeká na odeslání</span>
+    <span style="font-size: 14px; font-weight: 700; color: #8a5000">4 prvky</span>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="background: #ffffff; border: 1px solid #a8433a; border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="font-size: 15px; font-weight: 800; color: #a8433a; width: 20px; flex: none">5.</span>
+      <span style="flex: 1; font-size: 16px; font-weight: 600">Otočná — levobokem</span>
+      <span style="font-size: 13px; font-weight: 700; color: #a8433a">odmítnut</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e2e0dc; border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="font-size: 15px; font-weight: 800; color: #5d666f; width: 20px; flex: none">6.</span>
+      <span style="flex: 1; font-size: 16px; font-weight: 600">Brána</span>
+      <span style="font-size: 13px; color: #5d666f">čeká</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e2e0dc; border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="font-size: 15px; font-weight: 800; color: #5d666f; width: 20px; flex: none">7.</span>
+      <span style="flex: 1; font-size: 16px; font-weight: 600">Otočná — pravobokem</span>
+      <span style="font-size: 13px; color: #5d666f">čeká</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e2e0dc; border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="font-size: 15px; font-weight: 800; color: #5d666f; width: 20px; flex: none">8.</span>
+      <span style="flex: 1; font-size: 16px; font-weight: 600">Cíl</span>
+      <span style="font-size: 13px; color: #5d666f">čeká</span>
+    </div>
+  </div>
+
+  <div style="flex: 1"></div>
+
+  <div style="padding: 10px 16px 30px 16px">
+    <div style="font-size: 13px; color: #5d666f; text-align: center; margin-bottom: 8px">Pípat jde dál — odejde to, až bude signál</div>
+    <a href="Popis.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 12px; height: 86px; border-radius: 16px; background: #1f6f8b; color: #ffffff; text-decoration: none; font-size: 26px; font-weight: 800; letter-spacing: -0.3px">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="10" r="3"></circle><path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11z"></path></svg>
+      PÍPNI ZNAČKU
+    </a>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
