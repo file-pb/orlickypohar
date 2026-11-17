@@ -6,8 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Radek } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
+import { nabidka } from '@/lib/nabidka';
 import { mojeOpravneni, zapomenOpravneni } from '@/lib/opravneni';
-import { kdeStavi } from '@/lib/role';
 import { kamVUkazce, ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
 
 /**
@@ -24,58 +24,7 @@ import { kamVUkazce, ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
  * 30. 10. 2026 našlo třicetkrát (`tools/kontrola-dotyku.py`).
  */
 
-/** Kam se dá odsud jít. Pořadí je podle toho, jak často se tam chodí. */
-const KAM: { text: string; cil: string; popis?: string }[] = [
-  // <b>Domů musí být v nabídce</b> (Filip, 7. 11. 2026: *„hele jak se
-  // budu dostávat zpět na landing?"*). Hlavička se nekreslí, takže
-  // jediná cesta zpátky bylo gesto — a z cíle rozjížďky je to gest
-  // několik. Nabídka je na každé obrazovce, tak ať vede i domů.
-  { text: 'Domů', cil: '/', popis: 'úvodní obrazovka' },
-  // <b>Moje regata je nad ročníky.</b> Posádka na vodě se neptá „jaké
-  // byly výsledky v červnu", ptá se „co se děje teď" — a ročníky jsou
-  // cesta dovnitř pro zkoušení, ne obrazovka produktu.
-  { text: 'Moje regata', cil: '/zavodnik', popis: 'co se dnes jede a jak tě vidí rozhodčí' },
-  { text: 'Ročníky', cil: '/rocniky', popis: 'kalendář, výsledky, pořadí' },
-  { text: 'Moje lodě a posádka', cil: '/lode' },
-  { text: 'Klíč k lodi', cil: '/klic' },
-  { text: 'Záznam trasy', cil: '/tracker' },
-  { text: 'Účet a nastavení', cil: '/ucet', popis: 'oprávnění, zvuk na startu, verze appky' },
-];
-
 const WEB = 'https://orlickypohar.klihovka.cz';
-
-/**
- * Nabídka i se stavbou trati, má-li ji ten člověk kde dělat.
- *
- * <b>Proč je v nabídce, a ne jen na stránce regaty</b> (Filip,
- * 17. 11. 2026: *„udělej to spustitelné samostatně z menu"*). Stavitel
- * ráno appku zapne kvůli jediné věci a dnes se k ní musel proklikat
- * přes ročník a regatu.
- *
- * <b>Bez zastávky vede na ročník, ne na stavbu.</b> Kdo má právo na celý
- * ročník, může stavět na kterékoliv jeho zastávce — a které to jsou, ví
- * kalendář, ne nabídka. Vybrat za něj tu první by znamenalo pípat do
- * cizí regaty.
- */
-function kam(stavi: ReturnType<typeof kdeStavi>) {
-  if (!stavi) return KAM;
-
-  const stavba = stavi.zavod
-    ? {
-        text: 'Stavba trati',
-        cil: `/serie/${stavi.serie}/zavody/${stavi.zavod}/stavba`,
-        popis: 'pípni značky z lodi',
-      }
-    : {
-        text: 'Stavba trati',
-        cil: `/serie/${stavi.serie}`,
-        popis: 'vyber regatu, kde stavíš',
-      };
-
-  // Za „Moje regata": stavba je taky věc dnešního dne, ne archiv.
-  const kde = KAM.findIndex((k) => k.cil === '/zavodnik');
-  return [...KAM.slice(0, kde + 1), stavba, ...KAM.slice(kde + 1)];
-}
 
 export function Kebab() {
   const t = useTheme();
@@ -140,7 +89,7 @@ export function Kebab() {
             s.panel,
             { backgroundColor: t.papir, borderColor: t.linka, paddingTop: okraje.top + 8 },
           ]}>
-          {kam(kdeStavi(ja ?? null)).map((k) => (
+          {nabidka(ja ?? null).map((k) => (
             <Radek key={k.cil} text={k.text} popis={k.popis} onPress={() => jdi(k.cil)} />
           ))}
           {/* <b>Ukázkový režim.</b> Appka se odpojí od serveru a jede

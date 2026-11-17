@@ -42,6 +42,10 @@ echo "== Kdo zapíná aplikaci =="
 "${NODE[@]}" ./role.test.ts
 
 echo
+echo "== Nabídka pod kebabem =="
+"${NODE[@]}" ./nabidka.test.ts
+
+echo
 echo "== Hlášení a troubení =="
 "${NODE[@]}" ./hlaseni.test.ts
 
