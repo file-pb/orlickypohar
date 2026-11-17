@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Radek } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
-import { mojeOpravneni } from '@/lib/opravneni';
+import { mojeOpravneni, zapomenOpravneni } from '@/lib/opravneni';
 import { kdeStavi } from '@/lib/role';
 import { kamVUkazce, ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
 
@@ -85,7 +85,7 @@ export function Kebab() {
   const [vUkazce, setVUkazce] = useState(ukazkaBezi());
   // Oprávnění se drží minutu (`lib/opravneni.ts`); nabídka je na každé
   // obrazovce a dotaz za přechod by na vodě stál čekání u každého klepnutí.
-  const { data: ja } = useData(mojeOpravneni);
+  const { data: ja, obnov: obnovOpravneni } = useData(mojeOpravneni);
 
   // Zavřít dřív, než se někam jde: jinak by nabídka zůstala viset nad
   // obrazovkou, na kterou se právě přešlo.
@@ -101,7 +101,18 @@ export function Kebab() {
   return (
     <>
       <Pressable
-        onPress={() => setOtevreno(true)}
+        onPress={() => {
+          setOtevreno(true);
+          // <b>Ptát se až při otevření, ne jednou při startu.</b> Kebab
+          // visí v kořenovém rozvržení, takže se připojí jedinkrát za běh
+          // aplikace — a `useData` načítá právě tehdy. Kdo v tu chvíli
+          // ještě nebyl přihlášený (klíč ze SecureStore se čte asynchronně)
+          // nebo zapnul ukázku až potom, měl nabídku bez oprávnění do
+          // konce běhu. Měřeno v simulátoru 18. 11. 2026: v ukázce
+          // s pořadatelem závodu řádek *Stavba trati* chyběl.
+          // Opakované otevření nestojí dotaz — drží ho `mojeOpravneni`.
+          void obnovOpravneni();
+        }}
         accessibilityRole="button"
         accessibilityLabel="Nabídka"
         style={({ pressed }) => [s.terc, pressed && { opacity: 0.5 }]}>
@@ -169,6 +180,9 @@ export function Kebab() {
               setOtevreno(false);
               if (vUkazce) vypniUkazku();
               else zapniUkazku();
+              // Ukázka má vlastní identitu, takže držená odpověď `/ja`
+              // po přepnutí platit přestane.
+              zapomenOpravneni();
               setVUkazce(ukazkaBezi());
               // <b>`dismissAll` jen když je co zavřít.</b> Bez té
               // podmínky vyhodí navigace *„The action 'POP_TO_TOP' was
