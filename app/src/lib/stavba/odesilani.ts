@@ -13,8 +13,15 @@
  * zná z `OdmitnutoServerem` a tady na něm stojí celá smyčka.
  * </para>
  */
-import { OdmitnutoServerem, postavPrvek, type PostavPrvek } from '../api';
-import { cekajici, hotovo, prvniKOdeslani, zapisPotiz, type CekajiciPrvek } from './fronta';
+import { OdmitnutoServerem, postavPrvek, type PostavPrvek, type PrvekSpravy } from '../api';
+import {
+  cekajici,
+  hotovo,
+  prvniKOdeslani,
+  zapisPostaveny,
+  zapisPotiz,
+  type CekajiciPrvek,
+} from './fronta';
 
 export type VysledekOdesilani = {
   /** Kolik prvků v tomhle běhu došlo na server. */
@@ -41,7 +48,7 @@ export async function odesliFrontu(
     serie: string,
     zavod: string,
     vstup: PostavPrvek,
-  ) => Promise<unknown | null> = postavPrvek,
+  ) => Promise<PrvekSpravy | null> = postavPrvek,
 ): Promise<VysledekOdesilani> {
   let odeslano = 0;
 
@@ -62,6 +69,7 @@ export async function odesliFrontu(
         return { odeslano, stoji: prvni, proc: 'Nikdo není přihlášený.' };
       }
 
+      zapamatujCisla(serie, zavod, prvni, prvek);
       hotovo(prvni.id);
       odeslano++;
     } catch (e) {
@@ -84,4 +92,38 @@ export async function odesliFrontu(
     stoji: prvniZbyly,
     proc: prvniZbyly?.potiz ?? null,
   };
+}
+
+/**
+ * Zapíše čísla, která server prvku přidělil.
+ *
+ * <b>Dřív než se smaže řádek fronty</b>, a to je celý smysl pořadí: kdyby
+ * appku systém zabil mezi obojím, prvek ve frontě zůstane a odešle se
+ * znovu — `klic` je idempotentní, server vrátí týž prvek i s týmiž čísly
+ * a zápis se jen zopakuje. Obráceně by čísla zmizela nadobro, protože
+ * druhá cesta k nim nevede: `postav` je jediné místo, kde je appka vidí.
+ */
+function zapamatujCisla(
+  serie: string,
+  zavod: string,
+  radek: CekajiciPrvek,
+  prvek: PrvekSpravy,
+) {
+  // Odpověď bez konce A by byl jiný tvar, než jaký server slibuje
+  // (`PrvekDto.a` je povinné). Prvek postavený je, takže fronta se posune
+  // tak jako tak — jen k té bóji nepůjde přiložit fotka.
+  if (!prvek?.a) return;
+
+  zapisPostaveny({
+    klic: radek.klic,
+    serie,
+    zavod,
+    popis: radek.popis,
+    prvekId: prvek.id,
+    bojeAId: prvek.a.id,
+    bojeANazev: prvek.a.nazev,
+    bojeBId: prvek.b?.id ?? null,
+    bojeBNazev: prvek.b?.nazev ?? null,
+    potvrzenoV: Date.now(),
+  });
 }

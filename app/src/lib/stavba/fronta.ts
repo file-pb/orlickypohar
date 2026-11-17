@@ -21,6 +21,13 @@
  * nesouvisí a mažou se každá jindy — trasa po nahrání, prvek po
  * potvrzení serverem.
  * </para>
+ *
+ * <para>
+ * <b>Tabulky jsou dvě.</b> `fronta` drží, co ještě neodešlo, a řádek z ní
+ * po potvrzení mizí. `postavene` je naopak to, co zůstane: čísla, která
+ * server prvku přidělil. Bez nich nemá fotka pořízená na vodě kam přijít
+ * (17. 11. 2026; podrobně u `zapisPostaveny`).
+ * </para>
  */
 import * as SQLite from 'expo-sqlite';
 
@@ -79,6 +86,22 @@ function databaze(): SQLite.SQLiteDatabase {
       pokusu INTEGER NOT NULL DEFAULT 0,
       odmitnuto INTEGER NOT NULL DEFAULT 0,
       potiz TEXT
+    )
+  `);
+  // Druhá tabulka přibyla později. `IF NOT EXISTS` ji doplní i na telefonu,
+  // kde `stavba.db` už existuje s jedinou tabulkou — migrace netřeba.
+  db.execSync(`
+    CREATE TABLE IF NOT EXISTS postavene (
+      klic TEXT PRIMARY KEY,
+      serie TEXT NOT NULL,
+      zavod TEXT NOT NULL,
+      popis TEXT NOT NULL,
+      prvekId INTEGER NOT NULL,
+      bojeAId INTEGER NOT NULL,
+      bojeANazev TEXT NOT NULL,
+      bojeBId INTEGER,
+      bojeBNazev TEXT,
+      potvrzenoV INTEGER NOT NULL
     )
   `);
   return db;
@@ -194,4 +217,107 @@ export function stav(serie: string, zavod: string): { ceka: number; odmitnuto: n
     [serie, zavod],
   );
   return { ceka: Number(r?.ceka ?? 0), odmitnuto: Number(r?.odmitnuto ?? 0) };
+}
+
+/**
+ * Prvek, který server přijal, i s čísly, která mu přidělil.
+ *
+ * `bojeAId` a `bojeBId` jsou čísla bójí na serveru — to, co appce chybělo
+ * k tomu, aby šlo cokoliv k bóji přiložit.
+ */
+export type PostavenyPrvek = {
+  /** Místní klíč prvku. Týž, pod kterým šel na server. */
+  klic: string;
+  serie: string;
+  zavod: string;
+  /** Jak se prvek jmenoval ve frontě — aby bylo co ukázat bez dotazu na server. */
+  popis: string;
+  prvekId: number;
+  bojeAId: number;
+  bojeANazev: string;
+  /** Druhý konec, nebo <c>null</c> u jednobodového prvku. */
+  bojeBId: number | null;
+  bojeBNazev: string | null;
+  potvrzenoV: number;
+};
+
+function naPostaveny(r: Record<string, unknown>): PostavenyPrvek {
+  return {
+    klic: String(r.klic),
+    serie: String(r.serie),
+    zavod: String(r.zavod),
+    popis: String(r.popis),
+    prvekId: Number(r.prvekId),
+    bojeAId: Number(r.bojeAId),
+    bojeANazev: String(r.bojeANazev),
+    bojeBId: r.bojeBId == null ? null : Number(r.bojeBId),
+    bojeBNazev: r.bojeBNazev == null ? null : String(r.bojeBNazev),
+    potvrzenoV: Number(r.potvrzenoV),
+  };
+}
+
+/**
+ * Zapíše, co server o postaveném prvku vrátil.
+ *
+ * <b>Proč to vůbec existuje.</b> Fotka se k bóji přikládá na
+ * `POST …/boje/{boje}/fotky` a `{boje}` je číslo, které přiděluje server.
+ * V odpovědi na `postav` přijde (`PrvekDto.a.id`, `b.id`), jenže appka ji
+ * do 17. 11. 2026 zahazovala: řádek fronty se po potvrzení smazal a čísla
+ * s ním. Dokud se nepamatují, nemá fotka pořízená u značky kam přijít —
+ * a pořídit se dá jen z vody.
+ *
+ * <para>
+ * <b>Přepisuje se podle klíče.</b> Opakované odeslání téhož prvku vrací
+ * týž prvek (200 místo 201), takže druhý zápis není duplicita, ale tatáž
+ * věc znovu.
+ * </para>
+ *
+ * <para>
+ * <b>Řádky se nemažou.</b> Je to místní doklad o tom, co tenhle telefon
+ * postavil; při jednotkách prvků na regatu je levnější ho nechat být než
+ * vymýšlet, kdy je bezpečné ho zahodit.
+ * </para>
+ */
+export function zapisPostaveny(p: PostavenyPrvek) {
+  databaze().runSync(
+    `INSERT OR REPLACE INTO postavene
+       (klic, serie, zavod, popis, prvekId, bojeAId, bojeANazev, bojeBId, bojeBNazev, potvrzenoV)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      p.klic,
+      p.serie,
+      p.zavod,
+      p.popis,
+      p.prvekId,
+      p.bojeAId,
+      p.bojeANazev,
+      p.bojeBId,
+      p.bojeBNazev,
+      p.potvrzenoV,
+    ],
+  );
+}
+
+/**
+ * Co tenhle telefon u téhle regaty postavil, <b>v pořadí na trati</b>.
+ *
+ * Řadí se podle `prvekId`, ne podle času potvrzení: pořadí na trati určuje
+ * server a jen ono platí, až se k prvkům budou přikládat fotky.
+ */
+export function postavene(serie: string, zavod: string): PostavenyPrvek[] {
+  return databaze()
+    .getAllSync<Record<string, unknown>>(
+      'SELECT * FROM postavene WHERE serie = ? AND zavod = ? ORDER BY prvekId',
+      [serie, zavod],
+    )
+    .map(naPostaveny);
+}
+
+/** Jeden postavený prvek podle místního klíče, nebo <c>null</c>. */
+export function postavenyPodleKlice(klic: string): PostavenyPrvek | null {
+  const r = databaze().getFirstSync<Record<string, unknown>>(
+    'SELECT * FROM postavene WHERE klic = ?',
+    [klic],
+  );
+  return r ? naPostaveny(r) : null;
 }

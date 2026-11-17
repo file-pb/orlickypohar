@@ -12,14 +12,17 @@
  */
 import assert from 'node:assert/strict';
 
-import { OdmitnutoServerem } from '../src/lib/api.ts';
+import { OdmitnutoServerem, type PrvekSpravy } from '../src/lib/api.ts';
 import {
   cekajici,
   hotovo,
   novyKlic,
+  postavene,
+  postavenyPodleKlice,
   prvniKOdeslani,
   stav,
   zahod,
+  zapisPostaveny,
   zapisPotiz,
   zarad,
   type PrvekKPostaveni,
@@ -61,6 +64,26 @@ function prvek(): PrvekKPostaveni {
 
 function zaradNovy(popis: string) {
   return zarad(SERIE, ZAVOD, popis, prvek());
+}
+
+/**
+ * Odpověď serveru na `postav`. Čísla bójí v ní jsou to jediné, odkud se
+ * appka dozví, kam se k té bóji dá přiložit fotka.
+ */
+function odpoved(
+  prvekId: number,
+  nazevA: string,
+  konecB?: { id: number; nazev: string },
+): PrvekSpravy {
+  return {
+    id: prvekId,
+    typ: konecB ? 'Brana' : 'OtocnaBoje',
+    poradi: prvekId,
+    strana: null,
+    poznamka: null,
+    a: { id: prvekId * 10, nazev: nazevA, sirka: 49.516, delka: 14.165 },
+    b: konecB ? { ...konecB, sirka: 49.517, delka: 14.166 } : null,
+  };
 }
 
 await zkus('klíč má tvar, který server přijme jako Guid', () => {
@@ -136,7 +159,7 @@ await zkus('odesílání vyprázdní frontu v pořadí stavby', async () => {
   const poslano: string[] = [];
   const vysledek = await odesliFrontu(SERIE, ZAVOD, async (_s, _z, vstup) => {
     poslano.push(vstup.body![0]!.nazev!);
-    return { id: poslano.length };
+    return odpoved(poslano.length, vstup.body![0]!.nazev!);
   });
 
   assert.equal(vysledek.odeslano, 3);
@@ -184,6 +207,69 @@ await zkus('nepřihlášený se nebere jako odmítnutí prvku', async () => {
   // Po přihlášení prvek projde, takže odmítnutý není — jen stojí.
   assert.equal(cekajici(SERIE, ZAVOD)[0].odmitnuto, false);
   assert.match(vysledek.proc ?? '', /přihlášen/);
+});
+
+await zkus('čísla bójí ze serveru přežijí smazání řádku fronty', async () => {
+  const radek = zaradNovy('F');
+
+  await odesliFrontu(SERIE, ZAVOD, async (_s, _z, vstup) =>
+    odpoved(7, vstup.body![0]!.nazev!),
+  );
+
+  // Řádek fronty je pryč — a právě proto musí být čísla jinde. Do
+  // 17. 11. 2026 se zahazovala spolu s ním a fotka neměla kam přijít.
+  assert.equal(cekajici(SERIE, ZAVOD).length, 0);
+
+  const zapsany = postavenyPodleKlice(radek.klic);
+  assert.ok(zapsany, 'postavený prvek se nezapsal');
+  assert.equal(zapsany.prvekId, 7);
+  assert.equal(zapsany.bojeAId, 70);
+  assert.equal(zapsany.popis, 'F');
+  // Jednobodový prvek druhý konec nemá a nesmí si ho vymyslet.
+  assert.equal(zapsany.bojeBId, null);
+});
+
+await zkus('brána si zapamatuje obě čísla, ne jen první', async () => {
+  const radek = zaradNovy('G');
+
+  await odesliFrontu(SERIE, ZAVOD, async (_s, _z, vstup) =>
+    odpoved(8, vstup.body![0]!.nazev!, { id: 99, nazev: 'levý konec' }),
+  );
+
+  const zapsany = postavenyPodleKlice(radek.klic);
+  assert.equal(zapsany?.bojeAId, 80);
+  assert.equal(zapsany?.bojeBId, 99);
+  assert.equal(zapsany?.bojeBNazev, 'levý konec');
+});
+
+await zkus('opakované potvrzení téhož prvku nezaloží druhý záznam', () => {
+  const pred = postavene(SERIE, ZAVOD).length;
+  const klic = novyKlic();
+  const zaznam = {
+    klic,
+    serie: SERIE,
+    zavod: ZAVOD,
+    popis: 'H',
+    prvekId: 9,
+    bojeAId: 90,
+    bojeANazev: 'otočná 9',
+    bojeBId: null,
+    bojeBNazev: null,
+    potvrzenoV: 1_700_000_000_000,
+  };
+
+  // Server vrací na opakované odeslání týž prvek (200 místo 201), takže
+  // druhý zápis je tatáž věc znovu, ne duplicita.
+  zapisPostaveny(zaznam);
+  zapisPostaveny({ ...zaznam, potvrzenoV: 1_700_000_001_000 });
+
+  assert.equal(postavene(SERIE, ZAVOD).length, pred + 1);
+  assert.equal(postavenyPodleKlice(klic)?.potvrzenoV, 1_700_000_001_000);
+});
+
+await zkus('postavené se řadí podle pořadí na trati, ne podle času', () => {
+  const vsechny = postavene(SERIE, ZAVOD).map((p) => p.prvekId);
+  assert.deepEqual(vsechny, [...vsechny].sort((x, y) => x - y));
 });
 
 console.log(`  ${prosly} prošlo`);
