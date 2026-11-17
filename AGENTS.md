@@ -451,6 +451,40 @@ produkce na novějším commitu. Zkouška přitom našla chybu v první podobě
 opravy: stav se zapisoval až po uvolnění zámku, takže se mezi zápis
 a kontrolu druhého požadavku pořád vešla mezera.
 
+**Selhání přenosu není selhání nasazení.** Odpověď háčku není důkaz, že se
+nasadilo, a její ztráta není důkaz, že se nenasadilo: mezi GitHubem
+a hostitelem je proxy a ta umí spojení zahodit nad nasazením, které už
+doběhlo. Krok `Deploy` proto návratový kód `curl`u jen zapamatuje a verdikt
+vynáší až ověření `/verze`.
+
+Změřeno třikrát se stejným tvarem — 10. 11. 2026 u `fed3857` vrátila proxy
+520 po 43 s; 17. 11. 2026 dvakrát `curl: (56) Recv failure: Connection reset
+by peer` po ~60 s (běhy 44182164236 u `e80c6e20` a 44186217325 u `4f6390a2`).
+Pokaždé API i web vydávaly přesně ten commit, který se posílal, a opakované
+spuštění spadlé úlohy prošlo. Viník v cestě potvrzený není; oprava ho
+nepotřebuje.
+
+**Následek planého poplachu nebyl kosmetický.** `aktualizace-appky` má
+`needs: [nasazeni]`, takže červená úloha nasazení **přeskočila vydání
+aktualizace do telefonů**. Server běžel nový kód a appka starý JavaScript,
+a poznat se to dalo jen dotazem na manifest `u.expo.dev`. 17. 11. 2026 to
+stálo půl hodiny hledání v kódu, který byl správně.
+
+Pravidlo výš se tím **nezměkčuje**. Nesedící nebo nepřečtená verze je dál
+chyba, ne varování, i po obnově. Mění se jen to, že o výsledku rozhoduje
+stav produkce, ne průchodnost jednoho HTTP spojení. Chování ve třech
+případech:
+
+| Háček | `/verze` | Úloha |
+|---|---|---|
+| odpoví | sedí | zelená |
+| neodpoví | sedí | **zelená**, do souhrnu běhu se napíše, že odpověď chybí |
+| neodpoví (nebo odpoví) | nesedí nebo se nedá přečíst | **červená** |
+
+Ochrany popsané výš se toho netýkají: zámek na serveru, `X-Deploy-Sha`,
+`X-Deploy-Poradi` i zákaz posílat commit, který je předkem běžící verze,
+zůstávají beze změny.
+
 ## Testy
 
 Bez databáze a bez Dockeru, v CI běží první:

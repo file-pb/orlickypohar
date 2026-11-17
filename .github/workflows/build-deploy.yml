@@ -682,18 +682,37 @@ jobs:
       #
       # `X-Deploy-Obnova` posílá výslovné vrácení na starší build dál, aby
       # ho server neodmítl: tady už je rozhodnuté, že se tak stát má.
+      #
+      # <b>Selhání přenosu tenhle krok neshodí.</b> Návratový kód `curl`u se
+      # jen zapamatuje a rozhodnutí patří kroku pod ním, který čte `/verze`:
+      # odpověď háčku není důkaz, že se nasadilo, a její ztráta není důkaz,
+      # že se nenasadilo. Měřeno 17. 11. 2026, dvakrát za sebou
+      # `curl: (56) Recv failure: Connection reset by peer` po ~60 s
+      # (běhy 44182164236 a 44186217325) — a produkce přitom v obou
+      # případech běžela přesně ten commit, který se posílal.
       - name: Deploy
+        id: deploy
         if: ${{ steps.kontrola.outputs.nasadit == 'ano' }}
         run: |
           poradi=$(git log -1 --format=%ct "${{ github.sha }}")
           echo "Posílám ${{ github.sha }}, čas commitu $poradi."
+          kod=0
           curl -fsS --max-time 900 -X POST "${{ vars.DEPLOY_WEBHOOK }}" \
             -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
             -H "X-Deploy-Sha: ${{ github.sha }}" \
             -H "X-Deploy-Poradi: $poradi" \
             -H "X-Deploy-Obnova: ${{ inputs.obnova == true && 'ano' || 'ne' }}" \
             -H "Content-Type: application/yaml" \
-            --data-binary @deploy/docker-compose.yml
+            --data-binary @deploy/docker-compose.yml || kod=$?
+          if [ "$kod" -eq 0 ]; then
+            echo "prenos=ok" >> "$GITHUB_OUTPUT"
+            echo "Háček odpověděl."
+          else
+            echo "prenos=selhal" >> "$GITHUB_OUTPUT"
+            echo "kod=$kod" >> "$GITHUB_OUTPUT"
+            echo "::warning::Háček neodpověděl, curl skončil s kódem $kod." \
+              "Jestli nasazení přesto proběhlo, rozhodne ověření verze."
+          fi
 
       # `Healthy` a HTTP 200 vrací i verze, která tam visí z minula, takže
       # samy o sobě nedokazují nic. Porovnává se skutečná verze obou služeb.
@@ -702,18 +721,28 @@ jobs:
       # výsledek končí chybou, i po obnově: zelená nad službou, o které
       # nevíme, co na ní běží, je falešná jistota.
       #
-      # <b>`!cancelled()` je tu proto, že odpověď háčku není důkaz.</b>
-      # Bez něj GitHub krok implicitně přeskočí, kdykoliv `Deploy` selže —
-      # a přeskočí ho tím pádem přesně v tom případě, pro který je napsaný.
-      # Stalo se to 10. 11. 2026 u `fed3857`: háček nasadil, ale odpověď se
-      # vrátila jako 520 (Cloudflare, po 43 s), `Deploy` tím spadl, ověření
-      # se přeskočilo — a produkce přitom ten commit běžela. V logu nebylo
-      # jak rozeznat „háček nenasadil" od „háček nasadil a odpověď se
-      # ztratila v proxy". Teď se verze přečte v obou případech.
+      # <b>Tenhle krok je jediný, kdo o výsledku nasazení rozhoduje.</b>
+      # Odpověď háčku není důkaz, že se nasadilo, a její ztráta není důkaz,
+      # že se nenasadilo — mezi GitHubem a hostitelem je proxy a ta umí
+      # spojení zahodit nad doběhlým nasazením. Proto `Deploy` nad tímhle
+      # krokem nepadá a verdikt stojí jen na tom, co obě služby vydávají.
       #
-      # Úloha zůstane červená i tak, protože selhal `Deploy`: ztracená
-      # odpověď je skutečný problém a nemá zmizet. Mění se jen to, že je
-      # u ní vidět, co na produkci běží.
+      # Změřené případy, všechny se stejným tvarem: 10. 11. 2026 u `fed3857`
+      # vrátila proxy 520 po 43 s; 17. 11. 2026 dvakrát `curl: (56)` po
+      # ~60 s (běhy 44182164236 a 44186217325). Pokaždé produkce běžela
+      # přesně ten commit, který se posílal, a ruční spuštění spadlé úlohy
+      # prošlo. <b>Rozdíl je v následku:</b> dokud takový běh končil červeně,
+      # přeskočila se kvůli `needs: [nasazeni]` i `aktualizace-appky` —
+      # server běžel nový a telefony starý JavaScript, a poznat se to dalo
+      # jen dotazem na manifest `u.expo.dev` (17. 11. 2026 to stálo půl
+      # hodiny hledání v kódu, který byl správně).
+      #
+      # <b>Nic se tím nezměkčuje.</b> Nesedící nebo nepřečtená verze je dál
+      # chyba, ne varování, i po obnově: zelená nad službou, o které nevíme,
+      # co na ní běží, je falešná jistota (oponentura, 6. 10. 2026). Mizí
+      # jen poplach z toho, *jak* se o výsledku dozvíme.
+      #
+      # Čeká se omezeně (20 × 15 s) a pak se **musí** vědět.
       #
       # `!cancelled()` a ne `always()`: po zrušení běhu nemá smysl pět minut
       # čekat na `/verze` a držet tím zrušení.
@@ -721,6 +750,8 @@ jobs:
         if: ${{ !cancelled() && steps.kontrola.outputs.nasadit == 'ano' }}
         run: |
           ocekavano='${{ github.sha }}'
+          prenos='${{ steps.deploy.outputs.prenos }}'
+          kod='${{ steps.deploy.outputs.kod }}'
           chyba=0
           for i in $(seq 1 20); do
             api=$(curl -fsS --max-time 20 "$API_URL/verze" 2>/dev/null \
@@ -744,7 +775,45 @@ jobs:
             || { echo "::error::API běží na jiné verzi."; chyba=1; }
           [ -z "$web" ] || [ "$web" = "$ocekavano" ] \
             || { echo "::error::Web běží na jiné verzi."; chyba=1; }
-          exit $chyba
+
+          if [ "$chyba" -ne 0 ]; then
+            if [ "$prenos" != "ok" ]; then
+              {
+                echo "### Nasazení selhalo"
+                echo
+                echo "Háček neodpověděl (curl skončil s kódem $kod)"
+                echo "a verze se neshoduje ani po čekání."
+                echo
+                echo "| | verze |"
+                echo "|---|---|"
+                echo "| čekáno | \`$ocekavano\` |"
+                echo "| API | \`${api:-neodpovědělo}\` |"
+                echo "| web | \`${web:-neodpovědělo}\` |"
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+            exit 1
+          fi
+
+          # Přenos selhal, ale obě služby vydávají nasazovaný commit.
+          # Nasazení je hotové; úloha končí zeleně, aby se kvůli planému
+          # poplachu nepřeskočilo vydání aktualizace appky. Do souhrnu se
+          # to napíše, protože ztracená odpověď je pořád něco, co má být
+          # vidět — jen to není selhání nasazení.
+          if [ "$prenos" != "ok" ]; then
+            {
+              echo "### Háček neodpověděl, nasazení přesto proběhlo"
+              echo
+              echo "curl skončil s kódem $kod, ale API i web vydávají"
+              echo "\`$ocekavano\`. Nasazení je tedy hotové a úloha pokračuje."
+              echo
+              echo "Spojení mezi GitHubem a hostitelem se rozpadlo nad už"
+              echo "doběhlým nasazením. Když se to opakuje, viník je"
+              echo "v cestě (proxy před \`deploy.klihovka.cz\`), ne v háčku."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::Háček neodpověděl (curl $kod), ale obě služby běží na $ocekavano." \
+              "Nasazení se považuje za hotové."
+          fi
+          exit 0
 
   # <b>Doručení aktualizace do telefonů.</b> Appka má `expo-updates` zapnuté
   # od 28. 10. 2026, ale do toho dne v kanálu `preview` leželo **nula**
