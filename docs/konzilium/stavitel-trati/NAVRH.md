@@ -4,6 +4,10 @@ Podklad pro konzilium. **Není to rozhodnutí**, je to návrh k rozcupování.
 Makety k němu leží v `navrh/` a jako plátno v artefaktu
 *Stavitel trati — návrh přepracování*.
 
+**Nálezy 1 až 6 posuzovalo konzilium** (tři kola, závěr v `ZAVER.md`).
+**Nálezy 7 až 11 přibyly 17. 11. 2026** z Filipových postřehů nad
+maketami, konzilium je nevidělo, a každý to u sebe říká.
+
 ## Čím to začalo
 
 Obrazovka se postavila 16. 11. 2026 a hned ten večer Filip napsal:
@@ -196,6 +200,107 @@ a kvůli něčemu, co se muselo udělat tak jako tak.
 tak, jak to žádá server (`FotkySprava.cs:160–162`). Řádek u prvku ukáže,
 kolik jich chybí, a *nahlásit hotovo* na chybějící upozorní; odjet od vody
 bez fotek jde, ale ne omylem.
+
+### 8. Seznam kreslí kolečka, přestože appka zná znak
+
+*Doplněno 17. 11. 2026 na Filipův postřeh. Konzilium neposuzovalo.*
+
+**Nález.** Model drží barvu a tvar zvlášť a zná i znaky z vyhlášky:
+`DruhZnaceni` má `DrahaPrava` (červený válec), `DrahaLeva` (zelený kužel),
+`DrahaSport`, `DrahaZakaz`, `Plavidlo` a `ObjektNaBrehu`
+(`Boje.cs:261–287`), `TvarBoje` vedle válce a kužele i plovatku
+(`Boje.cs:213`). Web z toho **dělá obrázek na jediném místě** —
+`web/app/znak-boje.tsx`, 353 řádků, s poznámkou, že *„znaky z vyhlášky
+jsou kombinace, ne kategorie"*. Appka tvar při pípnutí **zapisuje**
+(`stavba.tsx:210`), ale pak kreslí barevné kolečko; makety tohohle návrhu
+taky.
+
+**Proč to vadí.** Značka na vodě vypadá nějak a stavitel se na ni dívá.
+Kolečko říká jen barvu, takže červený válec plavební dráhy vypadá
+v seznamu stejně jako červená plovatka — a to je přesně ten rozdíl, podle
+kterého se na vodě pozná, co ta věc je.
+
+**Návrh.** Přenést `znak-boje.tsx` do appky, ne kreslit podruhé. Je to
+čistá funkce z barvy, tvaru a značení na SVG; druhá implementace by se
+rozešla při první změně. Kolečko zůstane tam, kde tvar není vyplněný —
+nepovinný je schválně (`Boje.cs:210–211`).
+
+**Start a cíl** rozlišovalo písmeno `S` a `C`, protože obojí je čára mezi
+dvěma konci a tvar sám je nerozliší (`ikona-prvku.tsx:58–63`). V maketách
+to od 17. 11. 2026 dělá **vlaječka na konci, kde stojí komise**:
+trojúhelníková u startu, obdélníková modrá u cíle. Živý web má pořád
+písmeno.
+
+### 9. Stavitel nevidí, co už na trati stojí
+
+*Doplněno 17. 11. 2026 na Filipův postřeh. Konzilium neposuzovalo.*
+
+**Nález.** Appka si prvky trati načítá (`nactiPrvkySpravy`,
+`stavba.tsx:126–128`), ale **jen ze sítě a nikam je neukládá**. Při výpadku
+`nactiZaSebe` vyhodí chybu (`api.ts:86`) a u regaty bez jediné bóje vrátí
+`null` na 404 (`:85`). Fronta vlastních pípnutí je v SQLite, stávající
+trať nikde.
+
+**Proč to vadí.** Scénář, který to vyvolal: někdo na břehu zapíše z webu
+prvek, ke kterému se nejezdí — dráty vysokého napětí nad vodou. Model pro
+to má kategorii (`ObjektNaBrehu` je popsaná jako *„molo, dráty nad vodou,
+značka na skále"*, `Boje.cs:286`). Stavitel na vodě o něm ale neví, takže
+ho buď postaví podruhé, nebo ho při hlášení hotovo bude postrádat.
+
+**Návrh.** Dvojí, a to první je podmínka toho druhého:
+
+1. **Uložit načtenou trať vedle fronty** do `stavba.db` a kreslit ji
+   i bez signálu, s poctivým *„naposled načteno v 9:12"*. Bez toho je
+   jakákoliv mapa prázdná přesně tam, kde je potřeba.
+2. **Schéma, ne mapa s dlaždicemi.** Webová mapka jede na dlaždicích
+   z OpenStreetMap (`mapka-trati.tsx`, `lib/mapa.ts`), což je na vodě
+   šedá plocha. Co funguje, je kresba ze souřadnic: co stojí, kde jsem
+   já, směr a vzdálenost — tedy táž věc, jakou návrh v nálezu 4 chce pro
+   druhý konec brány, jen pro celou trať.
+
+### 10. Prvek, ke kterému se nejede, nejde pípnout
+
+*Doplněno 17. 11. 2026 na Filipův postřeh. Konzilium neposuzovalo.*
+
+**Nález.** Obrazovka vynechává výběr bodu z mapy vědomě: *„ten vznikl pro
+člověka u počítače — na vodě telefon měří"* (`stavba.tsx:74–75`). To platí
+pro bójku, kterou tam stavitel pokládá. Neplatí pro dráty nad vodou, molo
+ani kanálovou bóji, která tam stojí celý rok.
+
+**Proč to nic nekazí.** Model rozlišuje, odkud poloha je: `ZdrojPolohy`
+má `Telefon`, `Mapa` (*„odečteno z mapy"*) a `Qr` (`Boje.cs:22–32`), a
+u `Telefon` výslovně stojí *„jediný zdroj, který měří"*. Bod odečtený
+z mapy se tedy od změřeného pozná v datech, ne jen v hlavě toho, kdo ho
+zadal.
+
+**Návrh.** Pustit stavitele k výběru z mapy **jen s `Mapa` jako zdrojem** a
+bez údaje o přesnosti, a na obrazovce to říct slovem — „odečteno z mapy",
+ne „±4 m". Jakmile by se odečtený bod tvářil jako měření, přestane být
+doklad o poloze dokladem.
+
+### 11. Ze zaseknutého prvku vede ven jedině zahození
+
+*Doplněno 17. 11. 2026 na Filipův postřeh. Část už řešilo konzilium.*
+
+**Nález.** Maketa `Fronta.dc.html` nabízí u odmítnutého prvku jedinou akci,
+*Zahodit prvek 5*, a to plnou červenou plochou. Konzilium přesně tenhle
+tvar zrušilo: *Zkusit znovu* stojí nad zahozením, zahození je nejslabší
+tvar na kartě, nese potvrzení a nechá doklad i se souřadnicemi. **Maketa
+je tedy proti závěru** a je to vada makety, ne nové rozhodnutí.
+
+**Druhá polovina je ale věcná a konzilium ji neřešilo:** věta, kterou
+server vrací — *„Tahle trať je už přijatá"* — popisuje stav, který appka
+odstranit nemůže. Z `Prijato` vede ven `/vraceni` (rozhodčí vrátí trať
+stavitelům) a `/prestavba` (`TratEndpoints.cs:85`, `:210`, stavy
+v `Trat.cs:14–34`). **Žádost o odemčení neexistuje žádná** — stavitel na
+vodě může leda zavolat.
+
+**Návrh.** Nejlevnější odpověď není žádost, ale **nechat prvek počkat**:
+zámek je vada okolností, prvek se nezahazuje a jakmile trať někdo odemkne,
+fronta se rozjede sama. Karta ať to řekne („počká, dokud se trať
+neodemkne") a zahození ať zůstane tím, co udělá člověk, když chce. Teprve
+kdyby se ukázalo, že se na odemčení čeká dlouho, má smysl příznak *stavitel
+žádá o odemčení* tam, kde se rozhodčí dívá — ne nová cesta zpráv.
 
 ## Co se nemění, a proč
 
