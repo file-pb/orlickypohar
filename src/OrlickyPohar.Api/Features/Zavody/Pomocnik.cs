@@ -134,6 +134,35 @@ public static class Pomocnici
         poradatel || pomocnik || rozhodci;
 
     /// <summary>
+    /// <b>Smí tenhle člověk stavět trať</b> — pípnout značku a přečíst, co
+    /// už stojí?
+    ///
+    /// <para>
+    /// Filip, 17. 11. 2026: *„stavba trati by měla jít i mimo stránku
+    /// rozhodčího, stavitel trati může být i pomocník."* Neudělala se z toho
+    /// nová role: <see cref="Role"/> zůstává pětičlenný a příznak jen
+    /// přenáší na jednu zastávku to, co někdo v ročníku už má — totéž, co
+    /// dělá <see cref="SmiUVody"/> u startu a cíle.
+    /// </para>
+    /// <para>
+    /// <b>Vlastní funkce, i když je výraz zatím stejný</b> jako u vody.
+    /// Jsou to dvě různé otázky: u vody se zapisuje, co se stalo, tady se
+    /// rozhoduje, jak bude trať vypadat. Kdyby to byla jedna funkce, první
+    /// rozhodnutí, které je rozejde, by tiše změnilo i tu druhou.
+    /// </para>
+    /// <para>
+    /// <b>Za tímhle sítem není nic dalšího</b> (podmínka konzilia,
+    /// 17. 11. 2026): pouští jen <c>POST …/trat/prvky/postav</c> a čtení
+    /// trati. Mazání prvků, zahození trati, přestavba, přijetí i vrácení
+    /// zůstávají organizátorovi a rozhodčímu. Hlášení hotovo taky —
+    /// pomocník, který trať postavil, ji zatím nahlásit nemůže, a jestli
+    /// má, je rozhodnutí, které nikdo neudělal.
+    /// </para>
+    /// </summary>
+    public static bool SmiStavet(bool poradatel, bool pomocnik, bool rozhodci) =>
+        poradatel || pomocnik || rozhodci;
+
+    /// <summary>
     /// Proč tohohle člověka nejde zaškrtnout — nebo <c>null</c>.
     ///
     /// <para>

@@ -95,6 +95,29 @@ public class PomocniciTests
     }
 
     /// <summary>
+    /// <b>Stavba trati</b> (Filip, 17. 11. 2026: *„stavitel trati může být
+    /// i pomocník"*). Táž tři vstupní práva jako u vody, ale vlastní
+    /// funkce — jsou to dvě různé otázky a mají jít rozejít.
+    /// </summary>
+    [Fact]
+    public void Zaskrtnuty_pomocnik_smi_stavet()
+    {
+        Assert.True(Pomocnici.SmiStavet(poradatel: false, pomocnik: true, rozhodci: false));
+        Assert.True(Pomocnici.SmiStavet(poradatel: true, pomocnik: false, rozhodci: false));
+        Assert.True(Pomocnici.SmiStavet(poradatel: false, pomocnik: false, rozhodci: true));
+    }
+
+    /// <summary>
+    /// Kdo není ani jedno, nestaví. Appka se ptá na totéž, aby obrazovku
+    /// neotevřela tomu, komu server odmítne každý prvek.
+    /// </summary>
+    [Fact]
+    public void Nikdo_cizi_nestavi()
+    {
+        Assert.False(Pomocnici.SmiStavet(poradatel: false, pomocnik: false, rozhodci: false));
+    }
+
+    /// <summary>
     /// Odškrtnout jde jen toho, kdo pomáhá — jinak by v dokladu vznikl
     /// záznam o ukončení něčeho, co nezačalo.
     /// </summary>

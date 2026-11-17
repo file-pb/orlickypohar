@@ -85,6 +85,31 @@ public class PomocniciSprava(AppDbContext db, TimeProvider cas)
             : [];
 
     /// <summary>
+    /// Zastávky, kde tenhle člověk pomáhá, jako dvojice slugů a napříč
+    /// všemi ročníky.
+    ///
+    /// <para>
+    /// <b>Pro <c>/ja</c>, ne pro rozhodování o zápisu.</b> Appka se ptá
+    /// jednou po přihlášení a pak podle toho kreslí nabídku; samotné právo
+    /// si server u každé cesty počítá znovu. Slugy proto, že klient pracuje
+    /// s adresami — čísla by si musel párovat sám (<c>OpravneniDto</c>).
+    /// </para>
+    /// </summary>
+    public async Task<IReadOnlyList<(string Serie, string Zavod)>> KdePomahaSlugyAsync(
+        Guid? uzivatelId, CancellationToken ct)
+    {
+        if (uzivatelId is not { } id) return [];
+
+        var radky = await db.Pomocnici
+            .Where(p => p.UzivatelId == id && p.DoV == null)
+            .Select(p => new { Serie = p.Zavod!.Serie!.Slug, Zavod = p.Zavod!.Slug })
+            .Distinct()
+            .ToListAsync(ct);
+
+        return [.. radky.Select(r => (r.Serie, r.Zavod))];
+    }
+
+    /// <summary>
     /// Pořadatelé ročníku a jejich příznak — podklad pro obrazovku
     /// v klubovně.
     /// </summary>

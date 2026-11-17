@@ -23,7 +23,21 @@ public record JaDto(
     string Zobrazovane,
     string? Email,
     IReadOnlyList<OpravneniDto> Opravneni,
-    IReadOnlyList<Role>? Web = null);
+    IReadOnlyList<Role>? Web = null,
+    /// <summary>
+    /// Zastávky, kde je přihlášený dneska zaškrtnutý jako pomocník
+    /// (17. 11. 2026). <b>Není to role</b> — příznak přenáší na jednu
+    /// zastávku to, co někdo v ročníku už má, a klient podle něj kreslí
+    /// nabídku. Co z toho plyne, počítá server u každé cesty znovu.
+    /// <para>
+    /// Aditivní pole s výchozí hodnotou: starší vydání appky, které ho
+    /// nezná, se nerozbije.
+    /// </para>
+    /// </summary>
+    IReadOnlyList<ZastavkaDto>? KdePomaha = null);
+
+/// <summary>Zastávka slugem, tak jak ji zná adresa.</summary>
+public record ZastavkaDto(string Serie, string Zavod);
 
 /// <summary>
 /// Přihlášený uživatel sám o sobě.
@@ -73,6 +87,7 @@ public static class IdentitaEndpoints
         Uzivatele uzivatele,
         Profily profily,
         Parovani parovani,
+        Zavody.PomocniciSprava pomocnici,
         TimeProvider cas,
         ILogger<JaDto> log,
         CancellationToken ct)
@@ -124,6 +139,8 @@ public static class IdentitaEndpoints
             uzivatel.Zobrazovane,
             uzivatel.Email,
             [.. rozsahy.Select(r => new OpravneniDto(r.Role, r.Serie, r.Zavod))],
-            await uzivatele.WebRoleAsync(uzivatel.Id, ct)));
+            await uzivatele.WebRoleAsync(uzivatel.Id, ct),
+            [.. (await pomocnici.KdePomahaSlugyAsync(uzivatel.Id, ct))
+                .Select(z => new ZastavkaDto(z.Serie, z.Zavod))]));
     }
 }
