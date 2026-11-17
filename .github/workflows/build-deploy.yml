@@ -728,10 +728,13 @@ jobs:
       # krokem nepadá a verdikt stojí jen na tom, co obě služby vydávají.
       #
       # Změřené případy, všechny se stejným tvarem: 10. 11. 2026 u `fed3857`
-      # vrátila proxy 520 po 43 s; 17. 11. 2026 dvakrát `curl: (56)` po
-      # ~60 s (běhy 44182164236 a 44186217325). Pokaždé produkce běžela
-      # přesně ten commit, který se posílal, a ruční spuštění spadlé úlohy
-      # prošlo. <b>Rozdíl je v následku:</b> dokud takový běh končil červeně,
+      # vrátila proxy 520 po 43 s; 17. 11. 2026 třikrát `curl: (56)` po
+      # ~60 s (běhy 44182164236, 44186217325 a 44196148901). Pokaždé
+      # produkce běžela přesně ten commit, který se posílal, a ruční
+      # spuštění spadlé úlohy prošlo — u toho posledního to dokonce přečetl
+      # sám workflow: následující běh našel na produkci `c526d726`, jehož
+      # nasazení hlásilo selhání.
+      # <b>Rozdíl je v následku:</b> dokud takový běh končil červeně,
       # přeskočila se kvůli `needs: [nasazeni]` i `aktualizace-appky` —
       # server běžel nový a telefony starý JavaScript, a poznat se to dalo
       # jen dotazem na manifest `u.expo.dev` (17. 11. 2026 to stálo půl
