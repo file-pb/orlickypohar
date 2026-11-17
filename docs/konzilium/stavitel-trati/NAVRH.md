@@ -147,21 +147,55 @@ telefon potřebuje ruční instalaci. Není to teorie — přeinstalace iPhonu
 16. 11. chtěla kabel, Xcode a potvrzení certifikátu na telefonu, a podpis
 osobního týmu vyprší 23. 11.
 
-**Návrh: rozdělit pořízení a nahrání.**
+**Rozhodnuto (Filip, 17. 11. 2026): fotí se v appce**, a to **dvěma
+cestami — vyfotit teď, nebo vybrat z galerie**. Nativní fotoaparát
+telefonu, ale spustí ho appka a snímek se vrátí do ní. Tím padá varianta
+„fotit zvlášť a nahrát na břehu z webu"; zůstává jen jako to, co funguje do
+doby, než vyjde nativní build.
 
-1. **Fotí se běžným fotoaparátem telefonu**, ne v appce. Žádná nativní
-   závislost, otisk se nemění — a fotoaparát sám zapíše do snímku polohu
-   z EXIF, tedy druhý, nezávislý doklad k té, kterou měří appka.
-2. **Appka o fotku požádá a řekne, kolik jich chybí.** Řádek u prvku
-   („dvě fotky: zblízka a s břehem") a připomínka u *nahlásit hotovo*. Je
-   to text a jeden příznak, ne nová schopnost — nic nativního.
-3. **Nahrává se na břehu z webu**, kde to celé funguje už dnes. Prvky stojí
-   v pořadí, v jakém se stavěly, takže se snímky přiřadí podle času.
+Obě cesty umí **jeden** modul, `expo-image-picker`: `launchCameraAsync`
+a `launchImageLibraryAsync`. `expo-camera` by dal jen tu první a přinesl
+větší nativní plochu — proto `expo-image-picker`.
 
-**Co se tím platí:** přiřazení fotky ke značce dělá člověk, ne appka. Při
-osmi značkách to unese, při třiceti ne. **Nativní fotoaparát má cenu teprve
-tehdy, až se ukáže, že se nahrávání na břehu nedělá** — a pak ať jede spolu
-s příštím nativním buildem, ne kvůli sobě samému.
+**Galerie není jen pohodlí, je to záchranná cesta.** Kdo pod tlakem sáhne
+po běžném fotoaparátu telefonu místo po appce, má pak snímky v galerii
+a přiřadí je ke značkám z appky, dokud si to pamatuje. Má to ale jeden
+důsledek, který musí být vidět: **snímek z galerie mohl vzniknout kdykoliv
+a kdekoliv**, zatímco server ho uloží jako doklad k poloze. U vybraného
+snímku se proto přebírá čas a poloha z EXIF, a nejsou-li tam, appka u něj
+nesmí tvrdit, že byl pořízený u té značky.
+
+**Nativní závislost není ta drahá část.** Pořadí prací je vynucené tímhle:
+
+1. **Appka zahazuje čísla, bez kterých fotka nemá kam jít.** Snímek se
+   nahrává na `POST …/boje/{boje}/fotky`, a to `{boje}` je číslo, které
+   přiděluje server. V odpovědi přitom je — `PrvekDto` nese `KonecBojeDto`
+   s `Id` pro oba konce (`PrvkySprava.cs:12–13`, `:22`). Jenže
+   `postavPrvek` je v odesílání typovaný jako `Promise<unknown | null>`
+   (`odesilani.ts:44`) a `hotovo(id)` řádek prostě smaže
+   (`fronta.ts:168–170`). **Tohle je jediný krok, který nestojí otisk
+   vůbec, a bez něj nejde postavit nic dalšího.**
+2. **Fronta umí jen JSON, ne soubory.** `PrvekKPostaveni` je prostý objekt
+   (`fronta.ts:28–46`). Fotka potřebuje vlastní frontu: cesta k souboru,
+   ke kterému prvku patří (místním klíčem, server o něm ještě neví) a stav.
+   A soubor se musí **překopírovat z dočasné složky fotoaparátu** do
+   trvalé; na vodě není signál celé hodiny a dočasné soubory systém maže.
+3. **Teprve pak fotoaparát.** `expo-image-picker` nebo `expo-camera` je
+   nativní modul, a `runtimeVersion` má politiku `fingerprint`
+   (`app/app.json:103–105`) — otisk se změní, kanál OTA se rozdělí a každý
+   telefon chce ruční instalaci.
+
+**Kdy ten otisk zaplatit: teď.** Appku má dnes jeden telefon, Milošovi se
+nic neposílalo — ruční přeinstalace se tedy týká jednoho člověka, zatímco
+za měsíc už jich může být pět. Navíc podpis osobního týmu na iPhonu vyprší
+**23. 11.**, takže nový build a instalace kabelem stejně musí proběhnout
+do šesti dnů. Nativní modul ať jede s ním; pak je otisk zaplacený jednou
+a kvůli něčemu, co se muselo udělat tak jako tak.
+
+**Co appka o fotce ví a říká.** Dvě fotky na značku, zblízka a s břehem —
+tak, jak to žádá server (`FotkySprava.cs:160–162`). Řádek u prvku ukáže,
+kolik jich chybí, a *nahlásit hotovo* na chybějící upozorní; odjet od vody
+bez fotek jde, ale ne omylem.
 
 ## Co se nemění, a proč
 
