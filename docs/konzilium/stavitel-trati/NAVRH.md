@@ -118,6 +118,51 @@ stavitele číst, místo aby mířil.
 bílé s tenkým rámem. Informace bez rámu. Nic dalšího barevného, kromě
 stavů (červená = stojí, oranžová = pozor).
 
+### 7. Fotka z vody v návrhu není vůbec — a server ji čeká
+
+*Doplněno 17. 11. 2026 na Filipův postřeh. **Konzilium tenhle nález
+neposuzovalo**, přišel po závěru.*
+
+**Nález.** Ani návrh, ani žádná z maket neříká o fotce slovo. Přitom doklad
+fotkou u značky **je hotový**: `Fotka.UBojeId` s migrací
+`20261009092122_FotkyBoje`, `POST …/boje/{boje}/fotky`
+(`BojeEndpoints.cs:59`), `FotkySprava.PridejKBojiAsync` (`:169`) i mazání
+(`:186`). Web to umí z obou stran — `nahrajFotku` a `odeberFotku`
+(`web/lib/boje.ts:295`, `:326`). Fotek smí být na jednu bóji víc schválně:
+*„jeden snímek zblízka neukáže zároveň bóji i břeh za ní, a teprve obojí
+dohromady dokládá, kde to je"* (`FotkySprava.cs:160–162`, Filip, 9. 10.
+2026).
+
+**Proč to vadí.** Fotka se dá pořídit **jen z vody** a jen při stavbě — na
+břehu je ta bóje daleko. Appka ale stavitele o fotku nijak nepožádá, takže
+nevznikne, a co nevznikne na vodě, se nedoloží nikdy. Hotová serverová
+cesta tím zůstane prázdná.
+
+**Čím to není.** Není to chybějící tlačítko fotoaparátu. Obrazovka fotku
+vynechává **vědomě** a důvod je zapsaný v jejím vlastním popisu: *„byla by
+to nativní závislost, tedy posunutý otisk a ruční přeinstalace APK u všech"*
+(`stavba.tsx:72–73`). Ten otisk je `runtimeVersion` z fingerprintu: nový
+nativní modul (`expo-image-picker`, `expo-camera`) rozdělí kanál OTA a každý
+telefon potřebuje ruční instalaci. Není to teorie — přeinstalace iPhonu
+16. 11. chtěla kabel, Xcode a potvrzení certifikátu na telefonu, a podpis
+osobního týmu vyprší 23. 11.
+
+**Návrh: rozdělit pořízení a nahrání.**
+
+1. **Fotí se běžným fotoaparátem telefonu**, ne v appce. Žádná nativní
+   závislost, otisk se nemění — a fotoaparát sám zapíše do snímku polohu
+   z EXIF, tedy druhý, nezávislý doklad k té, kterou měří appka.
+2. **Appka o fotku požádá a řekne, kolik jich chybí.** Řádek u prvku
+   („dvě fotky: zblízka a s břehem") a připomínka u *nahlásit hotovo*. Je
+   to text a jeden příznak, ne nová schopnost — nic nativního.
+3. **Nahrává se na břehu z webu**, kde to celé funguje už dnes. Prvky stojí
+   v pořadí, v jakém se stavěly, takže se snímky přiřadí podle času.
+
+**Co se tím platí:** přiřazení fotky ke značce dělá člověk, ne appka. Při
+osmi značkách to unese, při třiceti ne. **Nativní fotoaparát má cenu teprve
+tehdy, až se ukáže, že se nahrávání na břehu nedělá** — a pak ať jede spolu
+s příštím nativním buildem, ne kvůli sobě samému.
+
 ## Co se nemění, a proč
 
 1. **Prvek se pořád zapisuje jedním požadavkem.** `POST …/trat/prvky/postav`

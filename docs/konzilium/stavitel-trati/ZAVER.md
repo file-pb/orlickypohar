@@ -54,6 +54,21 @@ obrátil opačným směrem a zůstal sám. Jeho argument je zapsaný níž.
 **Z nálezu 1 návrhu zůstává to podstatné:** pípnutí patří před otázky uvnitř
 jednoho prvku. Padá jen věta *„a i na to se dá odpovědět později"*.
 
+**Podmínka tří hlasů je splněná** (odpověď Filipa, 17. 11. 2026): trať se
+dohodne s organizátorem **ústně ten den**, u některých regat se navíc obecně
+ví, co se asi pojede. Prvky jsou tedy známé dřív, než motorák odrazí — popis
+po pípnutí je **vybavení** toho, co bylo ujednáno před chvílí, ne rozhodování
+na vodě podle větru. Hlasy 1, 7 a 9 platí tak, jak jsou zapsané, odklad
+popisu padá a vlastní tabulka pro nepopsané pípnutí se nestaví.
+
+**Co ta odpověď otevřela a co rozhodnutí není.** Ujednání žije **jen v hlavě**
+stavitele; v appce o něm není nic. Kritérium 7-psychologa — *„zátěž je ta, ke
+které se člověk musí vrátit sám a bez vodítka"* — tedy míří na ranní dohodu
+stejně jako na odložený popis: popsat prvek hned znamená popsat ho, dokud si
+ho stavitel pamatuje. Druhý směr, totiž zapsat ujednanou trať do appky na
+břehu a na vodě ji jen potvrzovat, konzilium neposuzovalo a tenhle závěr ho
+**nerozhoduje** — je to zaznamenaný podnět, ne bod ke stavbě.
+
 ### 3. Seznam má osm řádků, ne sedm — jednomyslně, a rozhodl kód
 
 Hlasovali 1, 2, 3 — **všichni pro osm**. Byla to věcná otázka, ne vkus:
@@ -227,14 +242,14 @@ Rozsah se proto musí u každé cesty vybírat jmenovitě výčtem.
 ## Co čeká na Filipa
 
 Pět otázek, které konzilium rozhodnout nemůže, protože jsou to tvoje pravidla.
-První z nich je podmínkou tří hlasů.
+**První je odpovězená 17. 11. 2026, čtyři zbývají.**
 
 1. **Staví se trať podle předem nakresleného plánu, nebo se o prvcích
-   rozhoduje až na vodě podle větru?** Na tom visí bod 2: 1-ergonomie,
-   7-psycholog i 9-rizika svůj hlas pro zrušení odkladu podmínily tím, že se
-   staví podle plánu. **Řekneš-li, že se rozhoduje na vodě, odklad popisu
-   musí být** — a pak platí vlastní tabulka (viz zapsaný nesouhlas), strop
-   jedné nepopsané značky a zákaz dalšího pípnutí, všechny tři.
+   rozhoduje až na vodě podle větru?** — **Odpovězeno 17. 11. 2026:** ústní
+   dohoda s organizátorem ten den, u některých regat navíc obecné povědomí,
+   co se asi pojede. Ani jedna z nabídnutých možností: plán je, ale není
+   nakreslený. **Bod 2 tím platí celý**, odklad popisu padá a vlastní
+   tabulka se nestaví; podrobně v bodu 2.
 2. **Jede telefon ráno na vodě v tmavém režimu?** Celá tmavá polovina
    posudku 2-designu je odvozená z tokenů. Do odpovědi se staví přísnější
    varianta — stojí jedno volání funkce, která už existuje.
@@ -289,8 +304,10 @@ Každý obor dostal jednu větu na to, co není sporné, a proto nemá vlastní 
   které její autor (3-ux) v kole 2 s doložením ustoupil, protože
   `fronta.vstup` je `NOT NULL` a drží hotový `PrvekKPostaveni`. **Moderátor
   výhradu uznává jako oprávněnou.** Je bezpředmětná, dokud platí bod 2
-  (neukládá se nic), ale **vynutí-li odpověď na otázku 1 odklad, platí
-  vlastní tabulka**, ne řádek ve frontě.
+  (neukládá se nic), ale **vynutila-li by odpověď na otázku 1 odklad, platí
+  vlastní tabulka**, ne řádek ve frontě. Odpověď z 17. 11. 2026 odklad
+  nevynutila, takže výhrada zůstává bezpředmětná — a zapsaná pro případ, že
+  se odklad někdy vrátí.
 - **7-psycholog k bodu 6:** **403 se nesmí schovat do „zkouším znovu".**
   U 5xx je tiché opakování správné, mizí samy; 403 samo nezmizí a podle
   bodu 10 je to běžný stav, ne porucha. Tiché opakování by znamenalo, že
