@@ -7,6 +7,7 @@ import { ZvukNastaveni } from '@/components/zvuk-nastaveni';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiJa, type Ja } from '@/lib/api';
 import { navratovaAdresa, odhlas, prihlas, prihlasovaniJde } from '@/lib/identita';
+import { zapomenOpravneni } from '@/lib/opravneni';
 
 /**
  * Účet: přihlášení a co z něj plyne.
@@ -49,6 +50,9 @@ export default function Ucet() {
     try {
       const potiz = await prihlas();
       setChyba(potiz);
+      // Drženou odpověď `/ja` zahodit, jinak by nabídka v kebabu ještě
+      // minutu tvrdila, že přihlášený není nic.
+      zapomenOpravneni();
       if (!potiz) await nacti();
     } finally {
       setDelam(false);
@@ -57,6 +61,7 @@ export default function Ucet() {
 
   const naOdhlaseni = async () => {
     await odhlas();
+    zapomenOpravneni();
     setJa(null);
   };
 

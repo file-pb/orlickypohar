@@ -45,6 +45,71 @@ export function kdeVeli(ja: Ja | null): { serie: string; zavod: string | null } 
 }
 
 /**
+ * <b>Smí tenhle člověk stavět trať téhle regaty?</b> Pípnout značku
+ * a přečíst, co už stojí.
+ *
+ * <b>Proč to není `veliNekde`.</b> Karta *Stavba trati* se dosud nabízela
+ * každému, kdo někde velí — a pořadatelství **kterékoliv** zastávky
+ * ročníku stačí k tomu, aby ho šlo zaškrtnout jako pomocníka
+ * (`Pomocnik.cs`). Pořadatel Zahájení sezóny tedy viděl stavbu i na
+ * Radavě, kde mu server odmítne každý prvek. Obrazovka nemá slibovat,
+ * co pod ní není.
+ *
+ * <b>Tytéž tři vstupy jako na serveru</b> (`Pomocnici.SmiStavet`):
+ * pořadatel téhle zastávky, rozhodčí ročníku, zaškrtnutý pomocník.
+ * Rozhoduje server u každého požadavku znovu — tohle jen kreslí nabídku,
+ * takže smí být přísnější, nikdy volnější.
+ */
+export function smiStavet(ja: Ja | null, serie: string, zavod: string): boolean {
+  const opravneni = ja?.opravneni ?? [];
+
+  // Správce celého webu projde vším (`Prava.Pokryva`), a protože nemá
+  // ročník, nenajde se v oprávněních na sérii.
+  if ((ja?.web ?? []).includes('Spravce')) return true;
+
+  // Organizátor: právo na ročník platí i na kteroukoliv jeho zastávku,
+  // právo na jednu zastávku jen na ni.
+  const poradatel = opravneni.some(
+    (o) =>
+      (o.role === 'Organizator' || o.role === 'Spravce') &&
+      o.serie === serie &&
+      (!o.zavod || o.zavod === zavod),
+  );
+
+  // Rozhodčí se žádá na celý ročník, takže právo svázané s jedinou
+  // zastávkou na něj nestačí — stejně jako `Pozadavek(Role.Rozhodci,
+  // rozsah.SerieId)` na serveru.
+  const rozhodci = opravneni.some(
+    (o) => (o.role === 'Rozhodci' || o.role === 'Spravce') && o.serie === serie && !o.zavod,
+  );
+
+  const pomaha = (ja?.kdePomaha ?? []).some((z) => z.serie === serie && z.zavod === zavod);
+
+  return poradatel || rozhodci || pomaha;
+}
+
+/**
+ * Kde ten člověk staví trať — nebo <c>null</c>.
+ *
+ * <b>Nejdřív zastávka, kde je dneska zaškrtnutý jako pomocník:</b> tam
+ * ho někdo dnes ráno poslal stavět, kdežto právo na celý ročník má
+ * pořád. Pak zastávka, na kterou má přímo oprávnění, a nakonec ročník
+ * bez zastávky — tam si musí vybrat sám, protože zastávky jsou
+ * v kalendáři a nabídka je nezná.
+ */
+export function kdeStavi(ja: Ja | null): { serie: string; zavod: string | null } | null {
+  const pomaha = (ja?.kdePomaha ?? [])[0];
+  if (pomaha) return { serie: pomaha.serie, zavod: pomaha.zavod };
+
+  const stavi = (ja?.opravneni ?? []).filter((o) => VELI.has(o.role) || o.role === 'Spravce');
+  if (stavi.length === 0) return null;
+
+  const naZavod = stavi.find((o) => o.zavod);
+  const vybrane = naZavod ?? stavi[0];
+  return { serie: vybrane.serie, zavod: vybrane.zavod ?? null };
+}
+
+/**
  * Co ten člověk je. <b>Velení přebíjí loď</b>: rozhodčí, který má i vlastní
  * plachetnici, přišel k vodě velet — a kdyby mu rozcestník nabídl nejdřív
  * sledování, hledal by start pod ním.

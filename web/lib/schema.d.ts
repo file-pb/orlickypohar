@@ -5233,7 +5233,7 @@ export interface paths {
         put?: never;
         /**
          * Zapíše polohu postavené nebo přenastavené bóje
-         * @description Pořadatel regaty, nebo rozhodčí. Přenastavení je nový záznam — starý zůstává. Poloha mimo Orlík nebo přesnost horší než 100 m se odmítne. `zdroj` říká, odkud poloha je: `Telefon` ji změřil u bóje a hlásí přesnost, `Mapa` a `Qr` ji mají odečtenou a přesnost u nich nesmí přijít. Chybějící `zdroj` znamená `Telefon`.
+         * @description Pořadatel regaty, nebo rozhodčí. Přenastavení je nový záznam — starý zůstává. Poloha mimo Česko nebo přesnost horší než 100 m se odmítne. `zdroj` říká, odkud poloha je: `Telefon` ji změřil u bóje a hlásí přesnost, `Mapa` a `Qr` ji mají odečtenou a přesnost u nich nesmí přijít. Chybějící `zdroj` znamená `Telefon`.
          */
         post: {
             parameters: {
@@ -6337,7 +6337,7 @@ export interface paths {
         };
         /**
          * Stav trati regaty
-         * @description Organizátor regaty, nebo rozhodčí ročníku. Vrací 404, dokud regata nemá ani jednu bóji — stavba začíná prvním pípnutím, ne zvláštním knoflíkem.
+         * @description Organizátor regaty, rozhodčí ročníku, nebo pomocník zaškrtnutý na téhle zastávce (17. 11. 2026). Vrací 404, dokud regata nemá ani jednu bóji — stavba začíná prvním pípnutím, ne zvláštním knoflíkem.
          */
         get: {
             parameters: {
@@ -6517,7 +6517,7 @@ export interface paths {
         };
         /**
          * Prvky trati v pořadí
-         * @description Organizátor regaty, nebo rozhodčí ročníku.
+         * @description Organizátor regaty, rozhodčí ročníku, nebo pomocník zaškrtnutý na téhle zastávce (17. 11. 2026).
          */
         get: {
             parameters: {
@@ -6595,7 +6595,7 @@ export interface paths {
         put?: never;
         /**
          * Postaví prvek i s jeho značkami jednou transakcí
-         * @description Organizátor regaty, nebo rozhodčí ročníku. Cesta pro appku: prvek se nedá skládat ze serverových id, když se odesílá z fronty bez signálu. Buď vznikne celý, nebo nic. `klic` je povinný — opakované odeslání téhož klíče vrátí týž prvek s kódem 200, nový dostane 201.
+         * @description Organizátor regaty, rozhodčí ročníku, nebo pomocník zaškrtnutý na téhle zastávce (17. 11. 2026). Cesta pro appku: prvek se nedá skládat ze serverových id, když se odesílá z fronty bez signálu. Buď vznikne celý, nebo nic. `klic` je povinný — opakované odeslání téhož klíče vrátí týž prvek s kódem 200, nový dostane 201.
          */
         post: {
             parameters: {
@@ -7497,6 +7497,7 @@ export interface components {
             email: null | string;
             opravneni: components["schemas"]["OpravneniDto"][];
             web?: null | components["schemas"]["Role"][];
+            kdePomaha?: null | components["schemas"]["KdePomahaDto"][];
         };
         JsonElement: unknown;
         KapitanVstup: {
@@ -7515,6 +7516,10 @@ export interface components {
             nazev: string;
             /** Format: int32 */
             poradi: number;
+        };
+        KdePomahaDto: {
+            serie: string;
+            zavod: string;
         };
         KlicDto: {
             /** Format: int32 */

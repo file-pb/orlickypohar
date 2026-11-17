@@ -4,7 +4,10 @@ import { Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Radek } from '@/components/ui';
+import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
+import { mojeOpravneni } from '@/lib/opravneni';
+import { kdeStavi } from '@/lib/role';
 import { kamVUkazce, ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
 
 /**
@@ -41,12 +44,48 @@ const KAM: { text: string; cil: string; popis?: string }[] = [
 
 const WEB = 'https://orlickypohar.klihovka.cz';
 
+/**
+ * Nabídka i se stavbou trati, má-li ji ten člověk kde dělat.
+ *
+ * <b>Proč je v nabídce, a ne jen na stránce regaty</b> (Filip,
+ * 17. 11. 2026: *„udělej to spustitelné samostatně z menu"*). Stavitel
+ * ráno appku zapne kvůli jediné věci a dnes se k ní musel proklikat
+ * přes ročník a regatu.
+ *
+ * <b>Bez zastávky vede na ročník, ne na stavbu.</b> Kdo má právo na celý
+ * ročník, může stavět na kterékoliv jeho zastávce — a které to jsou, ví
+ * kalendář, ne nabídka. Vybrat za něj tu první by znamenalo pípat do
+ * cizí regaty.
+ */
+function kam(stavi: ReturnType<typeof kdeStavi>) {
+  if (!stavi) return KAM;
+
+  const stavba = stavi.zavod
+    ? {
+        text: 'Stavba trati',
+        cil: `/serie/${stavi.serie}/zavody/${stavi.zavod}/stavba`,
+        popis: 'pípni značky z lodi',
+      }
+    : {
+        text: 'Stavba trati',
+        cil: `/serie/${stavi.serie}`,
+        popis: 'vyber regatu, kde stavíš',
+      };
+
+  // Za „Moje regata": stavba je taky věc dnešního dne, ne archiv.
+  const kde = KAM.findIndex((k) => k.cil === '/zavodnik');
+  return [...KAM.slice(0, kde + 1), stavba, ...KAM.slice(kde + 1)];
+}
+
 export function Kebab() {
   const t = useTheme();
   const router = useRouter();
   const okraje = useSafeAreaInsets();
   const [otevreno, setOtevreno] = useState(false);
   const [vUkazce, setVUkazce] = useState(ukazkaBezi());
+  // Oprávnění se drží minutu (`lib/opravneni.ts`); nabídka je na každé
+  // obrazovce a dotaz za přechod by na vodě stál čekání u každého klepnutí.
+  const { data: ja } = useData(mojeOpravneni);
 
   // Zavřít dřív, než se někam jde: jinak by nabídka zůstala viset nad
   // obrazovkou, na kterou se právě přešlo.
@@ -90,7 +129,7 @@ export function Kebab() {
             s.panel,
             { backgroundColor: t.papir, borderColor: t.linka, paddingTop: okraje.top + 8 },
           ]}>
-          {KAM.map((k) => (
+          {kam(kdeStavi(ja ?? null)).map((k) => (
             <Radek key={k.cil} text={k.text} popis={k.popis} onPress={() => jdi(k.cil)} />
           ))}
           {/* <b>Ukázkový režim.</b> Appka se odpojí od serveru a jede

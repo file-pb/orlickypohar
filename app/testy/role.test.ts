@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict';
 
-import { kdeVeli, postava, veliNekde } from '../src/lib/role.ts';
+import { kdeStavi, kdeVeli, postava, smiStavet, veliNekde } from '../src/lib/role.ts';
 import type { Ja } from '../src/lib/api.ts';
 
 let prosly = 0;
@@ -86,6 +86,70 @@ zkus('cizí role se do velení nepočítají ani v hromadě', () => {
   );
   assert.equal(veliNekde(kdo), false);
   assert.equal(kdeVeli(kdo), null);
+});
+
+/** Přihlášený i se zastávkami, kde je dneska zaškrtnutý jako pomocník. */
+const jaSPomoci = (
+  pomaha: { serie: string; zavod: string }[],
+  ...opravneni: { role: string; serie: string; zavod?: string | null }[]
+): Ja => ({ ...ja(...opravneni), kdePomaha: pomaha }) as unknown as Ja;
+
+zkus('pořadatel cizí zastávky stavbu nevidí', () => {
+  // Živá vada do 17. 11. 2026: karta visela na `veliNekde`, a pořadatelství
+  // kterékoliv zastávky ročníku stačí k zaškrtnutí za pomocníka. Pořadatel
+  // Zahájení sezóny tak viděl stavbu i na Radavě, kde mu server odmítne
+  // každý prvek.
+  const kdo = ja({ role: 'Organizator', serie: '2027', zavod: 'zahajeni-sezony' });
+  assert.equal(veliNekde(kdo), true);
+  assert.equal(smiStavet(kdo, '2027', 'zahajeni-sezony'), true);
+  assert.equal(smiStavet(kdo, '2027', 'radavska-regata'), false);
+});
+
+zkus('zaškrtnutý pomocník staví tam, kde je zaškrtnutý', () => {
+  const kdo = jaSPomoci([{ serie: '2027', zavod: 'radavska-regata' }], {
+    role: 'Organizator',
+    serie: '2027',
+    zavod: 'zahajeni-sezony',
+  });
+  assert.equal(smiStavet(kdo, '2027', 'radavska-regata'), true);
+  // A nikde jinde. Příznak patří jedné zastávce, ne ročníku.
+  assert.equal(smiStavet(kdo, '2027', 'podzimni-vitr'), false);
+});
+
+zkus('právo na celý ročník staví na kterékoliv jeho zastávce', () => {
+  const kdo = ja({ role: 'Organizator', serie: '2027' });
+  assert.equal(smiStavet(kdo, '2027', 'radavska-regata'), true);
+  // Cizí ročník ne.
+  assert.equal(smiStavet(kdo, '2026', 'radavska-regata'), false);
+});
+
+zkus('rozhodčí svázaný s jednou zastávkou nestaví na druhé', () => {
+  // Server se na rozhodčího ptá na celý ročník (`Pozadavek(Role.Rozhodci,
+  // rozsah.SerieId)`), takže právo na jednu zastávku na to nestačí.
+  const kdo = ja({ role: 'Rozhodci', serie: '2027', zavod: 'zahajeni-sezony' });
+  assert.equal(smiStavet(kdo, '2027', 'radavska-regata'), false);
+  assert.equal(smiStavet(ja({ role: 'Rozhodci', serie: '2027' }), '2027', 'radavska-regata'), true);
+});
+
+zkus('nepřihlášený nestaví nikde', () => {
+  assert.equal(smiStavet(null, '2027', 'radavska-regata'), false);
+  assert.equal(kdeStavi(null), null);
+});
+
+zkus('nabídka vede tam, kde dneska pomáhá', () => {
+  // Zaškrtnutí je dnešní pokyn; právo na ročník má ten člověk pořád.
+  const kdo = jaSPomoci([{ serie: '2027', zavod: 'radavska-regata' }], {
+    role: 'Organizator',
+    serie: '2027',
+  });
+  assert.deepEqual(kdeStavi(kdo), { serie: '2027', zavod: 'radavska-regata' });
+});
+
+zkus('bez zastávky vede nabídka na ročník, ne na cizí regatu', () => {
+  assert.deepEqual(kdeStavi(ja({ role: 'Rozhodci', serie: '2027' })), {
+    serie: '2027',
+    zavod: null,
+  });
 });
 
 console.log(`  ${prosly} prošlo`);

@@ -213,6 +213,36 @@ jinak než na produkci a nešlo to poznat odnikud než z výsledkové tabulky.
 Proto je v `Dockerfile` `icu-libs` a porovnává se explicitně přes `cs-CZ`;
 Program.cs při startu upozorní, kdyby ICU zase zmizelo.
 
+**Instalace přes kabel nestačí, když je v kanálu novější aktualizace.**
+`app/scripts/iphone.sh` postaví Release a nainstaluje ho, jenže appka má
+v `app.json` `fallbackToCacheTimeout: 5000`: při startu počká až pět vteřin
+na aktualizaci z kanálu `preview`, a když se stáhne, spustí **ji** místo
+zabudovaného kódu. Čerstvě nainstalovaná appka tak běží na starším
+JavaScriptu a vypadá to, že se změna neprojevila — 17. 11. 2026 to stálo
+půl hodiny hledání v kódu, který byl správně. Co kanál zrovna nabízí, řekne
+dotaz na manifest:
+
+```bash
+curl -sD - -o /dev/null https://u.expo.dev/<projekt> \
+  -H 'expo-platform: ios' -H 'expo-protocol-version: 1' \
+  -H 'expo-channel-name: preview' -H 'expo-runtime-version: <otisk>' \
+  -H 'accept: multipart/mixed'
+```
+
+Cesta ven je **publikovat aktualizaci pushem** a appku restartovat, ne
+instalovat podruhé. Z ruky ji nepublikuj: `eas update` nedostane proměnné
+`EXPO_PUBLIC_*` ze shellu a Metro je zapéká do bundle, takže by vyšla
+appka s prázdnou adresou poskytovatele identity a vypnutým přihlašováním
+(stalo se 28. 10. 2026). CI to dělá přes `--input-dir` s hodnotami
+z `eas.json`.
+
+**Jméno DTO musí být unikátní v celém API.** Schémata OpenAPI žijí
+v jediném jmenném prostoru, takže druhý `ZastavkaDto` nevznikne — `$ref`
+se sveze na ten existující a vygenerovaný klient dostane tvar, který ta
+cesta nikdy nevrátí. 17. 11. 2026 to odhalila až kontrola typů v appce;
+kdyby se tvary náhodou shodovaly, projde to tiše a rozbije se to až
+u klienta.
+
 **Subdomény jen jednoúrovňové.** Bezplatný certifikát Cloudflare kryje
 `*.klihovka.cz`, takže `api.orlickypohar.klihovka.cz` selže na TLS dřív, než
 požadavek dojde na server. Proto `orlickypohar-api.klihovka.cz`.

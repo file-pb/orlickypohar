@@ -42,7 +42,7 @@ import {
   type ZavodDetail,
 } from '@/lib/api';
 import { pismoNaVyplni } from '@/lib/kontrast';
-import { veliNekde } from '@/lib/role';
+import { smiStavet, veliNekde } from '@/lib/role';
 import { baterieProcent, obnovBaterii } from '@/lib/tracker/baterie';
 import {
   nactiCekajici,
@@ -489,7 +489,12 @@ export default function Zastavka() {
               nemůže viset na panelu odpočtu kousek níž — ten se ukazuje,
               až když se startuje nebo jede. Značky se přitom staví ráno,
               kdy panel nic nekreslí. */}
-          {veliNekde(ja ?? null) ? (
+          {/* <b>Ne `veliNekde`.</b> Pořadatelství kterékoliv zastávky
+              ročníku stačí k zaškrtnutí za pomocníka, takže pořadatel
+              Zahájení sezóny viděl stavbu i tady — a server mu odmítne
+              každý prvek. `smiStavet` se ptá na tutéž trojici jako
+              `Pomocnici.SmiStavet` na serveru. */}
+          {smiStavet(ja ?? null, slug, zavod) ? (
             <Karta onPress={() => router.push(`/serie/${slug}/zavody/${zavod}/stavba`)}>
               <Text style={{ color: t.text, fontWeight: '600' }}>Stavba trati</Text>
               <Text style={{ color: t.tlumeny, marginTop: 2 }}>

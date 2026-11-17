@@ -5411,7 +5411,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Zap\u00ed\u0161e polohu postaven\u00e9 nebo p\u0159enastaven\u00e9 b\u00f3je",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. P\u0159enastaven\u00ed je nov\u00fd z\u00e1znam \u2014 star\u00fd z\u016fst\u00e1v\u00e1. Poloha mimo Orl\u00edk nebo p\u0159esnost hor\u0161\u00ed ne\u017e 100 m se odm\u00edtne. `zdroj` \u0159\u00edk\u00e1, odkud poloha je: `Telefon` ji zm\u011b\u0159il u b\u00f3je a hl\u00e1s\u00ed p\u0159esnost, `Mapa` a `Qr` ji maj\u00ed ode\u010dtenou a p\u0159esnost u nich nesm\u00ed p\u0159ij\u00edt. Chyb\u011bj\u00edc\u00ed `zdroj` znamen\u00e1 `Telefon`.",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. P\u0159enastaven\u00ed je nov\u00fd z\u00e1znam \u2014 star\u00fd z\u016fst\u00e1v\u00e1. Poloha mimo \u010cesko nebo p\u0159esnost hor\u0161\u00ed ne\u017e 100 m se odm\u00edtne. `zdroj` \u0159\u00edk\u00e1, odkud poloha je: `Telefon` ji zm\u011b\u0159il u b\u00f3je a hl\u00e1s\u00ed p\u0159esnost, `Mapa` a `Qr` ji maj\u00ed ode\u010dtenou a p\u0159esnost u nich nesm\u00ed p\u0159ij\u00edt. Chyb\u011bj\u00edc\u00ed `zdroj` znamen\u00e1 `Telefon`.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -6593,7 +6593,7 @@
                     "B\u00f3je"
                 ],
                 "summary": "Stav trati regaty",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Vrac\u00ed 404, dokud regata nem\u00e1 ani jednu b\u00f3ji \u2014 stavba za\u010d\u00edn\u00e1 prvn\u00edm p\u00edpnut\u00edm, ne zvl\u00e1\u0161tn\u00edm knofl\u00edkem.",
+                "description": "Organiz\u00e1tor regaty, rozhod\u010d\u00ed ro\u010dn\u00edku, nebo pomocn\u00edk za\u0161krtnut\u00fd na t\u00e9hle zast\u00e1vce (17. 11. 2026). Vrac\u00ed 404, dokud regata nem\u00e1 ani jednu b\u00f3ji \u2014 stavba za\u010d\u00edn\u00e1 prvn\u00edm p\u00edpnut\u00edm, ne zvl\u00e1\u0161tn\u00edm knofl\u00edkem.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -6791,7 +6791,7 @@
                     "B\u00f3je"
                 ],
                 "summary": "Prvky trati v po\u0159ad\u00ed",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku.",
+                "description": "Organiz\u00e1tor regaty, rozhod\u010d\u00ed ro\u010dn\u00edku, nebo pomocn\u00edk za\u0161krtnut\u00fd na t\u00e9hle zast\u00e1vce (17. 11. 2026).",
                 "parameters": [
                     {
                         "name": "serie",
@@ -6896,7 +6896,7 @@
                     "B\u00f3je"
                 ],
                 "summary": "Postav\u00ed prvek i s jeho zna\u010dkami jednou transakc\u00ed",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Cesta pro appku: prvek se ned\u00e1 skl\u00e1dat ze serverov\u00fdch id, kdy\u017e se odes\u00edl\u00e1 z fronty bez sign\u00e1lu. Bu\u010f vznikne cel\u00fd, nebo nic. `klic` je povinn\u00fd \u2014 opakovan\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e kl\u00ed\u010de vr\u00e1t\u00ed t\u00fd\u017e prvek s k\u00f3dem 200, nov\u00fd dostane 201.",
+                "description": "Organiz\u00e1tor regaty, rozhod\u010d\u00ed ro\u010dn\u00edku, nebo pomocn\u00edk za\u0161krtnut\u00fd na t\u00e9hle zast\u00e1vce (17. 11. 2026). Cesta pro appku: prvek se ned\u00e1 skl\u00e1dat ze serverov\u00fdch id, kdy\u017e se odes\u00edl\u00e1 z fronty bez sign\u00e1lu. Bu\u010f vznikne cel\u00fd, nebo nic. `klic` je povinn\u00fd \u2014 opakovan\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e kl\u00ed\u010de vr\u00e1t\u00ed t\u00fd\u017e prvek s k\u00f3dem 200, nov\u00fd dostane 201.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -8646,6 +8646,15 @@
                         "items": {
                             "$ref": "#/components/schemas/Role"
                         }
+                    },
+                    "kdePomaha": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/KdePomahaDto"
+                        }
                     }
                 }
             },
@@ -8712,6 +8721,21 @@
                     "poradi": {
                         "type": "integer",
                         "format": "int32"
+                    }
+                }
+            },
+            "KdePomahaDto": {
+                "required": [
+                    "serie",
+                    "zavod"
+                ],
+                "type": "object",
+                "properties": {
+                    "serie": {
+                        "type": "string"
+                    },
+                    "zavod": {
+                        "type": "string"
                     }
                 }
             },

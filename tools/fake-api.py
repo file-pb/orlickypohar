@@ -6108,6 +6108,11 @@ class H(BaseHTTPRequestHandler):
                 # slug ročníku u nich není co vydat.
                 "web": [o["role"] for o in OPRAVNENI_WEBU
                         if o["email"] == kdo["email"]],
+                # Zastávky, kde je přihlášený zaškrtnutý jako pomocník
+                # (17. 11. 2026). Mock pomocníky nemodeluje vůbec — pole
+                # je tu proto, aby klient dostal tvar, který API slibuje,
+                # ne aby se tím dal ten příznak vyzkoušet.
+                "kdePomaha": [],
             }
         elif cesta == f'/sprava/serie/{D["slug"]}/opravneni':
             if not self.headers.get("authorization"):
