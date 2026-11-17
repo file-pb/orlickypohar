@@ -34,10 +34,22 @@ public record JaDto(
     /// nezná, se nerozbije.
     /// </para>
     /// </summary>
-    IReadOnlyList<ZastavkaDto>? KdePomaha = null);
+    IReadOnlyList<KdePomahaDto>? KdePomaha = null);
 
-/// <summary>Zastávka slugem, tak jak ji zná adresa.</summary>
-public record ZastavkaDto(string Serie, string Zavod);
+/// <summary>
+/// Zastávka dvojicí slugů, tak jak ji zná adresa.
+///
+/// <para>
+/// <b>Jméno musí být unikátní v celém API.</b> Napoprvé se tenhle typ
+/// jmenoval <c>ZastavkaDto</c> — a takový už existuje jinde
+/// (slug, název, datum, pořadí). Dokument OpenAPI drží schémata
+/// v jediném jmenném prostoru, takže se <c>$ref</c> svezl na ten cizí
+/// a vygenerovaný klient dostal tvar, který tahle cesta nikdy nevrátí.
+/// Všimla si toho až kontrola typů v appce; kdyby se tvary náhodou
+/// shodovaly, projde to tiše.
+/// </para>
+/// </summary>
+public record KdePomahaDto(string Serie, string Zavod);
 
 /// <summary>
 /// Přihlášený uživatel sám o sobě.
@@ -141,6 +153,6 @@ public static class IdentitaEndpoints
             [.. rozsahy.Select(r => new OpravneniDto(r.Role, r.Serie, r.Zavod))],
             await uzivatele.WebRoleAsync(uzivatel.Id, ct),
             [.. (await pomocnici.KdePomahaSlugyAsync(uzivatel.Id, ct))
-                .Select(z => new ZastavkaDto(z.Serie, z.Zavod))]));
+                .Select(z => new KdePomahaDto(z.Serie, z.Zavod))]));
     }
 }
