@@ -144,7 +144,7 @@ export type TypStavby = {
   popis: string;
   body: Bod[];
   /** Která sada předpisů se nabídne. */
-  jak: "jedna" | "dve" | "start" | "cil";
+  jak: "jedna" | "dve" | "start" | "cil" | "odskok";
 };
 
 const znacka = (zaklad: string) => (poradi: number) => `${zaklad} ${poradi}`;
@@ -203,7 +203,12 @@ export const TYPY: TypStavby[] = [
     id: "Odskok",
     jmeno: "Odskok",
     popis: "otočná a hned za ní odskoková — jedno místo v řadě",
-    jak: "jedna",
+    // <b>Vlastní předpisy, ne ty jednobodové</b> (konzilium nad stavitelem
+    // trati, bod 9). Do 18. 11. 2026 tu stálo `jak: "jedna"`, takže průvodce
+    // nabídl volby, které ukládají `OtocnaBoje` — jenže pípaly se dva body
+    // a `Dvoukonec(OtocnaBoje)` je na serveru `false`. Pět klepnutí tedy
+    // skončilo prvkem, který server odmítne, a fronta na vodě stála.
+    jak: "odskok",
     body: [
       { vyzva: "Pípni otočnou", jmeno: znacka("otočná") },
       { vyzva: "Popojeď a pípni odskokovou", jmeno: znacka("odskok") },
@@ -253,6 +258,27 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
       strana: "PoPrave",
       stopa: "minePravobok",
       jmena: [znacka("průjezdní")],
+    },
+  ],
+  // <b>Odskok má jen stranu</b>, žádnou volbu mezi otočením a minutím:
+  // odskoková bóje je tam proto, aby se u otočné lodě netlačily při ostrém
+  // obratu (`PrvekTrati.cs`), takže se vždycky točí. Obě značky se
+  // ponechávají touž stranou — proto jedna volba na bok, ne na značku.
+  // Jména bodů dává `TYPY`, na předpisu nezávisí.
+  odskok: [
+    {
+      jmeno: "Otočit levobokem",
+      detail: "otočná s odskokovou za ní",
+      typ: "Odskok",
+      strana: "PoLeve",
+      stopa: "otocLevobok",
+    },
+    {
+      jmeno: "Otočit pravobokem",
+      detail: "otočná s odskokovou za ní",
+      typ: "Odskok",
+      strana: "PoPrave",
+      stopa: "otocPravobok",
     },
   ],
   dve: [
@@ -530,8 +556,9 @@ export function patriDruhStartu(typ: TypStavby): boolean {
  *
  * <b>Když se stopa nenajde, vrací `null`</b> a náhled se nakreslí bez ní.
  * To je schválně: vymyslet si, kudy loď jede, je přesně ta lež, kvůli
- * které prvky vznikly. Týká se to odskoku, který `VOLBY` jako typ nezná —
- * staví se přes „jedna značka" a uloží se jako vlastní typ.
+ * které prvky vznikly. Do 18. 11. 2026 to platilo o odskoku, protože ten
+ * `VOLBY` jako typ neznaly; od opravy bodu 9 má vlastní předpisy a stopu
+ * najde jako každý jiný.
  */
 export function stopaProPrvek(typ: TypPrvku, strana: StranaPrvku): Stopa | null {
   const vsechny = Object.values(VOLBY).flat();

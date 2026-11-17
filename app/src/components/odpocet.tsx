@@ -1659,6 +1659,11 @@ const s = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 12,
     alignItems: 'center',
+    // Podlaha 44 pt: samotná výplň dává s patnáctibodovým písmem 42 a
+    // `kontrola-dotyku.py` to od 18. 11. 2026 vidí — dřív každému řádku
+    // připisovala paušálních 20 pt, takže terč vyšel přesně na mez.
+    minHeight: 44,
+    justifyContent: 'center',
   },
   volbaHlavni: { borderColor: 'transparent' },
   polohy: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 10 },

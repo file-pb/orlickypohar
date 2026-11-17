@@ -54,10 +54,23 @@ PROHLEDAT = KOREN / "app" / "src"
 # Mez z Apple HIG (44×44 pt). Android Material žádá 48 dp; `--mez 48`.
 MEZ_PT = 44
 
-# Horní odhad řádkové schránky textu v terči. Na iOS i Androidu je řádek
-# zhruba 1,2× velikost písma, takže 20 pt odpovídá písmu 16–17 px — tedy
-# největšímu, jaké se v appce na řádkovém odkazu vyskytuje. Schválně
-# **horní** odhad: kontrola má hlásit jen to, co je malé i tak.
+# Řádek je na iOS i Androidu zhruba 1,2× velikost písma.
+RADEK_NASOBEK = 1.2
+
+# Výchozí velikost písma `<Text>` v React Native, když ji styl neurčí.
+PISMO_PT = 14
+
+# Záloha pro terč, u kterého se velikost písma nenajde — text může přijít
+# propem, ze sdíleného stylu v jiném souboru nebo z komponenty. Je to
+# **horní** odhad (odpovídá písmu 16–17 pt, největšímu na řádkovém
+# odkazu), takže se u takového terče hlásí jen to, co je malé i tak.
+#
+# <b>Dřív se tenhle paušál používal vždycky</b>, i když velikost písma
+# stála o dva řádky níž — a tím kontrola propustila dva terče ve
+# stavitelské obrazovce: `chip` s písmem 13 pt měl 39,6 pt a `zahodit`
+# s výchozími 14 pt měl 40,8, ale oba vyšly na rovných 44 (konzilium nad
+# stavitelem trati, bod 8). Odhad, který je o 4 pt mimo, je u meze 44
+# rozdíl mezi „projde" a „neprojde".
 RADEK_PT = 20
 
 ZNACKY = ("Pressable", "TouchableOpacity", "Link")
@@ -157,7 +170,74 @@ def rozpust(decl: str, konstanty: dict[str, int]) -> str:
     return decl
 
 
-def vyska(decl: str) -> tuple[int, str]:
+def podstrom(txt: str, zacatek: int, znacka: str, hl: str) -> str:
+    """Co je uvnitř té značky — od `>` po její uzavření.
+
+    Potřebuje to <see cref="radek"/>: velikost písma stojí na `<Text>`
+    uvnitř terče, ne v jeho vlastním stylu, takže `deklarace` ji nevidí.
+    Hloubka se počítá jen přes tutéž značku; cizí značky uvnitř nevadí,
+    protože se hledá jedno číslo, ne struktura.
+    """
+    if hl.rstrip().endswith("/"):
+        return ""  # <Pressable … /> nemá děti
+
+    i = zacatek + len(hl) + 1  # za `>` otevírací značky
+    hloubka = 1
+    otevreni = re.compile(r"<" + znacka + r"\b")
+    while i < len(txt) and hloubka > 0:
+        if txt.startswith("</" + znacka, i):
+            hloubka -= 1
+            i += len(znacka) + 2
+            continue
+        m = otevreni.match(txt, i)
+        if m:
+            # Samouzavřená uvnitř hloubku nemění — najdi, čím končí.
+            konec = txt.find(">", m.end())
+            if konec > 0 and txt[konec - 1] == "/":
+                i = konec + 1
+                continue
+            hloubka += 1
+            i = (konec + 1) if konec > 0 else m.end()
+            continue
+        i += 1
+    return txt[zacatek:i]
+
+
+def radek(uvnitr: str, styly: dict[str, str]) -> tuple[int, bool]:
+    """Výška textu v terči a jestli se dala spočítat z písma.
+
+    <b>Sčítá řádky, nebere největší.</b> První verze té opravy vzala
+    maximum a okamžitě nahlásila dvouřádkový banner, který mez drží
+    s přehledem — terč je vysoký jako součet svých řádků, ne jako ten
+    nejvyšší z nich.
+
+    Každý `<Text>` přispěje svou velikostí písma, a když ji nemá,
+    výchozími <see cref="PISMO_PT"/>. Podmíněný text (`{a && <Text…`)
+    se počítá taky, i když se nevykreslí — tím odhad **roste**, takže
+    chyba padá na stranu mlčení, ne falešného poplachu. Bez jediného
+    `<Text>` padá výsledek na <see cref="RADEK_PT"/>: uvnitř může být
+    obrázek nebo ikona a jejich výšku tenhle soubor nezjistí.
+
+    <b>Pojmenovaný styl se rozpouští</b> stejně jako u terče: `fontSize`
+    bývá v `StyleSheet.create`, ne v hlavičce značky. Bez toho vycházel
+    `s.vratitText` (15 pt) jako výchozích 14 a odhad byl o pt mimo.
+    """
+    texty = [m for m in re.finditer(r"<Text\b", uvnitr)]
+    if not texty:
+        return RADEK_PT, False
+
+    soucet = 0.0
+    for i, m in enumerate(texty):
+        konec = texty[i + 1].start() if i + 1 < len(texty) else len(uvnitr)
+        kus = uvnitr[m.start():konec]
+        for jmeno in re.findall(r"\bs\.(\w+)", kus):
+            kus += " " + styly.get(jmeno, "")
+        velikost = re.search(r"fontSize:\s*(\d+)", kus)
+        soucet += (int(velikost.group(1)) if velikost else PISMO_PT) * RADEK_NASOBEK
+    return round(soucet), True
+
+
+def vyska(decl: str, uvnitr: str = "", styly: dict[str, str] | None = None) -> tuple[int, str]:
     """Nejpříznivější deklarovaná výška terče a čím je dána."""
     # Podklad, který se roztahuje od horní hrany ke spodní, je vysoký jako
     # jeho rodič — a to z tohohle souboru nezjistíš. Takový terč se měřit
@@ -176,8 +256,10 @@ def vyska(decl: str) -> tuple[int, str]:
     slop = int(m.group(1)) if m else 0
     m = re.search(r"paddingVertical:\s*(\d+)", decl) or re.search(r"padding:\s*(\d+)", decl)
     vypln = int(m.group(1)) if m else 0
-    return RADEK_PT + 2 * vypln + 2 * slop, (
-        f"řádek+2×{vypln}" + (f"+2×{slop} hitSlop" if slop else "")
+    r, zPisma = radek(uvnitr, styly or {})
+    return r + 2 * vypln + 2 * slop, (
+        f"{'řádek' if not zPisma else f'písmo→{r}'}+2×{vypln}"
+        + (f"+2×{slop} hitSlop" if slop else "")
     )
 
 
@@ -197,7 +279,7 @@ def projdi(mez: int) -> tuple[list[tuple[int, str, int, str]], int]:
                 continue
             celkem += 1
             decl = rozpust(deklarace(blok(txt, m.start()), hl, styly), konstanty)
-            v, cim = vyska(decl)
+            v, cim = vyska(decl, podstrom(txt, m.start(), m.group(1), hl), styly)
             if v < mez:
                 radek = txt.count("\n", 0, m.start()) + 1
                 nalezy.append((v, str(soubor.relative_to(KOREN)), radek, cim))
@@ -223,7 +305,7 @@ def main() -> int:
         print(f"nebylo co měřit: v {PROHLEDAT} není jediné klepací místo", file=sys.stderr)
         return 2
 
-    print(f"klepacích míst: {celkem} · mez {mez} pt · řádek se počítá jako {RADEK_PT} pt")
+    print(f"klepacích míst: {celkem} · mez {mez} pt · řádky se sčítají podle písma")
     if not nalezy:
         print("všechna dosahují mez.")
         return 0
@@ -233,9 +315,10 @@ def main() -> int:
     for v, soubor, radek, cim in sorted(nalezy):
         print(f"{v:>4}  {cim:<22} {soubor}:{radek}")
     print(
-        "\nMěří se deklarovaná geometrie (minHeight, svislá výplň, hitSlop),\n"
-        f"řádek textu se počítá paušálně {RADEK_PT} pt — horním odhadem, takže\n"
-        "nahlášený terč je malý i při nejpříznivějším předpokladu."
+        "\nMěří se deklarovaná geometrie (minHeight, svislá výplň, hitSlop)\n"
+        f"a text: každý řádek svou velikostí písma, bez ní {PISMO_PT} pt, celý\n"
+        f"terč bez textu paušálem {RADEK_PT} pt. Podmíněný text se počítá taky,\n"
+        "takže odhad spíš roste — nahlášený terč je malý i tak."
     )
     return 1
 

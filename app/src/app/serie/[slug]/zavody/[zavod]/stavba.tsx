@@ -543,6 +543,14 @@ const styly = (t: Barvy) =>
     chip: {
       borderWidth: 1,
       borderRadius: 999,
+      // <b>Podlahu drží `minHeight`, ne výplň</b> (konzilium nad stavitelem
+      // trati, bod 8). Samotná výplň dávala 24 pt a písmo 13 pt k tomu
+      // zhruba 15,6 — dohromady 39,6, tedy pod mezí. Prošlo to proto, že
+      // `kontrola-dotyku.py` připisovala každému řádku paušálních 20 pt
+      // místo výšky podle písma; obojí je opravené týmž commitem.
+      minHeight: 44,
+      justifyContent: "center",
+      alignItems: "center",
       paddingVertical: 12,
       paddingHorizontal: 14,
     },
@@ -553,6 +561,10 @@ const styly = (t: Barvy) =>
       marginBottom: 6,
     },
     zahodit: {
+      // Text bez `fontSize` jede na výchozích 14 pt, takže s výplní
+      // vycházelo 40,8 — viz `chip` výš.
+      minHeight: 44,
+      justifyContent: "center",
       paddingVertical: 12,
       marginTop: 4,
     },

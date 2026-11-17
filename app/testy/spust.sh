@@ -135,3 +135,9 @@ echo "== Poloha při stavbě trati =="
 echo
 echo "== Fronta prvků trati =="
 TEST_DB=":memory:" "${NODE[@]}" ./fronta.test.ts
+
+# Předpisy průvodce proti pravidlům serveru. Odskok se kvůli rozchodu
+# nedal postavit a chyba se poznala až pátým klepnutím na vodě.
+echo
+echo "== Předpisy průvodce stavbou =="
+"${NODE[@]}" ./predpisy.test.ts

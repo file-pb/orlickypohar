@@ -876,7 +876,11 @@ const s = StyleSheet.create({
     borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 14, gap: 12,
   },
   poslednText: { fontSize: 16, fontWeight: '700', flexShrink: 1 },
-  vratit: { borderWidth: 1, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14 },
+  // Tatáž podlaha jako u `volba` níž a ze stejného důvodu.
+  vratit: {
+    borderWidth: 1, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14,
+    minHeight: 44, justifyContent: 'center',
+  },
   vratitText: { fontSize: 15, fontWeight: '700' },
 
   // Dlaždice jsou velké schválně: klepe se za jízdy, jednou rukou a bez
@@ -949,6 +953,11 @@ const s = StyleSheet.create({
   volba: {
     borderWidth: 1, borderRadius: 10,
     paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center',
+    // Podlaha 44 pt: samotná výplň dává s patnáctibodovým písmem 42 a
+    // `kontrola-dotyku.py` to od 18. 11. 2026 vidí — dřív každému řádku
+    // připisovala paušálních 20 pt, takže terč vyšel přesně na mez.
+    minHeight: 44,
+    justifyContent: 'center',
   },
   volbaVedle: { flex: 1 },
   volbaText: { fontWeight: '700', fontSize: 15 },
