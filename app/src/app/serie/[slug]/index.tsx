@@ -7,12 +7,15 @@ import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiSerii } from '@/lib/api';
 import { rozsah } from '@/lib/datum';
+import { mojeOpravneni } from '@/lib/opravneni';
+import { smiStavetNekde } from '@/lib/role';
 
 export default function Rocnik() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const t = useTheme();
   const router = useRouter();
   const { data, chyba, nacita, obnov } = useData(() => nactiSerii(slug), [slug]);
+  const { data: ja } = useData(mojeOpravneni);
 
   const odjete = data?.zavody.filter((z) => z.stav === 'Odjety').length ?? 0;
 
@@ -35,6 +38,16 @@ export default function Rocnik() {
           <Karta onPress={() => router.push(`/serie/${slug}/poradi`)}>
             <Text style={{ color: t.voda, fontWeight: '600' }}>Průběžné pořadí seriálu →</Text>
           </Karta>
+
+          {/* <b>Druhá cesta ke stavbě.</b> Nabídka pod kebabem vede přímo,
+              ale správce celého webu v ní ročník nemá — projde přes
+              kalendář a tady potřebuje, kudy dál. Obrazovka za tím ukáže
+              jen zastávky, kam ho server pustí. */}
+          {smiStavetNekde(ja ?? null, slug, data.zavody) ? (
+            <Karta onPress={() => router.push(`/serie/${slug}/stavba`)}>
+              <Text style={{ color: t.voda, fontWeight: '600' }}>Stavba trati →</Text>
+            </Karta>
+          ) : null}
 
           <OdberUpozorneni slug={slug} />
 

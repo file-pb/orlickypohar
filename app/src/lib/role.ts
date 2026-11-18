@@ -89,6 +89,21 @@ export function smiStavet(ja: Ja | null, serie: string, zavod: string): boolean 
 }
 
 /**
+ * Smí stavět aspoň na jedné z těchhle zastávek?
+ *
+ * Ptá se `smiStavet` po jedné, protože právo je vždycky na konkrétní
+ * zastávku: pořadatel jedné regaty ročníku nesmí do druhé. Zrušená se
+ * nepočítá — trať pro ni nikdo stavět nebude.
+ */
+export function smiStavetNekde(
+  ja: Ja | null,
+  serie: string,
+  zavody: { slug: string; stav?: string }[],
+): boolean {
+  return zavody.some((z) => z.stav !== 'Zruseny' && smiStavet(ja, serie, z.slug));
+}
+
+/**
  * Kde ten člověk staví trať — nebo <c>null</c>.
  *
  * <b>Nejdřív zastávka, kde je dneska zaškrtnutý jako pomocník:</b> tam

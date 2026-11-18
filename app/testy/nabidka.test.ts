@@ -61,7 +61,7 @@ zkus('bez zastávky vede na ročník, ne na cizí regatu', () => {
   const polozka = nabidka(ja([{ role: 'Rozhodci', serie: '2027' }])).find(
     (k) => k.text === 'Stavba trati',
   );
-  assert.equal(polozka?.cil, '/serie/2027');
+  assert.equal(polozka?.cil, '/serie/2027/stavba');
   assert.match(polozka?.popis ?? '', /vyber/);
 });
 

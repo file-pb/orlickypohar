@@ -57,7 +57,7 @@ export function nabidka(ja: Ja | null): PolozkaNabidky[] {
       : stavi.serie
         ? {
             text: 'Stavba trati',
-            cil: `/serie/${stavi.serie}`,
+            cil: `/serie/${stavi.serie}/stavba`,
             popis: 'vyber regatu, kde stavíš',
           }
         : {
