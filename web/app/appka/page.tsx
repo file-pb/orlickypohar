@@ -14,6 +14,24 @@ export const metadata = { title: "Appka" };
  */
 const APK = process.env.APK_URL;
 
+/**
+ * Co ta adresa rozdává: číslo buildu a den vydání. Z prostředí z téhož
+ * důvodu jako adresa — a <b>ne z `app/vydane-apk.json`</b>, ačkoliv je
+ * tam taky: obraz webu se staví jen z `web/`, takže ten soubor v něm
+ * není. Rozchod obou míst hlásí CI.
+ */
+const VERZE = process.env.APK_VERZE;
+const VYDANO = process.env.APK_VYDANO;
+
+/** Den vydání česky. Nesmyslné datum se neukazuje, než aby lhalo. */
+function den(iso: string | undefined) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? null
+    : d.toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
+}
+
 export default async function Appka() {
   // QR se kreslí na serveru z té adresy, ať se nemůže rozejít s odkazem
   // vedle. Na počítači je to jediný pohodlný způsob, jak appku dostat
@@ -41,7 +59,18 @@ export default async function Appka() {
                 Stáhnout pro Android
               </a>
             </p>
-            <p className="poznamka" style={{ marginTop: "0.75rem" }}>
+            {/* <b>Která verze se rozdává.</b> Bez toho vypadá druhé
+                stahování jako první a nejde poznat, že je venku novější
+                build než ten v telefonu — appka svou verzi v Účtu ukazuje
+                od buildu 5, web o ní dosud mlčel. */}
+            {VERZE && (
+              <p className="poznamka" style={{ marginTop: "0.75rem" }}>
+                Ke stažení je <strong>build {VERZE}</strong>
+                {den(VYDANO) ? ` z ${den(VYDANO)}` : ""}. Svou verzi najdeš
+                v appce v <em>Účtu</em>; je-li nižší, tahle je novější.
+              </p>
+            )}
+            <p className="poznamka" style={{ marginTop: VERZE ? undefined : "0.75rem" }}>
               Na počítači načti QR kód telefonem. Android se při první instalaci
               mimo obchod zeptá, jestli tomuhle zdroji věříš.
             </p>

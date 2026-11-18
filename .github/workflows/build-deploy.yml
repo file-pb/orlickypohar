@@ -491,6 +491,24 @@ jobs:
 
           chyba=0
 
+          verze=$(python3 -c "import json; print(json.load(open('vydane-apk.json'))['versionCode'])")
+
+          # Verze a datum na stránce /appka. Jsou v compose vedle adresy
+          # (obraz webu se staví jen z `web/`, tenhle soubor v něm není),
+          # takže se stejně jako adresa dají zapomenout — a stránka by pak
+          # tvrdila o nabízeném APK něco, co neplatí.
+          if ! grep -qF "APK_VERZE: \"$verze\"" ../deploy/docker-compose.yml \
+            || ! grep -qF "APK_VYDANO: \"$kdy\"" ../deploy/docker-compose.yml; then
+            echo "::warning::Verze nebo datum APK v docker-compose.yml nesedí s vydane-apk.json."
+            {
+              echo "### Stránka /appka píše o jiném buildu, než který rozdává"
+              echo ""
+              echo "V \`app/vydane-apk.json\` je build \`$verze\` z \`$kdy\`;"
+              echo "\`deploy/docker-compose.yml\` má v \`APK_VERZE\`/\`APK_VYDANO\` jiné údaje."
+            } >> "$GITHUB_STEP_SUMMARY"
+            chyba=1
+          fi
+
           if ! grep -qF "$url" ../deploy/docker-compose.yml; then
             echo "::warning::Adresa APK ve vydane-apk.json nesedí s APK_URL v docker-compose.yml."
             {
