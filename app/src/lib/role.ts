@@ -97,16 +97,26 @@ export function smiStavet(ja: Ja | null, serie: string, zavod: string): boolean 
  * bez zastávky — tam si musí vybrat sám, protože zastávky jsou
  * v kalendáři a nabídka je nezná.
  */
-export function kdeStavi(ja: Ja | null): { serie: string; zavod: string | null } | null {
+export function kdeStavi(ja: Ja | null): { serie: string | null; zavod: string | null } | null {
   const pomaha = (ja?.kdePomaha ?? [])[0];
   if (pomaha) return { serie: pomaha.serie, zavod: pomaha.zavod };
 
   const stavi = (ja?.opravneni ?? []).filter((o) => VELI.has(o.role) || o.role === 'Spravce');
-  if (stavi.length === 0) return null;
+  if (stavi.length > 0) {
+    const naZavod = stavi.find((o) => o.zavod);
+    const vybrane = naZavod ?? stavi[0];
+    return { serie: vybrane.serie, zavod: vybrane.zavod ?? null };
+  }
 
-  const naZavod = stavi.find((o) => o.zavod);
-  const vybrane = naZavod ?? stavi[0];
-  return { serie: vybrane.serie, zavod: vybrane.zavod ?? null };
+  // <b>Správce celého webu nemá ročník</b>, a přesto staví kdekoliv:
+  // `Prava.Pokryva` dává `Spravce` i `Organizator`. Role na celý web jdou
+  // klientovi zvlášť (`JaDto.Web`), ne jako oprávnění s prázdnou sérií,
+  // takže se ve výčtu výš nenajdou — a dokud se tenhle případ nehlídal,
+  // zmizel správci řádek stavby z nabídky úplně. Nasměrovat ho není podle
+  // čeho, tak ať si ročník vybere.
+  if ((ja?.web ?? []).includes('Spravce')) return { serie: null, zavod: null };
+
+  return null;
 }
 
 /**

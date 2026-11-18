@@ -47,17 +47,25 @@ export function nabidka(ja: Ja | null): PolozkaNabidky[] {
   const stavi = kdeStavi(ja);
   if (!stavi) return KAM;
 
-  const stavba: PolozkaNabidky = stavi.zavod
-    ? {
-        text: 'Stavba trati',
-        cil: `/serie/${stavi.serie}/zavody/${stavi.zavod}/stavba`,
-        popis: 'pípni značky z lodi',
-      }
-    : {
-        text: 'Stavba trati',
-        cil: `/serie/${stavi.serie}`,
-        popis: 'vyber regatu, kde stavíš',
-      };
+  const stavba: PolozkaNabidky =
+    stavi.serie && stavi.zavod
+      ? {
+          text: 'Stavba trati',
+          cil: `/serie/${stavi.serie}/zavody/${stavi.zavod}/stavba`,
+          popis: 'pípni značky z lodi',
+        }
+      : stavi.serie
+        ? {
+            text: 'Stavba trati',
+            cil: `/serie/${stavi.serie}`,
+            popis: 'vyber regatu, kde stavíš',
+          }
+        : {
+            // Správce webu: ročník ani zastávku mu nemá co vybrat.
+            text: 'Stavba trati',
+            cil: '/rocniky',
+            popis: 'vyber ročník a regatu',
+          };
 
   // Za „Moje regata": stavba je taky věc dnešního dne, ne archiv.
   const kde = KAM.findIndex((k) => k.cil === '/zavodnik');

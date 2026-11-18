@@ -25,6 +25,7 @@ function zkus(nazev: string, f: () => void) {
 const ja = (
   opravneni: { role: string; serie: string; zavod?: string | null }[],
   kdePomaha: { serie: string; zavod: string }[] = [],
+  web: string[] = [],
 ): Ja =>
   ({
     id: '00000000-0000-0000-0000-000000000001',
@@ -32,6 +33,7 @@ const ja = (
     email: null,
     opravneni: opravneni.map((o) => ({ ...o, zavod: o.zavod ?? null })),
     kdePomaha,
+    web,
   }) as unknown as Ja;
 
 const texty = (p: { text: string }[]) => p.map((k) => k.text);
@@ -67,6 +69,22 @@ zkus('zaškrtnutý pomocník ji dostane taky', () => {
   const kdo = ja([{ role: 'Ctenar', serie: '2027' }], [{ serie: '2027', zavod: 'radava' }]);
   const polozka = nabidka(kdo).find((k) => k.text === 'Stavba trati');
   assert.equal(polozka?.cil, '/serie/2027/zavody/radava/stavba');
+});
+
+zkus('správce celého webu ji dostane taky, jen bez ročníku', () => {
+  // Server ho pustí kamkoliv (`Prava.Pokryva`: Spravce pokrývá
+  // Organizator), jenže role na celý web jdou klientovi zvlášť, ne jako
+  // oprávnění s prázdnou sérií — a dokud se to nehlídalo, zmizel mu řádek
+  // z nabídky úplně (18. 11. 2026, Filipův účet).
+  const kdo = ja([], [], ['Spravce']);
+  const polozka = nabidka(kdo).find((k) => k.text === 'Stavba trati');
+  assert.equal(polozka?.cil, '/rocniky');
+  assert.match(polozka?.popis ?? '', /ro\u010dn\u00edk/);
+});
+
+zkus('editor webu ji nedostane', () => {
+  // Editor píše o závodech, nezasahuje do nich.
+  assert.deepEqual(nabidka(ja([], [], ['Editor'])), KAM);
 });
 
 console.log(`  ${prosly} prošlo`);
