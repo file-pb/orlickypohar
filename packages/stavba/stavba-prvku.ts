@@ -217,6 +217,88 @@ export const TYPY: TypStavby[] = [
 ];
 
 /**
+ * Nabídka, jak ji vidí stavitel na vodě: <b>jedna úplná věc na dlaždici</b>.
+ *
+ * <para>
+ * <b>Proč vedle `TYPY` a `VOLBY`, a ne místo nich</b> (konzilium nad
+ * stavitelem trati, bod 3 a nález 2 návrhu). Stavitel neuvažuje v počtu
+ * bodů: veze v lodi žlutou bóji a ví, že to bude *otočná, kterou se jede
+ * levobokem* — jedna věc, ne dvě. „Jedna značka" je kategorie vymyšlená
+ * kvůli tomu, kolikrát se pípne, tedy vlastnost zápisu, ne trati.
+ * </para>
+ *
+ * <para>
+ * Rozdělit kvůli tomu pravidla by znamenalo dvě pravdy o tomtéž — přesně
+ * to, proti čemu tenhle modul vznikl. Tohle je proto <b>pohled</b>, ne
+ * druhá definice: dvojice se rozsvěcejí z `TYPY` a `VOLBY` a test hlídá,
+ * že nabídka pokrývá všechny volby do jedné. Webový průvodce si nechává
+ * dva kroky, protože má myš a místo; na telefonu se klepe v rukavicích.
+ * </para>
+ *
+ * <para>
+ * <b>Pořadí je hitparáda podle použití</b> (Filip, 18. 11. 2026), ne
+ * abeceda a ne pořadí v kódu: první dlaždice je pod palcem nejlevnější.
+ * Čísla o tom, co se na Orlíku staví, ale nikde nejsou — tohle je odhad
+ * z domény (otočných je na trati několik, start a cíl po jednom, otočná
+ * zóna je výjimka) a od 1-ergonomie víme jen to, že <b>odskok je nejřidší
+ * prvek na trati</b>. Až budou postavené tratě, přepsat se to má podle
+ * nich.
+ * </para>
+ *
+ * <para>
+ * <b>Dvanáct, ne jedenáct.</b> Konzilium počítalo jedenáct úplných
+ * kombinací, protože odskok tehdy neměl vlastní předpisy; po opravě bodu 9
+ * nese stranu jako otočná, takže přibyla dvanáctá. Do jednoho sloupce se
+ * dvanáct řádků po 56 pt nevejde ani bez mezer (672 pt proti 596 volným),
+ * proto mřížka o dvou sloupcích — tu projekt volí na dotyku i v pruhu
+ * dlaždic ve správě, a ze stejného důvodu.
+ * </para>
+ */
+export const NABIDKA: {
+  jmeno: string;
+  /**
+   * Druhý řádek dlaždice. <b>Vlastní, ne `volba.detail`</b>: ten je psaný
+   * na plnou šířku webového průvodce a v mřížce 173 pt se láme na tři
+   * řádky — *„otočná brána; u které značky se otočí, si vybere loď"*
+   * nafoukne dlaždici z 75 na 93 pt a mřížka z 566 na dotek stropu.
+   * Krátký detail říká to, co jméno neunese, a nic navíc.
+   */
+  detail: string;
+  typ: TypStavby["id"];
+  volba: string;
+}[] = [
+  { jmeno: "Otočná — levobokem", detail: "jedna bóje, točí se", typ: "Jedna", volba: "Otočit levobokem" },
+  { jmeno: "Otočná — pravobokem", detail: "jedna bóje, točí se", typ: "Jedna", volba: "Otočit pravobokem" },
+  { jmeno: "Start — pevná linie", detail: "mezi dvěma body", typ: "Start", volba: "Pevná linie" },
+  { jmeno: "Cíl", detail: "mezi dvěma body", typ: "Cil", volba: "Proplout cílem" },
+  { jmeno: "Brána", detail: "projede se a jede dál", typ: "Dve", volba: "Projet mezi nimi" },
+  { jmeno: "Průjezdní — levobokem", detail: "jen se míjí", typ: "Jedna", volba: "Nechat po levoboku" },
+  { jmeno: "Průjezdní — pravobokem", detail: "jen se míjí", typ: "Jedna", volba: "Nechat po pravoboku" },
+  { jmeno: "Otočná brána", detail: "stranu volí loď", typ: "Dve", volba: "Projet a otočit se" },
+  { jmeno: "Start — otevírající se", detail: "brána se otevírá", typ: "Start", volba: "Otevírající se brána" },
+  { jmeno: "Odskok — levobokem", detail: "s odskokovou za ní", typ: "Odskok", volba: "Otočit levobokem" },
+  { jmeno: "Odskok — pravobokem", detail: "s odskokovou za ní", typ: "Odskok", volba: "Otočit pravobokem" },
+  { jmeno: "Otočná zóna", detail: "dráty nad vodou", typ: "Dve", volba: "Stačí se jí dotknout" },
+];
+
+/** Jedna dlaždice nabídky i s tím, co se po klepnutí nastaví. */
+export type Dlazdice = { jmeno: string; detail: string; typ: TypStavby; volba: Volba };
+
+/**
+ * Nabídka rozsvícená na typy a předpisy. Co v <see cref="NABIDKA"/> nenajde
+ * protějšek, vynechá — a test to ohlásí dřív, než se to dostane na vodu.
+ */
+export function dlazdiceNabidky(): Dlazdice[] {
+  const ven: Dlazdice[] = [];
+  for (const polozka of NABIDKA) {
+    const typ = TYPY.find((t) => t.id === polozka.typ);
+    const volba = typ ? VOLBY[typ.jak].find((v) => v.jmeno === polozka.volba) : undefined;
+    if (typ && volba) ven.push({ jmeno: polozka.jmeno, detail: polozka.detail, typ, volba });
+  }
+  return ven;
+}
+
+/**
  * Předpisy podle toho, kolik bodů prvek má.
  *
  * <para>

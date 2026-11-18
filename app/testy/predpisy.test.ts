@@ -14,7 +14,15 @@
  */
 import assert from 'node:assert/strict';
 
-import { dvaBody, patriSmer, TYPY, VOLBY, stopaProPrvek } from '../src/lib/stavba-prvku.ts';
+import {
+  dlazdiceNabidky,
+  dvaBody,
+  NABIDKA,
+  patriSmer,
+  stopaProPrvek,
+  TYPY,
+  VOLBY,
+} from '../src/lib/stavba-prvku.ts';
 
 let prosly = 0;
 function zkus(nazev: string, f: () => void) {
@@ -79,6 +87,38 @@ zkus('postavený odskok si najde svou stopu', () => {
   // neznaly, vracelo se `null` a stopa se nenakreslila.
   assert.equal(stopaProPrvek('Odskok', 'PoLeve'), 'otocLevobok');
   assert.equal(stopaProPrvek('Odskok', 'PoPrave'), 'otocPravobok');
+});
+
+zkus('nabídka pokrývá všechny předpisy do jednoho', () => {
+  // Dlaždice, která nenajde svůj předpis, z nabídky tiše vypadne —
+  // a na vodě by chyběl celý prvek. Tohle je ta kontrola, co to ohlásí
+  // dřív: každá volba v `VOLBY` musí mít v nabídce právě jedno místo.
+  const vsechny = Object.values(VOLBY).flat();
+  const dlazdice = dlazdiceNabidky();
+  assert.equal(
+    dlazdice.length,
+    NABIDKA.length,
+    `nabídka má ${NABIDKA.length} položek, rozsvítilo se ${dlazdice.length} — ` +
+      'některá nenašla typ nebo předpis',
+  );
+  assert.equal(dlazdice.length, vsechny.length, 'nabídka a předpisy se rozešly v počtu');
+
+  for (const volba of vsechny) {
+    const kolik = dlazdice.filter((d) => d.volba === volba).length;
+    assert.equal(kolik, 1, `${volba.jmeno} (${volba.typ}) je v nabídce ${kolik}×`);
+  }
+});
+
+zkus('každá dlaždice nese jméno i vysvětlení', () => {
+  for (const d of dlazdiceNabidky()) {
+    assert.ok(d.jmeno.length > 0, 'dlaždice bez jména');
+    assert.ok(d.detail.length > 0, `${d.jmeno} nemá detail`);
+  }
+});
+
+zkus('jména v nabídce se neopakují', () => {
+  const jmena = NABIDKA.map((x) => x.jmeno);
+  assert.equal(new Set(jmena).size, jmena.length, 'dvě dlaždice se jmenují stejně');
 });
 
 console.log(`\n  ${prosly} v pořádku`);

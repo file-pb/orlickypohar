@@ -24,8 +24,7 @@ import { pismoNaVyplni } from '@/lib/kontrast';
 import {
   NAZVY_SMERU,
   SMERY,
-  TYPY,
-  VOLBY,
+  dlazdiceNabidky,
   ZNACENI,
   jmenaBodu,
   kolmice,
@@ -309,53 +308,47 @@ export default function StavbaTrati() {
           <Sekce>
             {!typ
               ? 'Co stavíš'
-              : !volba
-                ? 'Jak se to jede'
-                : cekaNaSmer
-                  ? 'Kterým směrem'
-                  : vsechnyBody
-                    ? 'Hotovo?'
-                    : (dalsiBod?.vyzva ?? 'Pípni')}
+              : cekaNaSmer
+                ? 'Kterým směrem'
+                : vsechnyBody
+                  ? 'Hotovo?'
+                  : (dalsiBod?.vyzva ?? 'Pípni')}
           </Sekce>
 
-          {/* 1. Typ říká, kolik bodů se pípá — ne čím prvek je. To
-              rozhodne až předpis v dalším kroku. */}
-          {!typ ? (
-            <View>
-              {TYPY.map((x) => (
-                <Pressable
-                  key={x.id}
-                  onPress={() => setTyp(x)}
-                  style={({ pressed }) => [
-                    s.velke,
-                    { backgroundColor: t.papir, borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
-                  ]}>
-                  <Text style={{ color: t.text, fontSize: 18, fontWeight: '600' }}>{x.jmeno}</Text>
-                  <Text style={{ color: t.tlumeny, marginTop: 2 }}>{x.popis}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
+          {/* 1. <b>Jedna úplná věc na dlaždici</b> (Filip, 18. 11. 2026;
+              nález 2 návrhu konzilia). Dřív to byly dva kroky — nejdřív
+              kolik bodů se pípá, pak co loď udělá. Jenže stavitel veze
+              v lodi žlutou bóji a ví, že to bude otočná, kterou se jede
+              levobokem: jedna věc, ne dvě. „Jedna značka" byla kategorie
+              vymyšlená kvůli zápisu, ne vlastnost trati.
 
-          {/* 2. Předpis. Volí se před pípáním, protože na něm závisí
-              jméno značky — a to se po zápisu nepřepisuje. */}
-          {typ && !volba ? (
-            <View>
-              {VOLBY[typ.jak].map((v) => (
+              <b>Dva sloupce, protože dvanáct řádků se nevejde.</b> Ani bez
+              mezer: 12 × 56 je 672 pt proti 596 volným. Zmenšit řádek na
+              44 pt by stlačilo rozteč z 68 na 48 — a na motoráku je jeden
+              člověk, který zároveň kormidluje (Filip, 18. 11. 2026), takže
+              se terče zmenšovat nebudou. V mřížce vyjde seznam na zhruba
+              400 pt a neroluje; rolování je v rukavicích nejhorší možná
+              interakce, protože nechtěné klepnutí během něj zapíše prvek.
+
+              Pořadí dlaždic je hitparáda podle použití — žije v `NABIDKA`
+              ve sdílených pravidlech i s tím, že je to zatím odhad. */}
+          {!typ ? (
+            <View style={s.nabidka}>
+              {dlazdiceNabidky().map((d) => (
                 <Pressable
-                  key={v.jmeno}
-                  onPress={() => setVolba(v)}
+                  key={d.jmeno}
+                  onPress={() => {
+                    setTyp(d.typ);
+                    setVolba(d.volba);
+                  }}
                   style={({ pressed }) => [
-                    s.velke,
+                    s.dlazdice,
                     { backgroundColor: t.papir, borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
                   ]}>
-                  <Text style={{ color: t.text, fontSize: 18, fontWeight: '600' }}>{v.jmeno}</Text>
-                  <Text style={{ color: t.tlumeny, marginTop: 2 }}>{v.detail}</Text>
+                  <Text style={{ color: t.text, fontSize: 15, fontWeight: '600' }}>{d.jmeno}</Text>
+                  <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 2 }}>{d.detail}</Text>
                 </Pressable>
               ))}
-              <Pressable onPress={vycisti} style={s.zpet}>
-                <Text style={{ color: t.tlumeny }}>Zpátky na výběr</Text>
-              </Pressable>
             </View>
           ) : null}
 
@@ -513,6 +506,19 @@ const styly = (t: Barvy) =>
     },
     // Velké cíle schválně: na palubě v rukavicích se do malého tlačítka
     // nikdo netrefí a gesta jsou v nich ještě horší než klepání.
+    // Mřížka o dvou sloupcích. `flexBasis` pod polovinou plus `flexGrow`
+    // nechá dvojici vyplnit řádek a třetí dlaždici zalomit; `gap` drží
+    // odstup, který v rukavicích rozhoduje o překlepu víc než velikost.
+    nabidka: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+    dlazdice: {
+      flexBasis: '47%',
+      flexGrow: 1,
+      borderWidth: 1,
+      borderRadius: 12,
+      padding: 12,
+      minHeight: 56,
+      justifyContent: 'center',
+    },
     velke: {
       borderWidth: 1,
       borderRadius: 12,
