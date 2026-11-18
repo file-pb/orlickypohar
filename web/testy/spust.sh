@@ -38,3 +38,9 @@ node --experimental-strip-types ./zkratky.test.ts
 echo
 echo "== Přesun lodi v zápisu =="
 node --experimental-strip-types ./presun.test.ts
+
+# Fronta mapových dlaždic. „Mapa se občas nevykreslí celá" (pozorování 11):
+# počítadlo padalo do záporu a druhá vlna požadavků šla na zdroj celá naráz.
+echo
+echo "== Fronta mapových dlaždic =="
+node --experimental-strip-types ./dlazdice.test.ts

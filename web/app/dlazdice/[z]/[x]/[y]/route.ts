@@ -29,56 +29,23 @@
  * </para>
  */
 
+import { vRade } from "@/lib/fronta-dlazdic";
+
 type Podklad = "mapa" | "satelit";
 
 /**
- * <b>Kolik dlaždic se smí tahat ze zdroje naráz.</b>
+ * <b>Fronta je ve `web/lib/fronta-dlazdic.ts`</b>, ne tady.
  *
- * Mapa si při otevření řekne o celý výřez — na tabuli přes ultrawide to
- * bylo 68 dlaždic v jedné vlně. Prohlížeč je přes HTTP/2 pustí všechny
- * najednou, náš server je všechny přepošle a OSM, jehož pravidla mluví
- * o dvou souběžných stahováních, část odmítne: změřeno 16 z 68 na
- * produkci (24. 10. 2026). Na obrazovce z toho byla mozaika rozbitých
- * obrázků — ta „rozhozená mapa", které si Filip všiml u dojezdu.
+ * Do 18. 11. 2026 to byla lokální proměnná v tomhle souboru, takže se
+ * její stav nedal odnikud přečíst — a chyba v počítadle se poznala až
+ * jako Filipovo pozorování 11: *„mapa se občas nevykreslí celá"*. Slot
+ * se uvolňoval dvakrát za jeden běh, čítač padal do záporu a při druhém
+ * otevření mapy fronta nedržela vůbec: všech dvacet dlaždic šlo na OSM
+ * naráz a část jich odmítlo. Odtud to „občas".
  *
- * Fronta je proto tady, ne v prohlížeči: tím platí pro všechny, kdo si
- * stránku otevřou, a drží pravidla zdroje i při deseti divácích.
+ * Teď má fronta vlastní modul i testy (`web/testy/dlazdice.test.ts`),
+ * které tu vlnu umí vyvolat; důvody, proč vůbec existuje, jsou u ní.
  */
-const NARAZ = 2;
-
-/** Jak dlouho smí dlaždice čekat ve frontě, než se to vzdá. */
-const CEKANI_MS = 8_000;
-
-let bezi = 0;
-const fronta: (() => void)[] = [];
-
-function pusti() {
-  bezi -= 1;
-  fronta.shift()?.();
-}
-
-/** Pustí práci, až bude volno. Čekání má strop — radši prázdná dlaždice než visící požadavek. */
-async function vRade<T>(prace: () => Promise<T>): Promise<T | null> {
-  if (bezi >= NARAZ) {
-    const dockal = await new Promise<boolean>((hotovo) => {
-      const casovac = setTimeout(() => hotovo(false), CEKANI_MS);
-      fronta.push(() => {
-        clearTimeout(casovac);
-        hotovo(true);
-      });
-    });
-    if (!dockal) return null;
-  } else {
-    bezi += 1;
-  }
-
-  try {
-    return await prace();
-  } finally {
-    pusti();
-  }
-}
-
 /**
  * Průhledný pixel pro dlaždici, která nedorazila.
  *
