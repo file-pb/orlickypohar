@@ -1,4 +1,4 @@
-# Fronta: co se má vzít (18. 11. 2026)
+# Fronta: co se má vzít (18. 11. 2026, odpoledne)
 
 Jeden řádek na každou věc, která doopravdy zbývá — ze **všech** řezů, ne jen
 z jednoho. U každé je to jediné, co o ní potřebuješ vědět dřív, než ji vezmeš:
@@ -17,7 +17,7 @@ dokumentu, s jiným datem a jiným dělením. Z žádné z nich nešlo přečís
 
 **Mez poctivosti.** Řádek odsud odejde jedině tak, že je věc **doložená
 v kódu nebo nasazená**. Cesty a čísla řádků níž jsou ověřené proti `main` na
-commitu `0f9834a2` dnes; co ověřené není, je **u toho napsané** — a jedna
+commitu `0b00bb36` dnes; co ověřené není, je **u toho napsané** — a jedna
 položka ve skupině E je právě to ověření.
 
 ---
@@ -26,13 +26,9 @@ položka ve skupině E je právě to ověření.
 
 | Odkud | Co zbývá | Kde se to dnes vidí | Velikost |
 | --- | --- | --- | --- |
-| **K7** | **Shoda v cíli na webu.** Appka to umí od 7. 11. — dvě lodě na témž místě, body podle ZPJ A7. Web pořád počítá pořadí jako `i + 1`, takže rozhodčí u stolu shodu zapsat nemůže a totéž klepnutí má na telefonu a na webu jiný výsledek | `web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/cil/cil.tsx:921` a `:1122` | střední |
-| **konzilium, bod 3** | **Barvy bójí potřebují vlastní tokeny.** Žlutá otočná a červený/modrý konec brány mají na Orlíku význam (rozhodl jsi 18. 11.), ale appka si je půjčuje od barvy znamení a zrušené rozjížďky — změna kterékoliv z nich přebarví bóje na vodě. Ve světlé i tmavé sadě, protože ráno na vodě jede telefon v tmavém | `trat.tsx` bere `pripravaZnameni` a `stavZruseny` z `app/src/constants/theme.ts:34` a `:54` | malá až střední |
-| **R25** | **Verze 3 souhlasu.** Rozhodnuto 29. 10.: VMP a technický průkaz se sbírat nebudou, závodník je potvrdí v souhlasu. Znění o průkazech mlčí a kód vydává verzi 2 — dokud se nezmění, nepotvrzuje závodník nic a rozhodnutí žije jen v dokumentaci | `src/OrlickyPohar.Api/Features/Zavody/Souhlas.cs:44` | malá: text a verze, kolonka `SouhlasVerze` v datech už je |
 | **R21** | **Dva ze čtyř prázdných bodů vypsání** — ty, které si aplikace umí dosadit sama: *Dráha* (J1.3(4)) z předpisu trati a *lhůta pro změny bodování* (J1.2(6)) ze ZPJ 90.3(e). Zbylé dva vydává Miloš, ty jsou ve skupině B | `src/OrlickyPohar.Api/Features/Zavody/Vypsani.cs:136` a `:139` | střední |
 | **PLAN, 19. 10.** | **Graf tlaku na stránce regaty.** Řekl jsi to dvakrát a poslal k tomu obrázek. Tlakový trend existuje jen jako widget na hlavní; na stránce regaty se slovo „tlak" nevyskytuje vůbec | je v `web/app/vitr.tsx`, není nikde ve `web/app/serie/` | střední |
 | **konzilium, 2-design** | **`kontrast.test.ts` rozšířit** o páry, které stavitel zavádí. Dnes měří obecné tokeny a proužky fází na panelu odpočtu, takže návrat bílé napevno na modré ploše (2,35 : 1 v tmavé sadě) by CI nechytila | `app/testy/kontrast.test.ts:86` | malá |
-| — | **Verze appky na `/appka`.** Stránka rozdává APK a QR kód, ale neřekne, který build to je. Kdo stahuje podruhé, nepozná, že je novější než ten jeho — a `app/vydane-apk.json` to číslo vede | `web/app/appka/page.tsx` | malá |
 | — | **`VeleniDto` mimo vygenerovaný kontrakt.** Tvar odpovědi stojí v appce ručně, protože ve `schema.d.ts` ten typ není. Dluh s předem napsaným koncem: až se kontrakt vygeneruje znovu, ruční typ má zmizet | `app/src/lib/api.ts:366` | malá, ale patří ke generování kontraktu |
 
 ## B) Čeká na Miloše — a vejde se to do jedné zprávy
@@ -105,6 +101,15 @@ rozjížďky a zčásti flow rozpravy. Zbývá tohle:
   karta zádrhelu, vzdálenost u brány — **jsem si ověřil jedinou**: slovo
   „zádrhel" není v `app/src` nikde, takže karta zádrhelu (bod 6) postavená
   není. Zbytek je nedočtený, a než se začne stavět, má se dočíst.
+- **Barvy bójí, až je stavitel začne malovat.** Konzilium (bod 3) žádá
+  vlastní tokeny, protože makety si barvu bóje půjčují od
+  `pripravaZnameni` a `stavZruseny`. V živém kódu ten rozchod **není**:
+  appka bóje barvou nemaluje vůbec a web má na ně vlastní tabulku
+  (`web/app/znak-boje.tsx`, `BARVY`) s rozhodnutím, že to tokeny nejsou —
+  *„zelená bóje je zelená i na tmavém pozadí, je to vlastnost předmětu ve
+  vodě"*. Až stavitel barvy dostane, má si vzít **tu tabulku**, ne vyrobit
+  třetí zdroj. Ověřeno 18. 11.: jediné dva výskyty těch dvou tokenů
+  v `trat.tsx` jsou texty chyb.
 - **Vypsání jako plný dokument J1** (R1, R8). Osnova stojí, dva body si
   aplikace dosadí sama (skupina A), dva vydává Miloš a místo konání nevede
   nikdo (skupina B). Teprve pak je to dokument, o kterém R8 mluví.
@@ -137,6 +142,11 @@ dirigenta. Z devatenácti nálezů, které 28. 10. čekaly na rozhodnutí, neče
 tvrdí, že to pole neexistuje nikde, a dnes je v `Clanek.cs:132` i ve správě
 článků a na stránce regaty. A zbytek, který měl 28. 10. *pípání a focení bójí
 z appky*, postavily `a4710ffa`, `34605f3d` a `4b9c256d`.
+
+**18. 11. odpoledne** vypadly tři položky skupiny A: shoda v cíli na webu
+(`8dee3387`, 15 testů), verze 3 souhlasu s podmínkami účasti (`8a254875`,
+6 testů a nová kontrola rozchodu znění v CI) a verze buildu na `/appka`
+(`0b00bb36`). Čtvrtá se rozpadla při čtení kódu — barvy bójí, viz skupinu E.
 
 ## Jak se tahle fronta udržuje
 
