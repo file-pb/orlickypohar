@@ -234,6 +234,11 @@ obrazovce, nestavět.
 
 ## Celá fronta: 41 nálezů a co s nimi
 
+> **Přerostlo to, 18. 11. 2026.** Tenhle oddíl je z 28. 10. a dělí nálezy podle
+> *otázek, které visí*. Dnes už nevisí ani jedna a nálezů je 49, ne 41.
+> **Fronta na stavbu se čte z `FRONTA.md`**; tohle níž zůstává jako doklad, jak
+> se z té hromady vybíralo, a jako zdroj pořadí kroků u startu výš.
+
 Tohle je ta „hromada", ze které se máme postupně dostat. Nálezů je **41**
 (R1–R34, K1–K7) a bez rozdělení se v nich pracovat nedá, protože **nejsou to
 všechno úkoly**. Každý nález je níž přesně v jedné skupině:

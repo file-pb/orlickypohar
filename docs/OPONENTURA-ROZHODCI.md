@@ -4779,6 +4779,10 @@ ověřené strojově: každý nález je přesně v jedné skupině a žádný ne
 Tenhle dokument zůstává zdrojem nálezů; ten druhý je záchytný bod, ke kterému
 se vrací, a **stav fronty se čte z něj**.
 
+**Od 18. 11. 2026** je pořadí práce ještě o patro dál: `FRONTA.md` drží jeden
+řádek na každou věc, která z těchhle nálezů doopravdy zbývá, rozdělenou podle
+toho, kdo nebo co ji drží. Oddíl *Celá fronta* v soupisu je tím překonaný.
+
 ## Přehled stavu řešení
 
 Od 28. 10. 2026 je **stav** v samostatném dokumentu: `docs/STAV-RESENI.md`.
