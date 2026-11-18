@@ -137,6 +137,13 @@ jobs:
       - name: Kontrola velikosti klepacích míst
         run: python3 tools/kontrola-dotyku.py
 
+      # Znění souhlasu závodníka drží C# i JSX — právní text ve dvou
+      # kopiích. Stejný důvod pro krok místo úlohy jako u dvou kontrol výš.
+      # Přibylo 18. 11. 2026 s verzí 3 (podmínky účasti): tehdy se ukázalo,
+      # že změna v `Souhlas.cs` sama nezmění, co má člověk před očima.
+      - name: Kontrola znění souhlasu
+        run: python3 tools/kontrola-souhlasu.py
+
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0

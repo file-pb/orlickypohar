@@ -41,7 +41,7 @@ namespace OrlickyPohar.Api.Features.Zavody;
 public static class Souhlas
 {
     /// <summary>Verze, kterou dostane souhlas daný dnes.</summary>
-    public const int Verze = 2;
+    public const int Verze = 3;
 
     /// <summary>
     /// Znění verze 1, platné 28. 10. 2026 (jen pár hodin, než ho nahradila
@@ -96,14 +96,49 @@ public static class Souhlas
         + "že ji vidí pořadatel a rozhodčí, a že podle nastavení regaty může "
         + "být vidět i ostatním lodím, na webu a na tabuli.";
 
+    /// <summary>
+    /// Znění verze 3, platné od 18. 11. 2026. Nová je <b>poslední věta</b>
+    /// o podmínkách účasti — VMP, technickém průkazu a pojištění.
+    ///
+    /// <para>
+    /// <b>Proč přibyla</b> (kolize 2 v oponentuře rozhodčího, rozhodl Filip
+    /// 29. 10. 2026). Miloš zadal, že se do přihlášky bude požadovat číslo
+    /// VMP a číslo technického průkazu. Filip to rozhodl jinak:
+    /// *„Zatím nic takového nesbíráme, a závodník by měl v podmínkách, na
+    /// které dává souhlas, mít, že toto splňuje a že je to jeho
+    /// odpovědnost."* Čísla se tedy nesbírají — ale vypsání ty doklady
+    /// žádá (nález R25), takže to musí říct text souhlasu. Není to volba
+    /// zdarma: práce se nešetří, jen přesouvá sem.
+    /// </para>
+    /// <para>
+    /// <b>Pojištění je v té větě taky</b>, ačkoliv Miloš mluvil o dvou
+    /// dokladech: vypsání ho žádá v oddílu Odpovědnost (*„Každá loď musí
+    /// mít platné pojištění"*) a aplikace ho nevede stejně jako ty dva.
+    /// Vynechat ho by znamenalo, že ze tří požadavků vypsání potvrzuje
+    /// závodník dva.
+    /// </para>
+    /// <para>
+    /// <b>Předložení u registrace</b> je přesně to, co stojí ve vypsání
+    /// (*„mohou být požádány o předložení"*) — kontrola je fyzická
+    /// u zápisu v klubovně a aplikace žádné doklady neskladuje.
+    /// </para>
+    /// </summary>
+    public const string ZneniV3 =
+        ZneniV2
+        + " Potvrzuji, že alespoň jeden člen posádky je držitelem platného "
+        + "Průkazu způsobilosti vůdce malého plavidla, že loď má platný "
+        + "technický průkaz a platné pojištění, a že za splnění těchto "
+        + "podmínek odpovídám já; pořadatel mě o jejich předložení může "
+        + "u registrace požádat.";
+
     /// <summary>Znění, které se sbírá dnes.</summary>
-    public const string Zneni = ZneniV2;
+    public const string Zneni = ZneniV3;
 
     /// <summary>Hláška, když souhlas nepřišel.</summary>
     public const string Chybi =
         "Potvrď souhlas s pravidly závodu, s účastí na vlastní nebezpečí, "
-        + "se zveřejněním lodi ve startovní listině a se zaznamenáváním "
-        + "polohy během závodního dne.";
+        + "se zveřejněním lodi ve startovní listině, se zaznamenáváním "
+        + "polohy během závodního dne a se splněním podmínek účasti.";
 
     /// <summary>
     /// Co o souhlasu říct pořadateli, když loď zapisuje sám.
@@ -116,7 +151,8 @@ public static class Souhlas
     /// </summary>
     public const string ZaKapitana =
         "Kapitán mi potvrdil souhlas s pravidly závodu, s účastí na vlastní "
-        + "nebezpečí a se zaznamenáváním polohy lodi.";
+        + "nebezpečí, se zaznamenáváním polohy lodi a splnění podmínek "
+        + "účasti závodu.";
 
     /// <summary>
     /// Znění podle čísla verze. Neznámá verze je chyba, ne tichý návrat
@@ -130,7 +166,10 @@ public static class Souhlas
         // přepsat starý text novým by ten smysl zrušilo. A rozdíl je tu
         // věcný: lodě s verzí 1 se <b>sledováním nesouhlasily</b>.
         1 => ZneniV1,
+        // Dvojka zůstává stejně jako jednička: lodě s ní <b>nepotvrdily
+        // podmínky účasti</b>, a to je ten věcný rozdíl proti trojce.
         2 => ZneniV2,
+        3 => ZneniV3,
         _ => throw new ArgumentOutOfRangeException(
             nameof(verze), verze, "Tahle verze znění souhlasu není známá."),
     };

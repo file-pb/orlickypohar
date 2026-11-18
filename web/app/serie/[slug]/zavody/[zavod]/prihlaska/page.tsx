@@ -303,6 +303,19 @@ function Formular({
           zaznamenává</b>, že ji vidí pořadatel a rozhodčí, a že podle
           nastavení regaty může být vidět i ostatním lodím, na webu a na
           tabuli.{" "}
+          {/* <b>Podmínky účasti přibyly 18. 11. 2026</b> jako verze 3
+              (kolize 2 oponentury, rozhodl Filip 29. 10.: *„Zatím nic
+              takového nesbíráme, a závodník by měl v podmínkách, na které
+              dává souhlas, mít, že toto splňuje a že je to jeho
+              odpovědnost."*). Miloš zadal sbírat čísla VMP a technického
+              průkazu; sbírat se nebudou, a proto to musí říct tenhle text —
+              vypsání ty doklady žádá. Znění drží `Souhlas.ZneniV3` a
+              rozchod s ním hlídá `tools/kontrola-souhlasu.py` v CI. */}
+          Potvrzuji, že alespoň jeden člen posádky je držitelem platného
+          Průkazu způsobilosti vůdce malého plavidla, že loď má{" "}
+          <b>platný technický průkaz a platné pojištění</b>, a že za splnění
+          těchto podmínek odpovídám já; pořadatel mě o jejich předložení může
+          u registrace požádat.{" "}
           <Link href={`/serie/${serie}/zavody/${zavod}/vypsani`}>
             Vypsání závodu
           </Link>{" "}

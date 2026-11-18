@@ -353,7 +353,9 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
                   nestalo. Jednou daný se už nemaže. */}
               <label>
                 <input type="checkbox" name="souhlas" value="ano" /> Kapitán mi
-                potvrdil souhlas s pravidly závodu a s účastí na vlastní nebezpečí
+                potvrdil souhlas s pravidly závodu, s účastí na vlastní
+                nebezpečí, se zaznamenáváním polohy lodi a splnění podmínek
+                účasti závodu
               </label>
               <button type="submit">Přihlásit</button>
             </form>
@@ -414,7 +416,9 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
                   nestalo. Jednou daný se už nemaže. */}
               <label>
                 <input type="checkbox" name="souhlas" value="ano" /> Kapitán mi
-                potvrdil souhlas s pravidly závodu a s účastí na vlastní nebezpečí
+                potvrdil souhlas s pravidly závodu, s účastí na vlastní
+                nebezpečí, se zaznamenáváním polohy lodi a splnění podmínek
+                účasti závodu
               </label>
               <button type="submit">Založit a přihlásit</button>
               <p className="poznamka">
