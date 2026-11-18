@@ -457,12 +457,19 @@ a hostitelem je proxy a ta umí spojení zahodit nad nasazením, které už
 doběhlo. Krok `Deploy` proto návratový kód `curl`u jen zapamatuje a verdikt
 vynáší až ověření `/verze`.
 
-Změřeno třikrát se stejným tvarem — 10. 11. 2026 u `fed3857` vrátila proxy
-520 po 43 s; 17. 11. 2026 dvakrát `curl: (56) Recv failure: Connection reset
-by peer` po ~60 s (běhy 44182164236 u `e80c6e20` a 44186217325 u `4f6390a2`).
-Pokaždé API i web vydávaly přesně ten commit, který se posílal, a opakované
-spuštění spadlé úlohy prošlo. Viník v cestě potvrzený není; oprava ho
-nepotřebuje.
+Změřeno čtyřikrát se stejným tvarem — 10. 11. 2026 u `fed3857` vrátila proxy
+520 po 43 s; 17. 11. 2026 třikrát `curl: (56) Recv failure: Connection reset
+by peer` po ~60 s (běhy 44182164236 u `e80c6e20`, 44186217325 u `4f6390a2`
+a 44196148901 u `c526d726`). Pokaždé API i web vydávaly přesně ten commit,
+který se posílal, a opakované spuštění spadlé úlohy prošlo.
+
+Ten čtvrtý případ je nejčistší důkaz, protože ho nepřečetl člověk ručně:
+spadl v 23:05, a **následující běh si v kroku „Co běží na produkci" přečetl
+`c526d726`** — nasazení tedy proběhlo, zatímco úloha hlásila selhání.
+
+Viník v cestě potvrzený není a oprava ho nepotřebuje. Jedno ale víme:
+**pevný strop na minutě to není.** První nasazení po téhle opravě
+(`b870bd39`) trvalo 118 s a přerušené nebylo. Resety jsou nahodilé.
 
 **Následek planého poplachu nebyl kosmetický.** `aktualizace-appky` má
 `needs: [nasazeni]`, takže červená úloha nasazení **přeskočila vydání
