@@ -39,6 +39,12 @@ echo
 echo "== Přesun lodi v zápisu =="
 node --experimental-strip-types ./presun.test.ts
 
+# Shoda v cíli v klepacím listu (K7, ZPJ A7). Dvě stejná čísla v něm dřív
+# vzniknout nemohla — čísloval se index klepnutí.
+echo
+echo "== Shoda v cíli =="
+node --experimental-strip-types ./shoda.test.ts
+
 # Fronta mapových dlaždic. „Mapa se občas nevykreslí celá" (pozorování 11):
 # počítadlo padalo do záporu a druhá vlna požadavků šla na zdroj celá naráz.
 echo

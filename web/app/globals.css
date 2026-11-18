@@ -1911,6 +1911,11 @@ th.vlevo, td.vlevo { text-align: left; }
   border: 1px solid var(--linka); background: var(--pozadi);
 }
 .cil-opravy button:disabled { opacity: 0.35; cursor: default; }
+/* Zapnutá shoda v cíli (K7): tlačítko drží stav, protože rovnítko v řádku
+   je malé a u čtyřiceti lodí se lehko přehlédne. */
+.cil-opravy button[aria-pressed="true"] {
+  background: var(--voda); color: var(--papir); border-color: var(--voda);
+}
 /* Rozbalovací části: další lodě, znaky, nová loď, kódy. Zavřené, ať
    tlačítka lodí zůstanou nahoře a na očích. */
 .cil details { margin-top: 1.2rem; border-top: 1px solid var(--linka); padding-top: 0.4rem; }

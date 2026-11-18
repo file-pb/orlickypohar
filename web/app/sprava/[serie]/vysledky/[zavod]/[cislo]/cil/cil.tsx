@@ -3,6 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 // Jen typy: hodnoty z lib/vysledky by do prohlížeče zatáhly i čtení tokenu.
+import {
+  cislaMist,
+  cislaVKategoriich,
+  odeberMisto,
+  prepniShodu,
+  prohodMista,
+  shodyZCisel,
+  type MistoVCili,
+} from "@/lib/cil-shoda";
 import type { KodVysledku, ZapisLod, ZapisRadek, ZapisRozjizdky } from "@/lib/vysledky";
 import {
   klicKonceptu,
@@ -58,7 +67,12 @@ import type { DruhProcedury } from "@/lib/vysledky";
 /** Kódy, které se dávají po dojezdu (PLAN.md). DNC a RDG patří k papíru. */
 const KODY_PO_DOJEZDU: KodVysledku[] = ["Dnf", "Ret", "Dns", "Ocs", "Dsq"];
 
-type Dojezd = { id: number; v: string | null };
+/**
+ * Místo v klepacím listu. Pravidla shody (K7, ZPJ A7) jsou v
+ * `@/lib/cil-shoda` — čistá a otestovaná, protože dvě stejná čísla
+ * v cílovém listu rozhodují o bodech.
+ */
+type Dojezd = MistoVCili;
 type Ukladani = "ulozeno" | "ukladam" | "chyba";
 
 export function Cil({
@@ -101,12 +115,19 @@ export function Cil({
   // na liště (Filip, 20. 10. 2026: *„lodě bez cíle dopíšeme, ale čas už
   // zastav"*).
   const [konec, setKonec] = useState<string | null>(zapis.konecV ?? null);
-  const [dojeti, setDojeti] = useState<Dojezd[]>(() =>
-    zapis.lode
+  const [dojeti, setDojeti] = useState<Dojezd[]>(() => {
+    const vporadi = zapis.lode
       .filter((l) => l.poradiVCili != null)
-      .sort((a, b) => a.poradiVCili! - b.poradiVCili!)
-      .map((l) => ({ id: l.prihlaskaId, v: l.dojezdV ?? null })),
-  );
+      .sort((a, b) => a.poradiVCili! - b.poradiVCili!);
+    // Shodu server nevydává jako příznak — vydává pořadí, a dvě stejná
+    // čísla za sebou jsou ta shoda (K7).
+    const shody = shodyZCisel(vporadi.map((l) => l.poradiVCili!));
+    return vporadi.map((l, i) => ({
+      id: l.prihlaskaId,
+      v: l.dojezdV ?? null,
+      shodneSPredchozim: shody[i],
+    }));
+  });
   const [kody, setKody] = useState<Record<number, KodVysledku>>(() =>
     Object.fromEntries(zapis.lode.filter((l) => l.kod).map((l) => [l.prihlaskaId, l.kod!])),
   );
@@ -281,14 +302,13 @@ export function Cil({
 
   const presun = (z: number, na: number) => {
     if (na < 0 || na >= dojeti.length) return;
-    const jmena = dojeti.map((d) => d.id);
-    const [id] = jmena.splice(z, 1);
-    jmena.splice(na, 0, id);
-    zmen(
-      jmena.map((id, i) => ({ id, v: dojeti[i].v })),
-      kody,
-    );
+    zmen(prohodMista(dojeti, z, na), kody);
   };
+
+  // Čísla míst a čísla v kategorii. Obojí počítá modul pravidel, protože
+  // shoda mění obě řady naráz a rozejít se nesmí (K7).
+  const cisla = cislaMist(dojeti);
+  const cislaKategorii = cislaVKategoriich(dojeti, (id) => lode.get(id)!.kategorie);
 
   /**
    * Odešle start, který leží v telefonu. Vrací se k tomu sám, dokud
@@ -918,11 +938,15 @@ export function Cil({
               const l = lode.get(d.id)!;
               return (
                 <li key={d.id}>
-                  <span className="cil-misto">{i + 1}.</span>
+                  {/* Shodné místo se pozná rovnítkem místo čísla — totéž
+                      dělá appka, aby se dvě obrazovky nečetly jinak (K7). */}
+                  <span className="cil-misto">
+                    {cisla[i] === cisla[i - 1] ? "=" : `${cisla[i]}.`}
+                  </span>
                   <span className="cil-jmeno">
                     {l.lod}
                     <small>
-                      {l.kategorie} {poradiVKategorii(dojeti, lode, i)}.
+                      {l.kategorie} {cislaKategorii[i]}.
                     </small>
                   </span>
                   <span className="cil-cas">{d.v && start ? trvani(start, Date.parse(d.v)) : ""}</span>
@@ -943,10 +967,26 @@ export function Cil({
                     >
                       ↓
                     </button>
+                    {/* <b>Shoda v cíli</b> (K7, ZPJ A7) je oprava, ne
+                        základní gesto: klepnutí na loď musí zůstat jedno
+                        klepnutí, a shoda je vzácná. */}
+                    <button
+                      type="button"
+                      aria-label={
+                        d.shodneSPredchozim
+                          ? `${l.lod}: zrušit shodu s předchozí`
+                          : `${l.lod} dojela shodně s předchozí`
+                      }
+                      aria-pressed={d.shodneSPredchozim === true}
+                      disabled={i === 0}
+                      onClick={() => zmen(prepniShodu(dojeti, i), kody)}
+                    >
+                      =
+                    </button>
                     <button
                       type="button"
                       aria-label={`${l.lod} zpátky na vodu`}
-                      onClick={() => zmen(dojeti.filter((_, j) => j !== i), kody)}
+                      onClick={() => zmen(odeberMisto(dojeti, i), kody)}
                     >
                       ✕
                     </button>
@@ -1116,10 +1156,11 @@ function TlacitkoLodi({
 
 /** Celá sada pro API: dojeté s pořadím a časem, zbylé s kódem. */
 function radky(dojeti: Dojezd[], kody: Record<number, KodVysledku>): ZapisRadek[] {
+  const cisla = cislaMist(dojeti);
   return [
     ...dojeti.map((d, i) => ({
       prihlaskaId: d.id,
-      poradiVCili: i + 1,
+      poradiVCili: cisla[i],
       kod: null,
       dojezdV: d.v,
     })),
@@ -1129,12 +1170,6 @@ function radky(dojeti: Dojezd[], kody: Record<number, KodVysledku>): ZapisRadek[
       kod,
     })),
   ];
-}
-
-/** Kolikátá dojela loď na místě `i` ve své kategorii. */
-function poradiVKategorii(dojeti: Dojezd[], lode: Map<number, ZapisLod>, i: number) {
-  const kategorie = lode.get(dojeti[i].id)!.kategorie;
-  return dojeti.slice(0, i + 1).filter((d) => lode.get(d.id)!.kategorie === kategorie).length;
 }
 
 /** Lodě po kategoriích v pořadí, v jakém je vydalo API. */

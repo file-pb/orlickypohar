@@ -13,7 +13,12 @@
  * musí fungovat i bez něj — je to pojistka navíc, ne podmínka.
  */
 
-export type DojezdKonceptu = { id: number; v: string | null };
+export type DojezdKonceptu = {
+  id: number;
+  v: string | null;
+  /** Dojela shodně s místem nad sebou (K7, ZPJ A7). Starší koncepty ho nemají. */
+  shodneSPredchozim?: boolean;
+};
 
 /**
  * Neodeslaný stav obrazovky. `otisk` je podoba zápisu na serveru v době,
