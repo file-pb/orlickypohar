@@ -243,6 +243,8 @@ Rozsah se proto musí u každé cesty vybírat jmenovitě výčtem.
 
 Pět otázek, které konzilium rozhodnout nemůže, protože jsou to tvoje pravidla.
 **První odpovězena 17. 11. 2026, zbytek 18. 11.; otevřená zůstává pátá.**
+Pátá je od 18. 11. 2026 vedená ve `FRONTA.md`, skupina C, aby se nehledala
+tady; rozhodnutí se zapisuje sem.
 
 1. **Staví se trať podle předem nakresleného plánu, nebo se o prvcích
    rozhoduje až na vodě podle větru?** — **Odpovězeno 17. 11. 2026:** ústní

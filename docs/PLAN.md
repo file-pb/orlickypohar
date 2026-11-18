@@ -10720,6 +10720,12 @@ zpravuješ.
 
 ## Fronta k 20. 10. 2026
 
+> **Překonané 18. 11. 2026.** Co z tohohle oddílu zbývá, stojí ve `FRONTA.md`
+> spolu s frontami z oponentury rozhodčího a ze závěru konzilia — jedna fronta
+> místo čtyř. Dva body odsud se mezitím zavřely: *úvodník jako příznak článku*
+> je v kódu (`Clanek.cs:132`) a Zitadel byl hotový už 21. 10. Oddíl zůstává
+> jako doklad, co a kdy bylo řečeno.
+
 <b>Proč je tenhle oddíl v plánu, a ne v hlavě.</b> Filip, 19. 10. 2026:
 *„dvakrát jsem říkal u té editace trati a jednou jsem posílal i obrázek,
 jak to tam chci. To tu ve frontě nevidím a uděláno to není."* Fronta
