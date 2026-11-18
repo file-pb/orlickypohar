@@ -242,7 +242,7 @@ Rozsah se proto musí u každé cesty vybírat jmenovitě výčtem.
 ## Co čeká na Filipa
 
 Pět otázek, které konzilium rozhodnout nemůže, protože jsou to tvoje pravidla.
-**První je odpovězená 17. 11. 2026, čtyři zbývají.**
+**První odpovězena 17. 11. 2026, zbytek 18. 11.; otevřená zůstává pátá.**
 
 1. **Staví se trať podle předem nakresleného plánu, nebo se o prvcích
    rozhoduje až na vodě podle větru?** — **Odpovězeno 17. 11. 2026:** ústní
@@ -250,20 +250,26 @@ Pět otázek, které konzilium rozhodnout nemůže, protože jsou to tvoje pravi
    co se asi pojede. Ani jedna z nabídnutých možností: plán je, ale není
    nakreslený. **Bod 2 tím platí celý**, odklad popisu padá a vlastní
    tabulka se nestaví; podrobně v bodu 2.
-2. **Jede telefon ráno na vodě v tmavém režimu?** Celá tmavá polovina
-   posudku 2-designu je odvozená z tokenů. Do odpovědi se staví přísnější
-   varianta — stojí jedno volání funkce, která už existuje.
+2. **Jede telefon ráno na vodě v tmavém režimu?** — **Odpovězeno 18. 11.
+   2026: ano, počítat s tmavým.** Celá tmavá polovina posudku 2-designu tedy
+   platí a kontrast se hlídá v obou odrudách.
 3. **Mají barvy bójí na Orlíku skutečný význam** (žlutá otočná, červený
-   a modrý konec brány), nebo to byla ozdoba makety? Pokud mají, potřebují
-   vlastní tokeny; dnes si půjčují `pripravaZnameni` a `stavZruseny`, tedy
-   znamení a zrušenou rozjížďku.
-4. **Kormidluje a pípá tentýž člověk, nebo jsou na motoráku dva?** Mění to
-   celou úvahu o zátěži.
+   a modrý konec brány)? — **Odpovězeno 18. 11. 2026: mají.** Potřebují proto
+   **vlastní tokeny**: dnes si půjčují `pripravaZnameni` a `stavZruseny`, tedy
+   barvu znamení a zrušené rozjížďky, a změna kterékoliv z nich by přebarvila
+   bóje na vodě. Spolu s bodem 2 to znamená tokeny ve světlé i tmavé odrudě.
+4. **Kormidluje a pípá tentýž člověk, nebo jsou na motoráku dva?** —
+   **Odpovězeno 18. 11. 2026: jeden člověk.** Platí tedy přísnější zadání:
+   jedna ruka na kormidle, druhá na telefonu, loď se hýbe. Dotyková mez
+   a počet kroků průvodce se podle toho neuvolňují.
 5. **Kolik z osmi kombinací se za sezónu reálně postaví?** Pořadí voleb má
    být podle četnosti a pevně zadrátované — bez čísel ho seřadím odhadem.
+   **Zůstává otevřená.**
 
 Šestá otázka je od 9-rizik a není o stavbě: **má `posud` dál pouštět celé
-Česko**, když ani jedna kontrola nepozná bránu položenou mimo přehradu?
+Česko**, když ani jedna kontrola nepozná bránu položenou mimo přehradu? —
+**Odpovězeno 18. 11. 2026: ano, meze zůstávají na Česku.** Hlídají překlep
+v souřadnici, ne území; prvek daleko od přehrady pozná stavitel na mapě.
 
 ## Co se při stavbě zapomene první
 

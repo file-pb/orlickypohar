@@ -346,16 +346,31 @@ Všech pět oborů to potvrdilo, nebo proti tomu nic nenamítlo:
 
 ## Co čeká na Filipa
 
+**Všechny tři zodpovězené 18. 11. 2026.**
+
 1. **Pořadatel jediné zastávky: okno ročníku, nebo rovnou okno jeho regaty?**
-   3-ux chce přesměrování (jeho regata je stejně jediný řádek), 1-ergonomie
-   okno drží a má k tomu čísla: vypsat svou regatu jde **jen z Kalendáře
+   3-ux chtěla přesměrování (jeho regata je stejně jediný řádek), 1-ergonomie
+   okno držela a měla k tomu čísla: vypsat svou regatu jde **jen z Kalendáře
    ročníku**, takže přesměrování ušetří klepnutí v den regaty a přidá ho po
-   celou předsezónu. Padá to, až okno regaty ponese i vypsání (R1, R8).
+   celou předsezónu. — **Odpovězeno: přesměrovat do regaty.**
+
+   > **Co z toho plyne, a je to podmínka, ne poznámka.** Závěr k tomu psal
+   > *„padá to, až okno regaty ponese i vypsání (R1, R8)"* — jenže rozhodnutí
+   > padlo dřív. Pořadatel, kterého obrazovka pošle rovnou do jeho regaty,
+   > **se ke Kalendáři ročníku nedostane**, a odtamtud se regata vypisuje.
+   > Přesměrování se proto nesmí postavit samo: buď s vypsáním v okně regaty,
+   > nebo s cestou zpátky do ročníku, která je vidět. Jinak si pořadatel
+   > v předsezóně nevypíše vlastní regatu.
+
 2. **Zůstává tab *Co teď* v pruhu i tomu, komu nikdy nic nevydá?** Konzilium
-   doporučuje ne, ale je to tvoje pravidlo 2 („pruh = co můžu spravovat").
-3. **Veřejné menu *Závodím / Fandím / Legislativa*.** 4-jazyk: *Legislativa* je
-   nejúřednější slovo v návrhu a stojí vedle dvou sloves v první osobě —
-   navrhuje **Pravidla**. Rozhoduje se to podle plánu najednou s bodem 2 fáze 8.
+   doporučovalo ne, ale bylo to proti pravidlu 2 („pruh = co můžu spravovat").
+   — **Odpovězeno: schovat, když nic nevydá.** Pravidlo 2 tím dostává výjimku,
+   a je to vědomé: tab, který vždycky řekne „nic tu není", učí nedívat se tam.
+
+3. **Veřejné menu *Závodím / Fandím / Legislativa*.** 4-jazyk navrhoval
+   **Pravidla**, protože *Legislativa* je nejúřednější slovo v návrhu a stojí
+   vedle dvou sloves v první osobě. — **Odpovězeno: zůstává *Legislativa*.**
+   Nesouhlas 4-jazyka tím zůstává zapsaný, rozhodnutí je moderátorské.
 
 ## Co čeká na Miloše
 
