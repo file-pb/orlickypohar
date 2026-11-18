@@ -12,6 +12,7 @@ import {
   type StavVysledku,
 } from "@/lib/vysledky";
 import { NAZVY_STAVU, nactiTrate, type TratNaVyber } from "@/lib/trat";
+import { krokVpred } from "@/lib/workflow";
 import { nactiJa } from "@/lib/ja";
 import { prava, smi } from "@/lib/co-smim";
 import { dataTrackeru, PanelTrackeru } from "../../tracker/[zavod]/panel";
@@ -347,6 +348,17 @@ function Rozjizdka({
 }) {
   const skryta = ["Navrzeno", "Schvaleno"] as const;
 
+  // Krok, na který se čeká — ten jediný dostane váhu.
+  const naVpred = krokVpred(rozjizdka.stavVysledku, rozjizdka.mozneStavy);
+  const vpred = naVpred ? { na: naVpred, ...krokZe(rozjizdka.stavVysledku, naVpred) } : null;
+  // Zbyde po vyzdvižení hlavního kroku ještě něco do rozbalovače?
+  const maDalsiUkony =
+    rozjizdka.mozneStavy.some(
+      (na) => na !== "KRevizi" && na !== "Eliminovano" && na !== naVpred,
+    ) ||
+    rozjizdka.smiDoPoharu ||
+    rozjizdka.smiPublikovat;
+
   return (
     <div className="karta">
       <div className="nazev">
@@ -459,74 +471,105 @@ function Rozjizdka({
         </p>
       )}
 
-      <div className="stavy">
-        {rozjizdka.mozneStavy
-          // <b>Zrušení má od 28. 10. 2026 povinný důvod</b> (nálezy R13
-          // a R17), takže se stejně jako revize nevejde mezi tlačítka na
-          // jedno kliknutí — má vlastní rozbalovací formulář níž.
-          .filter((na) => na !== "KRevizi" && na !== "Eliminovano")
-          .map((na) => {
-            // Text podle toho, odkud se jde — „Vrátit do návrhu" je
-            // z revize krok vpřed, ne couvnutí (viz `krokZe`).
-            const krok = krokZe(rozjizdka.stavVysledku, na);
-            return (
-              <form key={na} action={stavAkce}>
-                <input type="hidden" name="serie" value={serie} />
-                <input type="hidden" name="zavod" value={zavod} />
-                <input type="hidden" name="cislo" value={rozjizdka.cislo} />
-                <input type="hidden" name="stav" value={na} />
-                {/* Viditelný text napřed — viz obrazovka přihlášek. */}
-                <button
-                  type="submit"
-                  title={krok.popis}
-                  aria-label={`${krok.tlacitko} — ${krok.popis}`}
-                >
-                  {krok.tlacitko}
-                </button>
-              </form>
-            );
-          })}
+      {/* <b>Jeden krok má váhu, ostatní jsou po ruce</b> (18. 11. 2026).
+          Karta nabízela všechny úkony jako stejně vypadající tlačítka —
+          na obrazovce se čtyřmi rozjížďkami jich bylo třiadvacet a nic
+          neříkalo, které z nich posouvá zápis dál. Přitom takový je právě
+          jeden: podepsat, potvrdit, otevřít k opravě. Pohár, publikace
+          a správcův přeskok se za sezónu použijí párkrát, takže se
+          schovaly — ne zmizely. Který krok je ten hlavní, rozhoduje
+          `krokVpred` i s testy. */}
+      {vpred && (
+        <form action={stavAkce} className="krok-vpred">
+          <input type="hidden" name="serie" value={serie} />
+          <input type="hidden" name="zavod" value={zavod} />
+          <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+          <input type="hidden" name="stav" value={vpred.na} />
+          <button type="submit" title={vpred.popis} aria-label={`${vpred.tlacitko} — ${vpred.popis}`}>
+            {vpred.tlacitko}
+          </button>
+        </form>
+      )}
 
-        {/* Do poháru, nebo mimo něj. Výsledku regaty se to netýká —
-            ten se počítá ze všech odjetých rozjížděk. */}
-        {rozjizdka.smiDoPoharu && (
-          <form action={poharAkce}>
-            <input type="hidden" name="serie" value={serie} />
-            <input type="hidden" name="zavod" value={zavod} />
-            <input type="hidden" name="cislo" value={rozjizdka.cislo} />
-            <input type="hidden" name="doSerie" value={rozjizdka.doSerie ? "ne" : "ano"} />
-            <button
-              type="submit"
-              title={
-                rozjizdka.doSerie
-                  ? "Body z téhle rozjížďky přestanou platit v poháru. Výsledek regaty zůstává."
-                  : "Body z téhle rozjížďky se zase budou počítat do poháru."
-              }
-            >
-              {rozjizdka.doSerie ? "Vyndat z poháru" : "Vrátit do poháru"}
-            </button>
-          </form>
-        )}
+      {/* <b>Výjimečné úkony pod jedním rozbalovačem.</b> Pohár,
+          publikace a správcův přeskok se za sezónu použijí párkrát;
+          vedle kroku, na který se čeká, jen přidávaly šum. Zmizet nesmějí
+          — stažení z webu je to, čím se opravuje vypuštěná chyba. */}
+      {maDalsiUkony && (
+        <details className="uprava">
+          <summary>Další úkony</summary>
+        <div className="stavy">
+          {rozjizdka.mozneStavy
+            // <b>Zrušení má od 28. 10. 2026 povinný důvod</b> (nálezy R13
+            // a R17), takže se stejně jako revize nevejde mezi tlačítka na
+            // jedno kliknutí — má vlastní rozbalovací formulář níž.
+            .filter((na) => na !== "KRevizi" && na !== "Eliminovano")
+            // Krok vpřed stojí výš jako hlavní tlačítko, tady už ne podruhé.
+            .filter((na) => na !== vpred?.na)
+            .map((na) => {
+              // Text podle toho, odkud se jde — „Vrátit do návrhu" je
+              // z revize krok vpřed, ne couvnutí (viz `krokZe`).
+              const krok = krokZe(rozjizdka.stavVysledku, na);
+              return (
+                <form key={na} action={stavAkce}>
+                  <input type="hidden" name="serie" value={serie} />
+                  <input type="hidden" name="zavod" value={zavod} />
+                  <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+                  <input type="hidden" name="stav" value={na} />
+                  {/* Viditelný text napřed — viz obrazovka přihlášek. */}
+                  <button
+                    type="submit"
+                    title={krok.popis}
+                    aria-label={`${krok.tlacitko} — ${krok.popis}`}
+                  >
+                    {krok.tlacitko}
+                  </button>
+                </form>
+              );
+            })}
 
-        {rozjizdka.smiPublikovat && (
-          <form action={publikaceAkce}>
-            <input type="hidden" name="serie" value={serie} />
-            <input type="hidden" name="zavod" value={zavod} />
-            <input type="hidden" name="cislo" value={rozjizdka.cislo} />
-            <input type="hidden" name="publikovano" value={rozjizdka.publikovano ? "ne" : "ano"} />
-            <button
-              type="submit"
-              title={
-                rozjizdka.publikovano
-                  ? "Čísla z webu zmizí. Stav zápisu se tím nemění."
-                  : "Čísla uvidí veřejnost. Stav zápisu se tím nemění."
-              }
-            >
-              {rozjizdka.publikovano ? "Stáhnout z webu" : "Pustit ven"}
-            </button>
-          </form>
-        )}
-      </div>
+          {/* Do poháru, nebo mimo něj. Výsledku regaty se to netýká —
+              ten se počítá ze všech odjetých rozjížděk. */}
+          {rozjizdka.smiDoPoharu && (
+            <form action={poharAkce}>
+              <input type="hidden" name="serie" value={serie} />
+              <input type="hidden" name="zavod" value={zavod} />
+              <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+              <input type="hidden" name="doSerie" value={rozjizdka.doSerie ? "ne" : "ano"} />
+              <button
+                type="submit"
+                title={
+                  rozjizdka.doSerie
+                    ? "Body z téhle rozjížďky přestanou platit v poháru. Výsledek regaty zůstává."
+                    : "Body z téhle rozjížďky se zase budou počítat do poháru."
+                }
+              >
+                {rozjizdka.doSerie ? "Vyndat z poháru" : "Vrátit do poháru"}
+              </button>
+            </form>
+          )}
+
+          {rozjizdka.smiPublikovat && (
+            <form action={publikaceAkce}>
+              <input type="hidden" name="serie" value={serie} />
+              <input type="hidden" name="zavod" value={zavod} />
+              <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+              <input type="hidden" name="publikovano" value={rozjizdka.publikovano ? "ne" : "ano"} />
+              <button
+                type="submit"
+                title={
+                  rozjizdka.publikovano
+                    ? "Čísla z webu zmizí. Stav zápisu se tím nemění."
+                    : "Čísla uvidí veřejnost. Stav zápisu se tím nemění."
+                }
+              >
+                {rozjizdka.publikovano ? "Stáhnout z webu" : "Pustit ven"}
+              </button>
+            </form>
+          )}
+        </div>
+        </details>
+      )}
 
       {/* Vrácení má povinný důvod, takže se nevejde mezi tlačítka na jedno
           kliknutí. Rozbaluje se v kartě, ne na vlastní stránce. */}

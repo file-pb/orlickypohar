@@ -1827,6 +1827,17 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .zapis .presun button:hover:not(:disabled) { color: var(--voda); border-color: var(--voda); }
 .zapis .presun button:disabled { opacity: 0.3; cursor: default; }
+/* <b>Krok, na který se čeká.</b> Jediné barevné tlačítko na kartě:
+   do 18. 11. 2026 vypadalo stejně jako pohár a publikace, takže se na
+   obrazovce se čtyřmi rozjížďkami nedalo poznat, co má člověk udělat.
+   Tvar je týž jako u `Uložit zápis` — je to tatáž role. */
+.karta .krok-vpred { margin: 0.6rem 0 0.2rem; }
+.karta .krok-vpred > button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: 0.5rem 1rem; border: 0; border-radius: 8px;
+  background: var(--voda); color: var(--papir);
+}
+
 .zapis-akce { margin-top: 1rem; }
 .zapis-akce > button, .pridat > button {
   font: inherit; font-weight: 600; cursor: pointer;
@@ -6240,6 +6251,10 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
   /* Štítek role je na dotyk cíl, ne jen popisek — 2,2 rem je minimum,
      pod kterým se do něj na telefonu trefuje palcem na dvakrát. */
   button.stitek-role { min-height: 2.2rem; padding: 0.45rem 0.75rem; font-size: 0.8rem; }
+
+  /* Hlavní krok je na dotyku cíl jako každý jiný: s výplní 0,5 rem a
+     patnáctibodovým písmem vycházel na 42 pt (změřeno na 375 px). */
+  .karta .krok-vpred > button { min-height: 44px; }
 
   /* <b>Šipka přesunu je pod palcem cíl jako každý jiný</b> — 44 px.
      Pole pořadí se k tomu zužuje: víc než dvojciferné číslo do něj

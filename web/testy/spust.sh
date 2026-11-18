@@ -44,3 +44,9 @@ node --experimental-strip-types ./presun.test.ts
 echo
 echo "== Fronta mapových dlaždic =="
 node --experimental-strip-types ./dlazdice.test.ts
+
+# Který krok posouvá zápis dál. Rozhoduje, co na kartě rozjížďky dostane
+# váhu — splést couvnutí s krokem vpřed je drahé oběma směry.
+echo
+echo "== Krok vpřed ve workflow =="
+node --experimental-strip-types ./workflow.test.ts
