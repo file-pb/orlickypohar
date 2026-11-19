@@ -56,3 +56,9 @@ node --experimental-strip-types ./dlazdice.test.ts
 echo
 echo "== Krok vpřed ve workflow =="
 node --experimental-strip-types ./workflow.test.ts
+
+# Čtení papírového zápisu, jak ho nasype člověk s modelem. Hlídá hlavně,
+# že se nepřečtený řádek neztratí — jinak by tabulka vypadala úplná.
+echo
+echo "== Čtení papírového zápisu =="
+node --experimental-strip-types ./papir.test.ts

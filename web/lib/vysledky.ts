@@ -29,30 +29,9 @@ export type NavrhRadek = S["NavrhRadekDto"];
 // Jako klíč slovníku a hodnota v nabídce ale prázdný být nesmí.
 export type KodVysledku = NonNullable<S["KodVysledku"]>;
 
-/**
- * Kódy závodních pravidel tak, jak je čte pořadatel. Zkratka se nepřekládá
- * — stojí tak na papíře z cíle — ale co znamená, se hodí mít vedle.
- *
- * Pořadí je podle toho, jak často se na vodě stávají, ne podle závažnosti:
- * v rozbalovátku se hledá `DNF`, ne `RDG`.
- */
-export const KODY: Record<KodVysledku, string> = {
-  Dnf: "nedokončila",
-  Dns: "nestartovala",
-  Ret: "odstoupila",
-  Ocs: "předčasný start",
-  Dsq: "diskvalifikace",
-  Dnc: "nezúčastnila se",
-  Rdg: "náprava",
-  // Čtyři kódy z 28. 10. 2026 (nálezy K1 a R14). Popisek říká, co kód
-  // znamená pro loď — ne číslo pravidla: ten, kdo zapisuje, hledá „co se
-  // té lodi stalo", a ZPJ si přečte ve vypsání. Pozor: startovní tresty
-  // jsou na poháru dohoda z rozpravy, ne ZPJ 30 (nález R16).
-  Zfp: "bodový trest 20 %",
-  Ufd: "diskvalifikace od startu",
-  Bfd: "diskvalifikace černou vlajkou",
-  Dne: "diskvalifikace, nelze vyškrtnout",
-};
+/** Kódy závodních pravidel — žijí v `kody.ts`, viz důvod tam. */
+export { KODY } from "./kody";
+
 
 /**
  * Stav zápisu: co znamená a co udělá tlačítko, které do něj vede.
