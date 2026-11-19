@@ -47,5 +47,31 @@ public class ZapisNavrh
     /// <summary>Kdy tenhle zapisovatel naposledy uložil.</summary>
     public DateTimeOffset ZapsanoV { get; set; }
 
+    /// <summary>
+    /// Přečetl ta čísla stroj z fotky papíru?
+    /// <para>
+    /// <b>Třetí zapisovatel vedle dvou lidských</b> (oponentura rozhodčího,
+    /// 27. 10. 2026). Papír z cíle se stejně fotí a fotka v aplikaci leží;
+    /// rozpoznaná čísla jsou přesně takový druhý zdroj jako zápis z druhého
+    /// telefonu — nezávazný doklad o tom, co kdo viděl.
+    /// </para>
+    /// <para>
+    /// <b>Proč vlastní příznak a ne jen autor.</b> Snímek je vždycky čísi,
+    /// takže patří tomu, kdo rozpoznaná čísla vložil. Jenže ten je
+    /// nezapisoval ani neviděl v cíli — a rozhodčí, který verze porovnává,
+    /// musí vědět, které z nich četl stroj. Ruční zápis je svědectví,
+    /// tohle je odhad z fotky; spolehlivost je nižší a u výsledků je chyba
+    /// drahá (Filip, 18. 11. 2026).
+    /// </para>
+    /// </summary>
+    public bool ZPapiru { get; set; }
+
+    /// <summary>
+    /// Čemu stroj nerozuměl — řádky z papíru, které se nepodařilo spárovat
+    /// s lodí. Drží se u snímku, aby bylo při potvrzování vidět, že fotka
+    /// nesla víc, než co je v tabulce.
+    /// </summary>
+    public List<string> Neprecteno { get; set; } = [];
+
     public List<NavrhRadek> Radky { get; set; } = [];
 }

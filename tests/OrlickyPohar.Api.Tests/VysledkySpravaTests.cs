@@ -836,6 +836,83 @@ public class VysledkySpravaTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Snimek_z_papiru_stoji_vedle_rucniho_a_vysledky_nemeni()
+    {
+        var slug = "zapis-papir";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        var anna = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = "Anna Zapisovatelka" };
+        db.Uzivatele.Add(anna);
+        await db.SaveChangesAsync();
+
+        // Anna zapsala z telefonu pořadí 1–2.
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], PoradiVCili: 2)],
+            default, anna.Id, rozjizdka.Revize)).Chyba);
+
+        // Z fotky papíru vyšlo pořadí obrácené. Vkládá to Anna, protože
+        // snímek je vždycky čísi — ale její ruční tím přepsat nesmí.
+        Assert.Null(await zapis.ZPapiruAsync(rozjizdka, anna.Id,
+            [new(prihlasky[0], PoradiVCili: 2), new(prihlasky[1], PoradiVCili: 1)],
+            ["3. ?????? — nečitelné"], default));
+
+        var navrhy = await zapis.NavrhyAsync(rozjizdka, anna.Id, default);
+        Assert.Equal(2, navrhy.Navrhy.Count);
+
+        var zPapiru = navrhy.Navrhy.Single(n => n.ZPapiru);
+        var rucni = navrhy.Navrhy.Single(n => !n.ZPapiru);
+
+        // Oba jsou Anniny, ale „můj" je jen ten, který zapsala sama.
+        Assert.Equal(anna.Id, zPapiru.UzivatelId);
+        Assert.False(zPapiru.Muj);
+        Assert.True(rucni.Muj);
+
+        Assert.Equal(prihlasky[1], zPapiru.Radky[0].PrihlaskaId);
+        Assert.Equal(prihlasky[0], rucni.Radky[0].PrihlaskaId);
+
+        // Co stroj nepřečetl, se u snímku drží — mlčet o tom by znamenalo
+        // tvrdit, že se přečetlo všechno.
+        Assert.Equal(["3. ?????? — nečitelné"], zPapiru.Neprecteno);
+
+        // <b>Výsledky zůstaly Anniny.</b> Snímek je doklad, ne zápis.
+        var nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
+        Assert.Equal(prihlasky[0], nacteny.Lode.Single(l => l.PoradiVCili == 1).PrihlaskaId);
+
+        // Druhé vložení téhož snímek přepíše, nepřidá třetí.
+        Assert.Null(await zapis.ZPapiruAsync(rozjizdka, anna.Id,
+            [new(prihlasky[0], PoradiVCili: 1)], [], default));
+
+        navrhy = await zapis.NavrhyAsync(rozjizdka, anna.Id, default);
+        Assert.Equal(2, navrhy.Navrhy.Count);
+        Assert.Empty(navrhy.Navrhy.Single(n => n.ZPapiru).Neprecteno!);
+    }
+
+    [Fact]
+    public async Task Snimek_z_papiru_odmitne_cizi_lod()
+    {
+        var slug = "zapis-papir-cizi";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, _) = await OtevrenaAsync(scope, slug);
+
+        var anna = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = "Anna Zapisovatelka" };
+        db.Uzivatele.Add(anna);
+        await db.SaveChangesAsync();
+
+        // Přihláška, která v tomhle ročníku není. V porovnání by se
+        // objevila jako loď, co na regatě nestartovala.
+        var chyba = await zapis.ZPapiruAsync(
+            rozjizdka, anna.Id, [new(999_999, PoradiVCili: 1)], [], default);
+
+        Assert.NotNull(chyba);
+        Assert.Empty((await zapis.NavrhyAsync(rozjizdka, anna.Id, default)).Navrhy);
+    }
+
+    [Fact]
     public async Task Bez_zapisovatele_snimek_nevznika()
     {
         var slug = "zapis-bez-snimku";

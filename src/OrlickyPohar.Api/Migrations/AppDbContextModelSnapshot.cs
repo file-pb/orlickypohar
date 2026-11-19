@@ -2053,11 +2053,18 @@ namespace OrlickyPohar.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.PrimitiveCollection<List<string>>("Neprecteno")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<int>("RozjizdkaId")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("UzivatelId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("ZPapiru")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset>("ZapsanoV")
                         .HasColumnType("timestamp with time zone");
@@ -2066,7 +2073,7 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.HasIndex("UzivatelId");
 
-                    b.HasIndex("RozjizdkaId", "UzivatelId")
+                    b.HasIndex("RozjizdkaId", "UzivatelId", "ZPapiru")
                         .IsUnique();
 
                     b.ToTable("ZapisyNavrhu", (string)null);

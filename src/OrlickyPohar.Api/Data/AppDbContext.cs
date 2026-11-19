@@ -355,8 +355,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         navrh.HasOne(x => x.Uzivatel).WithMany().HasForeignKey(x => x.UzivatelId)
             .OnDelete(DeleteBehavior.Cascade);
         // Jeden zapisovatel má u rozjížďky jeden snímek — ten poslední.
-        navrh.HasIndex(x => new { x.RozjizdkaId, x.UzivatelId }).IsUnique();
+        // <b>`ZPapiru` je v klíči schválně</b>: snímek z fotky patří tomu,
+        // kdo ho vložil, a ten u téže rozjížďky obvykle má i svůj ruční.
+        // Bez téhle třetí složky by druhý z nich první přepsal — a to je
+        // přesně ten doklad, kvůli kterému snímky vznikly.
+        navrh.HasIndex(x => new { x.RozjizdkaId, x.UzivatelId, x.ZPapiru }).IsUnique();
         navrh.OwnsMany(x => x.Radky, r => r.ToJson());
+        // Co stroj z papíru nepřečetl. Pár řetězců, ke kterým se nikdo
+        // nedotazuje — stejný důvod pro JSON jako u řádků.
+        navrh.PrimitiveCollection(x => x.Neprecteno);
 
         // Smazaná fotka papíru nesmí odnést rozjížďku i s výsledky.
         b.Entity<Rozjizdka>().HasOne(x => x.Fotka).WithMany().HasForeignKey(x => x.FotkaId)

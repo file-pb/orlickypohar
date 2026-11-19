@@ -93,7 +93,26 @@ public record NavrhRadekDto(
 /// </summary>
 public record NavrhDto(
     Guid UzivatelId, string Kdo, DateTimeOffset ZapsanoV, bool Muj,
-    IReadOnlyList<NavrhRadekDto> Radky);
+    IReadOnlyList<NavrhRadekDto> Radky,
+    /// <summary>
+    /// Přečetl ta čísla stroj z fotky papíru? Rozhodčí musí vědět, které
+    /// verzi věřit míň: ruční zápis je svědectví, tohle je odhad.
+    /// </summary>
+    bool ZPapiru = false,
+    /// <summary>Řádky z papíru, které se nepodařilo spárovat s lodí.</summary>
+    IReadOnlyList<string>? Neprecteno = null);
+
+/// <summary>
+/// Co stroj přečetl z fotky papírového zápisu.
+/// <para>
+/// <c>Neprecteno</c> nese řádky, které se nepodařilo spárovat s lodí —
+/// drží se u snímku, aby bylo při potvrzování vidět, že fotka nesla víc,
+/// než co je v tabulce. Mlčet o nich by znamenalo tvrdit, že se přečetlo
+/// všechno.
+/// </para>
+/// </summary>
+public record SnimekZPapiruVstup(
+    IReadOnlyList<ZapisRadekVstup> Radky, IReadOnlyList<string>? Neprecteno);
 
 /// <summary>Snímky rozjížďky, od nejnovějšího.</summary>
 public record NavrhyDto(
@@ -391,13 +410,20 @@ public class ZapisSprava(
             .AsNoTracking()
             .Where(n => n.RozjizdkaId == rozjizdka.Id)
             .OrderByDescending(n => n.ZapsanoV)
-            .Select(n => new { n.UzivatelId, Kdo = n.Uzivatel!.Zobrazovane, n.ZapsanoV, n.Radky })
+            .Select(n => new {
+                n.UzivatelId, Kdo = n.Uzivatel!.Zobrazovane, n.ZapsanoV, n.Radky,
+                n.ZPapiru, n.Neprecteno,
+            })
             .ToListAsync(ct);
 
         return new NavrhyDto(zavod.Slug, zavod.Nazev, rozjizdka.Cislo,
         [
             .. navrhy.Select(n => new NavrhDto(
-                n.UzivatelId, n.Kdo, n.ZapsanoV, n.UzivatelId == kdo,
+                n.UzivatelId, n.Kdo, n.ZapsanoV,
+                // Snímek z papíru patří tomu, kdo ho vložil, ale „můj"
+                // v porovnání znamená „tohle jsem zapsal já" — a to o něm
+                // neplatí ani pro vkladatele.
+                !n.ZPapiru && n.UzivatelId == kdo,
                 [
                     .. n.Radky
                         .OrderBy(r => r.PoradiVCili ?? int.MaxValue)
@@ -406,7 +432,9 @@ public class ZapisSprava(
                             lode.GetValueOrDefault(r.PrihlaskaId)?.Nazev ?? "neznámá loď",
                             lode.GetValueOrDefault(r.PrihlaskaId)?.Kategorie ?? "",
                             r.PoradiVCili, r.Kod)),
-                ])),
+                ],
+                n.ZPapiru,
+                n.Neprecteno)),
         ]);
     }
 
@@ -430,6 +458,83 @@ public class ZapisSprava(
             .ToList();
 
         return (false, (await UlozAsync(rozjizdka, radky, ct, kdo, rozjizdka.Revize)).Chyba);
+    }
+
+    /// <summary>
+    /// Uloží snímek přečtený z fotky papíru. <b>Výsledky rozjížďky nemění.</b>
+    /// <para>
+    /// <b>Třetí zapisovatel vedle dvou lidských</b> (oponentura rozhodčího).
+    /// Papír z cíle se stejně fotí; rozpoznaná čísla jsou druhý zdroj jako
+    /// zápis z druhého telefonu — doklad o tom, co kdo viděl, ne výsledek.
+    /// Proto se nikam nezapisují a projdou týmž porovnáním jako ostatní.
+    /// </para>
+    /// <para>
+    /// <b>Rozpoznává člověk s modelem, ne server</b> (oponentura, a Filip
+    /// 27. 10. 2026: <i>„prostě to někdo načmárá na papír, a vyfotí na
+    /// mobil. Pak ti to nasype až se probereš."</i>). U věci, která se
+    /// použije několikrát za sezónu, je to výrazně levnější než stavět OCR
+    /// do serveru — a spolehlivější, protože ruční zápis na mokrém papíru
+    /// je jiná úloha než tištěná listina.
+    /// </para>
+    /// <para>
+    /// Snímek se drží k dvojici rozjížďka × vkladatel zvlášť od jeho
+    /// vlastního ručního, takže si navzájem nepřepíšou — v klíči je
+    /// i <c>ZPapiru</c>.
+    /// </para>
+    /// </summary>
+    public async Task<string?> ZPapiruAsync(
+        Rozjizdka rozjizdka, Guid kdo, IReadOnlyList<ZapisRadekVstup> radky,
+        IReadOnlyList<string> neprecteno, CancellationToken ct)
+    {
+        // <b>Tvar se tu nehlídá a je to schválně.</b> Snímek je doklad
+        // o tom, co stroj z fotky přečetl — i špatně přečtené číslo je
+        // pravda o tom, co na papíře viděl. Rozsoudí se to při potvrzování
+        // po řádcích proti fotce, kde u každé lodi rozhoduje člověk;
+        // odmítnout celou dávku kvůli jednomu nečitelnému řádku by znamenalo
+        // zahodit i ty ostatní.
+        //
+        // Hlídá se jediné: že ty lodě vůbec patří do tohohle ročníku.
+        // Cizí přihláška by se jinak objevila v porovnání jako loď, která
+        // na regatě nestartovala.
+        var serieId = await db.Zavody
+            .Where(z => z.Id == rozjizdka.ZavodId)
+            .Select(z => z.SerieId)
+            .FirstAsync(ct);
+
+        var vRocniku = await db.Prihlasky
+            .Where(p => p.SerieId == serieId)
+            .Select(p => p.Id)
+            .ToListAsync(ct);
+
+        if (radky.Any(r => !vRocniku.Contains(r.PrihlaskaId)))
+            return "Snímek nese loď, která v tomhle ročníku není přihlášená.";
+
+        var navrh = await db.ZapisyNavrhu.FirstOrDefaultAsync(
+            n => n.RozjizdkaId == rozjizdka.Id && n.UzivatelId == kdo && n.ZPapiru, ct);
+
+        if (navrh is null)
+        {
+            navrh = new ZapisNavrh { RozjizdkaId = rozjizdka.Id, UzivatelId = kdo, ZPapiru = true };
+            db.ZapisyNavrhu.Add(navrh);
+        }
+
+        navrh.ZapsanoV = cas.GetUtcNow();
+        navrh.Neprecteno = [.. neprecteno];
+        navrh.Radky =
+        [
+            .. radky
+                .Where(r => r.PoradiVCili is not null || r.Kod is not null)
+                .Select(r => new NavrhRadek
+                {
+                    PrihlaskaId = r.PrihlaskaId,
+                    PoradiVCili = r.PoradiVCili,
+                    Kod = r.Kod,
+                    DojezdV = r.DojezdV?.ToUniversalTime(),
+                }),
+        ];
+
+        await db.SaveChangesAsync(ct);
+        return null;
     }
 
     /// <summary>

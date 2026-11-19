@@ -191,6 +191,14 @@ public static class VysledkyEndpoints
                 "Pořadatel regaty. Na vodě zapisují dva a každý na svém telefonu; tohle jsou " +
                 "jejich verze k porovnání. S jedním zapisovatelem je snímek jeden.");
 
+        g.MapPost("/{zavod}/rozjizdky/{cislo:int}/navrhy/papir", ZPapiruAsync)
+            .Produces<NavrhyDto>()
+            .WithSummary("Uloží snímek přečtený z fotky papírového zápisu")
+            .WithDescription(
+                "Pořadatel regaty, dokud je zápis otevřený. Výsledky rozjížďky to nemění — " +
+                "je to třetí zapisovatel vedle dvou lidských, nezávazný a k porovnání. " +
+                "Rozpoznává člověk s modelem, ne server; aplikace jen přijme výsledek.");
+
         g.MapPost("/{zavod}/rozjizdky/{cislo:int}/navrhy/{autor:guid}/pouzit", PouzijNavrhAsync)
             .Produces<ZapisRozjizdkyDto>()
             .WithSummary("Přepíše výsledky rozjížďky snímkem jednoho zapisovatele")
@@ -540,6 +548,30 @@ public static class VysledkyEndpoints
         if (!await SmiUVodyAsync(kdo, rozsahy, pomocnici, rozsah, ct)) return Results.Forbid();
 
         return Results.Ok(await zapis.NavrhyAsync(rozjizdka, await rozsahy.UzivatelIdAsync(kdo, ct), ct));
+    }
+
+    private static async Task<IResult> ZPapiruAsync(
+        string serie, string zavod, int cislo, SnimekZPapiruVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        // Snímek je vždycky čísi — anonymní nemá co dokládat. Sem se
+        // bez účtu nedá dostat (`SmiZapisovatAsync` výš), takže je to
+        // pojistka, ne větev, kterou by někdo prošel.
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } vkladatel)
+            return Results.Forbid();
+
+        var chyba = await zapis.ZPapiruAsync(
+            rozjizdka, vkladatel, vstup.Radky, vstup.Neprecteno ?? [], ct);
+
+        if (chyba is not null) return Results.BadRequest(new { error = chyba });
+
+        return Results.Ok(await zapis.NavrhyAsync(rozjizdka, vkladatel, ct));
     }
 
     private static async Task<IResult> PouzijNavrhAsync(
