@@ -500,6 +500,48 @@ trať v řízení, a přidat mezi ně viditelnost by znamenalo násobit je —
 „rozestavěná veřejná", „hotová neveřejná" a tak dál. Dva nezávislé údaje
 jsou dva sloupce, ne osm stavů.
 
+## Jedna obrazovka, ne čtyři
+
+*Revize na Filipovu otázku, 20. 11. 2026: neukazují Stavba, Pořadí
+a Přehled totéž, jen v jiném režimu?* **Ukazují.** Porovnáno řádek po
+řádku:
+
+| | Stavba | Plán | Pořadí | Hotovo |
+|---|---|---|---|---|
+| seznam prvků v pořadí | ano | ano | ano | ano |
+| stav u prvku | odesláno | změřeno / z plánu | — | odesláno / chybí fotka / čeká |
+| pruh nahoře | poloha | plán z kanceláře | — | co brání hlášení |
+| hlavní akce | Pípni | Jsem u ní | — | Nahlásit hotovo |
+
+Seznam je ve všech čtyřech **tentýž**, a i ty stavy jsou jen různé
+pohledy na jeden prvek: kde se vzala jeho poloha, jestli už došel na
+server, jestli u něj je fotka. Že jsem to nakreslil čtyřikrát, je vidět
+i na tom, že *Hotovo* má číslovaný seznam a zbytek osu — tutéž věc jsem
+dvakrát nakreslil jinak.
+
+**Takže jedna obrazovka.** Pruh nahoře se mění podle situace, u prvku
+stojí to, co je na něm zrovna podstatné, a přerovnání je **režim**, do
+kterého se vejde schválně — jako v mapových aplikacích. Mód je tu
+správně: přetažení nesmí vystřelit při rolování.
+
+**Jedna věc se ale slepit nesmí: hlavní akce.** Rozhodnutí 1 konzilia
+zní, že *pípnutí je první a trvale dostupná akce*, a obrazovka, jejíž
+velké tlačítko jednou pípá a podruhé hlásí hotovo, to pravidlo ruší —
+zrovna ve chvíli, kdy loď stojí u značky a potřebuje pípnout. Proto:
+
+- **Pípnutí je hlavní akce vždycky.** *Jsem u ní* není jiná akce, je to
+  jen jeho jméno ve chvíli, kdy je nejbližší značka z plánu na dosah;
+  dělá totéž — změří polohu tady.
+- **Nahlásit hotovo je podřízená akce.** Je to jednou za regatu, kdežto
+  pípne se dvacetkrát. Patří nad hlavní tlačítko jako řádek, ne na jeho
+  místo.
+- **Přerovnat** je vstup do režimu, taky podřízený.
+
+Co z toho plyne pro makety: `Main.dc.html` je **ta obrazovka**,
+`Plan.dc.html` a `Hotovo.dc.html` jsou její **stavy** a
+`Poradi.dc.html` je její **režim**. Zůstávají nakreslené zvlášť, protože
+každý ukazuje jinou situaci, ale stavět se bude jedna.
+
 ## Co se nemění, a proč
 
 1. **Prvek se pořád zapisuje jedním požadavkem.** `POST …/trat/prvky/postav`

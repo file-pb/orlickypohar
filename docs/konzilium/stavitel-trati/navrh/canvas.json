@@ -22,7 +22,7 @@
       "y": 0,
       "w": 390,
       "h": 844,
-      "title": "1 · Klid: čeká se na značku"
+      "title": "1 · Stavba — TA obrazovka"
     },
     "Popis.dc.html": {
       "x": 470,
@@ -85,7 +85,7 @@
       "y": 0,
       "w": 390,
       "h": 844,
-      "title": "9 · Nahlásit hotovo"
+      "title": "1b · Stavba ve stavu „všechno odešlo“"
     },
     "Barva.dc.html": {
       "x": 4700,
@@ -99,14 +99,14 @@
       "y": 0,
       "w": 390,
       "h": 844,
-      "title": "11 · Pořadí na trati, přetažením (nález 13)"
+      "title": "1c · Stavba v režimu přerovnání"
     },
     "Plan.dc.html": {
       "x": 5640,
       "y": 0,
       "w": 390,
       "h": 844,
-      "title": "12 · Plán z kanceláře a jeho potvrzování (nález 15)"
+      "title": "1a · Stavba ve stavu „jedeš podle plánu“"
     },
     "Smazani.dc.html": {
       "x": 6110,
@@ -163,6 +163,13 @@
       "size": "l",
       "fill": "gray",
       "text": "Obrazovky, které konzilium nevidělo — nálezy 7, 8, 9 a 10, nakreslené 20. 11. 2026, aby šly posoudit dřív, než se postaví. Fotka potřebuje nativní modul, a tím posunutý otisk; bod z mapy ne, ale stojí na tom, že si appka uloží, co už na trati stojí. Slovník znaků se použije všude, kde se dnes kreslí kolečko."
+    },
+    "jedna": {
+      "x": 0,
+      "y": -430,
+      "w": 1100,
+      "size": "l",
+      "text": "Revize 20. 11. 2026: Stavba, Plán, Hotovo a Pořadí ukazují tentýž seznam — jsou to stavy a režim jedné obrazovky, ne čtyři obrazovky. Nakreslené jsou zvlášť jen proto, že každá ukazuje jinou situaci. Hlavní akcí zůstává pípnutí ve všech; hlásit hotovo a přerovnat jsou podřízené."
     }
   },
   "designSystems": []
