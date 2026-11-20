@@ -28,6 +28,11 @@ nad mapou, aby posádky dopředu věděly, jak se asi pojede. V den regaty
 pak vyrazí loď a stavitel **pípá úpravy z vody** — bóje se posunou podle
 větru a počasí. Pro další rozjížďky se někdy založí trať nová.
 
+**Plán ale není pravidlo.** Někdy se trať postaví rovnou na vodě bez
+jakékoliv přípravy — záleží, kdo ji staví a jak svědomitě. Obě cesty jsou
+normální a **ani jedna není ta správná**; obrazovka proto nesmí plán
+předpokládat, vyžadovat ho ani na jeho nepřítomnost upozorňovat.
+
 Tři věci z toho plynou, a každá míří jinam, než návrh dosud mířil:
 
 1. **Hlavní činnost na vodě není zakládání, ale úprava.** Obrazovka je
@@ -419,6 +424,39 @@ lodi. Obrazovka to musí říct slovem, jinak si stavitel bude myslet, že
 opravuje chybu, a bude přesouvat i tam, kde chtěl jen přepsat špatně
 zadanou polohu — na to je zahození a nové pípnutí.
 
+### 15. Plán z kanceláře a jeho potvrzení na vodě
+
+*Doplněno 20. 11. 2026 na Filipův popis praxe. Konzilium neposuzovalo.*
+
+**Nález.** Model rozdíl mezi plánem a skutečností **už umí**, jen ho nikdo
+nepoužívá k tomu, k čemu se hodí: `ZdrojPolohy.Mapa` je *„odečteno
+z mapy"*, `ZdrojPolohy.Telefon` *„jediný zdroj, který měří"*
+(`Boje.cs:22–32`). Trať naklikaná z kanceláře je tedy trať samých
+odečtených bodů, a den regaty je její procházení a potvrzování měřením.
+Appka o tom neví nic: načtené prvky kreslí stejně, ať jsou změřené, nebo
+odečtené.
+
+**Proč to vadí.** Stavitel, který vyrazí k plánu, potřebuje vědět, co
+z trati už stojí doopravdy a co je zatím jen čára na mapě. Bez toho buď
+pípá znovu to, co je hotové, nebo nechá na vodě bóji, kterou nikdo
+nezměřil — a to druhé se pozná až po závodě.
+
+**Návrh.** U každého prvku stav *změřeno* / *z plánu*, pruh s počtem
+hotových, a hlavní akce **Jsem u ní** místo *Pípni značku*, když se
+jede podle plánu. Pípnutí plán nepřepíše: založí nový záznam a ten starý
+označí za nahrazený (nález 14, `Boje.NahrazenaV`).
+
+**Co z toho nesmí vzniknout.** Plán je nepovinný. Když žádný není,
+obrazovka vypadá přesně jako dnes a o plánu nepadne ani slovo — žádné
+„trať nemá plán", žádná výzva ho udělat.
+
+**Otázka, kterou musí rozhodnout Filip:** má se plán ukazovat veřejně už
+od vypsání regaty? Dnešní pravidlo zní, že *nepřijatá trať se nevydává
+vůbec* (`TratEndpoints`, veřejné čtení), a má dobrý důvod — posádka
+nesmí navigovat podle něčeho, co ještě neplatí. Ukázat plán jde, ale jen
+jako **plán**, viditelně odlišený, a s vědomím, že to je výjimka z toho
+pravidla.
+
 ## Co se nemění, a proč
 
 1. **Prvek se pořád zapisuje jedním požadavkem.** `POST …/trat/prvky/postav`
@@ -470,6 +508,7 @@ nevidělo. Postavené z toho pořád není nic kromě obrazovky výběru zastáv
 | `navrh/Znaky.dc.html` | slovník tvarů a barev, jak to vypadá na hladině |
 | `navrh/Barva.dc.html` | volba barvy a tvaru bójky, předvolená žlutá nafukovací |
 | `navrh/Poradi.dc.html` | pořadí na trati v ose, přerovnání přetažením |
+| `navrh/Plan.dc.html` | jízda podle plánu z kanceláře a jeho potvrzování |
 
 Barvy a rozměry jsou **skutečné tokeny appky**
 (`app/src/constants/theme.ts`, světlé téma), ne vymyšlená paleta. Makety

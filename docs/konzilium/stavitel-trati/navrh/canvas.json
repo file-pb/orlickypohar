@@ -100,6 +100,13 @@
       "w": 390,
       "h": 844,
       "title": "11 · Pořadí na trati, přetažením (nález 13)"
+    },
+    "Plan.dc.html": {
+      "x": 5640,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "12 · Plán z kanceláře a jeho potvrzování (nález 15)"
     }
   },
   "order": [
@@ -115,7 +122,8 @@
     "Mapa.dc.html",
     "Znaky.dc.html",
     "Barva.dc.html",
-    "Poradi.dc.html"
+    "Poradi.dc.html",
+    "Plan.dc.html"
   ],
   "notes": {
     "nadpis": {

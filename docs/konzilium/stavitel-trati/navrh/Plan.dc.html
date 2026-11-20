@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Stavitel trati — plán a skutečnost</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+a { color: #1f6f8b; } a:hover { color: #175264; }
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #fbfaf8; color: #1a1d21; display: flex; flex-direction: column">
+
+  <div style="padding: 52px 16px 10px 16px">
+    <div style="font-size: 20px; font-weight: 700; letter-spacing: -0.3px">Stavba trati</div>
+    <div style="font-size: 13px; color: #5d666f; margin-top: 1px">Radavská regata · 1. rozjížďka</div>
+  </div>
+
+  <div style="margin: 0 16px; padding: 12px 14px; border-radius: 12px; background: #f3f0ea; border: 1px solid #8a5000">
+    <div style="font-size: 16px; font-weight: 700; color: #8a5000">Jedeš podle plánu z kanceláře</div>
+    <div style="font-size: 14px; color: #1a1d21; margin-top: 3px">Pět prvků je odečtených z mapy. Změřené jsou zatím dva — u každé značky pípni, až u ní budeš.</div>
+  </div>
+
+  <div style="margin: 12px 16px 0 16px; height: 8px; border-radius: 999px; background: #e6e3de; overflow: hidden">
+    <div style="width: 40%; height: 8px; background: #2f6b4f"></div>
+  </div>
+
+  <div style="padding: 14px 16px 6px 16px; font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #5d666f">Trať podle plánu</div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 7px">
+      <div style="box-sizing: border-box; background: #ffffff; border: 1px solid #e2e0dc; border-radius: 12px; padding: 10px 13px; display: flex; align-items: center; gap: 11px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2f6b4f" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="flex: none" role="img" aria-label="změřeno"><path d="M20 6L9 17l-5-5"></path></svg>
+        <div style="flex: 1; min-width: 0">
+          <div style="font-size: 16px; font-weight: 600">Start</div>
+          <div style="font-size: 13px; color: #5d666f">pevná linie · k severu</div>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; color: #2f6b4f; text-align: right; max-width: 92px">změřeno</span>
+      </div>
+      <div style="box-sizing: border-box; background: #ffffff; border: 1px solid #e2e0dc; border-radius: 12px; padding: 10px 13px; display: flex; align-items: center; gap: 11px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2f6b4f" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="flex: none" role="img" aria-label="změřeno"><path d="M20 6L9 17l-5-5"></path></svg>
+        <div style="flex: 1; min-width: 0">
+          <div style="font-size: 16px; font-weight: 600">Otočná 1</div>
+          <div style="font-size: 13px; color: #5d666f">otočit levobokem</div>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; color: #2f6b4f; text-align: right; max-width: 92px">změřeno</span>
+      </div>
+      <div style="box-sizing: border-box; background: #ffffff; border: 2px solid #8a5000; border-radius: 12px; padding: 10px 13px; display: flex; align-items: center; gap: 11px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8a5000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex: none" role="img" aria-label="z plánu"><path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11z" stroke-dasharray="3 2.5"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+        <div style="flex: 1; min-width: 0">
+          <div style="font-size: 16px; font-weight: 600">Brána 2</div>
+          <div style="font-size: 13px; color: #5d666f">projet mezi nimi</div>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; color: #8a5000; text-align: right; max-width: 92px">z plánu</span>
+      </div>
+      <div style="box-sizing: border-box; background: #ffffff; border: 1px solid #e2e0dc; border-radius: 12px; padding: 10px 13px; display: flex; align-items: center; gap: 11px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8a5000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex: none" role="img" aria-label="z plánu"><path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11z" stroke-dasharray="3 2.5"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+        <div style="flex: 1; min-width: 0">
+          <div style="font-size: 16px; font-weight: 600">Otočná 3</div>
+          <div style="font-size: 13px; color: #5d666f">otočit pravobokem</div>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; color: #8a5000; text-align: right; max-width: 92px">z plánu</span>
+      </div>
+      <div style="box-sizing: border-box; background: #ffffff; border: 1px solid #e2e0dc; border-radius: 12px; padding: 10px 13px; display: flex; align-items: center; gap: 11px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8a5000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex: none" role="img" aria-label="z plánu"><path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11z" stroke-dasharray="3 2.5"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+        <div style="flex: 1; min-width: 0">
+          <div style="font-size: 16px; font-weight: 600">Cíl</div>
+          <div style="font-size: 13px; color: #5d666f">proplout · k jihu</div>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; color: #8a5000; text-align: right; max-width: 92px">z plánu</span>
+      </div>
+  </div>
+
+  <div style="padding: 16px 16px 0 16px">
+    <div style="font-size: 13px; color: #5d666f; line-height: 1.45">
+      Odečtený bod není měření, a tak se s ním i zachází: dokud u značky
+      někdo nepípne, zůstane u ní „z plánu". Pípnutí plán **nepřepíše** —
+      založí nový záznam a ten starý označí za nahrazený, protože podle
+      něj se posuzuje trasa lodi z doby, kdy platil.
+    </div>
+  </div>
+
+  <div style="flex: 1"></div>
+
+  <div style="padding: 10px 16px 30px 16px">
+    <div style="font-size: 13px; color: #5d666f; text-align: center; margin-bottom: 8px">Stojíš u Brány 2 · ±4 m</div>
+    <a href="Popis.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 12px; height: 86px; border-radius: 16px; background: #1f6f8b; color: #ffffff; text-decoration: none; font-size: 24px; font-weight: 800; letter-spacing: -0.3px">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="10" r="3"></circle><path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11z"></path></svg>
+      JSEM U NÍ
+    </a>
+    <div style="font-size: 13px; color: #5d666f; text-align: center; margin-top: 8px">Značka v plánu nestojí? Pípni ji jako novou.</div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
