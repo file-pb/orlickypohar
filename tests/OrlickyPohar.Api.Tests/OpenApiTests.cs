@@ -80,4 +80,29 @@ public class OpenApiTests(PostgresFixture fixture)
         Assert.True(schemata.GetProperty("ObrazekDto").GetProperty("properties")
             .TryGetProperty("id", out _));
     }
+
+    /// <summary>
+    /// <b>Velení je v dokumentu.</b> Handler vrací <c>IResult</c>, takže se
+    /// tvar odpovědi do dokumentu dostane jedině přes <c>Produces</c> — a
+    /// když chybí, nic nespadne: appce se jen vygeneruje kontrakt bez
+    /// <c>VeleniDto</c> a někdo ten tvar opíše ručně. Přesně to se stalo
+    /// 7. 11. 2026 a drželo se to do 21. 11.
+    /// </summary>
+    [Fact]
+    public async Task Dokument_nese_tvar_veleni()
+    {
+        var klient = fixture.CreateClient();
+
+        using var dokument = JsonDocument.Parse(
+            await (await klient.GetAsync("/openapi/v1.json")).Content.ReadAsStringAsync());
+        var veleni = dokument.RootElement.GetProperty("components")
+            .GetProperty("schemas").GetProperty("VeleniDto").GetProperty("properties");
+
+        Assert.True(veleni.TryGetProperty("uzivatelId", out _));
+        Assert.True(veleni.TryGetProperty("jmeno", out _));
+        Assert.True(veleni.TryGetProperty("odV", out _));
+        // Tohle pole je ten důvod, proč se telefon ptá při každém
+        // připojení: velí pořád ten, kdo se ptá?
+        Assert.True(veleni.TryGetProperty("jsemTo", out _));
+    }
 }

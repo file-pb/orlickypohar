@@ -26,8 +26,6 @@ položka ve skupině E je právě to ověření.
 
 | Odkud | Co zbývá | Kde se to dnes vidí | Velikost |
 | --- | --- | --- | --- |
-| **R21** | **Dva ze čtyř prázdných bodů vypsání** — ty, které si aplikace umí dosadit sama: *Dráha* (J1.3(4)) z předpisu trati a *lhůta pro změny bodování* (J1.2(6)) ze ZPJ 90.3(e). Zbylé dva vydává Miloš, ty jsou ve skupině B | `src/OrlickyPohar.Api/Features/Zavody/Vypsani.cs:136` a `:139` | střední |
-| **PLAN, 19. 10.** | **Graf tlaku na stránce regaty.** Řekl jsi to dvakrát a poslal k tomu obrázek. Tlakový trend existuje jen jako widget na hlavní; na stránce regaty se slovo „tlak" nevyskytuje vůbec | je v `web/app/vitr.tsx`, není nikde ve `web/app/serie/` | střední |
 | **konzilium, 2-design** | **`kontrast.test.ts` rozšířit** o páry, které stavitel zavádí. Dnes měří obecné tokeny a proužky fází na panelu odpočtu, takže návrat bílé napevno na modré ploše (2,35 : 1 v tmavé sadě) by CI nechytila | `app/testy/kontrast.test.ts:86` | malá |
 | — | **`VeleniDto` mimo vygenerovaný kontrakt.** Tvar odpovědi stojí v appce ručně, protože ve `schema.d.ts` ten typ není. Dluh s předem napsaným koncem: až se kontrakt vygeneruje znovu, ruční typ má zmizet | `app/src/lib/api.ts:366` | malá, ale patří ke generování kontraktu |
 
@@ -45,7 +43,7 @@ rozjížďky a zčásti flow rozpravy. Zbývá tohle:
 | **Začátek a konec rozpravy** | 8 | zbytek otázky 6: co rozprava zapíná, už víme (R3, R4, R6, R39), kdy začíná a končí ne |
 | **Má protestní limit nepustit podpis, nebo to jen napsat?** | — | K2. Limit se počítá a píše se u rozjížďky; nezamyká nic, protože aplikace neví, že nějaký protest visí |
 | **Vyloučení: „nepustím ke startu", nebo „vyhazuju z výsledků"?** | — | K4 a mez z pravidla 76.1(a) |
-| **Dva body vypsání, které vydáváš ty** — kdy se poslední den už nestartuje (J1.3(7)) a odepření práva na odvolání (J1.3(8)). A **místo konání**, které aplikace nevede nikde, takže je v dokumentu zadrátované „neuvedené" | — | R21, R23, zbytek R1/R8 |
+| **Dva body vypsání, které vydáváš ty** — *Dráha* (J1.3(4)), kterou dnes nese směrnice jako text, a *kdy se poslední den už nestartuje* (J1.3(7)), tedy ve vzoru „žádná rozjížďka nebude startována po 16:00". A **místo konání**, které aplikace nevede nikde, takže je v dokumentu zadrátované „neuvedené" | — | R21, R23, zbytek R1/R8 |
 
 ## C) Čeká na rozhodnutí Filipa
 
@@ -59,6 +57,12 @@ rozjížďky a zčásti flow rozpravy. Zbývá tohle:
 - **Kdo appku nemá, se o přeloženém termínu nedozví** (zbytek K5). Zpráva
   odchází odběrem ročníku, tedy jen do telefonů. Druhý kanál je rozhodnutí
   (mail? SMS? vůbec?), ne práce.
+- **Má vypsání říct, co pohár nevyhlašuje?** Dva ze čtyř prázdných bodů —
+  *lhůta pro změny bodování* (J1.2(6)) a *odepření práva na odvolání*
+  (J1.3(8)) — nejsou ve vzoru vypsání ani ve směrnici. R21 z toho čte, že
+  je pohár **nevyhlašuje**, ne že se zapomněly. Dokument je dnes ukazuje
+  v seznamu chybějících, jako by se na ně čekalo. Věta *„pohár nevyhlašuje"*
+  je ale tvrzení o závodu, ne údaj z dat — proto to rozhodnutí.
 - **Licence** — Play 25 USD jednorázově, Apple 99 USD ročně. Bez nich se nová
   appka k pořadatelům dostane jedině kabelem, a zrovna stavitel trati je
   funkce, kterou budou chtít mít v telefonu bez tvé asistence.
@@ -147,6 +151,15 @@ z appky*, postavily `a4710ffa`, `34605f3d` a `4b9c256d`.
 (`8dee3387`, 15 testů), verze 3 souhlasu s podmínkami účasti (`8a254875`,
 6 testů a nová kontrola rozchodu znění v CI) a verze buildu na `/appka`
 (`0b00bb36`). Čtvrtá se rozpadla při čtení kódu — barvy bójí, viz skupinu E.
+
+**21. 11.** vypadly z A další dvě položky, a ani jedna nebyla práce.
+**Graf tlaku na stránce regaty už tam je** — `BokVitr` ho nese spolu
+s 24hodinovým průběhem a na regatě se vykresluje (ověřeno na produkci:
+*„Tlak · Kocelovice 1006 hPa ↗ +1,6 za 3 h"*); zápis v plánu je z 20. 10.
+a od té doby zestárl. A **dva prázdné body vypsání**, o kterých jsem psal,
+že si je aplikace dosadí sama, si dosadit neumí: R21 říká, že *Dráhu* vydává
+Miloš jako text ve směrnici a zbylé dva pohár nevyhlašuje vůbec. Jedno patří
+do B, druhé do C.
 
 ## Jak se tahle fronta udržuje
 

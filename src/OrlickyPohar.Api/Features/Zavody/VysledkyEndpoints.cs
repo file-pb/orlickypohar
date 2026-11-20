@@ -104,6 +104,11 @@ public static class VysledkyEndpoints
         // nedozvěděl a vznikli by dva hlavní. Je to tentýž vzorec jako
         // u oken závodních dnů (`OknaEndpoints.ProTelefonAsync`).
         g.MapGet("/{zavod}/velitel", VelitelAsync)
+            // <b>Tvar odpovědi musí stát v kontraktu.</b> Handler vrací
+            // `IResult`, takže exportér tělo neodvodí a `VeleniDto` se
+            // z dokumentu vynechá — appka si kvůli tomu nesla jediný ručně
+            // psaný tvar v celém souboru (`app/src/lib/api.ts`).
+            .Produces<VeleniDto>()
             .WithTags("Výsledky")
             .WithSummary("Kdo velí startu téhle regaty")
             .WithDescription(
@@ -111,6 +116,7 @@ public static class VysledkyEndpoints
                 + "o tom, jak se velení předávalo. Telefon se ptá při každém připojení.");
 
         g.MapPost("/{zavod}/velitel", PrevezmiVeleniAsync)
+            .Produces<VeleniDto>()
             .WithTags("Výsledky")
             .WithSummary("Převezme velení startu")
             .WithDescription(
