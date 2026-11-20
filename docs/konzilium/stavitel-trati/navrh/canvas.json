@@ -1,0 +1,41 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-16T23:45:00Z" },
+  "title": "Stavitel trati — návrh přepracování",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Vyber.dc.html": { "x": -470, "y": 0, "w": 390, "h": 844, "title": "0 · Kde stavíš trať — vchod z nabídky" },
+    "Main.dc.html": { "x": 0, "y": 0, "w": 390, "h": 844, "title": "1 · Klid: čeká se na značku" },
+    "Popis.dc.html": { "x": 470, "y": 0, "w": 390, "h": 844, "title": "2 · Pípnuto: co to bylo?" },
+    "Dvoubod.dc.html": { "x": 940, "y": 0, "w": 390, "h": 844, "title": "3 · Druhý konec" },
+    "Fronta.dc.html": { "x": 1410, "y": 0, "w": 390, "h": 844, "title": "4 · Bez signálu a zádrhel" },
+    "Zamek.dc.html": { "x": 1880, "y": 0, "w": 390, "h": 844, "title": "5 · Trať je přijatá" }
+  },
+  "order": ["Vyber.dc.html", "Main.dc.html", "Popis.dc.html", "Dvoubod.dc.html", "Fronta.dc.html", "Zamek.dc.html"],
+  "notes": {
+    "nadpis": {
+      "x": 0,
+      "y": -300,
+      "text": "Stavitel trati — návrh, překresleno 20. 11. 2026",
+      "kind": "title1",
+      "maxW": 2270
+    },
+    "teze": {
+      "x": 0,
+      "y": -170,
+      "text": "Hlavní změna: pípnout jde kdykoliv a je to první akce na obrazovce. Odklad popisu konzilium zrušilo 3 : 1 — popis je jedno klepnutí a to klepnutí má čas, protože poloha je už uložená. Makety jsou od 20. 11. 2026 srovnané se závěrem: osm řádků v seznamu, slovo místo čísla u polohy, karta zádrhelu bez nevratné akce v popředí.",
+      "w": 1100,
+      "size": "l"
+    },
+    "barvy": {
+      "x": 1170,
+      "y": -170,
+      "text": "Barvy a rozměry jsou skutečné tokeny appky (app/src/constants/theme.ts, světlé téma) — ne vymyšlená paleta. Co je v maketách nepřesné, je nedbalost makety, ne návrh. Obrazovka 0 odpovídá tomu, co už v appce běží; zbytek jsou návrhy, postavené z nich není nic.",
+      "w": 1100,
+      "size": "l",
+      "fill": "gray"
+    }
+  },
+  "designSystems": []
+}

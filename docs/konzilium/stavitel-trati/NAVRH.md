@@ -327,8 +327,16 @@ kdyby se ukázalo, že se na odemčení čeká dlouho, má smysl příznak *stav
 
 ## Makety
 
+**Překresleno 20. 11. 2026 podle `ZAVER.md`.** Co v maketách bylo proti
+závěru: odložený popis (zrušen 3 : 1), sedmiřádkový seznam (platí osm),
+živé číslo přesnosti v proužku polohy (patří k akci, ne do proužku)
+a karta zádrhelu s nevratnou akcí v popředí (platí *Zkusit znovu* nahoře,
+zahození podřízené a s potvrzením). Přibyla maketa výběru zastávky —
+jediná, která odpovídá tomu, co v appce **už běží**.
+
 | Soubor | Co ukazuje |
 |---|---|
+| `navrh/Vyber.dc.html` | kde stavíš: vchod z nabídky, jen regaty, kam server pustí |
 | `navrh/Main.dc.html` | klidový stav: stav polohy, co stojí, trvalé *Pípni* |
 | `navrh/Popis.dc.html` | po pípnutí: jeden seznam konkrétních prvků |
 | `navrh/Dvoubod.dc.html` | rozestavěná brána: vzdálenost od prvního bodu |
