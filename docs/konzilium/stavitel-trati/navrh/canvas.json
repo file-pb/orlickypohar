@@ -93,6 +93,13 @@
       "w": 390,
       "h": 844,
       "title": "10 · Barva a tvar bójky (nález 12)"
+    },
+    "Poradi.dc.html": {
+      "x": 5170,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "11 · Pořadí na trati, přetažením (nález 13)"
     }
   },
   "order": [
@@ -107,7 +114,8 @@
     "Fotka.dc.html",
     "Mapa.dc.html",
     "Znaky.dc.html",
-    "Barva.dc.html"
+    "Barva.dc.html",
+    "Poradi.dc.html"
   ],
   "notes": {
     "nadpis": {

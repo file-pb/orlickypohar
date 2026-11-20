@@ -334,6 +334,41 @@ přeskočit — pak platí předvolba, tedy dnešní chování.
 dneska staví oranžové, mění to jednou za ráno, ne u každé bóje; předvolba
 je výchozí stav, ne věta o tom, co se právě pokládá.
 
+### 13. Pořadí na trati nejde přerovnat
+
+*Doplněno 20. 11. 2026 na Filipův postřeh. Konzilium neposuzovalo.*
+
+**Nález.** Pořadí prvku určuje server podle toho, v jakém pořadí dorazí
+požadavky — při zakládání se `Poradi` ze vstupu **ignoruje** schválně,
+protože klient počítá z toho, co měl načtené, a to bývá o krok pozadu
+(`PrvkySprava.cs`, komentář u `PrvekVstup.Poradi`). Při **úpravě** už
+`Poradi` platí, takže přerovnat trať server umí; appka pro to jen nemá
+obrazovku.
+
+**Proč to vadí.** Trať se staví v pořadí, v jakém se k značkám dojede,
+a to nemusí být pořadí na trati — u brány se popojíždí, odskok se staví
+hned za otočnou, a když se jedna značka pípne dvakrát, je rázem na
+špatném místě. Jediná dnešní cesta je zahodit a pípnout znovu, což zahodí
+i měření.
+
+**Návrh.** Obrazovka *Pořadí na trati* s osou jako v mapových
+aplikacích: kolečko na každý prvek, tečkovaná spojnice mezi nimi,
+špendlík na cíl. Přetažení za úchyt mění pořadí, ukládá se samo a bez
+signálu počká ve frontě. Přijatou trať přetahovat nejde — nejdřív se
+odemkne na přestavbu.
+
+**Co to stojí.** Přetahování potřebuje `react-native-gesture-handler`
+a `reanimated`; v `app/package.json` není ani jedno, takže je to **další
+nativní závislost a další posunutý otisk**. Jede-li to v témž buildu jako
+fotoaparát (nález 7), zaplatí se jednou. Samo o sobě to nestojí za ruční
+přeinstalaci u všech.
+
+**Výhrada, kterou si zapisuju sám:** přetažení je v rukavicích na
+houpající se lodi nejtěžší gesto, jaké obrazovka může mít. Dvě tlačítka
+*výš / níž* na řádku zvládnou totéž bez jediné nové závislosti a bez
+gesta. Kreslím, co Filip chtěl; kdyby se to na vodě neosvědčilo, tohle je
+cesta zpátky.
+
 ## Co se nemění, a proč
 
 1. **Prvek se pořád zapisuje jedním požadavkem.** `POST …/trat/prvky/postav`
@@ -384,6 +419,7 @@ nevidělo. Postavené z toho pořád není nic kromě obrazovky výběru zastáv
 | `navrh/Mapa.dc.html` | schéma trati ze souřadnic a bod odečtený z mapy |
 | `navrh/Znaky.dc.html` | slovník tvarů a barev, jak to vypadá na hladině |
 | `navrh/Barva.dc.html` | volba barvy a tvaru bójky, předvolená žlutá nafukovací |
+| `navrh/Poradi.dc.html` | pořadí na trati v ose, přerovnání přetažením |
 
 Barvy a rozměry jsou **skutečné tokeny appky**
 (`app/src/constants/theme.ts`, světlé téma), ne vymyšlená paleta. Makety
