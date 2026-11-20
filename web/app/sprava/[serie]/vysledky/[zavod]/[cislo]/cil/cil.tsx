@@ -9,8 +9,8 @@ import {
   odeberMisto,
   prepniShodu,
   prohodMista,
-  shodyZCisel,
   type MistoVCili,
+  zeZapisu,
 } from "@/lib/cil-shoda";
 import type { KodVysledku, ZapisLod, ZapisRadek, ZapisRozjizdky } from "@/lib/vysledky";
 import {
@@ -115,19 +115,9 @@ export function Cil({
   // na liště (Filip, 20. 10. 2026: *„lodě bez cíle dopíšeme, ale čas už
   // zastav"*).
   const [konec, setKonec] = useState<string | null>(zapis.konecV ?? null);
-  const [dojeti, setDojeti] = useState<Dojezd[]>(() => {
-    const vporadi = zapis.lode
-      .filter((l) => l.poradiVCili != null)
-      .sort((a, b) => a.poradiVCili! - b.poradiVCili!);
-    // Shodu server nevydává jako příznak — vydává pořadí, a dvě stejná
-    // čísla za sebou jsou ta shoda (K7).
-    const shody = shodyZCisel(vporadi.map((l) => l.poradiVCili!));
-    return vporadi.map((l, i) => ({
-      id: l.prihlaskaId,
-      v: l.dojezdV ?? null,
-      shodneSPredchozim: shody[i],
-    }));
-  });
+  // Shodu server nevydává jako příznak — vydává pořadí, a dvě stejná
+  // čísla za sebou jsou ta shoda (K7). Řazení uvnitř shody řeší `zeZapisu`.
+  const [dojeti, setDojeti] = useState<Dojezd[]>(() => zeZapisu(zapis.lode));
   const [kody, setKody] = useState<Record<number, KodVysledku>>(() =>
     Object.fromEntries(zapis.lode.filter((l) => l.kod).map((l) => [l.prihlaskaId, l.kod!])),
   );

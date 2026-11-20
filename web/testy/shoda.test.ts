@@ -16,6 +16,7 @@ import {
   prepniShodu,
   prohodMista,
   shodyZCisel,
+  zeZapisu,
   type MistoVCili,
 } from '../lib/cil-shoda.ts';
 
@@ -124,6 +125,43 @@ zkus('kategorie: shoda s jinou kategorií se v ní neprojeví', () => {
   // Dvojka (do 7 m) je shodná s jedničkou (RACE). Mezi sebou se nepředjely,
   // ale ve své kategorii je každá první.
   assert.deepEqual(cislaVKategoriich([m(1), m(2, true)], kat), [1, 1]);
+});
+
+zkus('ze zápisu: lodě bez pořadí se vynechají a pořadí se seřadí', () => {
+  const m = zeZapisu([
+    { prihlaskaId: 3, poradiVCili: 2, dojezdV: '2026-05-01T10:02:00Z' },
+    { prihlaskaId: 9, poradiVCili: null, dojezdV: null },
+    { prihlaskaId: 1, poradiVCili: 1, dojezdV: '2026-05-01T10:01:00Z' },
+  ]);
+  assert.deepEqual(m.map((x) => x.id), [1, 3]);
+  assert.deepEqual(cislaMist(m), [1, 2]);
+});
+
+zkus('ze zápisu: shodu pozná ze stejných čísel', () => {
+  const m = zeZapisu([
+    { prihlaskaId: 1, poradiVCili: 1, dojezdV: null },
+    { prihlaskaId: 2, poradiVCili: 2, dojezdV: '2026-05-01T10:02:00Z' },
+    { prihlaskaId: 3, poradiVCili: 2, dojezdV: '2026-05-01T10:02:30Z' },
+  ]);
+  assert.deepEqual(m.map((x) => x.shodneSPredchozim), [false, false, true]);
+  assert.deepEqual(cislaMist(m), [1, 2, 2]);
+});
+
+zkus('ze zápisu: uvnitř shody rozhoduje čas, ne pořadí z databáze', () => {
+  // Zjištěno 20. 11. 2026 na produkci: zapnutí a vypnutí shody prohodilo
+  // dvě lodě, protože obě měly totéž číslo a server je vydal jinak než
+  // posledně. Na bodech to nesejde, ale po zrušení shody rozhoduje, která
+  // zůstane vepředu — a to nesmí viset na pořadí řádků v odpovědi.
+  const pozde = { prihlaskaId: 7, poradiVCili: 2, dojezdV: '2026-05-01T10:02:30Z' };
+  const brzy = { prihlaskaId: 4, poradiVCili: 2, dojezdV: '2026-05-01T10:02:00Z' };
+  assert.deepEqual(zeZapisu([pozde, brzy]).map((x) => x.id), [4, 7]);
+  assert.deepEqual(zeZapisu([brzy, pozde]).map((x) => x.id), [4, 7]);
+});
+
+zkus('ze zápisu: loď bez času jde ve shodě za ty s časem', () => {
+  const bezCasu = { prihlaskaId: 8, poradiVCili: 3, dojezdV: null };
+  const sCasem = { prihlaskaId: 2, poradiVCili: 3, dojezdV: '2026-05-01T10:05:00Z' };
+  assert.deepEqual(zeZapisu([bezCasu, sCasem]).map((x) => x.id), [2, 8]);
 });
 
 console.log(`\n  ${prosly} v pořádku`);

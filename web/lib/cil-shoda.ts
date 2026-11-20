@@ -122,3 +122,36 @@ export function cislaVKategoriich(
   }
   return cisla;
 }
+
+/**
+ * Místa ze zápisu, jak ho vydal server.
+ *
+ * <b>Shodné lodě se řadí podle času dojezdu</b>, ne podle pořadí, v jakém
+ * je vrátila databáze. Číslo místa mají obě stejné, takže jím se rozlišit
+ * nedají — a bez druhého klíče se pořadí uvnitř skupiny mění od načtení
+ * k načtení. Na bodech to nesejde (A7 je dělí rovným dílem), ale až se
+ * shoda zruší, rozhoduje právě tohle, která loď zůstane vepředu; a to
+ * nesmí záviset na tom, kdo stránku kdy otevřel. Zjištěno 20. 11. 2026 na
+ * produkci: zapnutí a vypnutí shody prohodilo dvě lodě.
+ *
+ * Loď bez času jde za ty s časem — čas se bere při klepnutí, takže
+ * prázdno znamená zápis z papíru.
+ */
+export function zeZapisu(
+  lode: readonly { prihlaskaId: number; poradiVCili?: number | null; dojezdV?: string | null }[],
+): MistoVCili[] {
+  const vporadi = lode
+    .filter((l) => l.poradiVCili != null)
+    .sort(
+      (a, b) =>
+        a.poradiVCili! - b.poradiVCili! ||
+        (a.dojezdV ?? "\uffff").localeCompare(b.dojezdV ?? "\uffff") ||
+        a.prihlaskaId - b.prihlaskaId,
+    );
+  const shody = shodyZCisel(vporadi.map((l) => l.poradiVCili!));
+  return vporadi.map((l, i) => ({
+    id: l.prihlaskaId,
+    v: l.dojezdV ?? null,
+    shodneSPredchozim: shody[i],
+  }));
+}
