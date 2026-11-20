@@ -450,12 +450,34 @@ označí za nahrazený (nález 14, `Boje.NahrazenaV`).
 obrazovka vypadá přesně jako dnes a o plánu nepadne ani slovo — žádné
 „trať nemá plán", žádná výzva ho udělat.
 
-**Otázka, kterou musí rozhodnout Filip:** má se plán ukazovat veřejně už
-od vypsání regaty? Dnešní pravidlo zní, že *nepřijatá trať se nevydává
-vůbec* (`TratEndpoints`, veřejné čtení), a má dobrý důvod — posádka
-nesmí navigovat podle něčeho, co ještě neplatí. Ukázat plán jde, ale jen
-jako **plán**, viditelně odlišený, a s vědomím, že to je výjimka z toho
-pravidla.
+**Rozhodnuto (Filip, 20. 11. 2026): plán se zveřejnit dá, a bude na to
+druhý příznak.** Dnes to nejde proto, že jsou dvě různé otázky slepené
+do jedné: *přijatá* je o autoritě — tohle je trať, která platí — kdežto
+*veřejná* je o tom, kdo ji smí vidět. Veřejné čtení se dnes ptá na stav
+(`StavTrati.Prijato`), takže plán nemá jak ven.
+
+**Tvar:** `Trat.ZverejnenaV` jako nepovinný časový údaj, stejně jako
+`PrijatoV` o pár řádků výš, a vedle něj `ZverejnilId`. Ne `bool`:
+repozitář tenhle druh příznaku zapisuje časem (`PrijatoV`, `ZkracenoV`,
+`SebranaV`, `PodanoV`) a čas tu má smysl — *od kdy* je plán venku je
+součást dokladu. Přidání nepovinného sloupce je aditivní změna, tedy
+jedno nasazení bez odstávky.
+
+**Dvě podmínky, bez kterých to nedělej.** Jsou tam proto, že pravidlo
+„nepřijatá trať se nevydává vůbec" nevzniklo z opatrnosti, ale aby
+posádka nenavigovala podle něčeho, co neplatí:
+
+1. **Veřejná odpověď musí vždycky říct, co to je** — plán, nebo přijatá
+   trať. Ne barvou v klientovi, ale údajem v datech, aby to nešlo
+   vykreslit jako hotovou věc ani omylem. Appka i web jsou dva klienti
+   a každý by si to jinak domyslel.
+2. **Výchozí stav je neveřejná a zveřejnění je úkon člověka**, ne
+   vedlejší účinek uložení. Totéž, co dnes platí o přijetí.
+
+Co tím **nevzniká**: další stav v `StavTrati`. Stavy popisují, kde je
+trať v řízení, a přidat mezi ně viditelnost by znamenalo násobit je —
+„rozestavěná veřejná", „hotová neveřejná" a tak dál. Dva nezávislé údaje
+jsou dva sloupce, ne osm stavů.
 
 ## Co se nemění, a proč
 
