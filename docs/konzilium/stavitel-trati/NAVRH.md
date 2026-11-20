@@ -18,6 +18,29 @@ je pokus ten dojem pojmenovat a nabídnout, co s ním.
 Obrazovka **nikdy neběžela na vodě**. Všechno níž je rozbor kódu a úvaha,
 ne zkušenost z motoráku. Co z toho padne při první skutečné stavbě, padne.
 
+## Jak se trať staví doopravdy
+
+*Zapsáno 20. 11. 2026 podle Filipa. Konzilium tohle nevědělo a část jeho
+rozvahy to posouvá.*
+
+Plán trati často vzniká **předem z kanceláře**: někdo ho naklikne z webu
+nad mapou, aby posádky dopředu věděly, jak se asi pojede. V den regaty
+pak vyrazí loď a stavitel **pípá úpravy z vody** — bóje se posunou podle
+větru a počasí. Pro další rozjížďky se někdy založí trať nová.
+
+Tři věci z toho plynou, a každá míří jinam, než návrh dosud mířil:
+
+1. **Hlavní činnost na vodě není zakládání, ale úprava.** Obrazovka je
+   celá postavená na „pípni novou značku"; skutečný den vypadá spíš jako
+   „tahle je o dvacet metrů vedle". Viz nález 14.
+2. **Bod z mapy není okrajový případ.** Nález 10 ho obhajoval dráty nad
+   vodou — ve skutečnosti je to **způsob, jakým plán vzniká**, jen se to
+   dělá na webu. Appka a web tedy dělají touž věc ze dvou stran.
+3. **Trať se během dne mění, a to je v modelu záměr.** `Boje.NahrazenaV`
+   a `Platna` existují proto, aby šlo porovnat trasu lodi se stavem,
+   který zrovna platil (`Boje.cs`: *„přenastavení je nový záznam, ne
+   přepis"*). Appka z toho dnes neumí nic.
+
 ## Co dnes obrazovka dělá
 
 `app/src/app/serie/[slug]/zavody/[zavod]/stavba.tsx`, průvodce o pěti krocích:
@@ -368,6 +391,33 @@ houpající se lodi nejtěžší gesto, jaké obrazovka může mít. Dvě tlač�
 *výš / níž* na řádku zvládnou totéž bez jediné nové závislosti a bez
 gesta. Kreslím, co Filip chtěl; kdyby se to na vodě neosvědčilo, tohle je
 cesta zpátky.
+
+### 14. Přesunout značku jde jen z webu, a přitom je to hlavní práce na vodě
+
+*Doplněno 20. 11. 2026 na Filipův popis praxe. Konzilium neposuzovalo.*
+
+**Nález.** Obrazovka stavitele přenastavení ani sebrání značky neumí
+a je to zapsané jako záměr: *„přenastavení či sebrání značky (cesta pro
+zvláštní případ, ta zůstává na webu)"* (`stavba.tsx:74–76`). Server to
+přitom umí celé — `POST …/boje/{boje}/sebrana`, a přenastavení jako nový
+záznam, který ten starý označí za nahrazený (`Boje.NahrazenaV`,
+`Boje.Platna`).
+
+**Proč to vadí.** Ten „zvláštní případ" je podle Filipa **běžný průběh
+závodního dne**: plán se udělá předem z kanceláře, na vodě se bóje
+posouvají podle větru. Stavitel tedy na lodi potřebuje přesně to jediné,
+co obrazovka nemá — a sáhnout si pro to na web uprostřed přehrady nejde.
+
+**Návrh.** U prvku v seznamu dvě akce vedle popisu: *Přesunout sem*
+(pípne novou polohu a starou označí za nahrazenou) a *Sebrat z vody*.
+Obojí je jedno klepnutí u značky, u které loď zrovna stojí, a obojí
+projde frontou jako pípnutí. Žádná nová nativní závislost.
+
+**Pozor na jednu věc:** přesun **není oprava překlepu**. Starý záznam
+zůstává platný pro dobu, kdy platil, protože se podle něj posuzuje trasa
+lodi. Obrazovka to musí říct slovem, jinak si stavitel bude myslet, že
+opravuje chybu, a bude přesouvat i tam, kde chtěl jen přepsat špatně
+zadanou polohu — na to je zahození a nové pípnutí.
 
 ## Co se nemění, a proč
 
