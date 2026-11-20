@@ -2911,7 +2911,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VeleniDto"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -2941,7 +2948,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VeleniDto"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -11224,6 +11238,37 @@
                     }
                 }
             },
+            "PrevzetiDto": {
+                "required": [
+                    "kdo",
+                    "odV",
+                    "doV",
+                    "prevzal"
+                ],
+                "type": "object",
+                "properties": {
+                    "kdo": {
+                        "type": "string"
+                    },
+                    "odV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "doV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "prevzal": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "PrihlaseniVstup": {
                 "type": "object",
                 "properties": {
@@ -13435,6 +13480,47 @@
                     },
                     "keKontrole": {
                         "type": "boolean"
+                    }
+                }
+            },
+            "VeleniDto": {
+                "required": [
+                    "uzivatelId",
+                    "jmeno",
+                    "odV",
+                    "jsemTo",
+                    "historie"
+                ],
+                "type": "object",
+                "properties": {
+                    "uzivatelId": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "uuid"
+                    },
+                    "jmeno": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "odV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "jsemTo": {
+                        "type": "boolean"
+                    },
+                    "historie": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PrevzetiDto"
+                        }
                     }
                 }
             },

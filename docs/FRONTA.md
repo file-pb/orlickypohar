@@ -27,7 +27,6 @@ položka ve skupině E je právě to ověření.
 | Odkud | Co zbývá | Kde se to dnes vidí | Velikost |
 | --- | --- | --- | --- |
 | **konzilium, 2-design** | **`kontrast.test.ts` rozšířit** o páry, které stavitel zavádí. Dnes měří obecné tokeny a proužky fází na panelu odpočtu, takže návrat bílé napevno na modré ploše (2,35 : 1 v tmavé sadě) by CI nechytila | `app/testy/kontrast.test.ts:86` | malá |
-| — | **`VeleniDto` mimo vygenerovaný kontrakt.** Tvar odpovědi stojí v appce ručně, protože ve `schema.d.ts` ten typ není. Dluh s předem napsaným koncem: až se kontrakt vygeneruje znovu, ruční typ má zmizet | `app/src/lib/api.ts:366` | malá, ale patří ke generování kontraktu |
 
 ## B) Čeká na Miloše — a vejde se to do jedné zprávy
 
@@ -160,6 +159,13 @@ a od té doby zestárl. A **dva prázdné body vypsání**, o kterých jsem psal
 že si je aplikace dosadí sama, si dosadit neumí: R21 říká, že *Dráhu* vydává
 Miloš jako text ve směrnici a zbylé dva pohár nevyhlašuje vůbec. Jedno patří
 do B, druhé do C.
+
+Téhož dne odešel i **`VeleniDto`**: příčina nebyla v appce, ale v API —
+oba endpointy velitele vracely `IResult`, takže se tvar odpovědi do
+kontraktu nedostal. Po `Produces<VeleniDto>()` a přegenerování kontraktu
+z produkce je ruční typ v `api.ts` pryč. **Skupina A je tím prázdná** až
+na rozšíření `kontrast.test.ts`, a to má smysl až se stavitelem, protože
+barvy, které by hlídalo, zatím nikdo nemaluje.
 
 ## Jak se tahle fronta udržuje
 

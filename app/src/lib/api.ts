@@ -360,21 +360,14 @@ export type TrestZaJizdy = S['TrestDto'];
  * častěji.
  */
 /**
- * <b>Kdo velí startu téhle regaty.</b>
+ * <b>Kdo velí startu téhle regaty.</b> Pole `jsemTo` je to, kvůli kterému
+ * se telefon ptá při každém připojení: velí pořád ten, kdo se ptá?
  *
- * Tvar odpovědi je napsaný ručně, a je to jediné takové místo v appce.
- * Vygenerovaný kontrakt (`schema.d.ts`) cestu zná, ale `VeleniDto` v něm
- * není — tělo odpovědi se při generování nevydalo. Zdroj pravdy je
- * `Features/Zavody/VeleniSprava.cs`; až se kontrakt vygeneruje znovu,
- * tenhle typ má zmizet.
+ * Do 21. 11. 2026 tu stál tvar napsaný ručně — jediný takový v appce —,
+ * protože oba endpointy velitele vracejí `IResult` a `VeleniDto` se tím do
+ * kontraktu nedostalo. Spravilo se to v API (`Produces<VeleniDto>()`), ne tady.
  */
-export type Veleni = {
-  uzivatelId: string | null;
-  jmeno: string | null;
-  odV: string | null;
-  /** Velí ten, kdo se ptá? Telefon se na to ptá při každém otevření. */
-  jsemTo: boolean;
-};
+export type Veleni = S["VeleniDto"];
 
 export const nactiVeleni = (serie: string, zavod: string) =>
   nactiZaSebe<Veleni>(`/sprava/serie/${serie}/vysledky/${zavod}/velitel`);

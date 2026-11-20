@@ -3121,7 +3121,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["VeleniDto"];
+                    };
                 };
             };
         };
@@ -3147,7 +3149,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["VeleniDto"];
+                    };
                 };
             };
         };
@@ -8165,6 +8169,14 @@ export interface components {
             fotka?: null | components["schemas"]["ObrazekDto"];
             zdrojLogo?: null | string;
         };
+        PrevzetiDto: {
+            kdo: string;
+            /** Format: date-time */
+            odV: string;
+            /** Format: date-time */
+            doV: null | string;
+            prevzal: null | string;
+        };
         PrihlaseniVstup: {
             /** Format: int32 */
             prihlaskaId?: null | number;
@@ -8751,6 +8763,15 @@ export interface components {
             /** Format: date-time */
             roleUrcenaV: null | string;
             keKontrole: boolean;
+        };
+        VeleniDto: {
+            /** Format: uuid */
+            uzivatelId: null | string;
+            jmeno: null | string;
+            /** Format: date-time */
+            odV: null | string;
+            jsemTo: boolean;
+            historie: components["schemas"]["PrevzetiDto"][];
         };
         VerejnaBojeDto: {
             nazev: string;
