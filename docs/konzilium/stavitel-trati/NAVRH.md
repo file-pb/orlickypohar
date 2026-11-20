@@ -302,6 +302,32 @@ neodemkne") a zahození ať zůstane tím, co udělá člověk, když chce. Tepr
 kdyby se ukázalo, že se na odemčení čeká dlouho, má smysl příznak *stavitel
 žádá o odemčení* tam, kde se rozhodčí dívá — ne nová cesta zpráv.
 
+### 12. Barvu bójky nejde zapsat a z šesti tvarů se použije jeden
+
+*Doplněno 20. 11. 2026 na Filipův postřeh. Konzilium neposuzovalo.*
+
+**Nález.** Předvolby značení mají barvu **napevno**: `NaseBoje` je
+`barva: "Zluta"` (`stavba-prvku.ts:511`) a appka pošle, co v předvolbě
+stojí (`stavba.tsx:208`). Oranžovou ani růžovou bójku tedy není jak
+zaznamenat, přestože `BarvaBoje` jich zná sedm a `Boje.Barva` je
+nepovinná. Tvar je na tom hůř: `NaseBoje` má vyjmenovaných šest
+(`SferickyVrsek`, `Valcova`, `Kuzelova`, `Kulova`, `Plovatka`,
+`Plamenak`), ale odesílá se `tvary[0]` — vždycky ten první.
+
+**Proč to vadí.** Barva je to, podle čeho se značka na vodě pozná na
+dálku; je to vlastnost předmětu, ne rozhraní, a proto ji model drží
+u bóje. Zapsat žlutou tam, kde plave oranžová, znamená uložit nepravdu
+do dokladu o poloze — a zároveň je to důvod, proč nález 8 (kreslit znak
+místo kolečka) nemá dnes z čeho kreslit.
+
+**Návrh.** Po popisu prvku krok *Jaká bójka to je*: sedm barev
+a tvary té předvolby, s předvolenou žlutou a nafukovacím válcem. Dá se
+přeskočit — pak platí předvolba, tedy dnešní chování.
+
+**Co z toho je nové pravidlo:** vybrané **drží pro další značku**. Kdo
+dneska staví oranžové, mění to jednou za ráno, ne u každé bóje; předvolba
+je výchozí stav, ne věta o tom, co se právě pokládá.
+
 ## Co se nemění, a proč
 
 1. **Prvek se pořád zapisuje jedním požadavkem.** `POST …/trat/prvky/postav`
@@ -350,7 +376,8 @@ nevidělo. Postavené z toho pořád není nic kromě obrazovky výběru zastáv
 | `navrh/Zamek.dc.html` | přijatá trať, jen ke čtení |
 | `navrh/Fotka.dc.html` | doklad fotkou u značky: zblízka a s břehem, foťák i galerie |
 | `navrh/Mapa.dc.html` | schéma trati ze souřadnic a bod odečtený z mapy |
-| `navrh/Znaky.dc.html` | slovník tvarů: válec, kužel, sférický vršek, plovatka |
+| `navrh/Znaky.dc.html` | slovník tvarů a barev, jak to vypadá na hladině |
+| `navrh/Barva.dc.html` | volba barvy a tvaru bójky, předvolená žlutá nafukovací |
 
 Barvy a rozměry jsou **skutečné tokeny appky**
 (`app/src/constants/theme.ts`, světlé téma), ne vymyšlená paleta. Makety

@@ -86,6 +86,13 @@
       "w": 390,
       "h": 844,
       "title": "9 · Nahlásit hotovo"
+    },
+    "Barva.dc.html": {
+      "x": 4700,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "10 · Barva a tvar bójky (nález 12)"
     }
   },
   "order": [
@@ -99,7 +106,8 @@
     "Zamek.dc.html",
     "Fotka.dc.html",
     "Mapa.dc.html",
-    "Znaky.dc.html"
+    "Znaky.dc.html",
+    "Barva.dc.html"
   ],
   "notes": {
     "nadpis": {
