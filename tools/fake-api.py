@@ -4764,6 +4764,9 @@ class H(BaseHTTPRequestHandler):
                           r'/rozjizdky/(\d+)/konec$', cesta)):
             return self.konec_rozjizdky(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/navrhy/papir$', cesta)):
+            return self.snimek_z_papiru(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/navrhy/([0-9a-f-]+)/pouzit$', cesta)):
             return self.pouzij_navrh(m.group(1), int(m.group(2)), m.group(3))
         if (m := re.match(
@@ -5257,12 +5260,58 @@ class H(BaseHTTPRequestHandler):
         """Snímek zápisu jednoho zapisovatele, jako `ZapisSprava.SnimekAsync`."""
         from datetime import datetime, timezone
         navrhy = r.setdefault("navrhy", [])
-        navrh = next((n for n in navrhy if n["uzivatelId"] == kdo["id"]), None)
+        # <b>Ruční snímek je jiný než ten z papíru</b>, i když patří témuž
+        # účtu — na serveru je `ZPapiru` součástí unikátního klíče. Bez
+        # téhle podmínky by uložení zápisu přepsalo snímek z fotky celou
+        # sadou a v porovnání by nebylo co porovnávat (zjištěno zkouškou
+        # na mocku 20. 11. 2026).
+        navrh = next((n for n in navrhy
+                      if n["uzivatelId"] == kdo["id"] and not n.get("zPapiru")), None)
         if not navrh:
-            navrh = {"uzivatelId": kdo["id"], "kdo": kdo["zobrazovane"]}
+            navrh = {"uzivatelId": kdo["id"], "kdo": kdo["zobrazovane"], "zPapiru": False}
             navrhy.append(navrh)
         navrh["zapsanoV"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         navrh["radky"] = radky
+        navrh.setdefault("zPapiru", False)
+
+    def snimek_z_papiru(self, zavod, cislo):
+        """
+        Snímek přečtený z fotky papíru — `ZapisSprava.ZPapiruAsync`.
+
+        Výsledky rozjížďky nemění: je to třetí zapisovatel vedle dvou
+        lidských. Drží se k dvojici rozjížďka × vkladatel **zvlášť** od
+        jeho ručního, takže si navzájem nepřepíšou; na serveru je to
+        `ZPapiru` v unikátním klíči.
+        """
+        from datetime import datetime, timezone
+        z, r = self.rozjizdka(zavod, cislo)
+        if not r:
+            return None
+        if not (kdo := self.prihlaseny()):
+            return self.send_error(401)
+        if not smi_ted("Organizator", z["slug"]):
+            return self.send_error(403)
+        # Zamčený zápis snímek nepřijme: je to doklad k číslům, která se
+        # ještě mění. Táž podmínka jako u `pouzij_navrh`.
+        if (chyba := proc_nejde_prepsat(z, r)):
+            return self.chyba(400, chyba)
+
+        telo = self.telo_zadosti() or {}
+        radky = [x for x in telo.get("radky", [])
+                 if x.get("poradiVCili") is not None or x.get("kod") is not None]
+        if any(x["prihlaskaId"] not in LOD_PODLE_ID for x in radky):
+            return self.chyba(400, "Snímek nese loď, která v tomhle ročníku není přihlášená.")
+
+        navrhy = r.setdefault("navrhy", [])
+        navrh = next((n for n in navrhy
+                      if n["uzivatelId"] == kdo["id"] and n.get("zPapiru")), None)
+        if not navrh:
+            navrh = {"uzivatelId": kdo["id"], "kdo": kdo["zobrazovane"], "zPapiru": True}
+            navrhy.append(navrh)
+        navrh["zapsanoV"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        navrh["radky"] = radky
+        navrh["neprecteno"] = list(telo.get("neprecteno") or [])
+        return self.navrhy(zavod, cislo)
 
     def navrhy(self, zavod, cislo):
         z, r = self.rozjizdka(zavod, cislo)
@@ -5272,7 +5321,11 @@ class H(BaseHTTPRequestHandler):
             "zavod": z["slug"], "zavodNazev": z["nazev"], "cislo": r["cislo"],
             "navrhy": [{
                 "uzivatelId": n["uzivatelId"], "kdo": n["kdo"], "zapsanoV": n["zapsanoV"],
-                "muj": n["uzivatelId"] == self.prihlaseny()["id"],
+                # „Můj" znamená „tohle jsem zapsal já", a to o snímku
+                # z papíru neplatí ani pro toho, kdo ho vložil.
+                "muj": not n.get("zPapiru") and n["uzivatelId"] == self.prihlaseny()["id"],
+                "zPapiru": bool(n.get("zPapiru")),
+                "neprecteno": n.get("neprecteno") or [],
                 "radky": [{**radek,
                            "lod": nazvy(LOD_PODLE_ID[radek["prihlaskaId"]]),
                            "kategorie": KAT[LOD_PODLE_ID[radek["prihlaskaId"]]]}

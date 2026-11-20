@@ -2,8 +2,17 @@
 
 import { redirect } from "next/navigation";
 import { NEJVIC_MB } from "@/lib/fotky";
+import { prectiPapir } from "@/lib/papir";
 import { prohodVRade } from "@/lib/presun";
-import { nahrajPapir, odeberPapir, ulozZapis, type KodVysledku, type ZapisRadek } from "@/lib/vysledky";
+import {
+  nactiZapis,
+  nahrajPapir,
+  odeberPapir,
+  ulozZapis,
+  ulozZPapiru,
+  type KodVysledku,
+  type ZapisRadek,
+} from "@/lib/vysledky";
 
 /**
  * Uložení zápisu rozjížďky. Serverová akce, ne javascript v prohlížeči —
@@ -125,6 +134,56 @@ export async function zapisAkce(formular: FormData) {
 
   redirect(
     kam(serie, zavod, cislo, chyba ? { chyba, navrh: zakoduj(radky) } : { stav: "ulozeno" }),
+  );
+}
+
+/**
+ * Přijme zápis přečtený z fotky papíru a uloží ho jako snímek.
+ *
+ * <b>Rozpoznává člověk s modelem, ne server</b> (oponentura rozhodčího;
+ * Filip 27. 10. 2026: *„prostě to někdo načmárá na papír, a vyfotí na
+ * mobil. Pak ti to nasype až se probereš."*). Sem tedy přijde text, ne
+ * fotka — a aplikace ho jen přečte proti lodím téhle rozjížďky.
+ *
+ * <b>Lodě se berou ze zápisu, ne z formuláře.</b> Poslat jejich jména
+ * skrytým polem by znamenalo věřit tomu, co se vrátilo z prohlížeče,
+ * u věci, která rozhoduje o párování řádků.
+ *
+ * <b>Výsledky to nemění.</b> Po uložení se jde na porovnání, kde se
+ * řádky potvrzují jednotlivě proti fotce — rozpoznaný zápis odklepnutý
+ * najednou by z chyby stroje udělal výsledek.
+ */
+export async function zPapiruAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const cislo = Number(formular.get("cislo") ?? 0);
+  const text = String(formular.get("text") ?? "").trim();
+
+  if (text === "")
+    redirect(kam(serie, zavod, cislo, { chyba: "Vlož přečtený zápis, pole je prázdné." }));
+
+  const { data: zapisData } = await nactiZapis(serie, zavod, cislo);
+  if (!zapisData)
+    redirect(kam(serie, zavod, cislo, { chyba: "Zápis se teď nedaří načíst, zkus to znovu." }));
+
+  const { radky, neprecteno } = prectiPapir(text, zapisData.lode);
+
+  if (radky.length === 0)
+    redirect(
+      kam(serie, zavod, cislo, {
+        chyba:
+          "Z vloženého textu se nepodařilo přečíst jedinou loď. Čeká se řádek " +
+          "„jméno lodi a za ním pořadí nebo kód“, třeba „LUNA 1“.",
+      }),
+    );
+
+  const chyba = await ulozZPapiru(serie, zavod, cislo, radky, neprecteno);
+  if (chyba) redirect(kam(serie, zavod, cislo, { chyba }));
+
+  redirect(
+    `/sprava/${encodeURIComponent(serie)}/vysledky/${encodeURIComponent(zavod)}/${cislo}` +
+      `/porovnani?zpapiru=${radky.length}` +
+      (neprecteno.length > 0 ? `&nepreceteno=${neprecteno.length}` : ""),
   );
 }
 

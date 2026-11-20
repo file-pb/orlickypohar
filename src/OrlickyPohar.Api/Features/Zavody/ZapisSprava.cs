@@ -486,6 +486,14 @@ public class ZapisSprava(
         Rozjizdka rozjizdka, Guid kdo, IReadOnlyList<ZapisRadekVstup> radky,
         IReadOnlyList<string> neprecteno, CancellationToken ct)
     {
+        // <b>Zamčený zápis snímek nepřijme.</b> Je to doklad k číslům, která
+        // se ještě mění — u potvrzené rozjížďky by se z něj nedalo nic
+        // převzít a zůstal by viset v porovnání jako nabídka, která nikam
+        // nevede. Táž podmínka jako u `PouzijNavrhAsync`.
+        var zavodProSnimek = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
+        if (Zapis.ProcNejdePrepsat(zavodProSnimek.Stav, rozjizdka.StavVysledku) is { } zamceno)
+            return zamceno;
+
         // <b>Tvar se tu nehlídá a je to schválně.</b> Snímek je doklad
         // o tom, co stroj z fotky přečetl — i špatně přečtené číslo je
         // pravda o tom, co na papíře viděl. Rozsoudí se to při potvrzování

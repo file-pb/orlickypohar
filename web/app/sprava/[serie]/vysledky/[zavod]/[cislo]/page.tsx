@@ -10,7 +10,7 @@ import {
   type KodVysledku,
   type ZapisLod,
 } from "@/lib/vysledky";
-import { odeberPapirAkce, papirAkce, presunAkce, zapisAkce } from "./akce";
+import { odeberPapirAkce, papirAkce, presunAkce, zapisAkce, zPapiruAkce } from "./akce";
 import { KonceptVZapisu } from "./koncept-v-zapisu";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -350,6 +350,37 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
           <p className="poznamka" style={{ marginTop: 0 }}>
             Fotka papíru z cíle tu zatím není. Slouží jako doklad k číslům, na web se nedostane.
           </p>
+        )}
+
+        {/* <b>Fotka je doklad, ale dá se z ní i číst</b> (oponentura
+            rozhodčího). Papír z cíle se stejně fotí a dosud s ním aplikace
+            nedělala nic. Rozpoznává člověk s modelem, ne server — u věci,
+            která se použije několikrát za sezónu, je to levnější a
+            u ručního zápisu na mokrém papíru i spolehlivější. Sem tedy
+            přijde text, ne fotka.
+
+            Výsledky to nemění: vznikne snímek jako od druhého zapisovatele
+            a řádky se potvrzují jednotlivě proti fotce. */}
+        {zapis.smiZapisovat && (
+          <form action={zPapiruAkce} className="formular">
+            <input type="hidden" name="serie" value={serie} />
+            <input type="hidden" name="zavod" value={zavod} />
+            <input type="hidden" name="cislo" value={zapis.cislo} />
+            <label>
+              Přečtený zápis z papíru
+              <textarea
+                name="text"
+                rows={6}
+                placeholder={"LUNA 1\nSENDY 2\nJOY DNF"}
+              />
+              <span className="poznamka">
+                Řádek na loď: jméno nebo číslo plachty a za ním pořadí v cíli,
+                nebo kód. Co se nepodaří přiřadit, se nezahodí — ukáže se to
+                u porovnání. Výsledky rozjížďky se tím nemění.
+              </span>
+            </label>
+            <button type="submit">Založit snímek z papíru</button>
+          </form>
         )}
 
         {zapis.smiPapir && (

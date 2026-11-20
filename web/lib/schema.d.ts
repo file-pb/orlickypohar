@@ -3498,6 +3498,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/navrhy/papir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Uloží snímek přečtený z fotky papírového zápisu
+         * @description Pořadatel regaty, dokud je zápis otevřený. Výsledky rozjížďky to nemění — je to třetí zapisovatel vedle dvou lidských, nezávazný a k porovnání. Rozpoznává člověk s modelem, ne server; aplikace jen přijme výsledek.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SnimekZPapiruVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NavrhyDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/navrhy/{autor}/pouzit": {
         parameters: {
             query?: never;
@@ -7745,6 +7792,9 @@ export interface components {
             zapsanoV: string;
             muj: boolean;
             radky: components["schemas"]["NavrhRadekDto"][];
+            /** @default false */
+            zPapiru: boolean;
+            neprecteno?: null | string[];
         };
         NavrhRadekDto: {
             /** Format: int32 */
@@ -8437,6 +8487,10 @@ export interface components {
             /** Format: date-time */
             oknoOd: null | string;
             lode: components["schemas"]["PolohaLodi"][];
+        };
+        SnimekZPapiruVstup: {
+            radky: components["schemas"]["ZapisRadekVstup"][];
+            neprecteno: null | string[];
         };
         StartovneVstup: {
             zaplaceno: boolean;

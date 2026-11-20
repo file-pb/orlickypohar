@@ -212,6 +212,25 @@ export async function ulozZapis(
   );
 }
 
+/**
+ * Uloží snímek přečtený z fotky papíru. <b>Výsledky rozjížďky nemění</b> —
+ * je to třetí zapisovatel vedle dvou lidských, nezávazný a k porovnání.
+ * Rozpoznává člověk s modelem, ne server.
+ */
+export async function ulozZPapiru(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  radky: ZapisRadek[],
+  neprecteno: string[],
+): Promise<string | null> {
+  return zapis(
+    kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/navrhy/papir`),
+    { radky, neprecteno },
+    "POST",
+  );
+}
+
 /** Přidá rozjížďku a vrátí její číslo — obrazovka pak jde rovnou na její zápis. */
 export async function pridejRozjizdku(
   serie: string,

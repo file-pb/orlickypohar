@@ -3381,6 +3381,65 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/navrhy/papir": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ulo\u017e\u00ed sn\u00edmek p\u0159e\u010dten\u00fd z fotky pap\u00edrov\u00e9ho z\u00e1pisu",
+                "description": "Po\u0159adatel regaty, dokud je z\u00e1pis otev\u0159en\u00fd. V\u00fdsledky rozj\u00ed\u017e\u010fky to nem\u011bn\u00ed \u2014 je to t\u0159et\u00ed zapisovatel vedle dvou lidsk\u00fdch, nez\u00e1vazn\u00fd a k porovn\u00e1n\u00ed. Rozpozn\u00e1v\u00e1 \u010dlov\u011bk s modelem, ne server; aplikace jen p\u0159ijme v\u00fdsledek.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SnimekZPapiruVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NavrhyDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/navrhy/{autor}/pouzit": {
             "post": {
                 "tags": [
@@ -9641,6 +9700,19 @@
                         "items": {
                             "$ref": "#/components/schemas/NavrhRadekDto"
                         }
+                    },
+                    "zPapiru": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "neprecteno": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 }
             },
@@ -12378,6 +12450,30 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/PolohaLodi"
+                        }
+                    }
+                }
+            },
+            "SnimekZPapiruVstup": {
+                "required": [
+                    "radky",
+                    "neprecteno"
+                ],
+                "type": "object",
+                "properties": {
+                    "radky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZapisRadekVstup"
+                        }
+                    },
+                    "neprecteno": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "type": "string"
                         }
                     }
                 }

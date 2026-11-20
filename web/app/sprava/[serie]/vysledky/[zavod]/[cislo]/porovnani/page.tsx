@@ -4,7 +4,7 @@ import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { nactiNavrhy, nactiZapis, type Navrh, type NavrhRadek } from "@/lib/vysledky";
 import { KonceptVPorovnani } from "../koncept-ukazka";
-import { pouzijNavrhAkce } from "./akce";
+import { pouzijNavrhAkce, prevezmiRadkyAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -13,7 +13,17 @@ export const metadata = { title: "Porovnání zápisů — správa" };
 
 type Parametry = {
   params: Promise<{ serie: string; zavod: string; cislo: string }>;
-  searchParams: Promise<{ chyba?: string; stav?: string; kdo?: string }>;
+  searchParams: Promise<{
+    chyba?: string;
+    stav?: string;
+    kdo?: string;
+    /** Kolik řádků se právě přečetlo z papíru. */
+    zpapiru?: string;
+    /** Kolik se jich nepodařilo přiřadit. */
+    nepreceteno?: string;
+    /** Kolik řádků se převzalo do výsledků. */
+    kolik?: string;
+  }>;
 };
 
 /**
@@ -78,6 +88,11 @@ export default async function PorovnaniZapisu({ params, searchParams }: Parametr
 
   const navrhy = data.navrhy;
   const mist = Math.max(0, ...navrhy.map((n) => n.radky.length));
+  // Snímky z papíru mají vlastní zacházení — přebírají se po řádcích,
+  // ne tlačítkem „Použít verzi". V tabulce vedle sebe ale zůstávají:
+  // porovnat je s lidskými je přesně to, kvůli čemu vznikly.
+  const zPapiru = navrhy.filter((n) => n.zPapiru);
+  const lidske = navrhy.filter((n) => !n.zPapiru);
 
   return (
     <>
@@ -96,6 +111,21 @@ export default async function PorovnaniZapisu({ params, searchParams }: Parametr
         <p className="hlaska hotovo" role="status">
           Do zápisu se vzala verze, kterou zapsal {zpravy.kdo || "zapisovatel"}. Ostatní snímky
           zůstávají, kdyby se ukázalo, že platí jiná.
+        </p>
+      )}
+      {zpravy.stav === "prevzato" && !zpravy.chyba && (
+        <p className="hlaska hotovo" role="status">
+          Převzato z papíru: {pocet(zpravy.kolik, "řádek", "řádky", "řádků")}.
+          Zbytek výsledků zůstal, jak byl.
+        </p>
+      )}
+      {zpravy.zpapiru && !zpravy.chyba && !zpravy.stav && (
+        <p className="hlaska" role="status">
+          Z papíru se přečetlo {pocet(zpravy.zpapiru, "loď", "lodě", "lodí")}
+          {zpravy.nepreceteno
+            ? ` a ${pocet(zpravy.nepreceteno, "řádek", "řádky", "řádků")} se nepodařilo přiřadit`
+            : ""}
+          . Výsledky se tím nezměnily — projdi čísla proti fotce níž a zaškrtni, co platí.
         </p>
       )}
 
@@ -118,10 +148,10 @@ export default async function PorovnaniZapisu({ params, searchParams }: Parametr
         <p className="prazdno">
           Rozjížďku zatím nikdo neuložil, takže není co porovnávat.
         </p>
-      ) : navrhy.length === 1 ? (
+      ) : lidske.length === 1 && zPapiru.length === 0 ? (
         <>
           <p className="hlaska" role="status">
-            Zapisoval jeden člověk ({navrhy[0].kdo}), takže se porovnávat nemá s čím. Až bude
+            Zapisoval jeden člověk ({lidske[0].kdo}), takže se porovnávat nemá s čím. Až bude
             u cíle druhý telefon, objeví se jeho verze tady.
           </p>
           <Tabulka navrhy={navrhy} mist={mist} />
@@ -134,8 +164,31 @@ export default async function PorovnaniZapisu({ params, searchParams }: Parametr
           </p>
           <Tabulka navrhy={navrhy} mist={mist} />
 
+          {/* <b>Snímek z papíru se potvrzuje po řádcích</b> (oponentura
+              rozhodčího; Filip, 18. 11. 2026). Četl ho stroj, ne člověk —
+              kdyby se dal odklepnout jedním tlačítkem, rozhodčí ho
+              odklepne a nezkontroluje, a chyba rozpoznání se stane
+              výsledkem. Fotka je proto na téže obrazovce: potvrzuje se
+              proti ní, ne proti dojmu. */}
+          {zPapiru.map((n) => (
+            <ZPapiru
+              key={n.uzivatelId}
+              navrh={n}
+              serie={serie}
+              zavod={zavod}
+              cislo={data.cislo}
+              papir={zapis?.papir ?? null}
+              ulozene={Object.fromEntries(
+                (zapis?.lode ?? []).map((l) => [
+                  l.prihlaskaId,
+                  { poradi: l.poradiVCili ?? null, kod: l.kod ?? null, lod: l.lod, kategorie: l.kategorie },
+                ]),
+              )}
+            />
+          ))}
+
           <div className="stavy">
-            {navrhy.map((n) => (
+            {lidske.map((n) => (
               <form key={n.uzivatelId} action={pouzijNavrhAkce}>
                 <input type="hidden" name="serie" value={serie} />
                 <input type="hidden" name="zavod" value={zavod} />
@@ -255,3 +308,173 @@ const cas = (iso: string) =>
     timeStyle: "medium",
     dateStyle: "short",
   });
+
+/**
+ * Počet se skloňovaným tvarem. Čeština má tři, a „1 lodí" se čte jako
+ * překlep, ne jako číslo.
+ */
+function pocet(kolik: string | undefined, jedna: string, dve: string, pet: string) {
+  const n = Number(kolik);
+  if (!Number.isInteger(n) || n < 1) return `${kolik ?? "?"} ${pet}`;
+  return `${n} ${n === 1 ? jedna : n < 5 ? dve : pet}`;
+}
+
+/**
+ * Snímek přečtený z fotky papíru: řádky k potvrzení, fotka vedle nich.
+ *
+ * <b>Zaškrtává se, co platí</b>, a nepřebírá se nic dalšího. Není to
+ * import celé sady, ale oprava jednotlivých míst — řádky, které nikdo
+ * neposoudil, se nesmějí přepsat.
+ *
+ * Řádek, který se shoduje s tím, co už v zápisu je, je předzaškrtnutý
+ * schválně <b>ne</b>: zaškrtnutí má znamenat „tohle jsem přečetl a
+ * souhlasí", ne „tohle aplikace předvyplnila".
+ */
+function ZPapiru({
+  navrh,
+  serie,
+  zavod,
+  cislo,
+  papir,
+  ulozene,
+}: {
+  navrh: Navrh;
+  serie: string;
+  zavod: string;
+  cislo: number;
+  papir: { nahled: string; velky: string; autor: string } | null;
+  ulozene: Record<number, {
+    poradi: number | null;
+    kod: string | null;
+    lod: string;
+    kategorie: string;
+  }>;
+}) {
+  /** Co z řádku čte člověk: pořadí, nebo kód. */
+  const hodnota = (poradi: number | null | undefined, kod: string | null | undefined) =>
+    poradi != null ? `${poradi}.` : (kod?.toUpperCase() ?? "—");
+
+  return (
+    <section className="zpapiru">
+      <h2>Přečteno z papíru</h2>
+      <p className="poznamka">
+        Vložil {navrh.kdo} · {cas(navrh.zapsanoV)}. Čísla četl stroj, ne člověk —
+        projdi je proti fotce a zaškrtni ta, která platí. Co nezaškrtneš, zůstane
+        ve výsledcích, jak je.
+      </p>
+
+      {papir ? (
+        <figure className="fotka-clanku" style={{ maxWidth: "26rem" }}>
+          <a href={papir.velky} target="_blank" rel="noopener noreferrer">
+            <img src={papir.nahled} alt="Fotka papírového zápisu rozjížďky" />
+          </a>
+          <figcaption>Nahrál {papir.autor}. Otevře se v novém okně ve velkém.</figcaption>
+        </figure>
+      ) : (
+        <p className="hlaska" role="status">
+          U téhle rozjížďky fotka papíru není, takže není proti čemu čísla
+          porovnat. Nahraj ji v <Link href={`/sprava/${serie}/vysledky/${zavod}/${cislo}#papir`}>zápisu</Link>,
+          nebo řádky neber.
+        </p>
+      )}
+
+      {/* <b>Kolize se předpovídá, nezkouší.</b> Pořadí je unikátní
+          v kategorii, takže převzetí jednoho řádku narazí na loď, která to
+          místo v zápisu drží — a server dávku odmítne celou. Bez téhle
+          věty by to člověk zjistil až pokusem a nevěděl, koho zaškrtnout
+          s ní. */}
+      <form action={prevezmiRadkyAkce}>
+        <input type="hidden" name="serie" value={serie} />
+        <input type="hidden" name="zavod" value={zavod} />
+        <input type="hidden" name="cislo" value={cislo} />
+        <input type="hidden" name="autor" value={navrh.uzivatelId} />
+
+        <div className="tabulka-obal">
+          <table>
+            <thead>
+              <tr>
+                <th>Vzít</th>
+                <th className="lod">Loď</th>
+                <th>Z papíru</th>
+                <th>V zápisu</th>
+              </tr>
+            </thead>
+            <tbody>
+              {navrh.radky.map((r) => {
+                const ted = ulozene[r.prihlaskaId];
+                const stejne =
+                  (ted?.poradi ?? null) === (r.poradiVCili ?? null) &&
+                  (ted?.kod ?? null) === (r.kod ?? null);
+
+                // Kdo to místo v zápisu drží teď. Shoda sama o sobě
+                // kolize není — tatáž loď na témž místě nic nemění.
+                const koliduje =
+                  r.poradiVCili != null
+                    ? Object.entries(ulozene).find(
+                        ([id, u]) =>
+                          Number(id) !== r.prihlaskaId &&
+                          u.poradi === r.poradiVCili &&
+                          u.kategorie === r.kategorie,
+                      )?.[1]
+                    : undefined;
+
+                return (
+                  <tr key={r.prihlaskaId} className={stejne ? undefined : "lisi"}>
+                    {/* <b>Terč je celá buňka, ne jen čtvereček.</b> Ten
+                        má 18 px a na telefonu se do něj netrefí; `label`
+                        kolem něj roztáhne klepací plochu na celý sloupec
+                        a drží 44 pt (konzilium, bod 5). */}
+                    <td className="vzit">
+                      <label>
+                        <input
+                          type="checkbox"
+                          name="radek"
+                          value={r.prihlaskaId}
+                          aria-label={`Vzít z papíru — ${r.lod}`}
+                        />
+                      </label>
+                    </td>
+                    <td className="lod">
+                      {r.lod}
+                      {koliduje && (
+                        <div className="majitel">
+                          {r.poradiVCili}. místo teď drží {koliduje.lod} — vezmi i ji
+                        </div>
+                      )}
+                    </td>
+                    <td>{hodnota(r.poradiVCili, r.kod)}</td>
+                    <td className="kod">
+                      {ted ? hodnota(ted.poradi, ted.kod) : "loď v zápisu není"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="zapis-akce">
+          <button type="submit">Převzít zaškrtnuté</button>
+        </div>
+      </form>
+
+      {/* Co stroj nepřečetl. Mlčet o tom by znamenalo tvrdit, že tabulka
+          výš je celý papír — a rozhodčí by tomu uvěřil. */}
+      {navrh.neprecteno && navrh.neprecteno.length > 0 && (
+        <>
+          <p className="hlaska" role="status">
+            Tohle z papíru nešlo přiřadit k lodi. Jestli tam ta místa patří,
+            dopiš je ručně ve <Link href={`/sprava/${serie}/vysledky/${zavod}/${cislo}`}>formuláři zápisu</Link>.
+          </p>
+          <ul className="seznam">
+            {navrh.neprecteno.map((radek, i) => (
+              <li key={`${radek}-${i}`}>
+                <code>{radek}</code>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  );
+}

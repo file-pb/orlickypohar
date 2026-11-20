@@ -1838,6 +1838,27 @@ th.vlevo, td.vlevo { text-align: left; }
   background: var(--voda); color: var(--papir);
 }
 
+/* <b>Snímek přečtený z papíru.</b> Fotka a tabulka vedle sebe, dokud je
+   kam — potvrzuje se proti ní, takže rolovat mezi nimi by znamenalo
+   porovnávat po paměti. Pod 60 rem se skládají pod sebe. */
+.zpapiru { margin-top: 1.5rem; }
+.zpapiru .fotka-clanku { margin: 0.6rem 0; }
+@media (min-width: 60rem) {
+  .zpapiru form { display: grid; grid-template-columns: 1fr; }
+}
+/* Řádek, kde se papír a zápis liší. Jen lem, ne výplň: zvýrazněných
+   řádků bývá víc než polovina a plocha by přebila samotná čísla. */
+.zpapiru tr.lisi td:first-child { box-shadow: inset 3px 0 0 var(--vystraha); }
+.zpapiru td .kod, .zpapiru th:last-child { color: var(--tlumeny); }
+.zpapiru input[type="checkbox"] { width: 1.1rem; height: 1.1rem; }
+/* Klepací plocha je celá buňka — samotný čtvereček má 18 px a pod palcem
+   je to míň než polovina meze. */
+.zpapiru td.vzit { padding: 0; }
+.zpapiru td.vzit label {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 44px; min-width: 44px; cursor: pointer;
+}
+
 .zapis-akce { margin-top: 1rem; }
 .zapis-akce > button, .pridat > button {
   font: inherit; font-weight: 600; cursor: pointer;
