@@ -107,6 +107,13 @@
       "w": 390,
       "h": 844,
       "title": "12 · Plán z kanceláře a jeho potvrzování (nález 15)"
+    },
+    "Smazani.dc.html": {
+      "x": 6110,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "13 · Smazat prvek ve dvou fázích"
     }
   },
   "order": [
@@ -123,7 +130,8 @@
     "Znaky.dc.html",
     "Barva.dc.html",
     "Poradi.dc.html",
-    "Plan.dc.html"
+    "Plan.dc.html",
+    "Smazani.dc.html"
   ],
   "notes": {
     "nadpis": {

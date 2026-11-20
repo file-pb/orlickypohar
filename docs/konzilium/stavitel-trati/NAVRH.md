@@ -391,6 +391,27 @@ nativní závislost a další posunutý otisk**. Jede-li to v témž buildu jako
 fotoaparát (nález 7), zaplatí se jednou. Samo o sobě to nestojí za ruční
 přeinstalaci u všech.
 
+**Smazat prvek k tomu patří** (Filip, 20. 11. 2026), ale ne na seznam
+pořadí — tam se jen přetahuje. Mazání sedí v detailu prvku, tedy o patro
+níž, což je samo o sobě pojistka: destruktivní terč nemá být tam, kde
+palec odpočívá. Server to umí (`DELETE …/prvky/{prvek}`) a **neztrácí
+tím měření**: `SmazAsync` odstraní jen prvek, bóje zůstávají — *„prvek se
+maže doopravdy, na rozdíl od bóje: není to měření, je to rozhodnutí"*
+(`PrvkySprava.cs:434`). Potvrzovací věta to musí říct, jinak si člověk
+myslí, že maže polohu.
+
+**Filip chtěl modální dialog; kreslím dvě fáze, a tady je proč.**
+Konzilium dialog zamítlo v kole 2 argumentem, který na vodě platí
+doslova: v rukavicích se objeví pod klesajícím palcem a odklepne se
+týmž gestem, kterým člověk mačkal to pod ním. Rozhodnutí 6 místo něj
+žádá dvě klepnutí na **nepohnutém** terči s krátkou prodlevou. Maketa
+`navrh/Smazani.dc.html` ukazuje obě fáze. Je to Filipovo rozhodnutí, ne
+moje — tohle je jen zapsaný důvod, proč jsem ho neudělal rovnou.
+
+**Mazání nepatří pomocníkovi.** Za jeho příznakem je jen pípnutí a čtení
+(podmínka konzilia, bod 11); mazání zůstává organizátorovi a rozhodčímu,
+takže se mu ta akce vůbec neukáže.
+
 **Výhrada, kterou si zapisuju sám:** přetažení je v rukavicích na
 houpající se lodi nejtěžší gesto, jaké obrazovka může mít. Dvě tlačítka
 *výš / níž* na řádku zvládnou totéž bez jediné nové závislosti a bez
@@ -518,7 +539,7 @@ nevidělo. Postavené z toho pořád není nic kromě obrazovky výběru zastáv
 | Soubor | Co ukazuje |
 |---|---|
 | `navrh/Vyber.dc.html` | kde stavíš: vchod z nabídky, jen regaty, kam server pustí |
-| `navrh/Main.dc.html` | klidový stav: stav polohy, co stojí, trvalé *Pípni* |
+| `navrh/Main.dc.html` | klidový stav: osa s tím, co stojí, a trvalé *Pípni* |
 | `navrh/Popis.dc.html` | po pípnutí: jeden seznam konkrétních prvků |
 | `navrh/Dvoubod.dc.html` | rozestavěná brána: vzdálenost od prvního bodu |
 | `navrh/Fronta.dc.html` | bez signálu a zaseknutý prvek |
@@ -531,6 +552,7 @@ nevidělo. Postavené z toho pořád není nic kromě obrazovky výběru zastáv
 | `navrh/Barva.dc.html` | volba barvy a tvaru bójky, předvolená žlutá nafukovací |
 | `navrh/Poradi.dc.html` | pořadí na trati v ose, přerovnání přetažením |
 | `navrh/Plan.dc.html` | jízda podle plánu z kanceláře a jeho potvrzování |
+| `navrh/Smazani.dc.html` | smazání prvku ve dvou fázích, bez dialogu |
 
 Barvy a rozměry jsou **skutečné tokeny appky**
 (`app/src/constants/theme.ts`, světlé téma), ne vymyšlená paleta. Makety
