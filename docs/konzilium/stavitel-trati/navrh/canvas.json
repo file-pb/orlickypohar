@@ -1,18 +1,106 @@
 {
   "v": 3,
-  "createdOnFiles": { "v": 1, "at": "2026-11-16T23:45:00Z" },
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-16T23:45:00Z"
+  },
   "title": "Stavitel trati — návrh přepracování",
-  "launch": { "view": "canvas" },
+  "launch": {
+    "view": "canvas"
+  },
   "pages": [],
   "boards": {
-    "Vyber.dc.html": { "x": -470, "y": 0, "w": 390, "h": 844, "title": "0 · Kde stavíš trať — vchod z nabídky" },
-    "Main.dc.html": { "x": 0, "y": 0, "w": 390, "h": 844, "title": "1 · Klid: čeká se na značku" },
-    "Popis.dc.html": { "x": 470, "y": 0, "w": 390, "h": 844, "title": "2 · Pípnuto: co to bylo?" },
-    "Dvoubod.dc.html": { "x": 940, "y": 0, "w": 390, "h": 844, "title": "3 · Druhý konec" },
-    "Fronta.dc.html": { "x": 1410, "y": 0, "w": 390, "h": 844, "title": "4 · Bez signálu a zádrhel" },
-    "Zamek.dc.html": { "x": 1880, "y": 0, "w": 390, "h": 844, "title": "5 · Trať je přijatá" }
+    "Vyber.dc.html": {
+      "x": -470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "0 · Kde stavíš trať — vchod z nabídky"
+    },
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "1 · Klid: čeká se na značku"
+    },
+    "Popis.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "2 · Pípnuto: co to bylo?"
+    },
+    "Dvoubod.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "3 · Druhý konec"
+    },
+    "Fronta.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "4 · Bez signálu a zádrhel"
+    },
+    "Zamek.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "5 · Trať je přijatá"
+    },
+    "Fotka.dc.html": {
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "6 · Doklad fotkou (nález 7)"
+    },
+    "Mapa.dc.html": {
+      "x": 2820,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "7 · Schéma a bod z mapy (nálezy 9 a 10)"
+    },
+    "Varianta.dc.html": {
+      "x": 3290,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "2b · Doptání na variantu (rozhodnutí 2 a 3)"
+    },
+    "Znaky.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "8 · Jak značka vypadá (nález 8)"
+    },
+    "Hotovo.dc.html": {
+      "x": 4230,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "9 · Nahlásit hotovo"
+    }
   },
-  "order": ["Vyber.dc.html", "Main.dc.html", "Popis.dc.html", "Dvoubod.dc.html", "Fronta.dc.html", "Zamek.dc.html"],
+  "order": [
+    "Vyber.dc.html",
+    "Main.dc.html",
+    "Popis.dc.html",
+    "Varianta.dc.html",
+    "Dvoubod.dc.html",
+    "Fronta.dc.html",
+    "Hotovo.dc.html",
+    "Zamek.dc.html",
+    "Fotka.dc.html",
+    "Mapa.dc.html",
+    "Znaky.dc.html"
+  ],
   "notes": {
     "nadpis": {
       "x": 0,
@@ -35,6 +123,14 @@
       "w": 1100,
       "size": "l",
       "fill": "gray"
+    },
+    "nove": {
+      "x": 2350,
+      "y": -170,
+      "w": 860,
+      "size": "l",
+      "fill": "gray",
+      "text": "Obrazovky, které konzilium nevidělo — nálezy 7, 8, 9 a 10, nakreslené 20. 11. 2026, aby šly posoudit dřív, než se postaví. Fotka potřebuje nativní modul, a tím posunutý otisk; bod z mapy ne, ale stojí na tom, že si appka uloží, co už na trati stojí. Slovník znaků se použije všude, kde se dnes kreslí kolečko."
     }
   },
   "designSystems": []

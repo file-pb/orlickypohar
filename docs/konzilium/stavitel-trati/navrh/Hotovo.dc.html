@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Stavitel trati — nahlásit hotovo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+a { color: #1f6f8b; } a:hover { color: #175264; }
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #fbfaf8; color: #1a1d21; display: flex; flex-direction: column">
+
+  <div style="padding: 52px 16px 10px 16px">
+    <div style="font-size: 20px; font-weight: 700; letter-spacing: -0.3px">Nahlásit hotovo</div>
+    <div style="font-size: 13px; color: #5d666f; margin-top: 1px">Radavská regata · 2. rozjížďka</div>
+  </div>
+
+  <div style="margin: 6px 16px 0 16px; padding: 14px; border-radius: 12px; background: #f3f0ea; border: 1px solid #8a5000">
+    <div style="font-size: 16px; font-weight: 700; color: #8a5000">Dva prvky ještě neodešly</div>
+    <div style="font-size: 14px; color: #1a1d21; margin-top: 4px">Bez signálu čekají ve frontě. Hotovo půjde nahlásit, až dojdou na server — rozhodčí musí vidět celou trať, ne část.</div>
+  </div>
+
+  <div style="padding: 16px 16px 6px 16px; font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #5d666f">Trať stojí takhle</div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="background: #ffffff; border: 1px solid #e2e0dc; border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="font-size: 15px; font-weight: 800; color: #5d666f; width: 20px; flex: none">1.</span>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 16px; font-weight: 600">Start</div>
+        <div style="font-size: 13px; color: #5d666f">pevná linie · k severu</div>
+      </div>
+      <span style="font-size: 13px; font-weight: 600; color: #2f6b4f">odesláno</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e2e0dc; border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="font-size: 15px; font-weight: 800; color: #5d666f; width: 20px; flex: none">2.</span>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 16px; font-weight: 600">Otočná 1</div>
+        <div style="font-size: 13px; color: #5d666f">otočit levobokem</div>
+      </div>
+      <span style="font-size: 13px; font-weight: 600; color: #8a5000">chybí fotka</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e2e0dc; border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="font-size: 15px; font-weight: 800; color: #5d666f; width: 20px; flex: none">3.</span>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 16px; font-weight: 600">Brána 2</div>
+        <div style="font-size: 13px; color: #5d666f">projet mezi nimi</div>
+      </div>
+      <span style="font-size: 13px; font-weight: 600; color: #2f6b4f">odesláno</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e2e0dc; border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="font-size: 15px; font-weight: 800; color: #5d666f; width: 20px; flex: none">4.</span>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 16px; font-weight: 600">Otočná 3</div>
+        <div style="font-size: 13px; color: #5d666f">otočit pravobokem</div>
+      </div>
+      <span style="font-size: 13px; font-weight: 600; color: #8a5000">čeká ve frontě</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e2e0dc; border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; gap: 10px">
+      <span style="font-size: 15px; font-weight: 800; color: #5d666f; width: 20px; flex: none">5.</span>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 16px; font-weight: 600">Cíl</div>
+        <div style="font-size: 13px; color: #5d666f">proplout · k jihu</div>
+      </div>
+      <span style="font-size: 13px; font-weight: 600; color: #8a5000">čeká ve frontě</span>
+    </div>
+  </div>
+
+  <div style="padding: 14px 16px 0 16px">
+    <div style="font-size: 13px; color: #5d666f; line-height: 1.45">
+      Chybějící fotka hlášení nebrání — je to doklad, ne podmínka. Ale
+      pořídit se dá jen z vody, takže až odjedeš, nedoplní ji nikdo.
+    </div>
+  </div>
+
+  <div style="flex: 1"></div>
+
+  <div style="padding: 10px 16px 30px 16px">
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 60px; border-radius: 14px; background: #e6e3de; color: #8d8880; font-size: 19px; font-weight: 700">Nahlásit hotovo</div>
+    <div style="font-size: 13px; color: #5d666f; text-align: center; margin-top: 8px">Odemkne se samo, až fronta doběhne.</div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

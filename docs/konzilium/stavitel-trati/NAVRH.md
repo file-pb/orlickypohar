@@ -334,6 +334,10 @@ a karta zádrhelu s nevratnou akcí v popředí (platí *Zkusit znovu* nahoře,
 zahození podřízené a s potvrzením). Přibyla maketa výběru zastávky —
 jediná, která odpovídá tomu, co v appce **už běží**.
 
+**Nakreslené je od 20. 11. 2026 celé**, včetně nálezů, které konzilium
+nevidělo. Postavené z toho pořád není nic kromě obrazovky výběru zastávky
+— makety jsou k tomu, aby se dalo rozhodnout dřív, než se začne stavět.
+
 | Soubor | Co ukazuje |
 |---|---|
 | `navrh/Vyber.dc.html` | kde stavíš: vchod z nabídky, jen regaty, kam server pustí |
@@ -341,7 +345,12 @@ jediná, která odpovídá tomu, co v appce **už běží**.
 | `navrh/Popis.dc.html` | po pípnutí: jeden seznam konkrétních prvků |
 | `navrh/Dvoubod.dc.html` | rozestavěná brána: vzdálenost od prvního bodu |
 | `navrh/Fronta.dc.html` | bez signálu a zaseknutý prvek |
+| `navrh/Varianta.dc.html` | doptání po volbě brány — tři předpisy, neodkládá se |
+| `navrh/Hotovo.dc.html` | hlášení rozhodčímu: co ještě neodešlo a kde chybí fotka |
 | `navrh/Zamek.dc.html` | přijatá trať, jen ke čtení |
+| `navrh/Fotka.dc.html` | doklad fotkou u značky: zblízka a s břehem, foťák i galerie |
+| `navrh/Mapa.dc.html` | schéma trati ze souřadnic a bod odečtený z mapy |
+| `navrh/Znaky.dc.html` | slovník tvarů: válec, kužel, sférický vršek, plovatka |
 
 Barvy a rozměry jsou **skutečné tokeny appky**
 (`app/src/constants/theme.ts`, světlé téma), ne vymyšlená paleta. Makety
