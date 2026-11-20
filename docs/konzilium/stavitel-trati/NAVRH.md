@@ -257,6 +257,12 @@ ho buď postaví podruhé, nebo ho při hlášení hotovo bude postrádat.
    šedá plocha. Co funguje, je kresba ze souřadnic: co stojí, kde jsem
    já, směr a vzdálenost — tedy táž věc, jakou návrh v nálezu 4 chce pro
    druhý konec brány, jen pro celou trať.
+3. **Břeh k tomu už máme.** `web/lib/orlik-obrys.ts` je obrys zátopy
+   z OpenStreetMap, 1 365 bodů zjednodušených na 20 m, 27 kB — statický
+   soubor, který vyrábí `tools/obrys-nadrze.py` a commituje se. Appka ho
+   může přibalit a kreslit břeh **bez jediného dotazu na síť**. Maketa
+   `navrh/Mapa.dc.html` ho od 20. 11. 2026 kreslí doopravdy, ne jako
+   vymyšlený tvar.
 
 ### 10. Prvek, ke kterému se nejede, nejde pípnout
 
