@@ -433,6 +433,16 @@ export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: st
   // Odpovídá se jako bez klíče, ne chybou — appka ten stav umí.
   if (c.startsWith('/klice/') || c === '/zarizeni') return Promise.resolve(odpoved(401));
 
+  // <b>Dojezdy z trasování ukázka nemá</b> a je to pravda, ne mezera: ve
+  // snímku nevysílá polohu žádná loď. Vrací se proto tatáž věta, jakou by
+  // poslal server (`CilZTrasovaniDto.procNe`) — prázdný stav cílové
+  // obrazovky tím řekne, proč nic nenavrhuje, místo aby mlčel. Dokud se
+  // tahle cesta odbývala čtyřistačtyřkou, nešlo to v ukázce vidět vůbec.
+  if (/\/rozjizdky\/\d+\/cil-z-trasovani$/.test(c))
+    return Promise.resolve(
+      odpoved(200, { procNe: 'Z lodí téhle regaty teď nikdo nevysílá polohu.', prujezdy: [] }),
+    );
+
   // Tresty za jízdy mají vlastní cestu (`/zastavky/…`, ne `/vysledky/…`)
   // a vlastní úložiště, takže se obslouí dřív než sníměk.
   const mt = /\/rozjizdky\/(\d+)\/tresty(?:\/(\d+)\/vykonan|\/(\d+))?$/.exec(c);

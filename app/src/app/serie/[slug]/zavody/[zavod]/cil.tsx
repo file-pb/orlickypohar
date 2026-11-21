@@ -198,6 +198,12 @@ function Zapisovani({
   // <b>Co u cíle vidí trasování</b> (nález R33). Je to návrh: když se
   // dotaz nepovede, obrazovka o nic nepřijde — zapisuje se dál klepáním.
   const [navrhy, setNavrhy] = useState<PrujezdZTrasovani[]>([]);
+
+  // <b>Proč trasování nic nenavrhuje.</b> Věta od serveru (`procNe`), ne
+  // chyba: trať bez cíle ani rozjížďka bez startu nejsou porucha. Dokud
+  // se zahazovala, obrazovka mlčela i tam, kde návrhy nikdy nepřijdou —
+  // a rozhodčí čekal na pomůcku, která pro tuhle rozjížďku neexistuje.
+  const [procNe, setProcNe] = useState<string | null>(null);
   const [tedProNavrhy, setTedProNavrhy] = useState(() => Date.now());
 
   // <b>Návrhy, které rozhodčí odmítl.</b> Drží se klíčem loď + okamžik,
@@ -211,7 +217,10 @@ function Zapisovani({
     const nacti = async () => {
       try {
         const v = await nactiCilZTrasovani(serie, zavod, zapis.cislo);
-        if (zivy && v) setNavrhy((v.prujezdy ?? []) as PrujezdZTrasovani[]);
+        if (zivy && v) {
+          setNavrhy((v.prujezdy ?? []) as PrujezdZTrasovani[]);
+          setProcNe(v.procNe ?? null);
+        }
       } catch {
         // Trasování je pomůcka, ne podmínka. Mlčky dál.
       }
@@ -532,6 +541,17 @@ function Zapisovani({
             </View>
           ))}
         </View>
+      ) : procNe ? (
+        /* <b>Prázdno se vysvětlí jen tady</b> — když není zapsané nic
+           a nenavrhuje se nic. Když už řádky jsou, věta by byla šum na
+           obrazovce, kterou Filip výslovně chtěl menší (8. 11. 2026),
+           a nejčastější stav („nikdo zrovna nevysílá polohu") by dostal
+           nejvíc inkoustu.
+
+           Text píše server, obrazovka na něj nevětví: u dálkové plavby
+           řekne, že dojezdy vyhlašuje rozhodčí z vody, a není to závada
+           — konec rozjížďky je rozhodnutí (plán, 20. 10. 2026). */
+        <Prazdno text={procNe} />
       ) : null}
 
       <Pressable
