@@ -10,7 +10,28 @@ namespace OrlickyPohar.Api.Features.Boje;
 /// ani tvar, takže bez něj by to byl bezejmenný bod.
 /// </summary>
 public record KonecBojeDto(
-    int Id, string Nazev, double Sirka, double Delka, DruhZnaceni? Znaceni = null);
+    int Id,
+    string Nazev,
+    double Sirka,
+    double Delka,
+    /// <summary>
+    /// Čím se ta poloha pořídila. <b>Povinné schválně</b> (nález C druhého
+    /// konzilia, 21. 11. 2026): řádka trati i detail prvku musí umět říct
+    /// <i>změřeno telefonem</i> proti <i>odečteno z mapy</i>, a výchozí
+    /// hodnota by na to odpověděla nepravdou tiše.
+    /// </summary>
+    ZdrojPolohy Zdroj,
+    DruhZnaceni? Znaceni = null,
+    /// <summary>Barva značky; <c>null</c> znamená „neuvedeno", ne žlutá.</summary>
+    BarvaBoje? Barva = null,
+    /// <summary>Tvar značky; <c>null</c> znamená „neuvedeno".</summary>
+    TvarBoje? Tvar = null,
+    /// <summary>
+    /// Kolik je u té značky fotek. Počet, ne seznam: řádka z něj potřebuje
+    /// jedinou věc — jestli stav <i>chybí fotka</i> vůbec vznikne —, a celé
+    /// adresy by seznam prvků nafoukly o data, která nikdo nezobrazí.
+    /// </summary>
+    int Fotek = 0);
 
 /// <summary>Prvek trati, jak ho vidí správa.</summary>
 public record PrvekDto(
@@ -138,11 +159,13 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
             .Select(p => new PrvekDto(
                 p.Id, p.Typ, p.Poradi, p.Strana, p.Poznamka,
                 new KonecBojeDto(
-                    p.BojeA!.Id, p.BojeA.Nazev, p.BojeA.Sirka, p.BojeA.Delka, p.BojeA.Znaceni),
+                    p.BojeA!.Id, p.BojeA.Nazev, p.BojeA.Sirka, p.BojeA.Delka, p.BojeA.Zdroj,
+                    p.BojeA.Znaceni, p.BojeA.Barva, p.BojeA.Tvar, p.BojeA.Fotky.Count),
                 p.BojeB == null
                     ? null
                     : new KonecBojeDto(
-                        p.BojeB.Id, p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka, p.BojeB.Znaceni),
+                        p.BojeB.Id, p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka, p.BojeB.Zdroj,
+                        p.BojeB.Znaceni, p.BojeB.Barva, p.BojeB.Tvar, p.BojeB.Fotky.Count),
                 p.Smer, p.DruhStartu))
             .ToListAsync(ct);
     }
@@ -525,11 +548,13 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
             .Select(p => new PrvekDto(
                 p.Id, p.Typ, p.Poradi, p.Strana, p.Poznamka,
                 new KonecBojeDto(
-                    p.BojeA!.Id, p.BojeA.Nazev, p.BojeA.Sirka, p.BojeA.Delka, p.BojeA.Znaceni),
+                    p.BojeA!.Id, p.BojeA.Nazev, p.BojeA.Sirka, p.BojeA.Delka, p.BojeA.Zdroj,
+                    p.BojeA.Znaceni, p.BojeA.Barva, p.BojeA.Tvar, p.BojeA.Fotky.Count),
                 p.BojeB == null
                     ? null
                     : new KonecBojeDto(
-                        p.BojeB.Id, p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka, p.BojeB.Znaceni),
+                        p.BojeB.Id, p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka, p.BojeB.Zdroj,
+                        p.BojeB.Znaceni, p.BojeB.Barva, p.BojeB.Tvar, p.BojeB.Fotky.Count),
                 p.Smer, p.DruhStartu))
             .FirstOrDefaultAsync(ct);
 }
