@@ -247,7 +247,7 @@ function ZakladniZnak({
             ` C ${x - r * 0.72} ${y + r * 1.04}, ${x - r} ${y + r * 0.8}, ${x - r} ${y + r * 0.35} Z`
           }
           fill={vypln}
-          stroke="#fff"
+          stroke={lem}
           strokeWidth={1.2}
           strokeLinejoin="round"
         />
