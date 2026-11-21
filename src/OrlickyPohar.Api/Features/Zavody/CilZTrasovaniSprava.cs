@@ -37,6 +37,49 @@ public class CilZTrasovaniSprava(AppDbContext db, TimeProvider cas)
     /// <summary>Jak daleko do minulosti se návrh dívá.</summary>
     public const int OknoMinut = 20;
 
+    /// <summary>
+    /// Ze kterého prvku je cíl a ze kterého plyne směr příjezdu — nebo
+    /// věta pro rozhodčího, proč to z téhle trati nejde.
+    ///
+    /// <para>
+    /// <b>Trať sem přichází jedině ve stavu <c>Prijato</c></b> (dotaz
+    /// v <see cref="ProRozjizdkuAsync"/>), tedy zamčená a přijatá
+    /// rozhodčím. <b>Chybějící cíl proto není nedodělaná trať</b>, ale
+    /// rozhodnutí: *„Konec rozjížďky je rozhodnutí"* (plán, 20. 10. 2026
+    /// — <i>„lodě bez cíle dopíšeme, ale čas už zastav"</i>). Dálková
+    /// plavba cíl běžně nemá a lodě odpiskává rozhodčí z vody; dřív to
+    /// tahle metoda hlásila větou <i>„Trať nemá cíl vytyčený dvěma
+    /// konci"</i>, tedy jako vadu trati, na které není co opravit.
+    /// </para>
+    ///
+    /// <para>
+    /// Čistá funkce schválně: rozhodnutí nepotřebuje databázi, takže se
+    /// dá zkoušet bez Dockeru jako zbytek <c>CilZTrasovaniTests</c>.
+    /// </para>
+    /// </summary>
+    public static (PrvekTrati? Cil, PrvekTrati? Predchozi, string? ProcNe) CilASmer(
+        IReadOnlyList<PrvekTrati> prvky)
+    {
+        var cil = prvky.LastOrDefault(p => p.Typ == TypPrvku.Cil);
+        if (cil is null)
+            return (null, null, "Trať nemá cíl — dojezdy vyhlašuje rozhodčí z vody, "
+                + "takže z čáry se navrhnout nedají.");
+
+        if (cil.BojeA is null || cil.BojeB is null)
+            return (null, null, "Cíl má zapsaný jen jeden konec, takže čára, kterou by "
+                + "stopa protla, není.");
+
+        // <b>Odkud se do cíle přijíždí.</b> Z předchozího prvku plyne směr,
+        // a bez směru by se dojezd nepoznal od startu — u Orlíku leží cíl
+        // na startu, takže tutéž čáru pole protne i na začátku.
+        var predchozi = prvky.LastOrDefault(p => p.Poradi < cil.Poradi && p.BojeA is not null);
+        if (predchozi is null)
+            return (null, null, "Před cílem není na trati prvek, ze kterého by se dal "
+                + "poznat směr.");
+
+        return (cil, predchozi, null);
+    }
+
     public async Task<CilZTrasovaniDto> ProRozjizdkuAsync(Rozjizdka rozjizdka, CancellationToken ct)
     {
         static CilZTrasovaniDto Nelze(string proc) => new(proc, []);
@@ -62,16 +105,9 @@ public class CilZTrasovaniSprava(AppDbContext db, TimeProvider cas)
             .OrderBy(p => p.Poradi)
             .ToListAsync(ct);
 
-        var cil = prvky.LastOrDefault(p => p.Typ == TypPrvku.Cil);
-        if (cil?.BojeA is null || cil.BojeB is null)
-            return Nelze("Trať nemá cíl vytyčený dvěma konci.");
-
-        // <b>Odkud se do cíle přijíždí.</b> Z předchozího prvku plyne směr,
-        // a bez směru by se dojezd nepoznal od startu — u Orlíku leží cíl
-        // na startu, takže tutéž čáru pole protne i na začátku.
-        var predchozi = prvky.LastOrDefault(p => p.Poradi < cil.Poradi && p.BojeA is not null);
-        if (predchozi?.BojeA is null)
-            return Nelze("Před cílem není na trati prvek, ze kterého by se dal poznat směr.");
+        var (cil, predchozi, procNe) = CilASmer(prvky);
+        if (procNe is not null || cil?.BojeA is null || cil.BojeB is null || predchozi is null)
+            return Nelze(procNe ?? "Z trati se cíl určit nedá.");
 
         var ted = cas.GetUtcNow();
         var od = startV > ted.AddMinutes(-OknoMinut) ? startV : ted.AddMinutes(-OknoMinut);

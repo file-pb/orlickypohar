@@ -269,7 +269,7 @@ Připisuje každému řádku textu paušálních 20 pt místo `fontSize`, takže
 znovu. A nehlídá **šířku ani mezeru mezi terči** — tedy právě ta dvě
 čísla, na kterých tahle řádka stojí: 8 dp mezery a „terčem je celý řádek".
 
-### F. Dálkové plavbě bez cíle appka tvrdí, že má nedodělanou trať
+### F. ~~Dálkové plavbě bez cíle appka tvrdí, že má nedodělanou trať~~ **opraveno 21. 11. 2026**
 
 Automatický dojezd z trasování si cíl vyžaduje. `CilZTrasovaniSprava.cs:65`
 hledá `prvky.LastOrDefault(p => p.Typ == TypPrvku.Cil)` a když ho nenajde
@@ -283,7 +283,35 @@ na ní není co.
 **A není to mezera, je to rozpor s rozhodnutím, které už v plánu stojí.**
 *„Konec rozjížďky je rozhodnutí"* (`PLAN.md:9662`, Filip 20. 10. 2026:
 *„lodě bez cíle dopíšeme, ale čas už zastav"*) říká, že o konci rozhoduje
-rozhodčí, ne průjezd čárou. Tahle jediná hláška tvrdí opak.
+rozhodčí, ne průjezd čárou. Tahle jediná hláška tvrdila opak.
+
+**Jak je to opravené.** Rozhodnutí vyšlo z metody ven do čisté funkce
+`CilZTrasovaniSprava.CilASmer`, takže jde zkoušet bez Dockeru jako zbytek
+`CilZTrasovaniTests`. Dvě věci, které dřív splývaly do jedné věty, jsou
+teď dvě:
+
+| stav trati | věta |
+|---|---|
+| cíl v trati **není** | *Trať nemá cíl — dojezdy vyhlašuje rozhodčí z vody, takže z čáry se navrhnout nedají.* |
+| cíl **má jeden konec** | *Cíl má zapsaný jen jeden konec, takže čára, kterou by stopa protla, není.* |
+
+**Co to dovolilo říct bez nového pole:** k té metodě se trať dostane
+jedině ve stavu `Prijato`, protože si to ten dotaz nad ní vybírá
+(`CilZTrasovaniSprava.cs:51`). Každá trať, která tam dojde, je tedy
+**zamčená a přijatá rozhodčím** — chybějící cíl proto nemůže být
+rozdělaná stavba a na typ závodu se není potřeba ptát. To je dobře,
+protože `Zavod.Typ` je volný text schválně (*„seznam typů je data, ne
+model"*, `Zavod.cs:336`) a větvit se na něm nemá.
+
+Pět testů (`CilZTratiTests`), z toho jeden na to, že **z více cílů platí
+poslední** — maraton jede velké kolo a uvnitř menší okruh, takže se prvky
+opakují. Sabotáž ověřena: po vrácení staré věty padá právě ten test, co
+má.
+
+**Co tím opravené není.** Appka tu větu dnes **nevykresluje vůbec** —
+`cil.tsx:214` si bere jen `v.prujezdy` a `procNe` zahazuje. Oprava je
+tedy v kontraktu, ne na obrazovce; prázdný stav návrhů zatím nikomu
+neřekne, proč nic nenavrhuje.
 
 Model je přitom v pořádku a nic se v něm měnit nemusí: `Hotovo` cíl
 nevyžaduje — `HotovoAsync` se ptá jedině `ProcNejdeHotovoKvuliZnackam`

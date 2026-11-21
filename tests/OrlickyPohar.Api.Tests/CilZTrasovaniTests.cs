@@ -1,3 +1,4 @@
+using OrlickyPohar.Api.Features.Boje;
 using OrlickyPohar.Api.Features.Zavody;
 
 using static OrlickyPohar.Api.Features.Zavody.CilZTrasovani;
@@ -145,5 +146,112 @@ public class CilZTrasovaniTests
         Assert.Null(Posledni(stopa, CilA, CilA, ZTrati));
         // Předchozí prvek přesně na čáře — ze které strany se přijíždí, neplyne.
         Assert.Null(Posledni(stopa, CilA, CilB, new Misto(49.5000, 14.3005)));
+    }
+}
+
+/// <summary>
+/// <b>Co se dá z trati o cíli vůbec zjistit</b> — <see
+/// cref="CilZTrasovaniSprava.CilASmer"/>.
+///
+/// <para>
+/// Řez je jedna věta z plánu: <i>„Konec rozjížďky je rozhodnutí"</i>
+/// (20. 10. 2026). Trať bez cíle je u dálkové plavby <b>normální stav</b>,
+/// ne nedodělaná práce — dojezdy odpiskává rozhodčí z vody. Trať se navíc
+/// k téhle metodě dostane jedině ve stavu <c>Prijato</c>, tedy zamčená
+/// rozhodčím, takže chybějící cíl nemůže být rozdělaná stavba.
+/// </para>
+/// </summary>
+public class CilZTratiTests
+{
+    private static Boje B(string nazev, double sirka, double delka) =>
+        new() { Nazev = nazev, Sirka = sirka, Delka = delka };
+
+    private static PrvekTrati Prvek(TypPrvku typ, int poradi, Boje a, Boje? b = null) =>
+        new() { Typ = typ, Poradi = poradi, BojeA = a, BojeB = b };
+
+    private static readonly Boje Otocna = B("Otočná 1", 49.4990, 14.3005);
+    private static readonly Boje CilLeva = B("Cíl levá", 49.5000, 14.3000);
+    private static readonly Boje CilPrava = B("Cíl pravá", 49.5000, 14.3010);
+
+    /// <summary>
+    /// <b>Trať bez cíle není vada trati.</b> Dřív se vracela věta „Trať
+    /// nemá cíl vytyčený dvěma konci", která zapisovatele posílala trať
+    /// dodělat — jenže u dálkové plavby na ní dodělat není co.
+    /// </summary>
+    [Fact]
+    public void Trat_bez_cile_posle_rozhodciho_na_vodu_a_nevini_trat()
+    {
+        var (cil, predchozi, procNe) = CilZTrasovaniSprava.CilASmer(
+            [Prvek(TypPrvku.Start, 1, CilLeva, CilPrava), Prvek(TypPrvku.OtocnaBoje, 2, Otocna)]);
+
+        Assert.Null(cil);
+        Assert.Null(predchozi);
+        Assert.NotNull(procNe);
+        Assert.Contains("rozhodčí", procNe);
+        Assert.DoesNotContain("dvěma konci", procNe);
+    }
+
+    /// <summary>
+    /// <b>Cíl o jednom konci je jiná věta.</b> Čára potřebuje dva konce,
+    /// a tohle je skutečně nedodělaný cíl — nesmí splynout s tratí, která
+    /// cíl mít nemá.
+    /// </summary>
+    [Fact]
+    public void Cil_s_jednim_koncem_se_nepleta_s_trati_bez_cile()
+    {
+        var (_, _, procNe) = CilZTrasovaniSprava.CilASmer(
+            [Prvek(TypPrvku.OtocnaBoje, 1, Otocna), Prvek(TypPrvku.Cil, 2, CilLeva)]);
+
+        Assert.NotNull(procNe);
+        Assert.Contains("jeden konec", procNe);
+        Assert.DoesNotContain("rozhodčí", procNe);
+    }
+
+    /// <summary>
+    /// <b>Bez předchozího prvku není směr.</b> U Orlíku leží cíl na startu,
+    /// takže tutéž čáru pole protne i na začátku.
+    /// </summary>
+    [Fact]
+    public void Cil_bez_predchoziho_prvku_nema_smer()
+    {
+        var (cil, _, procNe) = CilZTrasovaniSprava.CilASmer(
+            [Prvek(TypPrvku.Cil, 1, CilLeva, CilPrava)]);
+
+        Assert.Null(cil);
+        Assert.NotNull(procNe);
+        Assert.Contains("směr", procNe);
+    }
+
+    /// <summary>Úplná trať vydá cíl i prvek, ze kterého plyne směr.</summary>
+    [Fact]
+    public void Uplna_trat_vrati_cil_i_smer()
+    {
+        var (cil, predchozi, procNe) = CilZTrasovaniSprava.CilASmer(
+            [Prvek(TypPrvku.Start, 1, CilLeva, CilPrava),
+             Prvek(TypPrvku.OtocnaBoje, 2, Otocna),
+             Prvek(TypPrvku.Cil, 3, CilLeva, CilPrava)]);
+
+        Assert.Null(procNe);
+        Assert.Equal(3, cil!.Poradi);
+        Assert.Equal(2, predchozi!.Poradi);
+    }
+
+    /// <summary>
+    /// <b>Platí poslední cíl v pořadí.</b> Maraton jede velké kolo
+    /// a uvnitř menší okruh (plán, 11. 10. 2026), takže se prvky opakují
+    /// a cíl může být v trati víckrát.
+    /// </summary>
+    [Fact]
+    public void Z_vice_cilu_plati_posledni()
+    {
+        var (cil, predchozi, procNe) = CilZTrasovaniSprava.CilASmer(
+            [Prvek(TypPrvku.OtocnaBoje, 1, Otocna),
+             Prvek(TypPrvku.Cil, 2, CilLeva, CilPrava),
+             Prvek(TypPrvku.OtocnaBoje, 3, Otocna),
+             Prvek(TypPrvku.Cil, 4, CilLeva, CilPrava)]);
+
+        Assert.Null(procNe);
+        Assert.Equal(4, cil!.Poradi);
+        Assert.Equal(3, predchozi!.Poradi);
     }
 }
