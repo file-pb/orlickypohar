@@ -26,7 +26,17 @@ položka ve skupině E je právě to ověření.
 
 | Odkud | Co zbývá | Kde se to dnes vidí | Velikost |
 | --- | --- | --- | --- |
-| **konzilium, 2-design** | **`kontrast.test.ts` rozšířit** o páry, které stavitel zavádí. Dnes měří obecné tokeny a proužky fází na panelu odpočtu, takže návrat bílé napevno na modré ploše (2,35 : 1 v tmavé sadě) by CI nechytila | `app/testy/kontrast.test.ts:86` | malá |
+
+> **Skupina A je prázdná.** Poslední položka — rozšířit `kontrast.test.ts`
+> o páry stavitele — má od 21. 11. majitele: dopíše ji session stavitele
+> spolu s akcemi detailu, aby se měřila proti hotovým tvarům. Páry už
+> existují (silueta na kartě s lemem dopočítaným z podkladu, tlumená výplň
+> u značky bez barvy).
+
+Nová položka odtamtud: **`KonecBojeDto` nenese čas postavení a přesnost**,
+a závěr konzilia je u detailu značky chce — předčítají se do vysílačky. Je
+to aditivní změna API, stejného druhu jako ta, která tam přidala zdroj,
+barvu a tvar. Majitele zatím nemá.
 
 ## B) Čeká na Miloše — a vejde se to do jedné zprávy
 
@@ -71,8 +81,9 @@ rozjížďky a zčásti flow rozpravy. Zbývá tohle:
 
 ## D) Postavené, ale neověřené — čeká na telefon a na vodu
 
-- **Zkouška stavitele trati**: `ZKOUSKA-STAVITELE.md`, **22 nezaškrtnutých
-  bodů**. Od commitu `ea0e6682` (meze polohy rozvolněné z Orlíku na Česko) se
+- **Zkouška stavitele trati**: `ZKOUSKA-STAVITELE.md`, **23 bodů**,
+  srovnaných 21. 11. s přestavěnou obrazovkou (seznam je nově řádka na
+  značku, s osou a stavem jedním slovem; detail ukazuje jen fakta). Od commitu `ea0e6682` (meze polohy rozvolněné z Orlíku na Česko) se
   celý průvodce projde **na suchu**; na vodě zbývá jen to, co vodu doopravdy
   potřebuje. Tohle je dnes nejvýš položená věc ve frontě: tři týdny stavby
   nikdo nedržel v ruce.
@@ -96,14 +107,13 @@ rozjížďky a zčásti flow rozpravy. Zbývá tohle:
   60.3(b). Visí na tom **zbytek R13**: protest vytlačené lodi, náprava podle
   61.4(c) a zproštění viny podle 43.1(a). Cesta komise (zrušení s důvodem,
   odložení, důkaz z trasy podle 61.4(d)) běží.
-- **Projít sedm změn návrhu stavitele proti kódu** a říct, které z nich
-  stojí. Čtyři vady v živém kódu jsou opravené (`ee92fa3e` 44 pt, `41bf382e`
-  odskok a kontrola dotyku na písmo, `e80c6e20` stavba jen tam, kam server
-  pustí, `d2cb96e5` pomocník), ale u samotných změn návrhu — pípnutí jako
-  první akce, padlý odklad popisu, osm řádků seznamu, stav polohy slovem,
-  karta zádrhelu, vzdálenost u brány — **jsem si ověřil jedinou**: slovo
-  „zádrhel" není v `app/src` nikde, takže karta zádrhelu (bod 6) postavená
-  není. Zbytek je nedočtený, a než se začne stavět, má se dočíst.
+- **Stavitel: co z konzilia nestojí.** Session stavitele odpověděla
+  21. 11., takže se to nemusí dočítat z kódu. Postavená jsou rozhodnutí 2,
+  3 a 4 (řádka na značku, osa značek, souvislé vlákno); rozhodnutí 5 a 6 se
+  appky netýkají, byly to vady makety. **Nepostavené zůstává rozhodnutí 1**
+  (pevný dolní pruh s pípnutím ve všech stavech), **akce detailu** (přesun,
+  fotka, sebrání, barva, pořadí, mazání — pravidla a testy ano, obrazovka
+  ne) a **karta zádrhelu** z prvního konzilia. Staví to ta session, ne já.
 - **Barvy bójí, až je stavitel začne malovat.** Konzilium (bod 3) žádá
   vlastní tokeny, protože makety si barvu bóje půjčují od
   `pripravaZnameni` a `stavZruseny`. V živém kódu ten rozchod **není**:

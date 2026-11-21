@@ -44,6 +44,12 @@ protože jejich úkol je chytit prohozenou šířku s délkou, ne vymezit
 - [ ] **Postav celý prvek:** *Jedna značka* → otočit levobokem →
       značení → pípni → potvrď. Má přijít hláška „1. otočná bóje —
       zařazeno." a prvek se má objevit v seznamu *Co už stojí*.
+- [ ] **Jak ten seznam od 21. 11. 2026 vypadá:** jedna řádka na
+      **značku**, ne na prvek, řádky spojuje svislá osa a vpravo stojí
+      **stav jedním slovem** — *čeká na odemčení*, *čeká*, *chybí druhý
+      konec*, *z plánu*, *chybí fotka*. Řádka, u které je všechno
+      v pořádku, **nemá vpravo nic**; prázdno je dobrá zpráva, ne
+      chybějící údaj. Klepnutím se otevřou fakta o značce.
 - [ ] Projdi průvodce u všech pěti typů: **Jedna značka, Dvě značky,
       Start, Cíl, Odskok**. U každého má druhý krok nabídnout předpis
       (otočit levobokem, projet mezi nimi, pevná linie…).
@@ -55,9 +61,10 @@ protože jejich úkol je chytit prohozenou šířku s délkou, ne vymezit
 - [ ] *Zahodit rozdělaný prvek* v každém kroku vrátí průvodce na začátek
       a nic nepošle.
 - [ ] **Dva body s popojitím.** *Dvě značky*: pípni levou, popojdi aspoň
-      dvacet metrů, pípni pravou. V seznamu zkontroluj, že to **nejsou
-      dvě značky na témže místě** — to je celý důvod, proč obrazovka
-      odmítá fix starší než čtyři vteřiny.
+      dvacet metrů, pípni pravou. V seznamu z toho budou **dvě řádky
+      spojené osou** (jedna na značku) — zkontroluj, že to **nejsou dvě
+      značky na témže místě**; to je celý důvod, proč obrazovka odmítá
+      fix starší než čtyři vteřiny.
 - [ ] **Pípni druhý bod hned**, bez popojití a bez prodlevy. Jestli se
       poloha nestihla obnovit, má přijít „Poloha je N s stará." Když to
       projde vždycky, je pravidlo možná příliš mírné — to je zjištění,
@@ -81,13 +88,14 @@ protože jejich úkol je chytit prohozenou šířku s délkou, ne vymezit
 Letový režim, nebo prostě místo, kde není signál.
 
 - [ ] Postav prvek. Má se objevit pruh **„1 prvek čeká na odeslání"**
-      a prvek má být v seznamu *Co už stojí* jako čekající.
+      a řádka v *Co už stojí* má mít vpravo slovo **„čeká"**.
 - [ ] Zavři appku úplně a otevři ji. **Prvek musí ve frontě zůstat** —
       je v SQLite, ne ve stavu Reactu.
 - [ ] Postav bez signálu další dva. Jména mají být **různá** (značka 7,
       8, 9), ne třikrát totéž.
 - [ ] **Zapni signál a otevři obrazovku stavby znovu.** Fronta se má
-      vyprázdnit a prvky naskočit jako postavené.
+      vyprázdnit a slovo *„čeká"* u těch řádek **zmizet** — u hotové
+      značky nestojí vpravo nic.
 - [ ] **Známé omezení, ověř si ho:** fronta se posílá jen při otevření
       obrazovky, po postavení prvku a po zahození čekajícího
       (`stavba.tsx:156-160`). Když se signál vrátí a ty nic neuděláš,
@@ -111,5 +119,12 @@ nečekal.
 Není to seznam nedodělků, je to hranice zkoušky:
 
 - **Fotka papíru u značky** a výběr bodu z mapy nejsou postavené.
+- **Detail značky ukazuje jen fakta.** Úkony, které k němu patří podle
+  závěru druhého konzilia — přesun, fotka, sebrání z vody, barva, pořadí,
+  mazání —, postavené nejsou; jejich pravidla ano, i s testy
+  (`app/src/lib/detail-prvku.ts`). Nehledej je.
+- **Pevný dolní pruh s pípnutím ve všech stavech** (rozhodnutí 1 druhého
+  konzilia) taky ještě není; pípá se v průvodci.
+- **Karta zádrhelu** z prvního konzilia není postavená.
 - **Web pořád staví po krocích** přes starou cestu; nový atomický
   endpoint používá jen appka. Je to schválně, viz `docs/PLAN.md`.
