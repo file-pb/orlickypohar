@@ -365,6 +365,29 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
               až po publikaci — někdy i o půl hodiny později.
             </span>
           </label>
+
+          {/* <b>Spor dvou zadání, uzavřený přepínačem</b> (Filip,
+              21. 11. 2026). Miloš: *„úpravu výsledků smí provést pouze
+              rozhodčí"*; Filip 16. 10.: *„pořadatel, dokud je zápis
+              otevřený"*. Výchozí je Milošova věta — u nové i u existující
+              regaty, protože sloupec vznikl s `false`. Platí to na zápis
+              dojezdů odevšad, z webu i z appky; úkony u vody (velení,
+              procedura, start, konec) pořadateli zůstávají. */}
+          <label>
+            Dojezdy smí zapisovat
+            <select
+              name="poradatelZapisujeVysledky"
+              defaultValue={zastavka?.poradatelZapisujeVysledky ? "ano" : "ne"}
+            >
+              <option value="ne">Jen rozhodčí a pomocníci u vody</option>
+              <option value="ano">I pořadatel regaty</option>
+            </select>
+            <span className="poznamka">
+              Týká se zápisu dojezdů z cíle, z webu i z appky. Velení,
+              startovní proceduru a konec rozjížďky pořadatel smí tak jako
+              tak; správce ročníku a pomocník zaškrtnutý rozhodčím taky.
+            </span>
+          </label>
         </>
       )}
 

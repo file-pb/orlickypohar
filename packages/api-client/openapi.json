@@ -14755,6 +14755,10 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 5
+                    },
+                    "poradatelZapisujeVysledky": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -14834,6 +14838,12 @@
                         "format": "int32"
                     },
                     "procesniDej": {
+                        "type": [
+                            "null",
+                            "boolean"
+                        ]
+                    },
+                    "poradatelZapisujeVysledky": {
                         "type": [
                             "null",
                             "boolean"

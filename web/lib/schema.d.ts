@@ -9097,6 +9097,8 @@ export interface components {
              * @default 5
              */
             delkaProceduryMin: number;
+            /** @default false */
+            poradatelZapisujeVysledky: boolean;
         };
         ZastavkaVolbaDto: {
             slug: string;
@@ -9119,6 +9121,7 @@ export interface components {
             /** Format: int32 */
             posunDoSerie?: null | number;
             procesniDej?: null | boolean;
+            poradatelZapisujeVysledky?: null | boolean;
             /** Format: date */
             uzaverkaPrihlasek?: null | string;
             startovne?: null | string;

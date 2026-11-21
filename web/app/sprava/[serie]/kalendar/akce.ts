@@ -67,6 +67,8 @@ function vstupZFormulare(formular: FormData) {
     // Procesní děj je výběr se dvěma hodnotami, takže se posílá vždycky —
     // na rozdíl od počtů výš tu „neměnit" nepotřebujeme.
     procesniDej: text("procesniDej") === "ano",
+    // Totéž co procesní děj: výběr se dvěma hodnotami, posílá se vždycky.
+    poradatelZapisujeVysledky: text("poradatelZapisujeVysledky") === "ano",
     // Druh platí jen při založení; úprava ho v API nemění.
     druh: tab(formular) === "akce" ? ("Akce" as const) : ("Pohar" as const),
   };
