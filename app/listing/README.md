@@ -23,11 +23,13 @@ na stránce v obchodě má stát totéž, co uživatel uvidí po instalaci na pl
 Kdyby měla být i tam kulatá značka, je to změna ikony aplikace (`ikona.py`),
 ne jen obchodu — a to je rozhodnutí, které nikdo neudělal.
 
-**Nedořešené: pod jakým jménem appka v obchodě vystupuje.** Banner říká
-*Orlická série*, název aplikace a všechny texty níž říkají *Orlický pohár*.
-Obojí je dnes pravda — web se jmenuje jedním a appka druhým — ale na jedné
-stránce v obchodě to vedle sebe bude vypadat jako nedodělek. Patří to
-Milošovi, ne nám.
+**V obchodě se appka jmenuje *Orlická série*** (Miloš, 22. 11. 2026).
+Tím sedí s bannerem i s hlavičkou webu. Texty níž jsou přepsané.
+
+**Appka samotná se na ploše telefonu pořád jmenuje *Orlický pohár*** —
+to je `name` v `app/app.json` a mění se až novým buildem. Rozhodnuté to
+není: název v obchodě a název pod ikonou nemusí být tentýž, ale jestli se
+mají srovnat, patří to do téže změny jako příští vydání.
 
 ## Než se dá nahrát cokoliv
 
@@ -55,7 +57,7 @@ nenašel jsem o tom ani slovo, tak s tím nepočítej.
 Nejvýš 30 znaků.
 
 ```
-Orlický pohár
+Orlická série
 ```
 
 ## Krátký popis
@@ -72,7 +74,7 @@ Výsledky, kalendář a průběžné pořadí seriálu závodů plachetnic na Or
 Nejvýš 4000 znaků.
 
 ```
-Orlický pohár je seriál závodů plachetnic na Orlické přehradě. Tahle appka je jeho program, výsledková tabule a lodní deník v jednom — totéž co na orlickypohar.klihovka.cz, jen po ruce na břehu.
+Orlická série je seriál závodů plachetnic na Orlické přehradě. Tahle appka je její program, výsledková tabule a lodní deník v jednom — totéž co na orlickypohar.klihovka.cz, jen po ruce na břehu.
 
 Co v ní najdeš
 
