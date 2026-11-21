@@ -553,6 +553,8 @@ public class TratSpravaTests(PostgresFixture fixture)
         var prvni = await RozjizdkaAsync(db, zavod, 1);
         var puvodni = (await trate.AktualniAsync(zavod.Id, default))!;
         Assert.Null((await trate.PriradAsync(zavod.Id, puvodni.Id, prvni.Cislo, true, default)).Chyba);
+        // Přijmout jde až hotovou trať, proto dvojice hotovo → přijmi.
+        Assert.Null((await trate.HotovoAsync(zavod.Id, true, default)).Chyba);
         Assert.Null((await trate.PrijmiAsync(zavod.Id, kdo.Id, default)).Chyba);
 
         var druha = await RozjizdkaAsync(db, zavod, 2);
@@ -562,8 +564,15 @@ public class TratSpravaTests(PostgresFixture fixture)
 
         // Vítr odfoukl levou bóji startu a stavitel ji pípl znovu. Stavět
         // jde, protože vybraná trať je klon — přijatá trať je vedle.
+        //
+        // <b>Přenastavení se pozná podle `NahrazujeId`</b>, ne podle jména
+        // (`BojeSprava.cs:74`): bez něj by vznikla druhá bóje a přepojení
+        // prvků by se nevolalo vůbec, takže by test měřil něco jiného.
         var (novy, chybaPipnuti) = await boje.PipniAsync(
-            zavod.Id, Bod("start levý"), kdo.Id, default);
+            zavod.Id,
+            new PipnutiVstup("start levý", 0, 49.5205, 14.1702, 4, levy.Id),
+            kdo.Id,
+            default);
         Assert.Null(chybaPipnuti);
         Assert.NotEqual(levy.Id, novy!.Id);
 
@@ -579,7 +588,11 @@ public class TratSpravaTests(PostgresFixture fixture)
         Assert.Equal(pravy.Id, vKlonu.BojeBId);
 
         // A starý záznam se nesmí uklidit — visí na něm prvek odjeté trati.
-        Assert.True(await db.Boje.AnyAsync(b => b.Id == levy.Id));
+        var stary = await db.Boje.SingleOrDefaultAsync(b => b.Id == levy.Id);
+        Assert.NotNull(stary);
+        // Je označený jako nahrazený, takže v seznamu stojících bójí není;
+        // prvek odjeté trati na něj přesto ukazuje dál.
+        Assert.NotNull(stary!.NahrazenaV);
     }
 
     [Fact]
