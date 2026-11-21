@@ -215,6 +215,12 @@ rozjížďce přepíše prvky té první. Veřejná odpověď si pak protiřeč�
 berou souřadnice přes připojenou bóji, kdežto seznam bójí se rekonstruuje
 časem. **Není to budoucí problém — klon volá web už dnes.**
 
+**A je to častější, než jsem si myslel** (Filip, 21. 11. 2026): u dálkových
+plaveb a okruhových závodů se jede *co kolo, to rozjížďka*, tedy táž trať
+znovu a znovu — klonem. Po pátém kole ukazuje na tytéž bóje pět tratí
+a jeden přesun přepíše prvky ve všech čtyřech odjetých. Je to tedy
+**následek běžného průběhu okruhového závodu**, ne nešťastná shoda.
+
 ### B. Řádku dnes nejde nakreslit, protože `znak-boje.tsx` je psaná pro mapu
 
 Dvě výchozí hodnoty: bez zapsané barvy kreslí **červenou** (`:134`), tedy
@@ -288,23 +294,37 @@ Jedna věta na obor, povinná rubrika.
 
 ## Co čeká na Filipa
 
-1. ~~Jede se na Orlíku na kola?~~ **Odpovězeno 21. 11. 2026: většinou
-   se jede jedno kolo, tedy každý prvek jednou.** Padla tím ta větev,
-   kterou konzilium označilo za neškodnou: *značky* a *průjezdy* jsou
-   v tomhle případě **tentýž seznam**, takže bod 3 platí dál a nic
-   nemění. Je to zároveň doklad, že ten způsob rozhodování byl správný —
-   obor vybral možnost, která je v jedné větvi správná a v druhé
-   neškodná, místo aby čekal na odpověď.
+1. ~~Jede se na Orlíku na kola?~~ **Odpovězeno 21. 11. 2026, a jsou dvě
+   odpovědi.** Na **maratonech se na kola jede** (v kalendáři ročníku je
+   24hodinovka); u **dálkových plaveb a okruhových závodů** se většinou
+   jede *co kolo, to rozjížďka*. Běžná rozjížďka je jedno kolo, tedy
+   každý prvek jednou.
 
-   **Co z toho plyne.** Dva dovětky přestávají být denní realitou
-   a zůstávají jako pojistka, protože model opakování pořád umožňuje
-   a trať skládaná v kanceláři ho vyrobit může: `2×` u jména a zákaz
-   mazání u značky se dvěma průjezdy (bod 9). **Mazání je tím na běžné
-   trati vždycky jednoznačné**, což bere váhu i nesouhlasu 5-jachtara —
-   jeho argument stál právě na té dvojznačnosti. A rozpočet řádků sedí
-   s rezervou: čtyři až šest značek proti osmi, které se při rozteči 64
-   vejdou, takže rolování zůstává pojistkou proti ustřižení, ne běžným
-   stavem.
+   *(První zápis téhle odpovědi, o hodinu starší, tvrdil, že se jede
+   jedno kolo a hotovo. To bylo neúplné a dva závěry z toho plynuly
+   špatně — opravuju je níž.)*
+
+   **Rozhodnutí o ose tím zesiluje.** Bod 3 vybral *značky* proto, že
+   jsou v jedné větvi správné a v druhé neškodné; teď je jasné, že
+   nastávají **obě** a ta první je skutečná. Na maratonu by seznam
+   průjezdů dal na jednu bóji dva až desítky řádků a *Přesunout sem* na
+   jednom z nich by sáhl na kus plastu, který je ve vodě jeden.
+
+   **Dva dovětky nejsou pojistka, ale provoz.** `2×` u jména (bod 2)
+   a zákaz mazání u značky s opakováním (bod 9) platí na maratonech
+   doslova — a **nesouhlas 5-jachtara k bodu 9 tím zesiluje**, protože
+   stál právě na té dvojznačnosti. Zůstává přehlasovaný 2 : 1, ale ta
+   podmínka je teď podmínkou běžného dne, ne výjimky.
+
+   **A „co kolo, to rozjížďka" zvětšuje nález A.** Je to přesně ta cesta,
+   kterou závěr popisuje jako obvyklý začátek druhé rozjížďky: táž trať,
+   nová rozjížďka, tedy **klon**. Na okruhovém závodě se tak klonuje
+   několikrát za den a po každém klonu ukazuje další trať na tytéž
+   záznamy bójí. Přesun jedné bóje pak přepíše prvky **všech** dřívějších
+   rozjížděk, ne jen jedné — a ty už jsou odjeté. Vada z nálezu A tedy
+   není vzácná shoda okolností; je to následek toho, jak se okruhový
+   závod jede.
+
 2. **Dostává stavitel azimut a vzdálenost rádiem, nebo rozhoduje sám?**
    Mění to směr toku, ne místo: appka ta čísla buď ukazuje, nebo přijímá.
 3. **Kdo zakládá trať pro druhou rozjížďku** — kancelář, nebo stavitel
