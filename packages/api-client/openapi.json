@@ -8945,7 +8945,8 @@
                     "id",
                     "nazev",
                     "sirka",
-                    "delka"
+                    "delka",
+                    "zdroj"
                 ],
                 "type": "object",
                 "properties": {
@@ -8964,6 +8965,9 @@
                         "type": "number",
                         "format": "double"
                     },
+                    "zdroj": {
+                        "$ref": "#/components/schemas/ZdrojPolohy"
+                    },
                     "znaceni": {
                         "oneOf": [
                             {
@@ -8973,6 +8977,31 @@
                                 "$ref": "#/components/schemas/DruhZnaceni"
                             }
                         ]
+                    },
+                    "barva": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BarvaBoje"
+                            }
+                        ]
+                    },
+                    "tvar": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/TvarBoje"
+                            }
+                        ]
+                    },
+                    "fotek": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
                     }
                 }
             },

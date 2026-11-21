@@ -21,6 +21,10 @@
  * testy (`app/testy/radka-trati.test.ts`).
  * </para>
  */
+import type { components } from '@/lib/schema';
+
+type S = components['schemas'];
+
 export type StavRadky =
   | 'čeká na odemčení'
   | 'čeká'
@@ -66,4 +70,135 @@ export function stavRadky(v: VstupRadky): StavRadky {
 export function opakovaniUJmena(kolikrat: number | 'porad'): string | null {
   if (kolikrat === 'porad') return 'pořád';
   return kolikrat > 1 ? `${kolikrat}×` : null;
+}
+
+/**
+ * <b>Osa ukazuje značky, ne průjezdy</b> (rozhodnutí 3, došly k němu tři
+ * obory nezávisle).
+ *
+ * <para>
+ * Dvoukolová trať se v modelu zapisuje <b>opakováním prvku</b>, takže na
+ * jednu bóji vyjdou dva řádky — a *Přesunout sem* na jednom z nich sáhne
+ * na kus plastu, který je ve vodě jeden. Stavy na řádce jsou přitom
+ * vlastnosti <b>bóje</b>: jedna bóje nemůže mít fotku na druhém řádku
+ * a nemít ji na prvním. Na maratonu, kde se krouží do konce závodu, by
+ * těch řádků na jednu bóji byly desítky.
+ * </para>
+ */
+export type KonecProRadku = {
+  id: number;
+  nazev: string;
+  sirka: number;
+  delka: number;
+  barva?: S['BarvaBoje'];
+  tvar?: S['TvarBoje'];
+  znaceni?: S['DruhZnaceni'];
+  /** `Telefon`, `Mapa`, `Qr`. Z mapy znamená „jeď tam a pípni". */
+  zdroj: string;
+  fotek: number;
+};
+
+export type PrvekProRadku = {
+  poradi: number;
+  typ: string;
+  strana?: string | null;
+  a: KonecProRadku;
+  b?: KonecProRadku | null;
+};
+
+export type ZnackaNaOse = {
+  boje: KonecProRadku;
+  /** Kolikrát se po té značce jede. Jedna je běžná, víc dělá `2×`. */
+  prujezdu: number;
+  /** Předpisy v pořadí jetí. Víc různých znamená, že se liší bok. */
+  predpisy: string[];
+  /** Stojí v prvku, kterému chybí druhý konec. */
+  chybiDruhyKonec: boolean;
+};
+
+/**
+ * Má ten typ dva konce? <b>Opsáno ze serveru</b>
+ * (`PrvekTrati.Dvoukonec`: *„typ is not (OtocnaBoje or PrujezdniBoje)"*),
+ * i s tím, že je to pravidlo negativní — nový typ je dvoukoncový, dokud
+ * se neřekne jinak.
+ */
+export function dvoukonec(typ: string): boolean {
+  return typ !== 'OtocnaBoje' && typ !== 'PrujezdniBoje';
+}
+
+/** Jak se ten průjezd jede, slovy. Jména podle nálezů J7 a J8. */
+export function predpisPrvku(typ: string, strana?: string | null): string {
+  const bok = strana === 'PoLeve' ? 'levoboku' : strana === 'PoPrave' ? 'pravoboku' : null;
+  switch (typ) {
+    case 'OtocnaBoje':
+    case 'Odskok':
+      // Ne „otočit levobokem": ponechat znak po levoboku znamená točit
+      // doprava, a rozhodčí ani směrnice neříkají, kam se točí.
+      return bok ? `ponechat po ${bok}` : 'otočná';
+    case 'PrujezdniBoje':
+      return bok ? `nechat po ${bok}` : 'průjezdní';
+    case 'Brana':
+      return 'projet mezi nimi';
+    case 'OtocnaBrana':
+      return 'projet a otočit se';
+    case 'OtocnaZona':
+      // Dotek z trasy nikdo neposoudí; ze směrnice je „otočit se za linií".
+      return 'otočit se za linií';
+    case 'Start':
+      return 'start';
+    case 'Cil':
+      return 'cíl';
+    default:
+      return typ;
+  }
+}
+
+export function znackyZTrati(prvky: PrvekProRadku[]): ZnackaNaOse[] {
+  const poradi: number[] = [];
+  const podleId = new Map<number, ZnackaNaOse>();
+
+  const pridej = (boje: KonecProRadku, predpis: string, chybiKonec: boolean) => {
+    let z = podleId.get(boje.id);
+    if (!z) {
+      z = { boje, prujezdu: 0, predpisy: [], chybiDruhyKonec: false };
+      podleId.set(boje.id, z);
+      poradi.push(boje.id);
+    }
+    z.prujezdu += 1;
+    z.predpisy.push(predpis);
+    if (chybiKonec) z.chybiDruhyKonec = true;
+  };
+
+  for (const p of [...prvky].sort((x, y) => x.poradi - y.poradi)) {
+    const predpis = predpisPrvku(p.typ, p.strana);
+    const chybiKonec = dvoukonec(p.typ) && !p.b;
+    pridej(p.a, predpis, chybiKonec);
+    if (p.b) pridej(p.b, predpis, false);
+  }
+
+  return poradi.map((id) => podleId.get(id)!);
+}
+
+/**
+ * Druhá řádka: <b>ne předpis, ale rozdíl mezi průjezdy</b>.
+ *
+ * <para>
+ * Předpis patří k <b>průjezdu</b>, kdežto řádka je po rozhodnutí 3 jedna
+ * na <b>značku</b> — a značka se po obrátce může na zpáteční cestě jet
+ * opačnou stranou (Filip, 21. 11. 2026; model s tím počítá, `Strana`
+ * sedí na prvku). Jeden vypsaný předpis by tedy o druhém průjezdu lhal,
+ * a je to právě ta řádka, která se porovnává s textem plachetní
+ * směrnice.
+ * </para>
+ *
+ * <para>
+ * Shodné průjezdy se slévají do jednoho předpisu, různé se spojí slovem
+ * <i>pak</i>. Jednotlivé průjezdy i s předpisy patří do detailu.
+ * </para>
+ */
+export function predpisRadky(predpisy: string[]): string | null {
+  const ruzne = predpisy.filter((p, i) => i === 0 || p !== predpisy[i - 1]);
+  if (ruzne.length === 0) return null;
+  if (ruzne.length === 1) return ruzne[0];
+  return ruzne.join(', pak ');
 }

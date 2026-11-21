@@ -7610,7 +7610,15 @@ export interface components {
             sirka: number;
             /** Format: double */
             delka: number;
+            zdroj: components["schemas"]["ZdrojPolohy"];
             znaceni?: null | components["schemas"]["DruhZnaceni"];
+            barva?: null | components["schemas"]["BarvaBoje"];
+            tvar?: null | components["schemas"]["TvarBoje"];
+            /**
+             * Format: int32
+             * @default 0
+             */
+            fotek: number;
         };
         KonecVstup: {
             /** Format: date-time */

@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -10,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import { OsaTrati, RadkaTrati } from '@/components/radka-trati';
 import { Chyba, Nacitani, Nadpis, Prazdno, Sekce } from '@/components/ui';
 import type { Barvy } from '@/constants/theme';
 import { useData } from '@/hooks/use-data';
@@ -22,8 +24,17 @@ import {
 } from '@/lib/api';
 import { pismoNaVyplni } from '@/lib/kontrast';
 import {
+  opakovaniUJmena,
+  predpisRadky,
+  stavRadky,
+  znackyZTrati,
+  type ZnackaNaOse,
+} from '@/lib/radka-trati';
+import {
   NAZVY_SMERU,
   SMERY,
+  azimut,
+  vzdalenostM,
   dlazdiceNabidky,
   ZNACENI,
   jmenaBodu,
@@ -105,6 +116,10 @@ export default function StavbaTrati() {
   const s = styly(t);
 
   const { fix, opravneni } = usePoloha(true);
+
+  // Která značka má otevřený detail. Zatím jen fakta — ta jsou na vodě ta
+  // podstatná část, protože se předčítají do vysílačky (rozhodnutí 7).
+  const [vybrana, setVybrana] = useState<ZnackaNaOse | null>(null);
 
   const { data: zavodData, chyba: chybaZavodu, nacita, obnov } = useData(
     useCallback(() => nactiRozestavenouTrat(slug, zavod), [slug, zavod]),
@@ -474,13 +489,29 @@ export default function StavbaTrati() {
         <Prazdno text="Na trati zatím nic nestojí. Začni prvním prvkem." />
       ) : (
         <>
-          {(prvky ?? []).map((p) => (
-            <View key={p.id} style={[s.radek, { borderColor: t.linka, backgroundColor: t.papir }]}>
-              <Text style={{ color: t.text }}>
-                {p.poradi}. {popisPrvku(p)}
-              </Text>
-            </View>
-          ))}
+          {/* <b>Osa ukazuje značky, ne průjezdy</b> (rozhodnutí 3): táž
+              bóje je ve vodě jedna, i když se po ní jede dvakrát. */}
+          <OsaTrati>
+            {znackyZTrati(prvky ?? []).map((z) => (
+              <RadkaTrati
+                key={z.boje.id}
+                jmeno={z.boje.nazev}
+                predpis={predpisRadky(z.predpisy)}
+                opakovani={opakovaniUJmena(z.prujezdu)}
+                barva={z.boje.barva ?? undefined}
+                tvar={z.boje.tvar ?? undefined}
+                znaceni={z.boje.znaceni ?? undefined}
+                stav={stavRadky({
+                  zamceno: zamcena,
+                  veFronte: false,
+                  chybiDruhyKonec: z.chybiDruhyKonec,
+                  zPlanu: z.boje.zdroj === 'Mapa',
+                  bezFotky: z.boje.fotek === 0,
+                })}
+                onPress={() => setVybrana(z)}
+              />
+            ))}
+          </OsaTrati>
           {fronta.map((f) => (
             <View
               key={f.id}
@@ -495,6 +526,52 @@ export default function StavbaTrati() {
       )}
 
       {posila ? <ActivityIndicator color={t.tlumeny} style={{ marginTop: 12 }} /> : null}
+
+      {/* <b>Fakta nahoře, protože se předčítají</b> (rozhodnutí 7): když se
+          rozhodčí na vysílačce zeptá na azimut, čte se to vestoje
+          v houpající se lodi a nesmí se k tomu rolovat. Akce detailu
+          (přesun, fotka, sebrání, barva, pořadí, mazání) zatím nejsou —
+          jejich pravidla stojí v `lib/detail-prvku.ts` i s testy. */}
+      <Modal visible={vybrana !== null} transparent animationType="fade">
+        <Pressable style={s.stin} onPress={() => setVybrana(null)}>
+          <View style={[s.detail, { backgroundColor: t.papir, borderColor: t.linka }]}>
+            <Text style={[s.detailJmeno, { color: t.text }]}>{vybrana?.boje.nazev}</Text>
+            {vybrana ? (
+              <Text style={[s.detailRadek, { color: t.tlumeny }]}>
+                {predpisRadky(vybrana.predpisy)}
+                {vybrana.prujezdu > 1 ? ` · ${opakovaniUJmena(vybrana.prujezdu)}` : ''}
+              </Text>
+            ) : null}
+            {vybrana ? (
+              <Text style={[s.detailFakt, { color: t.text }]}>
+                {vybrana.boje.sirka.toFixed(5)}, {vybrana.boje.delka.toFixed(5)}
+              </Text>
+            ) : null}
+            {vybrana ? (
+              <Text style={[s.detailRadek, { color: t.tlumeny }]}>
+                {vybrana.boje.zdroj === 'Mapa' ? 'odečteno z mapy' : 'změřeno telefonem'}
+                {' · '}
+                {vybrana.boje.fotek === 0
+                  ? 'bez fotky'
+                  : `${vybrana.boje.fotek} ${vybrana.boje.fotek === 1 ? 'fotka' : 'fotky'}`}
+              </Text>
+            ) : null}
+            {/* Azimut číslicemi, protože se čtou do vysílačky. Bez fixu
+                se nekreslí nic — nepravdivé číslo je horší než žádné. */}
+            {vybrana && fix ? (
+              <Text style={[s.detailFakt, { color: t.text }]}>
+                {Math.round(azimut(fix, vybrana.boje)).toString().padStart(3, '0')}° ·{' '}
+                {Math.round(vzdalenostM(fix, vybrana.boje))} m odsud
+              </Text>
+            ) : null}
+            <Pressable
+              onPress={() => setVybrana(null)}
+              style={({ pressed }) => [s.zavrit, { opacity: pressed ? 0.6 : 1 }]}>
+              <Text style={[s.zavritText, { color: t.voda }]}>Zavřít</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -577,4 +654,23 @@ const styly = (t: Barvy) =>
       paddingVertical: 12,
       marginTop: 4,
     },
+    stin: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      justifyContent: 'center',
+      paddingHorizontal: 22,
+    },
+    detail: {
+      borderRadius: 14,
+      borderWidth: 1,
+      padding: 18,
+    },
+    // Jméno je identita za jízdy: to se říká do vysílačky a to stojí
+    // v plachetní směrnici.
+    detailJmeno: { fontSize: 20, fontWeight: '700', marginBottom: 4 },
+    detailRadek: { fontSize: 13, marginTop: 6 },
+    // Čísla, která se předčítají, nesou váhu textu, ne popisku.
+    detailFakt: { fontSize: 16, fontWeight: '600', marginTop: 10 },
+    zavrit: { minHeight: 44, justifyContent: 'center', marginTop: 14 },
+    zavritText: { fontSize: 16, fontWeight: '600' },
   });
