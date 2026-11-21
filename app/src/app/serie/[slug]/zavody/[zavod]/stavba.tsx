@@ -260,7 +260,13 @@ export default function StavbaTrati() {
 
   const stojici = fronta.find((f) => f.odmitnuto) ?? null;
 
+  // Co se zrovna pípá. Prázdno znamená, že hlavní akce v tomhle stavu
+  // není — vybírá se dlaždice, čeká se na směr, nebo je trať zamčená.
+  const copipat =
+    !zamcena && typ && volba && !vsechnyBody && !cekaNaSmer ? jmena[body.length] : null;
+
   return (
+    <View style={{ flex: 1, backgroundColor: t.pozadi }}>
     <ScrollView
       contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
       refreshControl={
@@ -403,30 +409,9 @@ export default function StavbaTrati() {
                 ))}
               </View>
 
-              <Text style={{ color: t.tlumeny, marginBottom: 4 }}>
-                {jmena[body.length]} · {popisPresnosti(fix)}
-              </Text>
-              {!posudek.ok ? (
-                <Text style={{ color: t.vystraha, marginBottom: 8 }}>{posudek.proc}</Text>
-              ) : posudek.varovani ? (
-                <Text style={{ color: t.vystraha, marginBottom: 8 }}>{posudek.varovani}</Text>
-              ) : null}
-
-              <Pressable
-                onPress={pipni}
-                disabled={!posudek.ok}
-                style={({ pressed }) => [
-                  s.pipnout,
-                  {
-                    backgroundColor: posudek.ok ? t.voda : t.linka,
-                    opacity: pressed ? 0.7 : 1,
-                  },
-                ]}>
-                <Text style={{ color: pismoNaVyplni(t, posudek.ok ? t.voda : t.linka), fontSize: 22, fontWeight: '700' }}>
-                  Pípnout
-                </Text>
-              </Pressable>
-
+              {/* Pípnutí odsud odešlo do pevného dolního pruhu
+                  (rozhodnutí 1): hlavní práce dne nesmí odrolovat pod
+                  hranu displeje, a na `Fronta` ležela přesně tam. */}
               <Pressable onPress={vycisti} style={s.zpet}>
                 <Text style={{ color: t.tlumeny }}>Zahodit rozdělaný prvek</Text>
               </Pressable>
@@ -548,7 +533,66 @@ export default function StavbaTrati() {
       ) : null}
 
     </ScrollView>
+
+    {/* <b>Dolní pruh je ve všech stavech a je ven z rolování</b>
+        (rozhodnutí 1 a 11). Vždycky nese proužek polohy — podle něj se
+        pozná, jestli má pípnutí vůbec cenu —, a hlavní akci tam, kde
+        v tom stavu nějaká je.
+
+        Číslo u akce je tu schválně jedno a na pevném místě
+        (rozhodnutí 8): číslo na proměnlivém řádku se musí najít, totéž
+        číslo nad tlačítkem se nehledá vůbec. Azimut a vzdálenost ke
+        značce patří do detailu, kde je ke které — tady se teprve pípá,
+        takže cíl zatím neexistuje. */}
+    {zamcena ? null : (
+      <View style={[s.pruh, { borderColor: t.linka, backgroundColor: t.papir }]}>
+        <Text style={[s.pruhRadek, { color: t.tlumeny }]}>
+          {(prvky?.length ?? 0) + fronta.length} {pocetPrvku((prvky?.length ?? 0) + fronta.length)}
+          {' · '}
+          {popisPresnosti(fix)}
+          {copipat ? ` · ${copipat}` : ''}
+        </Text>
+
+        {copipat ? (
+          <>
+            {!posudek.ok ? (
+              <Text style={[s.pruhRadek, { color: t.vystraha }]}>{posudek.proc}</Text>
+            ) : posudek.varovani ? (
+              <Text style={[s.pruhRadek, { color: t.vystraha }]}>{posudek.varovani}</Text>
+            ) : null}
+            <Pressable
+              onPress={pipni}
+              disabled={!posudek.ok}
+              accessibilityRole="button"
+              accessibilityLabel={`Pípnout ${copipat}`}
+              style={({ pressed }) => [
+                s.pipnout,
+                {
+                  backgroundColor: posudek.ok ? t.voda : t.linka,
+                  opacity: pressed ? 0.7 : 1,
+                },
+              ]}>
+              <Text
+                style={{
+                  color: pismoNaVyplni(t, posudek.ok ? t.voda : t.linka),
+                  fontSize: 22,
+                  fontWeight: '700',
+                }}>
+                Pípnout
+              </Text>
+            </Pressable>
+          </>
+        ) : null}
+      </View>
+    )}
+    </View>
   );
+}
+
+/** Prvek, prvky, prvků — ať pruh nehlásí „1 prvky". */
+function pocetPrvku(n: number): string {
+  if (n === 1) return 'prvek';
+  return n >= 2 && n <= 4 ? 'prvky' : 'prvků';
 }
 
 const styly = (t: Barvy) =>
@@ -621,6 +665,8 @@ const styly = (t: Barvy) =>
       padding: 10,
       marginBottom: 6,
     },
+    pruh: { borderTopWidth: 1, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 26 },
+    pruhRadek: { fontSize: 13, marginBottom: 6 },
     zahodit: {
       // Text bez `fontSize` jede na výchozích 14 pt, takže s výplní
       // vycházelo 40,8 — viz `chip` výš.
