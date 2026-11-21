@@ -477,6 +477,63 @@ export const postavPrvek = (serie: string, zavod: string, vstup: PostavPrvek) =>
   );
 
 /**
+ * <b>Pípnutí jedné značky.</b> Staví novou, nebo přenastavuje starou —
+ * to rozhoduje `nahrazujeId`.
+ *
+ * <para>
+ * <b>Přenastavení je nový záznam, ne oprava.</b> Starý zůstává platný
+ * pro dobu, kdy platil: podle něj se posuzuje trasa lodi, která kolem
+ * plula. Kdo chce opravit špatně zadanou polohu, zahodí záznam a pípne
+ * znovu.
+ * </para>
+ */
+export type PipnutiVstup = S['PipnutiVstup'];
+
+export type BojeSpravy = S['BojeDto'];
+
+export const pipni = (serie: string, zavod: string, vstup: PipnutiVstup) =>
+  posliZaSebe<BojeSpravy>(`/sprava/serie/${serie}/zastavky/${zavod}/boje`, vstup);
+
+/**
+ * <b>Sebrání bóje z vody.</b> Ze zápisu nemizí — je to razítko, ne
+ * mazání: podle té bóje se možná jelo.
+ */
+export const seberBoji = (serie: string, zavod: string, boje: number) =>
+  posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/boje/${boje}/sebrana`,
+    {},
+  );
+
+/**
+ * <b>Smaže prvek trati.</b> Mizí rozhodnutí o trati, <b>ne měření</b>:
+ * záznam bóje zůstává a dál říká, kde ta značka stála.
+ */
+export const smazPrvek = (serie: string, zavod: string, prvek: number) =>
+  posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/trat/prvky/${prvek}`,
+    null,
+    'DELETE',
+  );
+
+/**
+ * <b>Přepíše prvek trati</b> — v appce jediné kvůli pořadí (*výš* /
+ * *níž*). Posílá se celý tvar, protože server sadu přepisuje celou.
+ */
+export type PrvekVstup = S['PrvekVstup'];
+
+export const upravPrvek = (
+  serie: string,
+  zavod: string,
+  prvek: number,
+  vstup: PrvekVstup,
+) =>
+  posliZaSebe<PrvekSpravy>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/trat/prvky/${prvek}`,
+    vstup,
+    'PUT',
+  );
+
+/**
  * <b>Co komise za jízdy vyhlásila</b> — změna úseku (ZPJ 33) a chybějící
  * značka (34).
  */

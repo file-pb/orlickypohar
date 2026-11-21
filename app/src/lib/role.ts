@@ -89,6 +89,41 @@ export function smiStavet(ja: Ja | null, serie: string, zavod: string): boolean 
 }
 
 /**
+ * Je to <b>jen</b> pomocník — tedy někdo, kdo tu smí stavět výhradně
+ * přes svůj příznak, ne z role?
+ *
+ * <para>
+ * Rozhoduje o tom, co nabídne detail značky (rozhodnutí 10 druhého
+ * konzilia): <i>Přesunout sem</i> je pípnutí, tedy měření, a to pomocník
+ * smí; <i>Sebrat z vody</i>, přerovnání a mazání jsou rozhodnutí o trati
+ * a zůstávají organizátorovi a rozhodčímu.
+ * </para>
+ *
+ * <para>
+ * Ptá se přes <see cref="smiStavet"/> naruby: kdo tu smí stavět, ale
+ * nemá ani jednu z rolí, je pomocník. Tím se pravidlo nemůže rozejít
+ * s tím, kdo se na obrazovku vůbec dostane.
+ * </para>
+ */
+export function jePouzePomocnik(ja: Ja | null, serie: string, zavod: string): boolean {
+  if (!smiStavet(ja, serie, zavod)) return false;
+  if ((ja?.web ?? []).includes('Spravce')) return false;
+
+  const opravneni = ja?.opravneni ?? [];
+  const poradatel = opravneni.some(
+    (o) =>
+      (o.role === 'Organizator' || o.role === 'Spravce') &&
+      o.serie === serie &&
+      (!o.zavod || o.zavod === zavod),
+  );
+  const rozhodci = opravneni.some(
+    (o) => (o.role === 'Rozhodci' || o.role === 'Spravce') && o.serie === serie && !o.zavod,
+  );
+
+  return !poradatel && !rozhodci;
+}
+
+/**
  * Smí stavět aspoň na jedné z těchhle zastávek?
  *
  * Ptá se `smiStavet` po jedné, protože právo je vždycky na konkrétní

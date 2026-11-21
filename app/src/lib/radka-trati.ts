@@ -99,6 +99,8 @@ export type KonecProRadku = {
 };
 
 export type PrvekProRadku = {
+  /** Id prvku. Akce detailu míří na prvek, ne na bóji. */
+  id?: number;
   poradi: number;
   typ: string;
   strana?: string | null;
@@ -114,6 +116,15 @@ export type ZnackaNaOse = {
   predpisy: string[];
   /** Stojí v prvku, kterému chybí druhý konec. */
   chybiDruhyKonec: boolean;
+  /**
+   * Prvky, ve kterých ta značka stojí, v pořadí jetí.
+   *
+   * <b>Akce detailu míří na prvek, ne na značku</b> — smazat a přerovnat
+   * se dá prvek. U značky, po které se jede víckrát, je jich víc, a
+   * právě proto se u ní obojí nenabízí: dotaz „který průjezd" patří
+   * kamkoliv, jen ne na nejnevratnější terč obrazovky.
+   */
+  prvky: PrvekProRadku[];
 };
 
 /**
@@ -157,23 +168,29 @@ export function znackyZTrati(prvky: PrvekProRadku[]): ZnackaNaOse[] {
   const poradi: number[] = [];
   const podleId = new Map<number, ZnackaNaOse>();
 
-  const pridej = (boje: KonecProRadku, predpis: string, chybiKonec: boolean) => {
+  const pridej = (
+    boje: KonecProRadku,
+    predpis: string,
+    chybiKonec: boolean,
+    prvek: PrvekProRadku,
+  ) => {
     let z = podleId.get(boje.id);
     if (!z) {
-      z = { boje, prujezdu: 0, predpisy: [], chybiDruhyKonec: false };
+      z = { boje, prujezdu: 0, predpisy: [], chybiDruhyKonec: false, prvky: [] };
       podleId.set(boje.id, z);
       poradi.push(boje.id);
     }
     z.prujezdu += 1;
     z.predpisy.push(predpis);
+    z.prvky.push(prvek);
     if (chybiKonec) z.chybiDruhyKonec = true;
   };
 
   for (const p of [...prvky].sort((x, y) => x.poradi - y.poradi)) {
     const predpis = predpisPrvku(p.typ, p.strana);
     const chybiKonec = dvoukonec(p.typ) && !p.b;
-    pridej(p.a, predpis, chybiKonec);
-    if (p.b) pridej(p.b, predpis, false);
+    pridej(p.a, predpis, chybiKonec, p);
+    if (p.b) pridej(p.b, predpis, false, p);
   }
 
   return poradi.map((id) => podleId.get(id)!);

@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict';
 
-import { kdeStavi, kdeVeli, postava, smiStavet, veliNekde } from '../src/lib/role.ts';
+import { jePouzePomocnik, kdeStavi, kdeVeli, postava, smiStavet, veliNekde } from '../src/lib/role.ts';
 import type { Ja } from '../src/lib/api.ts';
 
 let prosly = 0;
@@ -150,6 +150,30 @@ zkus('bez zastávky vede nabídka na ročník, ne na cizí regatu', () => {
     serie: '2027',
     zavod: null,
   });
+});
+
+const pomocnik = (): Ja =>
+  ({
+    id: '00000000-0000-0000-0000-000000000002',
+    zobrazovane: 'Pomocník',
+    email: null,
+    opravneni: [],
+    kdePomaha: [{ serie: 'r', zavod: 'z' }],
+  }) as unknown as Ja;
+
+zkus('pomocník je ten, kdo smí stavět jen přes příznak', () => {
+  assert.equal(jePouzePomocnik(pomocnik(), 'r', 'z'), true);
+});
+
+zkus('organizátor téže zastávky pomocník není', () => {
+  assert.equal(
+    jePouzePomocnik(ja({ role: 'Organizator', serie: 'r', zavod: 'z' }), 'r', 'z'),
+    false,
+  );
+});
+
+zkus('kdo tam nesmí stavět, není ani pomocník', () => {
+  assert.equal(jePouzePomocnik(ja(), 'r', 'z'), false);
 });
 
 console.log(`  ${prosly} prošlo`);

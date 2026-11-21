@@ -64,8 +64,16 @@ zkus('pomocník nemaže ani nepřerovnává', () => {
   assert.ok(!a.includes('niz'));
 });
 
-zkus('u značky se dvěma průjezdy se mazání nenabízí vůbec', () => {
-  assert.ok(!akceDetailu({ ...zaklad, opakuje: true }).includes('smazat'));
+zkus('u značky se dvěma průjezdy se nenabízí mazání ani přerovnání', () => {
+  const dvakrat = akceDetailu({ ...zaklad, opakuje: true });
+  assert.ok(!dvakrat.includes('smazat'));
+  // Přerovnat se dá prvek, ne značka — a která z těch dvou by to byla,
+  // se obrazovka ptát nesmí.
+  assert.ok(!dvakrat.includes('vys'));
+  assert.ok(!dvakrat.includes('niz'));
+  // Přesun a sebrání zůstávají: ty míří na bóji, a ta je jedna.
+  assert.ok(dvakrat.includes('presunout'));
+  assert.ok(dvakrat.includes('sebrat'));
   // A jinak je mazání poslední.
   const a = akceDetailu(zaklad);
   assert.equal(a[a.length - 1], 'smazat');

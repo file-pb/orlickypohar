@@ -68,7 +68,12 @@ export function akceDetailu(s: StavDetailu): AkceDetailu[] {
 
   // Pořadí je rozhodnutí rozhodčího, takže oprava o jedno místo patří
   // nízko — ne jako režim, jen jako oprava sledu.
-  if (!s.jePomocnik) akce.push('vys', 'niz');
+  //
+  // <b>U značky s opakováním ne</b>, a ze stejného důvodu jako mazání:
+  // řádka je jedna na značku, ale přerovnat se dá jen prvek, takže by
+  // se obrazovka musela zeptat „který průjezd". Tenhle dotaz zakázalo
+  // rozhodnutí 6 prvního běhu doslova.
+  if (!s.jePomocnik && !s.opakuje) akce.push('vys', 'niz');
 
   // <b>Mazání u značky s opakováním se nenabízí vůbec</b> (podmínka,
   // na které se shodli všichni tři). Dotaz „který průjezd" na

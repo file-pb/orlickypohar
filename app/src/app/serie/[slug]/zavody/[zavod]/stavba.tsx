@@ -2,7 +2,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   View,
 } from 'react-native';
 
+import { DetailZnacky } from '@/components/detail-znacky';
 import { OsaTrati, RadkaTrati } from '@/components/radka-trati';
 import { Chyba, Nacitani, Nadpis, Prazdno, Sekce } from '@/components/ui';
 import type { Barvy } from '@/constants/theme';
@@ -23,6 +23,8 @@ import {
   type PrvekSpravy,
 } from '@/lib/api';
 import { pismoNaVyplni } from '@/lib/kontrast';
+import { mojeOpravneni } from '@/lib/opravneni';
+import { jePouzePomocnik } from '@/lib/role';
 import {
   opakovaniUJmena,
   predpisRadky,
@@ -117,9 +119,12 @@ export default function StavbaTrati() {
 
   const { fix, opravneni } = usePoloha(true);
 
-  // Která značka má otevřený detail. Zatím jen fakta — ta jsou na vodě ta
-  // podstatná část, protože se předčítají do vysílačky (rozhodnutí 7).
+  // Která značka má otevřený detail.
   const [vybrana, setVybrana] = useState<ZnackaNaOse | null>(null);
+
+  // Kdo se dívá. Pomocník smí přesouvat, ale ne sebrat, přerovnat ani
+  // mazat (rozhodnutí 10) — a to pravidlo patří k rolím, ne sem.
+  const { data: ja } = useData(mojeOpravneni);
 
   const { data: zavodData, chyba: chybaZavodu, nacita, obnov } = useData(
     useCallback(() => nactiRozestavenouTrat(slug, zavod), [slug, zavod]),
@@ -527,56 +532,21 @@ export default function StavbaTrati() {
 
       {posila ? <ActivityIndicator color={t.tlumeny} style={{ marginTop: 12 }} /> : null}
 
-      {/* <b>Fakta nahoře, protože se předčítají</b> (rozhodnutí 7): když se
-          rozhodčí na vysílačce zeptá na azimut, čte se to vestoje
-          v houpající se lodi a nesmí se k tomu rolovat. Akce detailu
-          (přesun, fotka, sebrání, barva, pořadí, mazání) zatím nejsou —
-          jejich pravidla stojí v `lib/detail-prvku.ts` i s testy. */}
-      <Modal visible={vybrana !== null} transparent animationType="fade">
-        <Pressable style={s.stin} onPress={() => setVybrana(null)}>
-          <View style={[s.detail, { backgroundColor: t.papir, borderColor: t.linka }]}>
-            <Text style={[s.detailJmeno, { color: t.text }]}>{vybrana?.boje.nazev}</Text>
-            {/* <b>Tady jdou průjezdy po jednom a celé.</b> Na řádce se
-                slévají do jednoho řádku a delší dvojice se tam usekne
-                (ověřeno v simulátoru) — řádka má říct, která značka to
-                je, kdežto přesné znění se porovnává s plachetní
-                směrnicí, a to se dělá tady. */}
-            {(vybrana?.predpisy ?? []).map((p, i) => (
-              <Text key={i} style={[s.detailRadek, { color: t.tlumeny }]}>
-                {vybrana!.predpisy.length > 1 ? `${i + 1}. průjezd · ` : ''}
-                {p}
-              </Text>
-            ))}
-            {vybrana ? (
-              <Text style={[s.detailFakt, { color: t.text }]}>
-                {vybrana.boje.sirka.toFixed(5)}, {vybrana.boje.delka.toFixed(5)}
-              </Text>
-            ) : null}
-            {vybrana ? (
-              <Text style={[s.detailRadek, { color: t.tlumeny }]}>
-                {vybrana.boje.zdroj === 'Mapa' ? 'odečteno z mapy' : 'změřeno telefonem'}
-                {' · '}
-                {vybrana.boje.fotek === 0
-                  ? 'bez fotky'
-                  : `${vybrana.boje.fotek} ${vybrana.boje.fotek === 1 ? 'fotka' : 'fotky'}`}
-              </Text>
-            ) : null}
-            {/* Azimut číslicemi, protože se čtou do vysílačky. Bez fixu
-                se nekreslí nic — nepravdivé číslo je horší než žádné. */}
-            {vybrana && fix ? (
-              <Text style={[s.detailFakt, { color: t.text }]}>
-                {Math.round(azimut(fix, vybrana.boje)).toString().padStart(3, '0')}° ·{' '}
-                {Math.round(vzdalenostM(fix, vybrana.boje))} m odsud
-              </Text>
-            ) : null}
-            <Pressable
-              onPress={() => setVybrana(null)}
-              style={({ pressed }) => [s.zavrit, { opacity: pressed ? 0.6 : 1 }]}>
-              <Text style={[s.zavritText, { color: t.voda }]}>Zavřít</Text>
-            </Pressable>
-          </View>
-        </Pressable>
-      </Modal>
+      {vybrana ? (
+        <DetailZnacky
+          znacka={vybrana}
+          prvky={prvky ?? []}
+          serie={slug}
+          zavod={zavod}
+          fix={fix}
+          posudek={posudek}
+          zamcena={zamcena}
+          jePomocnik={jePouzePomocnik(ja ?? null, slug, zavod)}
+          onZavri={() => setVybrana(null)}
+          onZmena={nactiPrvky}
+        />
+      ) : null}
+
     </ScrollView>
   );
 }
@@ -659,23 +629,4 @@ const styly = (t: Barvy) =>
       paddingVertical: 12,
       marginTop: 4,
     },
-    stin: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.45)',
-      justifyContent: 'center',
-      paddingHorizontal: 22,
-    },
-    detail: {
-      borderRadius: 14,
-      borderWidth: 1,
-      padding: 18,
-    },
-    // Jméno je identita za jízdy: to se říká do vysílačky a to stojí
-    // v plachetní směrnici.
-    detailJmeno: { fontSize: 20, fontWeight: '700', marginBottom: 4 },
-    detailRadek: { fontSize: 13, marginTop: 6 },
-    // Čísla, která se předčítají, nesou váhu textu, ne popisku.
-    detailFakt: { fontSize: 16, fontWeight: '600', marginTop: 10 },
-    zavrit: { minHeight: 44, justifyContent: 'center', marginTop: 14 },
-    zavritText: { fontSize: 16, fontWeight: '600' },
   });
