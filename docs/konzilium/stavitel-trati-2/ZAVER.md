@@ -215,7 +215,7 @@ protože cesta, které může chybět EXIF, nemá být ta snáz dosažitelná.
 
 ## Co platí o živém kódu, ať se návrh postaví, nebo ne
 
-### A. Přesun bóje po klonu přepíše odjetou rozjížďku
+### A. ~~Přesun bóje po klonu přepíše odjetou rozjížďku~~ **opraveno 21. 11. 2026**
 
 Našlo 3-ux, **ověřil jsem sám**. `PrepojPrvkyAsync` hledá prvky jen podle
 `BojeAId`/`BojeBId` a **filtr na trať tam není** (`BojeSprava.cs:183–185`);
@@ -234,25 +234,45 @@ znovu a znovu — klonem. Po pátém kole ukazuje na tytéž bóje pět tratí
 a jeden přesun přepíše prvky ve všech čtyřech odjetých. Je to tedy
 **následek běžného průběhu okruhového závodu**, ne nešťastná shoda.
 
-### B. Řádku dnes nejde nakreslit, protože `znak-boje.tsx` je psaná pro mapu
+**Opraveno** (21. 11. 2026): přepojují se jen tratě, na kterých se smí
+stavět — rozestavěná, hotová, přestavovaná. Zamčené zůstane prvek na
+starém záznamu, a tam ta bóje při té rozjížďce doopravdy stála. Zámek
+sám by nestačil, protože se ptá na **vybranou** trať, a tou je po
+klonování klon. Starý záznam se tím nestane zbytečným: `ZbytecnyAsync`
+se ptá na jakýkoliv prvek. Integrační test jde celou cestu (přijetí,
+klon, přepípnutí); lokálně neběží, Docker odsud není dostupný.
+
+### B. ~~Řádku nejde nakreslit, `znak-boje.tsx` je psaná pro mapu~~ **opraveno 21. 11. 2026**
 
 Dvě výchozí hodnoty: bez zapsané barvy kreslí **červenou** (`:134`), tedy
 *pravou stranu plavební dráhy* — celý seznam by byl červený —, a lem je
-**bílý**, což je na `papir` **1,00:1**. Spraví to dva parametry (výchozí
-výplň `tlumeny`, lem dopočítaný po vzoru `pismoNaVyplni`), ne druhá
-kresba.
+**bílý**, což je na `papir` **1,00:1**.
 
-### C. API nevydává, z čeho se ta řádka kreslí
+**Opraveno** přesně těmi dvěma parametry, mapa se nemění: `vychoziVypln`
+a `lem` mají dnešní hodnoty jako výchozí, takže volající na kartě předá
+své. Appka k tomu dostala **vlastní kopii** `znak-boje.tsx` na
+`react-native-svg` i se siluetou 28 × 36 — web kreslí značkami SVG,
+appka komponentami, takže sdílet by šla jedině geometrie. Je to druhá
+kopie, a pravidlo repozitáře zakládá knihovnu až u třetí.
+
+### C. ~~API nevydává, z čeho se ta řádka kreslí~~ **opraveno 21. 11. 2026**
 
 `GET …/trat/prvky` → `KonecBojeDto` nese jen `Id, Nazev, Sirka, Delka,
 Znaceni` (`PrvkySprava.cs:12–13`). Chybí **`Zdroj`, `Barva`, `Tvar`
 a počet fotek** — tedy všechno, z čeho je silueta i stav. `BojeDto` to má
 celé, ale `GET …/boje` je jen pro pořadatele a rozhodčího, tedy zavřené
-pro pomocníka, kvůli kterému se obrazovka otevírala. Aditivní změna,
-jedno nasazení — a **text návrhu tvrdí, že se API nedotkne, což je
-nepravda**, kterou jsem tam napsal já.
+pro pomocníka, kvůli kterému se obrazovka otevírala. A **text návrhu
+tvrdil, že se API nedotkne, což byla nepravda**, kterou jsem tam napsal
+já.
 
-### D. Jména, která jdou ven v datech, jsou věcně špatně
+**Opraveno aditivně:** `KonecBojeDto` nese `Zdroj`, `Barva`, `Tvar`
+a `Fotek`. Zdroj je **povinný** parametr schválně — výchozí hodnota by na
+otázku *změřeno telefonem* proti *odečteno z mapy* odpovídala nepravdou
+tiše. U fotek jde ven **počet, ne seznam**: řádka z něj potřebuje jedinou
+věc, jestli stav *chybí fotka* vůbec vznikne. Klienti se přegenerují až
+po nasazení, protože `generuj.sh` čte dokument z **běžícího** API.
+
+### D. ~~Jména, která jdou ven v datech, jsou věcně špatně~~ **opraveno 21. 11. 2026**
 
 J4–J8: linie nemá levobok a pravobok (boky má loď, ne čára — konce se
 jmenují *plavidlo* a *bóje*); otevírající se start pípá dva body, které
@@ -262,12 +282,36 @@ pravidlo, které z trasy nikdo neposoudí; a **„otočit levobokem" je ta
 dvojznačnost, kterou projekt jednou odstranil** (`PrvekTrati.cs:88–96`) —
 ponechat znak po levoboku znamená točit **doprava**.
 
-### E. `kontrola-dotyku.py` nevidí to, na čem řádka stojí
+**Opraveno ve zdroji** (`packages/stavba/stavba-prvku.ts`, odkud se
+kopíruje do obou klientů): konce linie se jmenují *u plavidla* a *u bóje*,
+otevírající se start má vlastní výzvy i jména (*kde brána startuje* /
+*kam dojede*), konce brány se **číslují**, z doteku je *otočit se za
+linií* a z otočné je *ponechat po levoboku*. Výzva nově smí záviset na
+předpisu, ne jen na typu — bez toho se otevírající se start ptal na konce
+linie, která nestojí.
+
+### E. ~~`kontrola-dotyku.py` nevidí to, na čem řádka stojí~~ **z poloviny opraveno 21. 11. 2026**
 
 Připisuje každému řádku textu paušálních 20 pt místo `fontSize`, takže
 `minHeight: 44` dva dnešní terče spraví a příští se 13dp písmem projde
 znovu. A nehlídá **šířku ani mezeru mezi terči** — tedy právě ta dvě
 čísla, na kterých tahle řádka stojí: 8 dp mezery a „terčem je celý řádek".
+
+**První půlka byla hotová dřív, než se nález napsal:** `radek()` sčítá
+řádky podle `fontSize` a výstup to i hlásí. To je na nálezu moje chyba,
+ne posudku.
+
+**Šířka přibyla 21. 11. 2026, ale jen zapsaná** (`width`, `minWidth`);
+z textu se dopočítat nedá, protože font ten soubor nezná, a odhad by buď
+nenašel nic, nebo hlásil terče, které jsou široké dost. Ikonové tlačítko
+`width: 32` se tedy nahlásí, řádka přes celou kartu ne. Ověřeno sabotáží:
+úzký terč se hlásí, široký ne.
+
+**Mezeru mezi terči kontrola neměří a teď to i říká** — ve výstupu i v
+dokumentaci. Rozteč vzniká až rozvržením (`gap`, `marginBottom`, pozice
+v seznamu) a z jednoho souboru se nedá zjistit, které dva terče spolu na
+obrazovce sousedí. Osm dp mezi řádkami trati tedy drží posudek a maketa,
+ne kontrola.
 
 ### F. ~~Dálkové plavbě bez cíle appka tvrdí, že má nedodělanou trať~~ **opraveno 21. 11. 2026**
 
@@ -308,10 +352,11 @@ poslední** — maraton jede velké kolo a uvnitř menší okruh, takže se prvk
 opakují. Sabotáž ověřena: po vrácení staré věty padá právě ten test, co
 má.
 
-**Co tím opravené není.** Appka tu větu dnes **nevykresluje vůbec** —
-`cil.tsx:214` si bere jen `v.prujezdy` a `procNe` zahazuje. Oprava je
-tedy v kontraktu, ne na obrazovce; prázdný stav návrhů zatím nikomu
-neřekne, proč nic nenavrhuje.
+**A appka ji od té doby vykresluje.** `cil.tsx` si větu drží ve stavu
+a kreslí ji v jediném místě, kde nic neruší — když není zapsané nic
+a nenavrhuje se nic. Jakmile řádky jsou, byl by to šum na obrazovce,
+kterou Filip výslovně chtěl menší. Ověřeno v simulátoru v ukázkovém
+režimu: věta se ukáže a po prvním klepnutí zmizí.
 
 Model je přitom v pořádku a nic se v něm měnit nemusí: `Hotovo` cíl
 nevyžaduje — `HotovoAsync` se ptá jedině `ProcNejdeHotovoKvuliZnackam`
