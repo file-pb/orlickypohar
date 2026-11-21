@@ -521,6 +521,67 @@ public class TratSpravaTests(PostgresFixture fixture)
         Assert.Single(await db.PrvkyTrati.Where(x => x.TratId == puvodni.Id).ToListAsync());
     }
 
+    /// <summary>
+    /// <b>Přesun bóje při stavbě druhé rozjížďky nesmí sáhnout na první</b>
+    /// (nález A druhého konzilia, 21. 11. 2026).
+    ///
+    /// <para>
+    /// Klon kopíruje prvky na tytéž záznamy bójí, takže po něm ukazují na
+    /// jednu bóji dvě tratě. Přenastavení přepojovalo prvky bez ohledu na
+    /// trať, tedy i té přijaté a odjeté — a u okruhového závodu, kde se
+    /// jede <i>co kolo, to rozjížďka</i>, se klonuje několikrát za den.
+    /// </para>
+    ///
+    /// <para>
+    /// Zámek sám nestačí: <c>PipniAsync</c> se ptá
+    /// <c>ProcNejdeStavetAsync</c> na <b>vybranou</b> trať, a tou je po
+    /// klonování klon. Odjetá trať je přitom o kus vedle a nikdo se jí
+    /// neptá.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Prenastaveni_boje_neprepise_prvky_prijate_trati()
+    {
+        var (db, boje, trate, prvky) = SluzbyIPrvky();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (levy, _) = await boje.PipniAsync(zavod.Id, Bod("start levý"), kdo.Id, default);
+        var (pravy, _) = await boje.PipniAsync(zavod.Id, Bod("start pravý"), kdo.Id, default);
+        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
+            TypPrvku.Start, 1, levy!.Id, pravy!.Id, Poznamka: "po proudu"), kdo.Id, default);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var puvodni = (await trate.AktualniAsync(zavod.Id, default))!;
+        Assert.Null((await trate.PriradAsync(zavod.Id, puvodni.Id, prvni.Cislo, true, default)).Chyba);
+        Assert.Null((await trate.PrijmiAsync(zavod.Id, kdo.Id, default)).Chyba);
+
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        var (klon, chyba) = await trate.KlonujAsync(
+            zavod.Id, puvodni.Id, new KlonTratiVstup(druha.Cislo, null), kdo.Id, true, default);
+        Assert.Null(chyba);
+
+        // Vítr odfoukl levou bóji startu a stavitel ji pípl znovu. Stavět
+        // jde, protože vybraná trať je klon — přijatá trať je vedle.
+        var (novy, chybaPipnuti) = await boje.PipniAsync(
+            zavod.Id, Bod("start levý"), kdo.Id, default);
+        Assert.Null(chybaPipnuti);
+        Assert.NotEqual(levy.Id, novy!.Id);
+
+        var vPuvodni = await db.PrvkyTrati.SingleAsync(x => x.TratId == puvodni.Id);
+        var vKlonu = await db.PrvkyTrati.SingleAsync(x => x.TratId == klon!.Id);
+
+        // Odjetá trať ukazuje tam, kde ta bóje při té rozjížďce stála.
+        Assert.Equal(levy.Id, vPuvodni.BojeAId);
+        // Rozestavěná jde za novou polohou.
+        Assert.Equal(novy.Id, vKlonu.BojeAId);
+        // Druhý konec se nehýbal ani v jedné.
+        Assert.Equal(pravy!.Id, vPuvodni.BojeBId);
+        Assert.Equal(pravy.Id, vKlonu.BojeBId);
+
+        // A starý záznam se nesmí uklidit — visí na něm prvek odjeté trati.
+        Assert.True(await db.Boje.AnyAsync(b => b.Id == levy.Id));
+    }
+
     [Fact]
     public async Task Prijaty_klon_smi_jen_rozhodci()
     {

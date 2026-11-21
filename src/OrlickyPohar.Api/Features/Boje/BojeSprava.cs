@@ -140,7 +140,8 @@ public class BojeSprava(
         // mezi „bóje stojí mimo trať“, protože ji žádný prvek nepoužívá.
         // A starý záznam nejde uklidit, protože na něj prvek ukazuje.
         // </para>
-        var byloVPrvku = stara is not null && await PrepojPrvkyAsync(stara.Id, nova.Id, ct);
+        var byloVPrvku = stara is not null
+            && await PrepojPrvkyAsync(zavodId, stara.Id, nova.Id, ct);
 
         // <b>Záznam, který byl součástí trati, se drží.</b> `ZahodAsync`
         // existuje kvůli překlepům — pípnuto a hned přenastaveno, nic na
@@ -172,17 +173,45 @@ public class BojeSprava(
     /// </para>
     ///
     /// <para>
-    /// <b>Nekontroluje se, že prvek patří téhle regatě</b>, a nemusí:
-    /// obě bóje jsou z ní, protože `stara` se hledala podle `zavodId`
-    /// a `nova` se právě založila. Prvek ukazující na bóji cizí regaty
-    /// by byl porušený zápis, ne případ, co má řešit tohle.
+    /// <b>Zamčená trať se nepřepojuje</b> (nález A druhého konzilia,
+    /// 21. 11. 2026). Regata má tratí víc — jednu na rozjížďku — a klon
+    /// kopíruje prvky <b>na tytéž záznamy bójí</b>
+    /// (<c>TratSprava.KlonujAsync</c>: <i>„kopíruje se rozhodnutí, ne
+    /// měření"</i>). Bez filtru tu proto přesun bóje při stavbě druhé
+    /// rozjížďky přepsal i prvky té první, odjeté a veřejné. U okruhového
+    /// závodu, kde se jede <i>co kolo, to rozjížďka</i>, se klonuje
+    /// několikrát za den, takže to nebyla vzácná shoda okolností.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Hranici dělá stav trati, ne čas.</b> Přepojí se jen tratě, na
+    /// kterých se smí stavět — rozestavěná, hotová, přestavovaná.
+    /// <see cref="StavTrati.Prijato"/> je přesně to, co
+    /// <see cref="TratSprava.ProcNejdeStavetAsync"/> zamyká, jenže ten
+    /// zámek platí na <b>vybranou</b> trať; tady jde o všechny ostatní.
+    /// Zamčené trati tím prvek zůstane na starém záznamu, a to je
+    /// správně: tam ta bóje při té rozjížďce doopravdy stála.
+    /// </para>
+    ///
+    /// <para>
+    /// Starý záznam se tím nestane zbytečným: <see cref="ZbytecnyAsync"/>
+    /// se ptá na <b>jakýkoliv</b> prvek, takže ho prvek zamčené trati
+    /// udrží i bez návratové hodnoty odsud.
+    /// </para>
+    ///
+    /// <para>
+    /// Filtr na regatu je navíc, ne proto, že by prvek cizí regaty mohl
+    /// vzniknout — nemohl —, ale protože se trať stejně připojuje.
     /// </para>
     /// </summary>
-    /// <returns>Jestli ta bóje v nějakém prvku byla.</returns>
-    private async Task<bool> PrepojPrvkyAsync(int staraId, int novaId, CancellationToken ct)
+    /// <returns>Jestli se nějaký prvek přepojil.</returns>
+    private async Task<bool> PrepojPrvkyAsync(
+        int zavodId, int staraId, int novaId, CancellationToken ct)
     {
         var prvky = await db.PrvkyTrati
-            .Where(p => p.BojeAId == staraId || p.BojeBId == staraId)
+            .Where(p => (p.BojeAId == staraId || p.BojeBId == staraId)
+                        && p.Trat!.ZavodId == zavodId
+                        && p.Trat.Stav != StavTrati.Prijato)
             .ToListAsync(ct);
 
         if (prvky.Count == 0) return false;
