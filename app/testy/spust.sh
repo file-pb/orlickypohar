@@ -141,3 +141,9 @@ TEST_DB=":memory:" "${NODE[@]}" ./fronta.test.ts
 echo
 echo "== Předpisy průvodce stavbou =="
 "${NODE[@]}" ./predpisy.test.ts
+
+# Pravý sloupec řádky trati. Jediná věc na té obrazovce, která se dá
+# rozhodnout bez telefonu — a ta, na které stojí „odesláno je mlčení".
+echo
+echo "== Stav v řádce trati =="
+"${NODE[@]}" ./radka-trati.test.ts
