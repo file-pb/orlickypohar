@@ -288,10 +288,23 @@ Jedna věta na obor, povinná rubrika.
 
 ## Co čeká na Filipa
 
-1. **Jede se na Orlíku na kola?** Na tom visel bod 3 — a shoda byla, že
-   značky jsou správné v jedné větvi a neškodné v druhé, takže rozhodnutí
-   to nepotřebovalo. Odpověď ale pořád rozhoduje, kolik řádek má obrazovka
-   čekat.
+1. ~~Jede se na Orlíku na kola?~~ **Odpovězeno 21. 11. 2026: většinou
+   se jede jedno kolo, tedy každý prvek jednou.** Padla tím ta větev,
+   kterou konzilium označilo za neškodnou: *značky* a *průjezdy* jsou
+   v tomhle případě **tentýž seznam**, takže bod 3 platí dál a nic
+   nemění. Je to zároveň doklad, že ten způsob rozhodování byl správný —
+   obor vybral možnost, která je v jedné větvi správná a v druhé
+   neškodná, místo aby čekal na odpověď.
+
+   **Co z toho plyne.** Dva dovětky přestávají být denní realitou
+   a zůstávají jako pojistka, protože model opakování pořád umožňuje
+   a trať skládaná v kanceláři ho vyrobit může: `2×` u jména a zákaz
+   mazání u značky se dvěma průjezdy (bod 9). **Mazání je tím na běžné
+   trati vždycky jednoznačné**, což bere váhu i nesouhlasu 5-jachtara —
+   jeho argument stál právě na té dvojznačnosti. A rozpočet řádků sedí
+   s rezervou: čtyři až šest značek proti osmi, které se při rozteči 64
+   vejdou, takže rolování zůstává pojistkou proti ustřižení, ne běžným
+   stavem.
 2. **Dostává stavitel azimut a vzdálenost rádiem, nebo rozhoduje sám?**
    Mění to směr toku, ne místo: appka ta čísla buď ukazuje, nebo přijímá.
 3. **Kdo zakládá trať pro druhou rozjížďku** — kancelář, nebo stavitel
