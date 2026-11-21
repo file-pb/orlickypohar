@@ -442,6 +442,33 @@ public class Zavod
     /// </summary>
     public bool ProcesniDej { get; set; }
 
+    /// <summary>
+    /// <b>Smí dojezdy zapisovat i pořadatel</b>, nebo jen rozhodčí?
+    ///
+    /// <para>
+    /// <b>Spor dvou zadání, uzavřený přepínačem</b> (Filip, 21. 11. 2026).
+    /// Miloš: *„úpravu výsledků smí provést pouze rozhodčí."* Filip,
+    /// 16. 10. 2026: *„pořadatel, dokud je zápis otevřený."* Do dneška
+    /// platilo Filipovo, a Milošova věta tím zůstávala nenaplněná —
+    /// rozhodnutí neudělal nikdo. Teď ho dělá každá regata zvlášť:
+    /// *„když se to v budoucnu změní, bude to jednoduchá úprava
+    /// a přepínač zmizí."*
+    /// </para>
+    /// <para>
+    /// <b>Výchozí je Milošova věta</b>, tedy <c>false</c>: dojezdy píše
+    /// rozhodčí, pomocník u vody (<see cref="Pomocnik"/>) a správce
+    /// ročníku. Je to <b>zpřísnění</b> proti stavu do 21. 11., a je
+    /// schválně na té straně — kdo to potřebuje jinak, zapne si to
+    /// u své regaty a je po něm vidět, že to zapnul.
+    /// </para>
+    /// <para>
+    /// <b>Týká se jen zápisu dojezdů</b>, ne úkonů u vody. Velení,
+    /// proceduru, start a konec rozjížďky pořadatel dál smí: ty se dělají
+    /// na břehu i na lodi a Milošova věta o nich nemluví.
+    /// </para>
+    /// </summary>
+    public bool PoradatelZapisujeVysledky { get; set; }
+
     // --- Výsledek závodu → body do seriálu ---
 
     /// <summary>Váha závodu v seriálu, běžně 1.0.</summary>

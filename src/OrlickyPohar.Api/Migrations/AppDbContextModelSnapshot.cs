@@ -2118,6 +2118,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int?>("PoradatelId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("PoradatelZapisujeVysledky")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("Poradi")
                         .HasColumnType("integer");
 

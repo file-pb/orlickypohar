@@ -127,4 +127,64 @@ public class PomocniciTests
         Assert.Null(Pomocnici.ProcNejdeOdskrtnout(jizPomaha: true));
         Assert.NotNull(Pomocnici.ProcNejdeOdskrtnout(jizPomaha: false));
     }
+
+    /// <summary>
+    /// <b>Přepínač regaty</b> (Filip, 21. 11. 2026). Výchozí je Milošova
+    /// věta „úpravu výsledků smí provést pouze rozhodčí", takže pořadatel
+    /// bez svolení regaty dojezdy nezapíše.
+    /// </summary>
+    [Fact]
+    public void Poradatel_bez_svoleni_regaty_dojezdy_nezapise()
+    {
+        Assert.False(Pomocnici.SmiZapsatVysledky(
+            poradatel: true, pomocnik: false, rozhodci: false, spravce: false,
+            regataPustiPoradatele: false));
+
+        Assert.True(Pomocnici.SmiZapsatVysledky(
+            poradatel: true, pomocnik: false, rozhodci: false, spravce: false,
+            regataPustiPoradatele: true));
+    }
+
+    /// <summary>
+    /// Rozhodčí, pomocník a správce na přepínači nevisí — každý z jiného
+    /// důvodu: rozhodčí je ten, komu Milošova věta zápis svěřuje, pomocníka
+    /// zaškrtl jmenovitě na tuhle regatu (K8) a správce je vlastník ročníku.
+    /// </summary>
+    [Fact]
+    public void Prepinac_neomezuje_rozhodciho_pomocnika_ani_spravce()
+    {
+        Assert.True(Pomocnici.SmiZapsatVysledky(
+            poradatel: false, pomocnik: false, rozhodci: true, spravce: false,
+            regataPustiPoradatele: false));
+
+        Assert.True(Pomocnici.SmiZapsatVysledky(
+            poradatel: false, pomocnik: true, rozhodci: false, spravce: false,
+            regataPustiPoradatele: false));
+
+        Assert.True(Pomocnici.SmiZapsatVysledky(
+            poradatel: false, pomocnik: false, rozhodci: false, spravce: true,
+            regataPustiPoradatele: false));
+    }
+
+    /// <summary>
+    /// Kdo nemá nic, nezapíše ani se zapnutým přepínačem: ten otevírá
+    /// pořadatelství, nezakládá právo.
+    /// </summary>
+    [Fact]
+    public void Cizi_clovek_nezapise_ani_se_zapnutym_prepinacem()
+    {
+        Assert.False(Pomocnici.SmiZapsatVysledky(
+            poradatel: false, pomocnik: false, rozhodci: false, spravce: false,
+            regataPustiPoradatele: true));
+    }
+
+    /// <summary>
+    /// <b>Úkony u vody se tím nemění.</b> Velení, procedura, start a konec
+    /// jdou pořadateli dál — Milošova věta mluví o zápisu výsledků.
+    /// </summary>
+    [Fact]
+    public void Ukony_u_vody_prepinac_neresi()
+    {
+        Assert.True(Pomocnici.SmiUVody(poradatel: true, pomocnik: false));
+    }
 }

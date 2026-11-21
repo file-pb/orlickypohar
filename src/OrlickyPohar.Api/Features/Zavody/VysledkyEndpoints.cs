@@ -481,7 +481,8 @@ public static class VysledkyEndpoints
 
     private static async Task<IResult> ZapisAsync(
         string serie, string zavod, int cislo, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, PomocniciSprava pomocnici, CancellationToken ct)
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, PomocniciSprava pomocnici,
+        AppDbContext db, CancellationToken ct)
     {
         if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
             return Results.NotFound();
@@ -494,8 +495,11 @@ public static class VysledkyEndpoints
 
         // `kdo` se předává kvůli velitelskému času: obrazovka musí vědět,
         // jestli velí ten, kdo se dívá (nález R19).
+        // <b>Týž příznak, jakým se řídí uložení.</b> Kdyby obrazovka
+        // dostala širší právo než brána u zápisu, nabídla by klepání,
+        // které server odmítne — a to je u cíle ta nejhorší chvíle.
         return Results.Ok(await zapis.NactiAsync(
-            rozjizdka, await SmiUVodyAsync(kdo, rozsahy, pomocnici, rozsah, ct), ct,
+            rozjizdka, await SmiZapsatVysledkyAsync(kdo, rozsahy, pomocnici, db, rozsah, ct), ct,
             await rozsahy.UzivatelIdAsync(kdo, ct)));
     }
 
@@ -509,7 +513,8 @@ public static class VysledkyEndpoints
 
         var (rozsah, rozjizdka) = nalezena;
 
-        if (!await SmiUVodyAsync(kdo, rozsahy, pomocnici, rozsah, ct)) return Results.Forbid();
+        if (!await SmiZapsatVysledkyAsync(kdo, rozsahy, pomocnici, db, rozsah, ct))
+            return Results.Forbid();
 
         var ktery = await rozsahy.UzivatelIdAsync(kdo, ct);
         var vysledek = await zapis.UlozAsync(
@@ -706,6 +711,54 @@ public static class VysledkyEndpoints
     /// Zapisuje pořadatel zastávky; správce ho pokrývá. Rozhodčí ne — ten
     /// zápis ověřuje a kdyby ho smel i měnit, ověřoval by sám sebe.
     /// </summary>
+    /// <summary>
+    /// <b>Smí zapsat dojezdy?</b> Totéž síto jako <see cref="SmiUVodyAsync"/>,
+    /// jen pořadatel navíc potřebuje svolení regaty
+    /// (<see cref="Zavod.PoradatelZapisujeVysledky"/>, rozhodl Filip
+    /// 21. 11. 2026). Pravidlo samo je v <see cref="Pomocnici.SmiZapsatVysledky"/>,
+    /// aby šlo otestovat bez databáze.
+    ///
+    /// <para>
+    /// <b>Čte se to odevšad stejně.</b> Zápis dojezdů má dvě cesty — web
+    /// posílá celou sadu, appka klepe po lodích —, ale obě jdou touhle
+    /// jedinou branou, takže se přepínač nedá obejít tím, že se vezme
+    /// druhý klient.
+    /// </para>
+    /// </summary>
+    private static async Task<bool> SmiZapsatVysledkyAsync(
+        ClaimsPrincipal kdo, Rozsahy rozsahy, PomocniciSprava pomocnici, AppDbContext db,
+        Rozsahy.Rozsah rozsah, CancellationToken ct)
+    {
+        var zapisuje = await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct);
+
+        // Správce se ptá zvlášť, protože `SmiZapisovatAsync` ho vrací
+        // společně s pořadatelem — a přepínač platí jen na pořadatele.
+        var spravce = zapisuje
+                      && await rozsahy.SmiAsync(
+                          kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct);
+
+        var rozhodci = !zapisuje
+                       && await rozsahy.SmiAsync(
+                           kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct);
+
+        var pomaha = !zapisuje && !rozhodci
+                     && await pomocnici.JeAsync(
+                         rozsah.ZavodId!.Value, await rozsahy.UzivatelIdAsync(kdo, ct), ct);
+
+        // Přepínač se čte jen tehdy, když o něj jde: správce, rozhodčí ani
+        // pomocník na něm nevisí, takže se za ně do databáze nechodí.
+        var pusti = !spravce && !rozhodci && !pomaha
+                    && zapisuje
+                    && await db.Zavody
+                        .Where(z => z.Id == rozsah.ZavodId!.Value)
+                        .Select(z => z.PoradatelZapisujeVysledky)
+                        .FirstOrDefaultAsync(ct);
+
+        return Pomocnici.SmiZapsatVysledky(
+            poradatel: zapisuje && !spravce, pomocnik: pomaha,
+            rozhodci: rozhodci, spravce: spravce, regataPustiPoradatele: pusti);
+    }
+
     private static Task<bool> SmiZapisovatAsync(
         ClaimsPrincipal kdo, Rozsahy rozsahy, Rozsahy.Rozsah rozsah, CancellationToken ct) =>
         rozsahy.SmiAsync(kdo, new Pozadavek(

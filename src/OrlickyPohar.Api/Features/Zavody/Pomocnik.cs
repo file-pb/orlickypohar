@@ -134,6 +134,31 @@ public static class Pomocnici
         poradatel || pomocnik || rozhodci;
 
     /// <summary>
+    /// <b>Smí tenhle člověk zapsat dojezdy?</b> Jako <see cref="SmiUVody"/>,
+    /// jenže pořadatel projde jen tehdy, když mu to regata dovolí.
+    ///
+    /// <para>
+    /// <b>Přepínač místo rozhodnutí za druhé</b> (Filip, 21. 11. 2026).
+    /// Milošova věta *„úpravu výsledků smí provést pouze rozhodčí"* stála
+    /// proti Filipovu rozhodnutí ze 16. 10. *„pořadatel, dokud je zápis
+    /// otevřený"*, a platilo to druhé, protože spor nikdo nezavřel.
+    /// Zavírá ho <see cref="Zavod.PoradatelZapisujeVysledky"/>: výchozí je
+    /// Milošova věta, kdo to potřebuje jinak, zapne si to u své regaty.
+    /// </para>
+    /// <para>
+    /// <b>Správce přepínač neomezuje.</b> Je to vlastník ročníku a
+    /// <c>Prava.Pokryva</c> jím pokrývá pořadatele všude jinde; kdyby ho
+    /// tenhle jediný přepínač zamykal, nemohl by opravit ani vlastní
+    /// zkušební data. <b>Pomocník taky ne</b> — toho zaškrtl rozhodčí
+    /// jmenovitě na tuhle regatu (K8), což je silnější souhlas než
+    /// pořadatelství ročníku.
+    /// </para>
+    /// </summary>
+    public static bool SmiZapsatVysledky(
+        bool poradatel, bool pomocnik, bool rozhodci, bool spravce, bool regataPustiPoradatele) =>
+        spravce || rozhodci || pomocnik || (poradatel && regataPustiPoradatele);
+
+    /// <summary>
     /// <b>Smí tenhle člověk stavět trať</b> — pípnout značku a přečíst, co
     /// už stojí?
     ///

@@ -51,7 +51,10 @@ public record ZastavkaRadek(
     DateOnly? UzaverkaPrihlasek = null,
     string? Startovne = null,
     DateTimeOffset? PrvniVyzyvaciZnameni = null,
-    int DelkaProceduryMin = Procedura.DelkaVychozi);
+    int DelkaProceduryMin = Procedura.DelkaVychozi,
+    // Smí dojezdy zapisovat i pořadatel (Filip, 21. 11. 2026). Aditivně,
+    // na konci. Viz `Zavod.PoradatelZapisujeVysledky`.
+    bool PoradatelZapisujeVysledky = false);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -106,6 +109,11 @@ public record ZastavkaVstup(
     int? PosunDoSerie = null,
     /// <summary>Procesní děj u regaty. Nepovinné jako škrty.</summary>
     bool? ProcesniDej = null,
+    /// <summary>
+    /// Smí dojezdy zapisovat i pořadatel? Nepovinné jako škrty — starý
+    /// klient to neposílá a úprava termínu by příznak jinak shodila.
+    /// </summary>
+    bool? PoradatelZapisujeVysledky = null,
     // --- Vypsání závodu (Dodatek J1, nález R8 z 28. 10. 2026) -------------
     // Tři kolonky, které J1 žádá do vypsání a aplikace je neměla. Nepovinné
     // jako škrty a ze stejného důvodu: starý klient je neposílá a úprava
@@ -210,6 +218,7 @@ public class KalendarSprava(AppDbContext db)
             KoeficientDoSerie = vstup.KoeficientDoSerie ?? 1.0m,
             PosunDoSerie = vstup.PosunDoSerie ?? 0,
             ProcesniDej = vstup.ProcesniDej ?? false,
+            PoradatelZapisujeVysledky = vstup.PoradatelZapisujeVysledky ?? false,
             UzaverkaPrihlasek = vstup.UzaverkaPrihlasek,
             Startovne = Prazdne(vstup.Startovne),
             PrvniVyzyvaciZnameni = vstup.PrvniVyzyvaciZnameni?.ToUniversalTime(),
@@ -295,6 +304,8 @@ public class KalendarSprava(AppDbContext db)
         zastavka.KoeficientDoSerie = vstup.KoeficientDoSerie ?? zastavka.KoeficientDoSerie;
         zastavka.PosunDoSerie = vstup.PosunDoSerie ?? zastavka.PosunDoSerie;
         zastavka.ProcesniDej = vstup.ProcesniDej ?? zastavka.ProcesniDej;
+        zastavka.PoradatelZapisujeVysledky =
+            vstup.PoradatelZapisujeVysledky ?? zastavka.PoradatelZapisujeVysledky;
         zastavka.UzaverkaPrihlasek = vstup.UzaverkaPrihlasek ?? zastavka.UzaverkaPrihlasek;
         zastavka.Startovne = Prazdne(vstup.Startovne) ?? zastavka.Startovne;
         zastavka.PrvniVyzyvaciZnameni =
