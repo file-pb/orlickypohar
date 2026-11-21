@@ -15,6 +15,19 @@ Druhý nejdůležitější tah udělal jachtař a byl to škrt: **vítr z obrazo
 zrušil sám**, protože stavitel ho vidí z vlajky, čeření a na kaňonu
 i z tvaru vody. Z vody nejde přečíst jedině **geometrie**.
 
+## Vada zadání, se kterou se tenhle závěr musí číst
+
+**Zadání, které jsem oborům dal, mlčelo o tvaru trati** a obory z toho
+poctivě počítaly *start → dvě až čtyři značky → cíl*. Plán přitom má
+zapsané od 11. a 20. 10. 2026, že tvary jsou tři a že konec rozjížďky
+vyhlašuje rozhodčí; `AGENTS.md` velí ten plán přečíst, **než se začne
+cokoliv navrhovat**, a web podle něj už kreslí. Neudělal jsem to.
+
+Co z posudků padá a co drží, stojí u odpovědi 1 v *Co čeká na Filipa*.
+Krátce: rozpočet seznamu na čtyři až šest prvků a předpoklad, že chybějící
+prvek je cíl, neplatí; **druhá řádka bodu 2 neunese značku jetou dvakrát
+různou stranou**. Zbytek závěru se tím nemění.
+
 ## Co se mění
 
 ### 1. Jedna obrazovka, a teď i nakreslená
@@ -262,10 +275,15 @@ Automatický dojezd z trasování si cíl vyžaduje. `CilZTrasovaniSprava.cs:65`
 hledá `prvky.LastOrDefault(p => p.Typ == TypPrvku.Cil)` a když ho nenajde
 nebo nemá dva konce, vrátí `Nelze("Trať nemá cíl vytyčený dvěma konci.")`.
 
-U dálkové plavby, která **cíl nemá** (Filip, 21. 11. 2026 — lodě odpiskává
-rozhodčí na vodě), je to **popis normálního stavu formulovaný jako vada
-trati**. Zapisovatel dostane na cílové obrazovce větu, podle které má jít
-trať dodělat; dodělat na ní není co.
+U dálkové plavby, která **cíl nemá** — lodě odpiskává rozhodčí na vodě —,
+je to **popis normálního stavu formulovaný jako vada trati**. Zapisovatel
+dostane na cílové obrazovce větu, podle které má jít trať dodělat; dodělat
+na ní není co.
+
+**A není to mezera, je to rozpor s rozhodnutím, které už v plánu stojí.**
+*„Konec rozjížďky je rozhodnutí"* (`PLAN.md:9662`, Filip 20. 10. 2026:
+*„lodě bez cíle dopíšeme, ale čas už zastav"*) říká, že o konci rozhoduje
+rozhodčí, ne průjezd čárou. Tahle jediná hláška tvrdí opak.
 
 Model je přitom v pořádku a nic se v něm měnit nemusí: `Hotovo` cíl
 nevyžaduje — `HotovoAsync` se ptá jedině `ProcNejdeHotovoKvuliZnackam`
@@ -344,16 +362,32 @@ Jedna věta na obor, povinná rubrika.
    není vzácná shoda okolností; je to následek toho, jak se okruhový
    závod jede.
 
-   **A ještě dál (Filip, 21. 11. 2026): *start → značky → cíl* je jedna
-   z možností, ne tvar trati.** Tři doložené tvary:
+   **A ještě dál: *start → značky → cíl* je jedna z možností, ne tvar
+   trati.** Filip to řekl 21. 11. 2026 — a hned dodal, že **tohle se už
+   jednou dojednávalo u webu a čekal, že z toho vycházím**. Vychází
+   z toho web, ne já: je to zapsané v `docs/PLAN.md` od 11. a 20. 10.
+   2026 a `AGENTS.md` velí ten plán přečíst, **než začnu cokoliv
+   navrhovat**. Druhé konzilium jsem odmoderoval bez toho. Tvary tedy
+   nejsou nález; jsou to tři fakta, která jsem oborům zamlčel:
 
-   | tvar | kde | co z toho plyne |
+   | tvar | kde | kde to je zapsané |
    |---|---|---|
    | start → značky → cíl | ostatní závody | tvar, se kterým konzilium počítalo |
-   | velké kolo, pak opakovaně **vnitřní kolo** do konce závodu | maratony | seznam nemá konec, který by se dal vyjmenovat |
-   | **bez cíle**, lodě odpiskává rozhodčí na vodě | některé dálkové plavby | poslední prvek není cíl a cíl nikde není |
+   | velké kolo, uvnitř menší okruh, opakovaně | maratony | `PLAN.md:4397` — Filipova věta z **11. 10. 2026**, doslova *„u maratonů se jezdí kola, kde jedno je veliké a uvnitř je např. menší okruh"* |
+   | konec rozjížďky **vyhlásí rozhodčí**, ne průjezd čárou | dálkové plavby | `PLAN.md:9662` — *„Konec rozjížďky je rozhodnutí"*, **20. 10. 2026** |
 
-   **Tady konzilium opřelo rozpočet o předpoklad, který neplatí.**
+   **A web to podle toho už kreslí.** `web/lib/voda.ts` rozestupuje nohy,
+   které jedou týmž korytem, do pruhů právě proto, že u maratonu leží dvě
+   kola stejným směrem přes sebe — a je to **ověřené na trati se sedmi
+   prvky: velké kolo, malé uvnitř, velké znovu** (`PLAN.md:4408`).
+   Opakování téže značky je zapsané ještě dřív: `start → A → brána → A →
+   brána → cíl` je v `PLAN.md:4273` ten **rozhodující** argument, proč
+   `Poradi` sedí na prvku a ne na bóji. Tam je i věta *„kola se čekala od
+   začátku"*.
+
+   **Co z toho zůstává vadou, a je moje.** Konzilium opřelo rozpočet
+   o předpoklad, který plán vylučuje — a nemohlo za to, protože mu ten
+   plán nikdo nedal.
    1-ergonomie i 5-jachtar počítali seznam na *start → dvě až čtyři
    otočné nebo brány → cíl*, tedy čtyři až šest prvků se stropem osm, a
    5-jachtar to řekl výslovně: *„pět je o jeden méně než obvyklá trať,
@@ -362,21 +396,22 @@ Jedna věta na obor, povinná rubrika.
    u maratonu se počet prvků nedá spočítat vůbec, protože se **krouží do
    konce závodu**.
 
-   **Opakování se dnes nemá kam zapsat.** `PrvekTrati.cs:178` opakování
-   připouští (*„Opakování je v pořádku"*), ale připouští ho jako **další
-   řádek v `Poradi`** — tedy vyjmenováním. Maratonské *„a teď vnitřní
-   kolo až do konce"* vyjmenovat nelze, protože se neví, kolikrát. `2×`
-   u jména (bod 2) tím dostává třetí podobu, kterou nikdo neřešil: ne
-   `2×`, ale *„pořád"*. **Tohle rozhodnutí v závěru chybí** a je to vada
-   mého zadání, ne posudků — tvar trati jsem oborům dal jako konstantu.
+   **Jediná věc, která tím zůstává otevřená, je zápis „do konce".**
+   Opakování se vyjmenovává do `Poradi` a ověřený případ je **konečný**
+   (sedm prvků: velké, malé, velké). Maratonské *„a teď vnitřní kolo až
+   do konce závodu"* vyjmenovat nejde, protože se neví, kolikrát —
+   a kolika kol se dojede, ví až počítadlo z průjezdů poloměrem prvku
+   (`PLAN.md:2361`). `2×` u jména (bod 2) tedy má třetí podobu:
+   `pořád`. Tohle v plánu opravdu rozhodnuté není; všechno ostatní výš
+   ano.
 
    **Co to nemění:** osa ze značek (bod 3) tím zesiluje potřetí, protože
    u kroužení je průjezdů neomezeně a bójí pět. A nález A je tím ještě
    větší: závod, který krouží, klonuje nejvíc.
 
-   **A třetí doplnění, které bere bodu 2 druhou řádku (Filip, 21. 11.
-   2026): značka jde dvakrát a po obrátce se na zpáteční cestě může jet
-   opačnou stranou.** Model s tím počítá a je to v něm napsané:
+   **A třetí věc, která bere bodu 2 druhou řádku: značka jde dvakrát
+   a po obrátce se na zpáteční cestě může jet opačnou stranou.** Taky to
+   není nové — model je na to **postavený** a stojí to v něm napsané:
    `Strana` sedí na **prvku**, ne na bóji (`PrvekTrati.cs:184`), `Poradi`
    opakování schválně připouští (`:178`, s příkladem
    `start → A → brána → A → brána → cíl`) a u průjezdní bóje to komentář
@@ -395,8 +430,8 @@ Jedna věta na obor, povinná rubrika.
    plachetní směrnice (`b2-jachtar-kolo3.md`) — tedy místo, kde nepravda
    nejvíc škodí.
 
-   **Doporučení, ne hlasování** (konzilium je dávno uzavřené a vstup je
-   nový): **jedna řádka na značku zůstává** — identita na vodě je bóje,
+   **Doporučení, ne hlasování** (konzilium je uzavřené a tohle není jeho
+   chyba): **jedna řádka na značku zůstává** — identita na vodě je bóje,
    ne průjezd, a to je bod 3, který se tímhle vstupem potvrdil potřetí.
    Mění se jen **druhá řádka: nenese předpis, nese rozdíl mezi průjezdy**
    — `levobok, pak pravobok` u značky se dvěma stranami, jediný předpis
