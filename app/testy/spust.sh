@@ -147,3 +147,9 @@ echo "== Předpisy průvodce stavbou =="
 echo
 echo "== Stav v řádce trati =="
 "${NODE[@]}" ./radka-trati.test.ts
+
+# Které akce detail prvku vůbec nabídne. Chybějící akce chybí, nešedne:
+# zešedivělé tlačítko slibuje úkon, který bez serverových čísel neexistuje.
+echo
+echo "== Akce v detailu prvku =="
+"${NODE[@]}" ./detail-prvku.test.ts
