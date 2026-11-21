@@ -1688,9 +1688,16 @@ def trat_odjeta(slug, t):
 def prvek_dto(slug, p):
     def konec(id_boje):
         b = next((x for x in BOJE.get(slug, []) if x["id"] == id_boje), None)
+        # <b>Zdroj, barva, tvar a počet fotek</b> přibyly 21. 11. 2026
+        # (nález C druhého konzilia): řádka trati i detail prvku se z toho
+        # kreslí. Jde ven **počet** fotek, ne seznam — řádka z něj
+        # potřebuje jedinou věc, jestli stav „chybí fotka" vznikne.
         return None if not b else {"id": b["id"], "nazev": b["nazev"],
                                    "sirka": b["sirka"], "delka": b["delka"],
-                                   "znaceni": b.get("znaceni")}
+                                   "zdroj": b["zdroj"],
+                                   "znaceni": b.get("znaceni"),
+                                   "barva": b.get("barva"), "tvar": b.get("tvar"),
+                                   "fotek": len(b.get("fotky") or [])}
 
     return {"id": p["id"], "typ": p["typ"], "poradi": p["poradi"], "strana": p["strana"],
             "smer": p.get("smer"), "druhStartu": p.get("druhStartu"),
@@ -2058,7 +2065,10 @@ def _nasad_boje():
     # na čem vidět, že se nic nepřepsalo.
     slug = ZAVOD_DVOU_ZAPISOVATELU or D["zavody"][0]["slug"]
     BOJE[slug] = [
-        boje("start levý", 1, 49.5163, 14.1651, 4.0, "2026-10-08T07:12:00+00:00"),
+        # <b>Linie nemá levobok</b> (nález J4): konec se jmenuje tím, co
+        # na něm stojí — startovní plavidlo, startovní bóje.
+        boje("start u plavidla", 1, 49.5163, 14.1651, 4.0, "2026-10-08T07:12:00+00:00",
+             znaceni="Plavidlo"),
         boje("bóje 1", 2, 49.5201, 14.1702, 6.0, "2026-10-08T07:20:00+00:00",
              nahrazena="2026-10-08T08:05:00+00:00"),
         boje("bóje 1", 2, 49.5208, 14.1711, 3.0, "2026-10-08T08:05:00+00:00"),
@@ -2082,6 +2092,23 @@ def _nasad_boje():
     # Liší se schválně: druhá objíždí otočnou z druhé strany. Kdyby byly
     # stejné, přepnutí záložky by vypadalo, že nic neudělalo.
     start, _, otocna, cil = BOJE[slug]
+
+    # <b>Tři bóje navíc kvůli rozestavěné trati níž.</b> Bez brány se na
+    # mocku nedá zkusit dvoukoncový prvek a bez druhého konce startu by
+    # řádka hlásila „chybí druhý konec" u všeho.
+    startovni, levá, pravá = (
+        boje("start u bóje", 4, 49.5159, 14.1668, 3.0, "2026-10-08T07:14:00+00:00",
+             barva="Zluta", tvar="SferickyVrsek", znaceni="NaseBoje"),
+        boje("brána levá", 5, 49.5188, 14.1739, 5.0, "2026-10-08T07:31:00+00:00",
+             barva="Zluta", tvar="Kulova", znaceni="NaseBoje"),
+        # Tahle je **odečtená z mapy**, ne změřená u bóje: v plánu z
+        # kanceláře poloha je, ale fyzicky se k ní ještě nejelo. Na řádce
+        # z toho vznikne stav „z plánu", tedy práce, ne závada. Přesnost
+        # u takové schválně chybí — tu umí říct jen měření.
+        boje("brána pravá", 6, 49.5192, 14.1751, None, "2026-10-08T07:33:00+00:00",
+             zdroj="Mapa", barva="Ruzova", tvar="Kulova", znaceni="NaseBoje"),
+    )
+    BOJE[slug] += [startovni, levá, pravá]
     for cislo, strana in ((1, "PoPrave"), (2, "PoLeve")):
         t = trat_zaloz(slug, "Prijato")
         t["rozjizdkaId"] = cislo
@@ -2103,6 +2130,40 @@ def _nasad_boje():
                 "smer": smer,
                 "druhStartu": "PevnaLinie" if typ == "Start" else None,
             })
+
+    # <b>A nakonec rozestavěná trať pro třetí rozjížďku.</b> Je nejnovější,
+    # takže ji `trat_aktualni` vybere — a stavitelská obrazovka tím má na
+    # čem stát. Dokud tu byly jen dvě přijaté, otevřel ji stavitel do
+    # zámku: řádky by hlásily „čeká na odemčení" a nešlo by zkusit nic.
+    #
+    # Trať je schválně složená tak, aby se na ní poznalo, co rozhodlo
+    # druhé konzilium (21. 11. 2026):
+    #
+    # - **otočná je v trati dvakrát, pokaždé jiným bokem** — na ose z ní
+    #   musí být jeden řádek s `2×` a předpisem „ponechat po levoboku,
+    #   pak ponechat po pravoboku", ne dva řádky na jednu bóji;
+    # - **start a cíl stojí na týchž dvou bójích**, jak to na Orlíku bývá
+    #   (totéž předpokládá `CilZTrasovaniSprava`), takže i ty jsou `2×`;
+    # - **brána** je dvoukoncový prvek, aby se poznalo, že oba konce jsou
+    #   dvě značky, každá jednou;
+    # - **cíl je odečtený z mapy**, takže u něj má stát „z plánu".
+    t = trat_zaloz(slug)
+    t["rozjizdkaId"] = 3
+    for poradi, (typ, a_boje, b_boje, bok, smer) in enumerate((
+        ("Start", start, startovni, None, "S"),
+        ("OtocnaBoje", otocna, None, "PoLeve", None),
+        ("Brana", levá, pravá, None, None),
+        ("OtocnaBoje", otocna, None, "PoPrave", None),
+        ("Cil", start, startovni, None, "J"),
+    ), start=1):
+        PRVEK_ID[0] += 1
+        PRVKY.setdefault(t["id"], []).append({
+            "id": PRVEK_ID[0], "typ": typ, "poradi": poradi,
+            "strana": bok, "poznamka": None,
+            "bojeAId": a_boje["id"], "bojeBId": b_boje["id"] if b_boje else None,
+            "smer": smer,
+            "druhStartu": "PevnaLinie" if typ == "Start" else None,
+        })
 
 
 def zbytecna_boje(slug, b):

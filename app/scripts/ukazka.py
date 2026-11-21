@@ -80,18 +80,36 @@ def posbirej() -> dict:
     for o in ja.get("opravneni", []):
         if not o.get("zavod"):
             continue
+        # <b>Jedna cesta, která nejde, nesmí shodit ty další.</b> Do
+        # 21. 11. 2026 tu stálo `continue`, takže když seznam rozjížděk
+        # vrátil 404 — a proti mocku vrací —, přeskočilo se všechno
+        # ostatní pro ten účet. Chyběla tím v ukázce celá trať, a nebylo
+        # jak to poznat: snímek se vyrobil, jen byl kratší.
         zaklad = f"/sprava/serie/{o['serie']}/vysledky/{o['zavod']}/rozjizdky"
         try:
             rozjizdky = nactiJson(zaklad)
+            snimek[zaklad] = rozjizdky
         except urllib.error.HTTPError:
-            continue
-        snimek[zaklad] = rozjizdky
+            rozjizdky = []
         for r in rozjizdky if isinstance(rozjizdky, list) else rozjizdky.get("rozjizdky", []):
             cislo = r.get("cislo")
             if cislo is None:
                 continue
             try:
                 snimek[f"{zaklad}/{cislo}"] = nactiJson(f"{zaklad}/{cislo}")
+            except urllib.error.HTTPError:
+                pass
+
+        # Trať a její prvky: z nich kreslí stavitelská obrazovka svou osu.
+        # Bez nich ukázka hlásila „trať se zatím nenačetla" a stavitele
+        # v ní nešlo ukázat vůbec — a je to obrazovka, kvůli které appka
+        # na vodu jede.
+        for cesta in (
+            f"/sprava/serie/{o['serie']}/zastavky/{o['zavod']}/trat",
+            f"/sprava/serie/{o['serie']}/zastavky/{o['zavod']}/trat/prvky",
+        ):
+            try:
+                snimek[cesta] = nactiJson(cesta)
             except urllib.error.HTTPError:
                 pass
 

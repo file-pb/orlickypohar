@@ -2,6 +2,7 @@
  "/ja": {
   "email": "milos@priklad.cz",
   "id": "01927f4e-0000-7000-8000-000000000004",
+  "kdePomaha": [],
   "opravneni": [
    {
     "role": "Organizator",
@@ -38,6 +39,14 @@
    }
   ],
   "nazev": "Orlický pohár 2026 (nanečisto)",
+  "pravidla": {
+   "bodyZaDiskvalifikaci": 20,
+   "pocetSkrtu": 2,
+   "prirazkaZaKod": 1,
+   "prirazkaZaNapravu": 1,
+   "trestZfpProcent": 20,
+   "verzePravidel": 1
+  },
   "prihlasky": [
    {
     "cisloPlachty": "CZE 430",
@@ -2232,6 +2241,7 @@
    {
     "cislo": 1,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-05-23T10:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -3304,6 +3314,7 @@
    {
     "cislo": 1,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-07-11T10:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -3465,6 +3476,7 @@
    {
     "cislo": 2,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-07-11T12:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -4916,6 +4928,7 @@
    {
     "cislo": 1,
     "doSerie": false,
+    "opakovacOd": null,
     "startV": "2026-06-20T10:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -5101,6 +5114,7 @@
    {
     "cislo": 2,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-06-20T12:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -5286,6 +5300,7 @@
    {
     "cislo": 3,
     "doSerie": false,
+    "opakovacOd": null,
     "startV": "2026-06-20T14:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -5914,6 +5929,7 @@
    {
     "cislo": 1,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-04-25T10:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -6559,6 +6575,7 @@
    {
     "cislo": 1,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-09-05T10:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -7377,6 +7394,7 @@
    {
     "cislo": 1,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-09-19T10:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -8678,6 +8696,7 @@
    {
     "cislo": 1,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-08-29T10:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -8815,6 +8834,7 @@
    {
     "cislo": 2,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-08-29T12:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -8952,6 +8972,7 @@
    {
     "cislo": 3,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-08-29T14:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -9089,6 +9110,7 @@
    {
     "cislo": 4,
     "doSerie": true,
+    "opakovacOd": null,
     "startV": "2026-08-29T16:00:00+02:00",
     "stav": "Dokoncena",
     "stavVysledku": "Potvrzeno",
@@ -9229,5 +9251,161 @@
   "stav": "Odjety",
   "typ": "okruhový",
   "vyhodnoceni": "PoKategoriich"
- }
+ },
+ "/sprava/serie/2026-nanecisto/zastavky/izolepa/trat": {
+  "cisloRozjizdky": 3,
+  "duvodVraceni": null,
+  "id": 4,
+  "nahrazujeId": null,
+  "odjeta": true,
+  "prijal": null,
+  "prijatoV": null,
+  "rozjizdkaId": 3,
+  "smiHlasitHotovo": true,
+  "smiPrestavet": false,
+  "smiPrijmout": false,
+  "smiZkratit": false,
+  "stav": "Rozestaveno",
+  "zalozenaV": "2026-11-21T06:45:28.732898+00:00",
+  "zkracenoUPrvkuId": null,
+  "zkracenoV": null,
+  "zkratil": null
+ },
+ "/sprava/serie/2026-nanecisto/zastavky/izolepa/trat/prvky": [
+  {
+   "a": {
+    "barva": null,
+    "delka": 14.1651,
+    "fotek": 0,
+    "id": 1,
+    "nazev": "start u plavidla",
+    "sirka": 49.5163,
+    "tvar": null,
+    "zdroj": "Telefon",
+    "znaceni": "Plavidlo"
+   },
+   "b": {
+    "barva": "Zluta",
+    "delka": 14.1668,
+    "fotek": 0,
+    "id": 5,
+    "nazev": "start u bóje",
+    "sirka": 49.5159,
+    "tvar": "SferickyVrsek",
+    "zdroj": "Telefon",
+    "znaceni": "NaseBoje"
+   },
+   "druhStartu": "PevnaLinie",
+   "id": 7,
+   "poradi": 1,
+   "poznamka": null,
+   "smer": "S",
+   "strana": null,
+   "typ": "Start"
+  },
+  {
+   "a": {
+    "barva": null,
+    "delka": 14.1711,
+    "fotek": 0,
+    "id": 3,
+    "nazev": "bóje 1",
+    "sirka": 49.5208,
+    "tvar": null,
+    "zdroj": "Telefon",
+    "znaceni": null
+   },
+   "b": null,
+   "druhStartu": null,
+   "id": 8,
+   "poradi": 2,
+   "poznamka": null,
+   "smer": null,
+   "strana": "PoLeve",
+   "typ": "OtocnaBoje"
+  },
+  {
+   "a": {
+    "barva": "Zluta",
+    "delka": 14.1739,
+    "fotek": 0,
+    "id": 6,
+    "nazev": "brána levá",
+    "sirka": 49.5188,
+    "tvar": "Kulova",
+    "zdroj": "Telefon",
+    "znaceni": "NaseBoje"
+   },
+   "b": {
+    "barva": "Ruzova",
+    "delka": 14.1751,
+    "fotek": 0,
+    "id": 7,
+    "nazev": "brána pravá",
+    "sirka": 49.5192,
+    "tvar": "Kulova",
+    "zdroj": "Mapa",
+    "znaceni": "NaseBoje"
+   },
+   "druhStartu": null,
+   "id": 9,
+   "poradi": 3,
+   "poznamka": null,
+   "smer": null,
+   "strana": null,
+   "typ": "Brana"
+  },
+  {
+   "a": {
+    "barva": null,
+    "delka": 14.1711,
+    "fotek": 0,
+    "id": 3,
+    "nazev": "bóje 1",
+    "sirka": 49.5208,
+    "tvar": null,
+    "zdroj": "Telefon",
+    "znaceni": null
+   },
+   "b": null,
+   "druhStartu": null,
+   "id": 10,
+   "poradi": 4,
+   "poznamka": null,
+   "smer": null,
+   "strana": "PoPrave",
+   "typ": "OtocnaBoje"
+  },
+  {
+   "a": {
+    "barva": null,
+    "delka": 14.1651,
+    "fotek": 0,
+    "id": 1,
+    "nazev": "start u plavidla",
+    "sirka": 49.5163,
+    "tvar": null,
+    "zdroj": "Telefon",
+    "znaceni": "Plavidlo"
+   },
+   "b": {
+    "barva": "Zluta",
+    "delka": 14.1668,
+    "fotek": 0,
+    "id": 5,
+    "nazev": "start u bóje",
+    "sirka": 49.5159,
+    "tvar": "SferickyVrsek",
+    "zdroj": "Telefon",
+    "znaceni": "NaseBoje"
+   },
+   "druhStartu": null,
+   "id": 11,
+   "poradi": 5,
+   "poznamka": null,
+   "smer": "J",
+   "strana": null,
+   "typ": "Cil"
+  }
+ ]
 }
