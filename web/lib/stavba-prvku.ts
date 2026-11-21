@@ -112,9 +112,11 @@ export type Bod = {
 /**
  * Předpis: věta z vody, která teprve rozhodne, čím prvek je.
  *
- * <b>Tady se sdružení rozplétá.</b> „Otočit levobokem" uloží otočnou
- * bóji, „nechat po levoboku" průjezdní — stavitel přitom nevybral ani
- * jedno jméno, jen řekl, jak se to jede.
+ * <b>Tady se sdružení rozplétá.</b> „Otočná — ponechat po levoboku"
+ * uloží otočnou bóji, „nechat po levoboku" průjezdní — stavitel přitom
+ * nevybral ani jedno jméno, jen řekl, jak se to jede. Obojí mluví
+ * o ponechání, ne o otáčení: kam se loď točí, se nikam neukládá
+ * (nález J8).
  */
 export type Volba = {
   jmeno: string;
@@ -138,6 +140,13 @@ export type Volba = {
   druhStartu?: NonNullable<DruhStartu>;
   /** Jak se pojmenují body, když jméno závisí na předpisu. */
   jmena?: ((poradi: number) => string)[];
+  /**
+   * Výzvy k pípnutí, když závisí na předpisu, ne jen na typu. Potřebuje
+   * to otevírající se start (nález J5): u něj žádné dva konce linie
+   * nestojí, takže výzvy z <see cref="TYPY"/> by se ptaly na něco jiného,
+   * než co stavitel pípá. Jinde je dává typ.
+   */
+  vyzvy?: string[];
 };
 
 /** Typ v nabídce: kolik bodů se pípá, ne čím prvek je. */
@@ -185,21 +194,27 @@ export const TYPY: TypStavby[] = [
   {
     id: "Start",
     jmeno: "Start",
-    popis: "levobok a pravobok, směr a čím je vytyčený",
+    popis: "oba konce, směr a čím je vytyčený",
     jak: "start",
+    // <b>Linie nemá levobok a pravobok</b> (nález J4 druhého konzilia):
+    // bok má loď, ne čára — linií se prochází. Konce se jmenují tím, co
+    // na nich stojí: startovní plavidlo (stěžeň s oranžovou vlajkou)
+    // a startovní bóje. Jméno jde ven ve veřejných datech (`Boje.Nazev`),
+    // takže „start levobok" došel až k posádkám.
     body: [
-      { vyzva: "Pípni levobok startu", jmeno: () => "start levobok" },
-      { vyzva: "Popojeď a pípni pravobok startu", jmeno: () => "start pravobok" },
+      { vyzva: "Pípni konec u plavidla", jmeno: () => "start u plavidla" },
+      { vyzva: "Popojeď a pípni konec u bóje", jmeno: () => "start u bóje" },
     ],
   },
   {
     id: "Cil",
     jmeno: "Cíl",
-    popis: "levobok a pravobok, směr proplutí",
+    popis: "oba konce, směr proplutí",
     jak: "cil",
+    // Totéž co u startu (J4); u cíle nese plavidlo modrou vlajku.
     body: [
-      { vyzva: "Pípni levobok cíle", jmeno: () => "cíl levobok" },
-      { vyzva: "Popojeď a pípni pravobok cíle", jmeno: () => "cíl pravobok" },
+      { vyzva: "Pípni konec u plavidla", jmeno: () => "cíl u plavidla" },
+      { vyzva: "Popojeď a pípni konec u bóje", jmeno: () => "cíl u bóje" },
     ],
   },
   {
@@ -270,8 +285,8 @@ export const NABIDKA: {
   typ: TypStavby["id"];
   volba: string;
 }[] = [
-  { jmeno: "Otočná — levobokem", detail: "jedna bóje, točí se", typ: "Jedna", volba: "Otočit levobokem" },
-  { jmeno: "Otočná — pravobokem", detail: "jedna bóje, točí se", typ: "Jedna", volba: "Otočit pravobokem" },
+  { jmeno: "Otočná — po levoboku", detail: "jedna bóje, točí se", typ: "Jedna", volba: "Otočná — ponechat po levoboku" },
+  { jmeno: "Otočná — po pravoboku", detail: "jedna bóje, točí se", typ: "Jedna", volba: "Otočná — ponechat po pravoboku" },
   { jmeno: "Start — pevná linie", detail: "mezi dvěma body", typ: "Start", volba: "Pevná linie" },
   { jmeno: "Cíl", detail: "mezi dvěma body", typ: "Cil", volba: "Proplout cílem" },
   { jmeno: "Brána", detail: "projede se a jede dál", typ: "Dve", volba: "Projet mezi nimi" },
@@ -279,9 +294,9 @@ export const NABIDKA: {
   { jmeno: "Průjezdní — pravobokem", detail: "jen se míjí", typ: "Jedna", volba: "Nechat po pravoboku" },
   { jmeno: "Otočná brána", detail: "stranu volí loď", typ: "Dve", volba: "Projet a otočit se" },
   { jmeno: "Start — otevírající se", detail: "brána se otevírá", typ: "Start", volba: "Otevírající se brána" },
-  { jmeno: "Odskok — levobokem", detail: "s odskokovou za ní", typ: "Odskok", volba: "Otočit levobokem" },
-  { jmeno: "Odskok — pravobokem", detail: "s odskokovou za ní", typ: "Odskok", volba: "Otočit pravobokem" },
-  { jmeno: "Otočná zóna", detail: "dráty nad vodou", typ: "Dve", volba: "Stačí se jí dotknout" },
+  { jmeno: "Odskok — po levoboku", detail: "s odskokovou za ní", typ: "Odskok", volba: "Ponechat po levoboku" },
+  { jmeno: "Odskok — po pravoboku", detail: "s odskokovou za ní", typ: "Odskok", volba: "Ponechat po pravoboku" },
+  { jmeno: "Otočná zóna", detail: "dráty nad vodou", typ: "Dve", volba: "Otočit se za linií" },
 ];
 
 /** Jedna dlaždice nabídky i s tím, co se po klepnutí nastaví. */
@@ -313,16 +328,20 @@ export function dlazdiceNabidky(): Dlazdice[] {
 export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
   jedna: [
     {
-      jmeno: "Otočit levobokem",
-      detail: "otočná bóje",
+      // <b>„Otočit levobokem" byla dvojznačnost</b>, kterou projekt už
+      // jednou odstranil (nález J8; `PrvekTrati.cs:88–96`): ponechat znak
+      // po levoboku znamená točit **doprava**. Rozhodčí ani směrnice
+      // neříkají, kam se točí — říkají, kterou stranou se znak ponechává.
+      jmeno: "Otočná — ponechat po levoboku",
+      detail: "jedna bóje, točí se",
       typ: "OtocnaBoje",
       strana: "PoLeve",
       stopa: "otocLevobok",
       jmena: [znacka("otočná")],
     },
     {
-      jmeno: "Otočit pravobokem",
-      detail: "otočná bóje",
+      jmeno: "Otočná — ponechat po pravoboku",
+      detail: "jedna bóje, točí se",
       typ: "OtocnaBoje",
       strana: "PoPrave",
       stopa: "otocPravobok",
@@ -352,14 +371,14 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
   // Jména bodů dává `TYPY`, na předpisu nezávisí.
   odskok: [
     {
-      jmeno: "Otočit levobokem",
+      jmeno: "Ponechat po levoboku",
       detail: "otočná s odskokovou za ní",
       typ: "Odskok",
       strana: "PoLeve",
       stopa: "otocLevobok",
     },
     {
-      jmeno: "Otočit pravobokem",
+      jmeno: "Ponechat po pravoboku",
       detail: "otočná s odskokovou za ní",
       typ: "Odskok",
       strana: "PoPrave",
@@ -384,7 +403,11 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
       jmena: [znacka("brána"), znacka("brána")],
     },
     {
-      jmeno: "Stačí se jí dotknout",
+      // <b>Dotek se neposoudí</b> (nález J7): linie mezi dráty a bodem na
+      // břehu je imaginární, rozhodčí ji z lodi nevidí a z trasy se pozná
+      // proplutí za ni, ne dotyk. Na porovnání trasy se stavem trati
+      // přitom stojí celý projekt, a tohle je zároveň slovo ze směrnice.
+      jmeno: "Otočit se za linií",
       detail: "otočná linie — třeba dráty nad vodou",
       typ: "OtocnaZona",
       strana: null,
@@ -408,6 +431,12 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
       strana: null,
       stopa: "startSipka",
       druhStartu: "OtevirajiciSeBrana",
+      // <b>Tady žádné dva konce linie nestojí</b> (nález J5): po linii
+      // jede vodicí loď a branka se za ní otevírá, takže dva body
+      // popisují, **kudy ta linie vede**. Bez vlastních jmen a výzev by
+      // se stavitel pípal „konce", které ve vodě nejsou.
+      vyzvy: ["Pípni, kde brána startuje", "Popojeď a pípni, kam dojede"],
+      jmena: [() => "start brány odkud", () => "start brány kam"],
     },
   ],
   cil: [
@@ -426,11 +455,18 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
  * jméno plyne z toho, co staví a jak se to jede.
  *
  * <para>
- * U dvoubodových prvků dostane druhý bod „vpravo" a první „vlevo": je to
- * jediné, co je u nich v tu chvíli pravda, a při čtení seznamu to stačí
- * k rozlišení.
+ * <b>U dvoubodových prvků se konce číslují, ne stranují</b> (nález J6
+ * druhého konzilia). „Vlevo" a „vpravo" se u brány nemají k čemu
+ * vztáhnout: směr průjezdu se u ní <b>neukládá</b> — `smer` smí být jen
+ * u startu a cíle (`PrvekTrati.cs:302`) —, takže „vlevo" znamenalo jen
+ * „pípnuto první", a jak se motorák otočí, je ta levá vpravo. Jméno
+ * přitom jde ven ve veřejných datech.
  * </para>
  */
+export function vyzvaBodu(typ: TypStavby, volba: Volba | null, i: number): string | null {
+  return volba?.vyzvy?.[i] ?? typ.body[i]?.vyzva ?? null;
+}
+
 export function jmenaBodu(typ: TypStavby, volba: Volba | null, poradi: number): string[] {
   const zaklad = volba?.jmena ?? typ.body.map((b) => b.jmeno);
   const jmena = typ.body.map((_, i) => (zaklad[i] ?? zaklad[0])(poradi));
@@ -438,7 +474,7 @@ export function jmenaBodu(typ: TypStavby, volba: Volba | null, poradi: number): 
   if (jmena.length < 2 || typ.id === "Odskok" || typ.id === "Start" || typ.id === "Cil")
     return jmena;
 
-  return [`${jmena[0]} vlevo`, `${jmena[1]} vpravo`];
+  return [`${jmena[0]} první konec`, `${jmena[1]} druhý konec`];
 }
 
 /** Značení: jeden dotyk nese význam, barvu i tvar. */

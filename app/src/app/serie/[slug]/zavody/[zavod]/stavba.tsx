@@ -27,6 +27,7 @@ import {
   dlazdiceNabidky,
   ZNACENI,
   jmenaBodu,
+  vyzvaBodu,
   kolmice,
   patriSmer,
   type Predvolba,
@@ -167,6 +168,8 @@ export default function StavbaTrati() {
   const dalsiPoradi = (prvky?.length ?? 0) + fronta.length + 1;
   const jmena = typ ? jmenaBodu(typ, volba, dalsiPoradi) : [];
   const dalsiBod = typ ? typ.body[body.length] : null;
+  // Výzva smí záviset na předpisu (nález J5), proto ne `dalsiBod.vyzva`.
+  const dalsiVyzva = typ ? vyzvaBodu(typ, volba, body.length) : null;
   const vsechnyBody = typ ? body.length >= typ.body.length : false;
   const cekaNaSmer = typ ? patriSmer(typ) && vsechnyBody && smer === null : false;
 
@@ -312,7 +315,7 @@ export default function StavbaTrati() {
                 ? 'Kterým směrem'
                 : vsechnyBody
                   ? 'Hotovo?'
-                  : (dalsiBod?.vyzva ?? 'Pípni')}
+                  : (dalsiVyzva ?? dalsiBod?.vyzva ?? 'Pípni')}
           </Sekce>
 
           {/* 1. <b>Jedna úplná věc na dlaždici</b> (Filip, 18. 11. 2026;

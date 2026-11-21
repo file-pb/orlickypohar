@@ -565,8 +565,10 @@ function Znacky({
           a odkazů naráz — a pořadatel mění vždycky jen jednu.
 
           Přepínač nese <b>jména těch značek</b>, ne „levá" a „pravá":
-          v seznamu i na mapě se jmenují „start levobok" a „start
-          pravobok", takže jména jsou to jediné, co sedí na obojí. */}
+          v seznamu i na mapě se jmenují „start u plavidla" a „start
+          u bóje", takže jména jsou to jediné, co sedí na obojí. Levá
+          a pravá by navíc u brány nebyly pravda — směr se u ní neukládá
+          (nález J6). */}
       {nalezene.length === 2 && (
         <div className="volba-znacky">
           {nalezene.map((b, i) => (

@@ -11,6 +11,7 @@ import {
   VOLBY,
   ZNACENI,
   jmenaBodu,
+  vyzvaBodu,
   kolmice,
   patriDruhStartu,
   patriSmer,
@@ -143,6 +144,9 @@ export function Stavba({
         ? "zavrsit"
         : "body";
   const bod = typ ? typ.body[hotove.length] : null;
+  // Výzva smí záviset na předpisu, ne jen na typu: otevírající se start
+  // pípá, kudy linie vede, ne její konce (nález J5).
+  const vyzva = typ ? vyzvaBodu(typ, volba, hotove.length) : null;
   const jmena = typ ? jmenaBodu(typ, volba, dalsiPoradi) : [];
   const vybrana = predvolba(znaceni);
 
@@ -445,7 +449,7 @@ export function Stavba({
       {krok === "body" && typ && volba && bod && (
         <>
           <p className="krok">
-            <b>{volba.jmeno}</b> — {bod.vyzva}
+            <b>{volba.jmeno}</b> — {vyzva ?? bod.vyzva}
             {typ.body.length > 1 && (
               <span className="detail">
                 {" "}

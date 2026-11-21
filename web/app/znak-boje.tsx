@@ -113,11 +113,28 @@ function ZakladniZnak({
   znaceni,
   vyplnPrepis,
   bezLemu = false,
+  vychoziVypln = "#c1121f",
+  lem = "#fff",
 }: {
   /** Čím přebarvit výplň. Používá vrstva světla, viz `Plasticita`. */
   vyplnPrepis?: string;
   /** Vrstva světla lem nemá — obkroužila by sama sebe uvnitř značky. */
   bezLemu?: boolean;
+  /**
+   * Čím se kreslí značka <b>bez zapsané barvy</b>. Výchozí červená je
+   * psaná pro mapu, kde je značka nad fotem a červená čte jako *pravá
+   * strana plavební dráhy*. Na bílé kartě by to byl celý seznam červený,
+   * protože `Barva` je nepovinná schválně — tam se předá `tlumeny`.
+   * (Nález B druhého konzilia, 21. 11. 2026.)
+   */
+  vychoziVypln?: string;
+  /**
+   * Barva lemu. Výchozí bílá drží značku nad fotomapou; na `papir` je
+   * bílá na bílé <b>1,00:1</b>, takže žlutá, bílá, růžová a oranžová
+   * silueta zůstanou pod mezí 3:1 bez obrysu. Karta proto předá lem
+   * dopočítaný ze svého podkladu.
+   */
+  lem?: string;
   x: number;
   y: number;
   r?: number;
@@ -131,10 +148,10 @@ function ZakladniZnak({
    */
   znaceni?: DruhZnaceni;
 }) {
-  const vypln = vyplnPrepis ?? (barva ? BARVY[barva] : "#c1121f");
+  const vypln = vyplnPrepis ?? (barva ? BARVY[barva] : vychoziVypln);
   const spolecne = bezLemu
     ? ({ fill: vypln } as const)
-    : ({ fill: vypln, stroke: "#fff", strokeWidth: 3 } as const);
+    : ({ fill: vypln, stroke: lem, strokeWidth: 3 } as const);
 
   // Plavidlo: lodička. Hýbe se a není to bóje, takže nesmí vypadat jako
   // něco zakotveného.
@@ -263,6 +280,8 @@ export function ZnakBoje({
   tvar,
   znaceni,
   plasticita = "zadna",
+  vychoziVypln,
+  lem,
 }: {
   x: number;
   y: number;
@@ -271,9 +290,22 @@ export function ZnakBoje({
   tvar?: TvarBoje;
   znaceni?: DruhZnaceni;
   plasticita?: Plasticita;
+  /** Výplň bez zapsané barvy; bez ní platí červená pro mapu. Viz `ZakladniZnak`. */
+  vychoziVypln?: string;
+  /** Barva lemu; bez ní bílá pro mapu. Viz `ZakladniZnak`. */
+  lem?: string;
 }) {
   const zaklad = (
-    <ZakladniZnak x={x} y={y} r={r} barva={barva} tvar={tvar} znaceni={znaceni} />
+    <ZakladniZnak
+      x={x}
+      y={y}
+      r={r}
+      barva={barva}
+      tvar={tvar}
+      znaceni={znaceni}
+      vychoziVypln={vychoziVypln}
+      lem={lem}
+    />
   );
 
   const slozity =
@@ -293,6 +325,7 @@ export function ZnakBoje({
           barva={barva}
           tvar={tvar}
           znaceni={znaceni}
+          vychoziVypln={vychoziVypln}
           vyplnPrepis="#ffffff"
           bezLemu
         />

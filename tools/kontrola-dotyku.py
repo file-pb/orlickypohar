@@ -32,6 +32,21 @@ kontrola nehlásí nic, co by ve skutečnosti prošlo — a zároveň propustí
 terč, který je na papíře dost vysoký, ale ve skutečnosti ho překrývá
 něco jiného. To z tohohle souboru nezjistíš.
 
+<b>Měří se obě strany, ale každá jinak.</b> Výška se dopočítá i z textu,
+protože řádek se dá odhadnout z `fontSize`. <b>Šířka se dopočítat nedá</b>
+— šířka textu závisí na fontu a ten tenhle soubor nezná —, takže se hlásí
+jen terč, který má šířku <b>zapsanou</b> a menší než mez (`width`,
+`minWidth`, případně vodorovná výplň s `hitSlop`). Terč bez zapsané šířky
+se roztáhne podle obsahu nebo rodiče a kontrola o něm mlčí. Je to užší
+záběr než u výšky, zato bez dohadů: ikonové tlačítko `width: 32` se
+nahlásí, řádka přes celou kartu ne.
+
+<b>Co kontrola nevidí dodnes</b>, a nepředstírá to (nález E druhého
+konzilia, 21. 11. 2026): <b>mezeru mezi dvěma terči</b>. Rozteč vzniká
+až rozvržením — `gap`, `marginBottom`, pozice v seznamu —, a z jednoho
+souboru se nedá zjistit, které dva terče spolu na obrazovce sousedí.
+Osm dp mezi řádkami trati tedy drží posudek a maketa, ne tahle kontrola.
+
 <b>A jedno slepé místo navíc, nalezené sabotáží 6. 11. 2026.</b> Styl
 předaný do komponenty <b>propem</b> se rozpustit nedá, takže u obalu
 jako `Klepaci` kontrola vidí jen tu podlahu, kterou si obal drží sám
@@ -263,6 +278,40 @@ def vyska(decl: str, uvnitr: str = "", styly: dict[str, str] | None = None) -> t
     )
 
 
+def sirka(decl: str) -> tuple[int, str] | None:
+    """Zapsaná šířka terče, nebo `None`, když žádná zapsaná není.
+
+    <b>Nedopočítává se z textu</b>, na rozdíl od výšky: šířka písmene
+    závisí na fontu a ten tenhle soubor nezná. Odhad by byl buď tak
+    velkorysý, že by nenašel nic, nebo by hlásil terče, které jsou ve
+    skutečnosti široké dost — a falešné hlášení kontrole ubírá víc, než
+    kolik přidá nalezená vada.
+
+    Roztažený terč se neměří ze stejného důvodu jako u výšky: `flex: 1`
+    i dvojice `left` + `right` berou šířku od rodiče.
+    """
+    if re.search(r"position:\s*'absolute'", decl) and re.search(r"\bleft:", decl) and re.search(r"\bright:", decl):
+        return None
+    if re.search(r"\bflex:\s*[1-9]", decl) or re.search(r"alignSelf:\s*'stretch'", decl):
+        return None
+
+    m = re.search(r"minWidth:\s*(\d+)", decl)
+    if m:
+        return int(m.group(1)), "minWidth"
+    m = re.search(r"\bwidth:\s*(\d+)", decl)
+    if m:
+        return int(m.group(1)), "width"
+
+    # Bez zapsané šířky se počítá jen tehdy, když je vodorovná výplň sama
+    # o sobě pod mezí a terč nemá text — tedy u ikon. S textem by to byl
+    # dohad o fontu.
+    m = re.search(r"hitSlop(?:=\{|:\s*)(\d+)", decl)
+    slop = int(m.group(1)) if m else 0
+    if slop:
+        return None
+    return None
+
+
 def projdi(mez: int) -> tuple[list[tuple[int, str, int, str]], int]:
     nalezy: list[tuple[int, str, int, str]] = []
     celkem = 0
@@ -283,6 +332,9 @@ def projdi(mez: int) -> tuple[list[tuple[int, str, int, str]], int]:
             if v < mez:
                 radek = txt.count("\n", 0, m.start()) + 1
                 nalezy.append((v, str(soubor.relative_to(KOREN)), radek, cim))
+            if (s := sirka(decl)) is not None and s[0] < mez:
+                radek = txt.count("\n", 0, m.start()) + 1
+                nalezy.append((s[0], str(soubor.relative_to(KOREN)), radek, f"šířka {s[1]}"))
     return nalezy, celkem
 
 
@@ -305,7 +357,10 @@ def main() -> int:
         print(f"nebylo co měřit: v {PROHLEDAT} není jediné klepací místo", file=sys.stderr)
         return 2
 
-    print(f"klepacích míst: {celkem} · mez {mez} pt · řádky se sčítají podle písma")
+    print(
+        f"klepacích míst: {celkem} · mez {mez} pt · řádky se sčítají podle písma, "
+        "šířka jen zapsaná"
+    )
     if not nalezy:
         print("všechna dosahují mez.")
         return 0
@@ -318,7 +373,9 @@ def main() -> int:
         "\nMěří se deklarovaná geometrie (minHeight, svislá výplň, hitSlop)\n"
         f"a text: každý řádek svou velikostí písma, bez ní {PISMO_PT} pt, celý\n"
         f"terč bez textu paušálem {RADEK_PT} pt. Podmíněný text se počítá taky,\n"
-        "takže odhad spíš roste — nahlášený terč je malý i tak."
+        "takže odhad spíš roste — nahlášený terč je malý i tak.\n"
+        "Šířka se hlásí jen tam, kde je zapsaná; z textu se nedopočítává.\n"
+        "Mezeru mezi dvěma terči tahle kontrola neměří vůbec."
     )
     return 1
 
