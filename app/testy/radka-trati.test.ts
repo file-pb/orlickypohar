@@ -137,11 +137,21 @@ zkus('shodné průjezdy dají jeden předpis', () => {
   );
 });
 
-zkus('po obrátce opačnou stranou řekne řádka obojí', () => {
+zkus('po obrátce opačnou stranou řekne řádka jen ten rozdíl', () => {
   assert.equal(
     predpisRadky(['ponechat po levoboku', 'ponechat po pravoboku']),
-    'ponechat po levoboku, pak ponechat po pravoboku',
+    'ponechat po levoboku, pak po pravoboku',
   );
+});
+
+zkus('bez společného začátku se nic neořezává', () => {
+  assert.equal(predpisRadky(['start', 'cíl']), 'start, pak cíl');
+});
+
+zkus('ořezává se po celých slovech, ne uprostřed', () => {
+  // „pravoboku" a „pravobok" mají společný kus písmen, ne slovo.
+  assert.equal(predpisRadky(['nechat po levoboku', 'projet mezi nimi']),
+    'nechat po levoboku, pak projet mezi nimi');
 });
 
 console.log(`\n  ${prosly} v pořádku`);

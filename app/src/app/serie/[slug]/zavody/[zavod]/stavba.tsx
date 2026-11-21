@@ -536,12 +536,17 @@ export default function StavbaTrati() {
         <Pressable style={s.stin} onPress={() => setVybrana(null)}>
           <View style={[s.detail, { backgroundColor: t.papir, borderColor: t.linka }]}>
             <Text style={[s.detailJmeno, { color: t.text }]}>{vybrana?.boje.nazev}</Text>
-            {vybrana ? (
-              <Text style={[s.detailRadek, { color: t.tlumeny }]}>
-                {predpisRadky(vybrana.predpisy)}
-                {vybrana.prujezdu > 1 ? ` · ${opakovaniUJmena(vybrana.prujezdu)}` : ''}
+            {/* <b>Tady jdou průjezdy po jednom a celé.</b> Na řádce se
+                slévají do jednoho řádku a delší dvojice se tam usekne
+                (ověřeno v simulátoru) — řádka má říct, která značka to
+                je, kdežto přesné znění se porovnává s plachetní
+                směrnicí, a to se dělá tady. */}
+            {(vybrana?.predpisy ?? []).map((p, i) => (
+              <Text key={i} style={[s.detailRadek, { color: t.tlumeny }]}>
+                {vybrana!.predpisy.length > 1 ? `${i + 1}. průjezd · ` : ''}
+                {p}
               </Text>
-            ) : null}
+            ))}
             {vybrana ? (
               <Text style={[s.detailFakt, { color: t.text }]}>
                 {vybrana.boje.sirka.toFixed(5)}, {vybrana.boje.delka.toFixed(5)}

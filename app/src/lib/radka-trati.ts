@@ -200,5 +200,22 @@ export function predpisRadky(predpisy: string[]): string | null {
   const ruzne = predpisy.filter((p, i) => i === 0 || p !== predpisy[i - 1]);
   if (ruzne.length === 0) return null;
   if (ruzne.length === 1) return ruzne[0];
-  return ruzne.join(', pak ');
+
+  // <b>Druhý průjezd se píše jen tím, čím se liší.</b> Celé
+  // „ponechat po levoboku, pak ponechat po pravoboku" má 44 znaků
+  // a na řádce se useklo (ověřeno v simulátoru 21. 11. 2026) — přitom
+  // opakovat „ponechat" nic nepřidává.
+  //
+  // Ořezává se <b>po celých slovech</b> (jinak by z „pravoboku" zbylo
+  // „oku") a <b>aspoň dvě slova zůstanou</b>: samotné „pak pravoboku"
+  // je bez předložky skřípavé a ušetří jediné písmeno.
+  const slova = ruzne.map((p) => p.split(' '));
+  let spolecnych = 0;
+  while (slova.every((x) => x.length > spolecnych + 2 && x[spolecnych] === slova[0][spolecnych]))
+    spolecnych += 1;
+
+  return [
+    ruzne[0],
+    ...slova.slice(1).map((x) => x.slice(spolecnych).join(' ')),
+  ].join(', pak ');
 }
