@@ -256,6 +256,25 @@ Připisuje každému řádku textu paušálních 20 pt místo `fontSize`, takže
 znovu. A nehlídá **šířku ani mezeru mezi terči** — tedy právě ta dvě
 čísla, na kterých tahle řádka stojí: 8 dp mezery a „terčem je celý řádek".
 
+### F. Dálkové plavbě bez cíle appka tvrdí, že má nedodělanou trať
+
+Automatický dojezd z trasování si cíl vyžaduje. `CilZTrasovaniSprava.cs:65`
+hledá `prvky.LastOrDefault(p => p.Typ == TypPrvku.Cil)` a když ho nenajde
+nebo nemá dva konce, vrátí `Nelze("Trať nemá cíl vytyčený dvěma konci.")`.
+
+U dálkové plavby, která **cíl nemá** (Filip, 21. 11. 2026 — lodě odpiskává
+rozhodčí na vodě), je to **popis normálního stavu formulovaný jako vada
+trati**. Zapisovatel dostane na cílové obrazovce větu, podle které má jít
+trať dodělat; dodělat na ní není co.
+
+Model je přitom v pořádku a nic se v něm měnit nemusí: `Hotovo` cíl
+nevyžaduje — `HotovoAsync` se ptá jedině `ProcNejdeHotovoKvuliZnackam`
+(`TratSprava.cs:229`), tedy na značky sebrané z vody. Trať bez cíle tedy
+projde až do `Prijato` **správně**. Chybí jen rozlišení dvou věcí, které
+dnes splývají do jedné hlášky: *trať cíl nemá, protože ho mít nemá* proti
+*trať cíl má mít a není dodělaný*. Bez toho rozlišení se obrazovka tváří,
+že nabízí dojezdy, které u téhle plavby nikdy nepřijdou.
+
 ## Co se při stavbě zapomene první
 
 Jedna věta na obor, povinná rubrika.
@@ -324,6 +343,74 @@ Jedna věta na obor, povinná rubrika.
    rozjížděk, ne jen jedné — a ty už jsou odjeté. Vada z nálezu A tedy
    není vzácná shoda okolností; je to následek toho, jak se okruhový
    závod jede.
+
+   **A ještě dál (Filip, 21. 11. 2026): *start → značky → cíl* je jedna
+   z možností, ne tvar trati.** Tři doložené tvary:
+
+   | tvar | kde | co z toho plyne |
+   |---|---|---|
+   | start → značky → cíl | ostatní závody | tvar, se kterým konzilium počítalo |
+   | velké kolo, pak opakovaně **vnitřní kolo** do konce závodu | maratony | seznam nemá konec, který by se dal vyjmenovat |
+   | **bez cíle**, lodě odpiskává rozhodčí na vodě | některé dálkové plavby | poslední prvek není cíl a cíl nikde není |
+
+   **Tady konzilium opřelo rozpočet o předpoklad, který neplatí.**
+   1-ergonomie i 5-jachtar počítali seznam na *start → dvě až čtyři
+   otočné nebo brány → cíl*, tedy čtyři až šest prvků se stropem osm, a
+   5-jachtar to řekl výslovně: *„pět je o jeden méně než obvyklá trať,
+   a ten jeden chybějící by byl pokaždé ten poslední — cíl"*
+   (`b2-jachtar-kolo3.md`). U plavby bez cíle není poslední prvek cíl;
+   u maratonu se počet prvků nedá spočítat vůbec, protože se **krouží do
+   konce závodu**.
+
+   **Opakování se dnes nemá kam zapsat.** `PrvekTrati.cs:178` opakování
+   připouští (*„Opakování je v pořádku"*), ale připouští ho jako **další
+   řádek v `Poradi`** — tedy vyjmenováním. Maratonské *„a teď vnitřní
+   kolo až do konce"* vyjmenovat nelze, protože se neví, kolikrát. `2×`
+   u jména (bod 2) tím dostává třetí podobu, kterou nikdo neřešil: ne
+   `2×`, ale *„pořád"*. **Tohle rozhodnutí v závěru chybí** a je to vada
+   mého zadání, ne posudků — tvar trati jsem oborům dal jako konstantu.
+
+   **Co to nemění:** osa ze značek (bod 3) tím zesiluje potřetí, protože
+   u kroužení je průjezdů neomezeně a bójí pět. A nález A je tím ještě
+   větší: závod, který krouží, klonuje nejvíc.
+
+   **A třetí doplnění, které bere bodu 2 druhou řádku (Filip, 21. 11.
+   2026): značka jde dvakrát a po obrátce se na zpáteční cestě může jet
+   opačnou stranou.** Model s tím počítá a je to v něm napsané:
+   `Strana` sedí na **prvku**, ne na bóji (`PrvekTrati.cs:184`), `Poradi`
+   opakování schválně připouští (`:178`, s příkladem
+   `start → A → brána → A → brána → cíl`) a u průjezdní bóje to komentář
+   říká výslovně — *„táž bóje proto může být ve dvou prvcích s různou
+   stranou"* (`PrvekTrati.cs:49–52`).
+
+   **Rozhodnutí 2 to ale rozsype, a ne okrajově.** Řádka má dvě řádky
+   textu: jméno a pod ním **předpis** (13/400 `tlumeny`, nejdelší
+   `ponechat po levoboku` = 134 dp). Předpis skládá appka z druhu prvku
+   (`stavba-prvku.ts:332`), takže **patří k průjezdu, ne ke značce** —
+   a bod 3 slil průjezdy do jedné řádky na značku. Značka, která se jede
+   levobokem a po obrátce pravobokem, má tedy jednu řádku a dva různé
+   předpisy: ať se vypíše kterýkoliv, o druhém průjezdu řádka lže. `2×`
+   u jména to nezachrání, protože neříká *čím se ty dva průjezdy liší*.
+   A je to ta řádka, která se podle 5-jachtara porovnává s textem
+   plachetní směrnice (`b2-jachtar-kolo3.md`) — tedy místo, kde nepravda
+   nejvíc škodí.
+
+   **Doporučení, ne hlasování** (konzilium je dávno uzavřené a vstup je
+   nový): **jedna řádka na značku zůstává** — identita na vodě je bóje,
+   ne průjezd, a to je bod 3, který se tímhle vstupem potvrdil potřetí.
+   Mění se jen **druhá řádka: nenese předpis, nese rozdíl mezi průjezdy**
+   — `levobok, pak pravobok` u značky se dvěma stranami, jediný předpis
+   tam, kde se průjezdy neliší. Vejde se to do týchž 134 dp
+   (`levobok, pak pravobok` je kratší než `ponechat po levoboku`),
+   neotvírá to druhý řádek na značku a **jednotlivé průjezdy i s předpisy
+   patří do detailu**, kam bod 7 fakta stejně soustředil.
+
+   **Dva následky se tím stvrzují.** Podmínka bodu 9 (u značky s `2×` se
+   nemaže z lodi) tím dostává silnější důvod než dvojznačnost terče:
+   smazat „značku", za kterou jsou dva průjezdy s různými stranami,
+   znamená smazat **dvě různá rozhodnutí rozhodčího** jedním klepnutím.
+   A **nesouhlas 5-jachtara k bodu 9 je tím podložený natřetí** — zůstává
+   přehlasovaný, ale každý nový Filipův vstup mu přidává.
 
 2. **Dostává stavitel azimut a vzdálenost rádiem, nebo rozhoduje sám?**
    Mění to směr toku, ne místo: appka ta čísla buď ukazuje, nebo přijímá.
