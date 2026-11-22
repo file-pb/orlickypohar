@@ -99,3 +99,44 @@ s jinými uživateli?** Odpověď je **ano** — trasa lodi se za určitých
 podmínek ukáže divákům a ostatním posádkám. Podrobnosti jsou v zásadách
 v oddílu *Kdo trasu vidí*; rozhoduje o tom rozhodčí dvěma přepínači
 (`Features/Polohy/PolohyEndpoints.cs`).
+
+## Oprávnění v manifestu
+
+Ověřeno 22. 11. 2026 přímo v hotovém AABu (`unzip -p … base/manifest/AndroidManifest.xml`),
+ne z konfigurace — to je rozdíl, protože do manifestu přispívají i knihovny.
+
+**`AD_ID` tam není**, takže deklarace *Aplikace nepoužívá inzertní ID* je
+ověřeně správná a Play ji nemá čím vyvrátit.
+
+**`SYSTEM_ALERT_WINDOW` tam ale byl** — tedy *zobrazovat přes jiné aplikace*.
+Appka ho nikde nechce; jediný zdroj v závislostech je **ladicí** manifest
+React Native (`react-native/ReactAndroid/src/debug/AndroidManifest.xml`),
+kde slouží překryvu vývojářského menu. Do ostré verze se svezl sloučením
+manifestů.
+
+Proč to není kosmetika: je to jedno z oprávnění, na která se kontrola dívá,
+protože ho zneužívají podvodné appky k překrývání cizích obrazovek. Mít ho
+a nepotřebovat je horší než ho nemít, a vysvětlovat se nedá ničím lepším než
+„svezlo se nám to".
+
+Řeší to `blockedPermissions` v `app.json`: plugin zapíše do manifestu
+`<uses-permission … tools:node="remove">` a slučovač oprávnění ho vyhodí,
+i když ho knihovna deklaruje
+(`@expo/config-plugins/build/android/Permissions.js`, `ensureBlockedPermission`).
+Zkontrolovat to jde bez buildu:
+
+```bash
+npx expo config --type introspect | grep -A1 SYSTEM_ALERT_WINDOW
+```
+
+### Služby na popředí
+
+V manifestu jsou **dvě**, a Play se na typ služby na popředí ptá u každé zvlášť:
+
+| Služba | Odkud | Zdůvodnění do konzole |
+|---|---|---|
+| `FOREGROUND_SERVICE_LOCATION` | `expo-location`, `isAndroidForegroundServiceEnabled` | záznam trasy lodi běží celý závod se zhasnutým displejem |
+| `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | `expo-audio`, `enableBackgroundPlayback: true` v `app.json` | odpočet startu troubí i se zamčeným telefonem |
+
+Druhá je tedy rozhodnutí, ne omyl. Kdyby odpočet nemusel být slyšet se
+zhasnutým displejem, vypne se to v `app.json` a jedna deklarace odpadne.
