@@ -1,5 +1,10 @@
+using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Testcontainers.PostgreSql;
 
 namespace OrlickyPohar.Api.Tests;
@@ -88,8 +93,40 @@ public sealed class PostgresFixture : WebApplicationFactory<Program>, IAsyncLife
         //
         // Platí to stejně pro `OchranaZapisuTests` — čtení i zápisy stojí
         // na tomtéž: bez identity není co hlídat.
-        builder.UseSetting("Identita:Authority", "https://identita.neexistuje.invalid");
-        builder.UseSetting("Identita:Audience", "orlickypohar-test");
+        builder.UseSetting("Identita:Authority", TestoveTokeny.Vydavatel);
+        builder.UseSetting("Identita:Audience", TestoveTokeny.Publikum);
+
+        // A pak jeden krok navíc, aby šla správa zkoušet i **přes HTTP**:
+        // hostitel dostane týž symetrický klíč, kterým `TestoveTokeny`
+        // podepisují, a prázdnou konfiguraci poskytovatele, takže se
+        // metadata nestahují. Na síť se pořád nesahá.
+        //
+        // Nic jiného se nevypíná — vydavatel, publikum i životnost se
+        // ověřují dál. Mění se jediná věc: čím je podpis ověřený. Proto
+        // požadavek bez tokenu končí 401 jako dřív a obě `Ochrana*Tests`
+        // dál měří to, co měřily.
+        builder.ConfigureTestServices(sluzby =>
+            sluzby.PostConfigure<JwtBearerOptions>(
+                JwtBearerDefaults.AuthenticationScheme,
+                o =>
+                {
+                    o.Configuration = new OpenIdConnectConfiguration();
+                    o.TokenValidationParameters.IssuerSigningKey = TestoveTokeny.Klic;
+                    o.TokenValidationParameters.ValidateIssuerSigningKey = true;
+                }));
+    }
+
+    /// <summary>
+    /// Klient, který se hlásí jako účet <paramref name="subjekt"/>. Dvojice
+    /// <c>(iss, sub)</c> je to, podle čeho si aplikace účet najde, takže
+    /// stejný subjekt dvakrát znamená stejný účet.
+    /// </summary>
+    public HttpClient KlientJako(string subjekt, string? zobrazovane = null, string? email = null)
+    {
+        var klient = CreateClient();
+        klient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", TestoveTokeny.Vydej(subjekt, zobrazovane, email));
+        return klient;
     }
 
     async Task IAsyncLifetime.DisposeAsync()
