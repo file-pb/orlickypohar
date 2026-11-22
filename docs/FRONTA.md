@@ -1,4 +1,4 @@
-# Fronta: co se má vzít (18. 11. 2026, odpoledne)
+# Fronta: co se má vzít (22. 11. 2026)
 
 Jeden řádek na každou věc, která doopravdy zbývá — ze **všech** řezů, ne jen
 z jednoho. U každé je to jediné, co o ní potřebuješ vědět dřív, než ji vezmeš:
@@ -24,42 +24,39 @@ položka ve skupině E je právě to ověření.
 
 ## A) Nic to nedrží — dá se vzít hned
 
+Čtyři položky, které vznikly **21. 11. z Filipových odpovědí** na otázky pro
+Miloše: rozhodnuté jsou, nic na nich nevisí, jen se musí postavit.
+
 | Odkud | Co zbývá | Kde se to dnes vidí | Velikost |
 | --- | --- | --- | --- |
+| **R39** | **Zámek startovní listiny visí na špatném hřebíku.** Rozprava je vyhlášený okamžik (*„řeknu to, je to podle situace v klubovně"*), ale listina zaklapne až tím, že někdo zapíše čas startu. Mezi rozpravou a zapsaným časem smí pořadatel do listiny dál sahat. Opravit na *to dřívější z obou* — vyhlášená rozprava, nebo zapsaný čas | `PrihlaskySprava.PoRozpraveAsync` je jeden řádek: *existuje rozjížďka se `StartV`?* | malá: řádek a test |
+| **K2** | **Podpis se nepustí, dokud běží protestní lhůta.** Dvě hodiny od dojezdu poslední lodi; Filip: *„dvě hodiny jsou v poho."* Zbývající čas musí stát u tlačítka, ne až v chybě, a rozjížďka, ze které nikdo nedojel, nečeká — nemá od čeho | limit se dnes počítá a píše, ale nezamyká nic | malá až střední |
+| **návod, bod 17** | **Uzavření regaty jako úkon na konci dne, a automat po dvou dnech.** Filip: *„úkon, který na konci dne uděláme; pokud na to zapomeneme, udělej ho za dva dny sám."* Automat zavírá, **nepodepisuje** — podmínku „protesty jsou vyřízené" aplikace neumí ověřit. Dva dny od konce posledního závodního dne. Na obrazovce má být vidět, že to udělal automat | úloha na pozadí jako `UklidKontaktu`; dnes regatu nezavírá nic | střední |
+| **R21** | **Dráha a „po kolikáté se nestartuje" do vypsání**, per regata — Filip: *„pro každou regatu extra, ale s našeptáváním z mediánu."* Medián jde spočítat z hodiny; u dráhy se našeptá **poslední použitá**, protože průměrovat věty nejde | `Vypsani.cs:136` a `:138` jsou pořád `null` | střední |
 
-> **Skupina A je prázdná.** Poslední položka — rozšířit `kontrast.test.ts`
-> o páry stavitele — má od 21. 11. majitele: dopíše ji session stavitele
-> spolu s akcemi detailu, aby se měřila proti hotovým tvarům. Páry už
-> existují (silueta na kartě s lemem dopočítaným z podkladu, tlumená výplň
-> u značky bez barvy).
+> Rozšíření `kontrast.test.ts` o páry stavitele má od 21. 11. majitele:
+> dopíše ho session stavitele spolu s akcemi detailu, aby se měřilo proti
+> hotovým tvarům.
 
 Nová položka odtamtud: **`KonecBojeDto` nenese čas postavení a přesnost**,
 a závěr konzilia je u detailu značky chce — předčítají se do vysílačky. Je
 to aditivní změna API, stejného druhu jako ta, která tam přidala zdroj,
 barvu a tvar. Majitele zatím nemá.
 
-## B) Čeká na Miloše — a vejde se to do jedné zprávy
+## B) Čeká na Miloše — zpráva je napsaná, zbývá ji poslat
 
-Z šesti otázek na konci návodu (s. 23) jsou **dvě odpovězené** — odstartování
-rozjížďky a zčásti flow rozpravy. Zbývá tohle:
+Z osmi otázek zbyly **tři**: pět jich 21. 11. odpadlo, protože dvě věci
+aplikace už umí (revize trati v editoru bójí, vyloučení obojím způsobem)
+a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách).
 
-| Otázka | Bod návodu | Co na ní visí |
-| --- | --- | --- |
-| Kde a jak chceš revidovat trať? | 5 | příjem trati rozhodčím proti stavbě v appce |
-| Kde chceš mít přehled o lodích za jízdy? | 10 | co má být na mapě za jízdy a komu |
-| Co potřebuješ vidět, než uznáš výsledky? | 16 | podpis výsledků — dnes se nabízí bez čehokoli |
-| Kde a jak se má regata uzavřít? | 17 | konec dne závodu jako úkon |
-| **Začátek a konec rozpravy** | 8 | zbytek otázky 6: co rozprava zapíná, už víme (R3, R4, R6, R39), kdy začíná a končí ne |
-| **Má protestní limit nepustit podpis, nebo to jen napsat?** | — | K2. Limit se počítá a píše se u rozjížďky; nezamyká nic, protože aplikace neví, že nějaký protest visí |
-| **Vyloučení: „nepustím ke startu", nebo „vyhazuju z výsledků"?** | — | K4 a mez z pravidla 76.1(a) |
-| **Dva body vypsání, které vydáváš ty** — *Dráha* (J1.3(4)), kterou dnes nese směrnice jako text, a *kdy se poslední den už nestartuje* (J1.3(7)), tedy ve vzoru „žádná rozjížďka nebude startována po 16:00". A **místo konání**, které aplikace nevede nikde, takže je v dokumentu zadrátované „neuvedené" | — | R21, R23, zbytek R1/R8 |
+| Otázka | Co na ní visí |
+| --- | --- |
+| **Kde chceš mít přehled o lodích za jízdy** — telefon na lodi, web u stolu, tabule? Nic se neubírá, jde o místo | mapa pro telefon je jiná stavba než mapa pro monitor; dnes je jen na webu |
+| **Je uznání výsledků jeden úkon za celou regatu, nebo dál po rozjížďkách?** Filip popsal konec dne; aplikace podepisuje každou rozjížďku zvlášť | celkový přehled regaty před podpisem dnes není |
+| **Zůstávají vyloučené lodi odjeté rozjížďky v bodování?** Dnes zůstávají a loď se dál počítá mezi přihlášené | K4, a mez z pravidla 76.1(a), kterou aplikace nehlídá |
 
 ## C) Čeká na rozhodnutí Filipa
 
-- **Smí do zápisu dojezdů i pořadatel?** Milošova věta říká *„pouze
-  rozhodčí"*, tvoje rozhodnutí ze 16. 10. *„pořadatel, dokud je zápis
-  otevřený"*. Dnes platí tvoje, a Milošova tím zůstává nenaplněná. Není to
-  chyba v kódu, je to nezavřený spor dvou zadání (R38).
 - **Kolik z osmi kombinací stavitele se za sezónu reálně postaví?** Pátá
   otázka konzilia, jediná otevřená. Pořadí voleb má být podle četnosti a
   pevně zadrátované — bez čísel ho seřadí odhadem, a odhad se na vodě pozná.
@@ -123,6 +120,11 @@ rozjížďky a zčásti flow rozpravy. Zbývá tohle:
   vodě"*. Až stavitel barvy dostane, má si vzít **tu tabulku**, ne vyrobit
   třetí zdroj. Ověřeno 18. 11.: jediné dva výskyty těch dvou tokenů
   v `trat.tsx` jsou texty chyb.
+- **Přestavba trati z appky.** Filip, 21. 11.: *„má to jít odevšad."*
+  Revize trati na webu je hotová — přijatou trať odemkne přestavba a
+  veřejně se hlásí —, ale v appce ten úkon není, přestože ho API pouští
+  pořadateli i rozhodčímu (`POST …/trat/prestavba`). `stavba.tsx` o něm
+  jen mluví. Patří k obrazovce stavitele, tedy té druhé session.
 - **Vypsání jako plný dokument J1** (R1, R8). Osnova stojí, dva body si
   aplikace dosadí sama (skupina A), dva vydává Miloš a místo konání nevede
   nikdo (skupina B). Teprve pak je to dokument, o kterém R8 mluví.
