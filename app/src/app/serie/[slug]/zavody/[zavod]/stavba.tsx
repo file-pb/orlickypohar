@@ -20,10 +20,12 @@ import { useTheme } from '@/hooks/use-theme';
 import {
   nactiPrvkySpravy,
   nactiRozestavenouTrat,
+  prestavbaTrati,
   type PrvekSpravy,
 } from '@/lib/api';
 import { pismoNaVyplni } from '@/lib/kontrast';
 import { mojeOpravneni } from '@/lib/opravneni';
+import { lzePotvrdit, vyprselo } from '@/lib/stavba/potvrzeni';
 import { jePouzePomocnik } from '@/lib/role';
 import {
   opakovaniUJmena,
@@ -126,6 +128,14 @@ export default function StavbaTrati() {
   // mazat (rozhodnutí 10) — a to pravidlo patří k rolím, ne sem.
   const { data: ja } = useData(mojeOpravneni);
 
+  // Odemčení má dvě fáze: první klepnutí jen řekne, co se tím veřejně
+  // stane. Je to úkon, o kterém se venku ví.
+  const [prestavuje, setPrestavuje] = useState(false);
+
+  // Zahození prvku z fronty: který terč je ve druhé fázi a odkdy.
+  const [zahazuje, setZahazuje] = useState<number | null>(null);
+  const [otevrenoV, setOtevrenoV] = useState<number | null>(null);
+
   const { data: zavodData, chyba: chybaZavodu, nacita, obnov } = useData(
     useCallback(() => nactiRozestavenouTrat(slug, zavod), [slug, zavod]),
   );
@@ -142,6 +152,21 @@ export default function StavbaTrati() {
   const [znaceni, setZnaceni] = useState<Predvolba>(VYCHOZI_ZNACENI);
   const [body, setBody] = useState<Fix[]>([]);
   const [smer, setSmer] = useState<(typeof SMERY)[number] | null>(null);
+
+  const odemkni = useCallback(async () => {
+    setPosila(true);
+    setHlaska(null);
+    try {
+      await prestavbaTrati(slug, zavod);
+      setPrestavuje(false);
+      obnov();
+      setHlaska('Trať je odemčená. Veřejně se hlásí, že se přestavuje.');
+    } catch (e) {
+      setHlaska(e instanceof Error ? e.message : 'Odemknout se nepovedlo.');
+    } finally {
+      setPosila(false);
+    }
+  }, [slug, zavod, obnov]);
 
   const nactiPrvky = useCallback(async () => {
     setPrvky(await nactiPrvkySpravy(slug, zavod));
@@ -247,7 +272,22 @@ export default function StavbaTrati() {
     await posliCoJde();
   };
 
+  /**
+   * Zahození má dvě fáze na témž terči, který se nepohne. První klepnutí
+   * potvrzení otevře, druhé maže — a mezi nimi je prodleva proti
+   * dvojklepu z houpnutí lodi. Po pěti vteřinách se to vrátí zpátky.
+   */
   const zahodCekajici = (id: number) => {
+    const ted = Date.now();
+    if (zahazuje !== id || vyprselo(otevrenoV, ted)) {
+      setZahazuje(id);
+      setOtevrenoV(ted);
+      return;
+    }
+    if (!lzePotvrdit(otevrenoV, ted)) return;
+
+    setZahazuje(null);
+    setOtevrenoV(null);
     zahod(id);
     obnovFrontu();
     void posliCoJde();
@@ -295,6 +335,51 @@ export default function StavbaTrati() {
           <Text style={{ color: t.tlumeny, marginTop: 2 }}>
             Stavět do ní nejde. Odemkne ji přestavba — ta se veřejně hlásí.
           </Text>
+
+          {/* <b>Cesta ven má být tam, kde se o zámku člověk dozví</b>
+              (Filip, 21. 11. 2026: *„má to jít odevšad"*). Pruh tuhle
+              větu psal od začátku, ale úkon k ní v appce nebyl: API ho
+              pouští pořadateli i rozhodčímu, a kdo je na vodě zrovna
+              u odfouklé bóje, nemá se kam přepnout.
+
+              Pomocníkovi se nenabízí — přestavba je rozhodnutí o trati,
+              ne měření, stejně jako sebrání a mazání (rozhodnutí 10). */}
+          {jePouzePomocnik(ja ?? null, slug, zavod) ? null : prestavuje ? (
+            <View style={s.prestavba}>
+              <Text style={{ color: t.tlumeny, marginBottom: 8 }}>
+                Veřejně se tím řekne, že se trať přestavuje. Podle odjeté se už jelo,
+                takže se nepřepíše — vznikne nová a stará zůstane přijatá.
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Pressable
+                  disabled={posila}
+                  onPress={odemkni}
+                  style={({ pressed }) => [
+                    s.odemknout,
+                    { borderColor: t.vystraha, opacity: pressed ? 0.6 : 1 },
+                  ]}>
+                  <Text style={{ color: t.vystraha, fontWeight: '600' }}>Ano, odemkni</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setPrestavuje(false)}
+                  style={({ pressed }) => [
+                    s.odemknout,
+                    { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
+                  ]}>
+                  <Text style={{ color: t.text, fontWeight: '600' }}>Nechat zamčené</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <Pressable
+              onPress={() => setPrestavuje(true)}
+              style={({ pressed }) => [
+                s.odemknout,
+                { borderColor: t.vystraha, marginTop: 10, opacity: pressed ? 0.6 : 1 },
+              ]}>
+              <Text style={{ color: t.vystraha, fontWeight: '600' }}>Přestavět trať</Text>
+            </Pressable>
+          )}
         </View>
       ) : null}
 
@@ -315,16 +400,57 @@ export default function StavbaTrati() {
           </Text>
           {stojici ? (
             <>
-              <Text style={{ color: t.stavZruseny, marginTop: 4 }}>{stojici.potiz}</Text>
+              <Text
+                style={{
+                  color: stojici.odmitnuto ? t.stavZruseny : t.tlumeny,
+                  marginTop: 4,
+                }}>
+                {stojici.potiz}
+              </Text>
               <Text style={{ color: t.tlumeny, marginTop: 2, fontSize: 13 }}>
                 Dokud tenhle prvek stojí, čeká i všechno za ním — pořadí na trati
                 určuje server podle pořadí, v jakém prvky dorazí.
               </Text>
-              <Pressable onPress={() => zahodCekajici(stojici.id)} style={s.zahodit}>
-                <Text style={{ color: t.stavZruseny, fontWeight: '600' }}>
-                  Zahodit „{stojici.popis}"
-                </Text>
+
+              {/* <b>Zkusit znovu stojí nad Zahodit</b> a obojí je obrysové
+                  (rozhodnutí 6 prvního konzilia): jediná plná barevná
+                  plocha na obrazovce zůstává pípnutí. */}
+              <Pressable
+                disabled={posila}
+                onPress={() => void posliCoJde()}
+                style={({ pressed }) => [
+                  s.odemknout,
+                  { borderColor: t.linka, marginTop: 10, opacity: pressed ? 0.6 : 1 },
+                ]}>
+                <Text style={{ color: t.text, fontWeight: '600' }}>Zkusit znovu</Text>
               </Pressable>
+
+              {/* <b>Zahodit se nabízí jen u vady prvku.</b> Když stojí
+                  okolnosti — výpadek proxy, chybějící signál —, prvek je
+                  v pořádku a fronta se rozjede sama; nabídnout tam mazání
+                  nenahraditelného měření by byla ta nejhorší rada. */}
+              {stojici.odmitnuto ? (
+                <Pressable
+                  onPress={() => zahodCekajici(stojici.id)}
+                  style={({ pressed }) => [
+                    s.odemknout,
+                    {
+                      borderColor: zahazuje === stojici.id ? t.stavZruseny : t.linka,
+                      marginTop: 8,
+                      opacity: pressed ? 0.6 : 1,
+                    },
+                  ]}>
+                  <Text
+                    style={{
+                      color: zahazuje === stojici.id ? t.stavZruseny : t.tlumeny,
+                      fontWeight: '600',
+                    }}>
+                    {zahazuje === stojici.id
+                      ? 'Klepni ještě jednou — měření zmizí'
+                      : `Zahodit „${stojici.popis}"`}
+                  </Text>
+                </Pressable>
+              ) : null}
             </>
           ) : null}
         </View>
@@ -664,6 +790,16 @@ const styly = (t: Barvy) =>
       borderRadius: 8,
       padding: 10,
       marginBottom: 6,
+    },
+    prestavba: { marginTop: 10 },
+    odemknout: {
+      minHeight: 48,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      flexGrow: 1,
     },
     pruh: { borderTopWidth: 1, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 26 },
     pruhRadek: { fontSize: 13, marginBottom: 6 },
