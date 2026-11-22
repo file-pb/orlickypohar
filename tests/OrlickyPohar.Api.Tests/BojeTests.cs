@@ -133,6 +133,12 @@ public class BojeTests(PostgresFixture fixture)
             kdo.Id,
             default);
 
+        // <b>Porovnává se načtené proti načtenému.</b> Postgres ukládá
+        // `timestamptz` s mikrosekundovou přesností, kdežto .NET tiká po
+        // 100 ns — hodnota z paměti se tedy téže hodnotě ze zápisu nikdy
+        // nerovná a test by padal na dvou ticích, ne na chybě v kódu.
+        var pred = await db.Boje.AsNoTracking().SingleAsync(b => b.Id == postavena!.Id);
+
         Assert.Null(await boje.ZnaceniAsync(
             zavod.Id,
             postavena!.Id,
@@ -149,9 +155,11 @@ public class BojeTests(PostgresFixture fixture)
 
         // A tohle je ta podstatná věc: měření se nehnulo a nevznikl druhý
         // záznam. Jinak by z opravy barvy bylo pípnutí, které se nestalo.
-        Assert.Equal(49.516, po.Sirka);
-        Assert.Equal(5, po.PresnostM);
-        Assert.Equal(postavena.PostavenaV, po.PostavenaV);
+        Assert.Equal(pred.Sirka, po.Sirka);
+        Assert.Equal(pred.Delka, po.Delka);
+        Assert.Equal(pred.PresnostM, po.PresnostM);
+        Assert.Equal(pred.Zdroj, po.Zdroj);
+        Assert.Equal(pred.PostavenaV, po.PostavenaV);
         Assert.Equal(1, await db.Boje.CountAsync(b => b.ZavodId == zavod.Id));
     }
 
@@ -207,24 +215,39 @@ public class BojeTests(PostgresFixture fixture)
     /// Přenastavený záznam platí jen pro dobu, kdy platil — čím ta značka
     /// je, řekne dnes její nástupce. <b>Sebraná se přebarvit smí</b>:
     /// špatně zapsanou barvu musí jít opravit i večer na břehu.
+    ///
+    /// <para>
+    /// <b>Bóje musí být „důležitá", jinak ji sebrání rovnou zahodí.</b>
+    /// <c>SeberAsync</c> volá <c>ZahodAsync</c> a záznam, na kterém nic
+    /// nevisí, zmizí celý — překlep při pípnutí není historie. Případ
+    /// „sebraná a přebarvená" tedy existuje jedině u záznamu, na kterém
+    /// něco stojí; tady ho drží přijatá trať. Zjištěno z červeného CI
+    /// 22. 11. 2026, protože integrační testy odsud nejdou spustit.
+    /// </para>
     /// </summary>
     [Fact]
     public async Task Nahrazeny_zaznam_se_neprebarvuje_sebrany_ano()
     {
-        var (db, boje) = Sluzby();
+        var (db, boje, trate) = SluzbyITrat();
         var (zavod, kdo) = await RegataAsync(db);
 
         var (stara, _) = await boje.PipniAsync(zavod.Id, Bod("Otočná"), kdo.Id, default);
         var (nova, _) = await boje.PipniAsync(
             zavod.Id, Bod("Otočná", 49.517, stara!.Id), kdo.Id, default);
 
+        // Trať se přijme a zase odemkne: obě bóje tím stály ve vodě, když
+        // šla trať ven, takže je úklid nesmí zahodit.
+        await DulezitaAsync(trate, zavod, kdo);
+
         Assert.NotNull(await boje.ZnaceniAsync(
-            zavod.Id, stara.Id, new ZnaceniBojeVstup(BarvaBoje.Modra), default));
+            zavod.Id, stara!.Id, new ZnaceniBojeVstup(BarvaBoje.Modra), default));
 
         // Nástupce ano — a pak i po sebrání.
         Assert.Null(await boje.ZnaceniAsync(
             zavod.Id, nova!.Id, new ZnaceniBojeVstup(BarvaBoje.Modra), default));
         Assert.Null(await boje.SeberAsync(zavod.Id, nova.Id, default));
+        Assert.True(await db.Boje.AnyAsync(b => b.Id == nova.Id));
+
         Assert.Null(await boje.ZnaceniAsync(
             zavod.Id, nova.Id, new ZnaceniBojeVstup(BarvaBoje.Zelena), default));
 
