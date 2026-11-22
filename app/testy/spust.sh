@@ -153,3 +153,9 @@ echo "== Stav v řádce trati =="
 echo
 echo "== Akce v detailu prvku =="
 "${NODE[@]}" ./detail-prvku.test.ts
+
+# Dvě fáze u zahození prvku z fronty: prodleva proti dvojklepu
+# z houpnutí lodi a potvrzení, které nečeká donekonečna.
+echo
+echo "== Potvrzení zahození =="
+"${NODE[@]}" ./potvrzeni.test.ts
