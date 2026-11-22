@@ -247,9 +247,22 @@ u klienta.
 `*.klihovka.cz`, takže `api.orlickypohar.klihovka.cz` selže na TLS dřív, než
 požadavek dojde na server. Proto `orlickypohar-api.klihovka.cz`.
 
-**Integrační testy lokálně nejedou.** Docker Hub je z pracovního stroje
-nedostupný, takže Testcontainers běží jen v GitHub Actions. Před pushem
-pusť aspoň `dotnet test --filter "Category!=Integracni"`.
+**Integrační testy lokálně nejedou, a je to horší, než stálo tady.**
+Dosud tu bylo napsané, že je nedostupný Docker Hub. Ověřeno 22. 11. 2026:
+na tomhle stroji **není kontejnerový runtime vůbec** — `docker` ani
+`colima` nejsou v cestě, `Docker.app` není nainstalovaná a `psql` taky
+ne. Testcontainers tedy nemá co spustit a nejde o síť.
+
+Praktický následek stál jednu noc dvě červená CI: **chybu v integračním
+testu se dozvíš až z běhu po pushi**, a do té doby za tou červenou stojí
+fronta cizích commitů, protože nasazení čeká na testy. Proto:
+
+1. před pushem pusť `dotnet test --filter "Category!=Integracni"`;
+2. a po pushi se na běh **podívej, než začneš další věc**.
+
+Cesty ven jsou dvě a obě jsou rozhodnutí, ne práce: doinstalovat runtime
+(colima, Docker Desktop, nebo `postgresql@17`), nebo dát fixtuře zadní
+vrátka přes `POSTGRES_URL` na běžící databázi.
 
 ## Zdraví a nasazení
 
