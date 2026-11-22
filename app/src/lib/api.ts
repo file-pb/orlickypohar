@@ -495,6 +495,44 @@ export const pipni = (serie: string, zavod: string, vstup: PipnutiVstup) =>
   posliZaSebe<BojeSpravy>(`/sprava/serie/${serie}/zastavky/${zavod}/boje`, vstup);
 
 /**
+ * <b>Odemkne přijatou trať na přestavbu.</b> Smí organizátor regaty
+ * a rozhodčí ročníku, ne pomocník.
+ *
+ * <para>
+ * <b>Veřejně to znamená „počkej", ne „nic"</b>: někdo už má GPX
+ * v plotteru a popluje k bóji, která se mezitím posunula. Podle odjeté
+ * trati se navíc už jelo, takže se nepřepíše — vznikne nová a stará
+ * zůstane přijatá.
+ * </para>
+ */
+export const prestavbaTrati = (serie: string, zavod: string) =>
+  posliZaSebe<unknown>(`/sprava/serie/${serie}/zastavky/${zavod}/trat/prestavba`, {});
+
+/**
+ * <b>Přepíše značení bóje</b> — barvu, tvar, druh a poznámku.
+ *
+ * <para>
+ * <b>Měření se tím nemění.</b> Poloha, přesnost, zdroj ani čas: tohle
+ * popisuje tentýž kus plastu, ne záznam o tom, kde stál. Posílá se celá
+ * čtveřice, protože `null` u každé z nich znamená „neuvedeno" a musí
+ * jít nastavit.
+ * </para>
+ */
+export type ZnaceniBoje = S['ZnaceniBojeVstup'];
+
+export const znaceniBoje = (
+  serie: string,
+  zavod: string,
+  boje: number,
+  vstup: ZnaceniBoje,
+) =>
+  posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/boje/${boje}/znaceni`,
+    vstup,
+    'PUT',
+  );
+
+/**
  * <b>Sebrání bóje z vody.</b> Ze zápisu nemizí — je to razítko, ne
  * mazání: podle té bóje se možná jelo.
  */

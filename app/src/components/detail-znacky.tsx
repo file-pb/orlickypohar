@@ -9,11 +9,13 @@ import {
   seberBoji,
   smazPrvek,
   upravPrvek,
+  znaceniBoje,
   type PrvekSpravy,
 } from '@/lib/api';
 import { akceDetailu } from '@/lib/detail-prvku';
-import { pismoNaVyplni } from '@/lib/kontrast';
+import { barvaNaVyplni, pismoNaVyplni } from '@/lib/kontrast';
 import { opakovaniUJmena, type ZnackaNaOse } from '@/lib/radka-trati';
+import { BARVY, NAZVY_BAREV, NAZVY_TVARU, SiluetaZnacky } from '@/components/znak-boje';
 import { azimut, vzdalenostM } from '@/lib/stavba-prvku';
 import type { Fix, Posudek } from '@/lib/stavba/poloha';
 
@@ -79,6 +81,9 @@ export function DetailZnacky({
   const [chyba, setChyba] = useState<string | null>(null);
   // Mazání má dvě fáze: první klepnutí jen řekne, co se stane.
   const [mazeSe, setMazeSe] = useState(false);
+  // Barva a tvar se mění jednou za ráno, z jedné krabice bójí — proto
+  // jsou schované, dokud o ně někdo nepožádá.
+  const [prebarvuje, setPrebarvuje] = useState(false);
 
   const akce = akceDetailu({
     naServeru: znacka.prvky.every((p) => p.id !== undefined),
@@ -91,14 +96,22 @@ export function DetailZnacky({
   // právě proto se u ní mazání ani přerovnání nenabízí.
   const prvek = znacka.prvky.length === 1 ? znacka.prvky[0] : null;
 
-  const udelej = async (co: () => Promise<unknown>) => {
+  /**
+   * Udělá úkon a načte trať znovu.
+   *
+   * <b>Zavírá se jen u toho, co detail vyčerpá.</b> Po přesunu, sebrání
+   * nebo smazání není na co se dívat; barvu a tvar ale člověk mění
+   * jedním dechem — zavřít mu obrazovku po prvním klepnutí by znamenalo
+   * otevřít ji znovu kvůli druhému.
+   */
+  const udelej = async (co: () => Promise<unknown>, zavri = true) => {
     if (pracuje) return;
     setPracuje(true);
     setChyba(null);
     try {
       await co();
       await onZmena();
-      onZavri();
+      if (zavri) onZavri();
     } catch (e) {
       setChyba(e instanceof Error ? e.message : 'Nepovedlo se to. Zkus to znovu.');
     } finally {
@@ -209,6 +222,120 @@ export function DetailZnacky({
               ]}>
               <Text style={[s.obrysovyText, { color: t.text }]}>Sebrat z vody</Text>
             </Pressable>
+          ) : null}
+
+          {/* <b>Barva a tvar: jednou za ráno, z jedné krabice bójí</b>
+              (rozhodnutí 11). Vzorky jsou dvě řady po čtyřech, 56 × 56,
+              a osmé pole je *neuvedeno*, protože `Barva` je nepovinná
+              schválně — ne každá bójka se zapisuje barevně.
+
+              Přepíše se jen značení. Měření zůstává: tohle je vlastnost
+              toho kusu plastu, ne záznamu o jeho poloze. */}
+          {akce.includes('barva-a-tvar') ? (
+            prebarvuje ? (
+              <View style={s.prebarveni}>
+                <Text style={[s.radek, { color: t.tlumeny }]}>Barva</Text>
+                <View style={s.vzorky}>
+                  {([...Object.keys(BARVY), null] as (keyof typeof BARVY | null)[]).map(
+                    (b) => (
+                      <Pressable
+                        key={b ?? 'nic'}
+                        disabled={pracuje}
+                        onPress={() =>
+                          udelej(
+                            () =>
+                              znaceniBoje(serie, zavod, znacka.boje.id, {
+                                barva: b,
+                                tvar: znacka.boje.tvar,
+                                znaceni: znacka.boje.znaceni,
+                              }),
+                            false,
+                          )
+                        }
+                        accessibilityRole="button"
+                        accessibilityLabel={b ? NAZVY_BAREV[b] : 'neuvedeno'}
+                        style={({ pressed }) => [
+                          s.vzorek,
+                          {
+                            backgroundColor: b ? BARVY[b] : 'transparent',
+                            // Lem dopočítaný z výplně — bílá bójka by se
+                            // na papíře jinak ztratila.
+                            borderColor:
+                              b === znacka.boje.barva
+                                ? t.voda
+                                : barvaNaVyplni(t, b ? BARVY[b] : t.papir, t.tlumeny),
+                            borderWidth: b === znacka.boje.barva ? 3 : 1,
+                            opacity: pressed ? 0.6 : 1,
+                          },
+                        ]}>
+                        {b ? null : (
+                          <Text
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                            style={{ color: t.tlumeny, fontSize: 11, paddingHorizontal: 4 }}>
+                            neuvedeno
+                          </Text>
+                        )}
+                      </Pressable>
+                    ),
+                  )}
+                </View>
+
+                <Text style={[s.radek, { color: t.tlumeny }]}>Tvar</Text>
+                <View style={s.tvary}>
+                  {([...Object.keys(NAZVY_TVARU), null] as (keyof typeof NAZVY_TVARU | null)[]).map(
+                    (tv) => (
+                      <Pressable
+                        key={tv ?? 'nic'}
+                        disabled={pracuje}
+                        onPress={() =>
+                          udelej(
+                            () =>
+                              znaceniBoje(serie, zavod, znacka.boje.id, {
+                                barva: znacka.boje.barva,
+                                tvar: tv,
+                                znaceni: znacka.boje.znaceni,
+                              }),
+                            false,
+                          )
+                        }
+                        style={({ pressed }) => [
+                          s.tvarChip,
+                          {
+                            borderColor: tv === znacka.boje.tvar ? t.voda : t.linka,
+                            opacity: pressed ? 0.6 : 1,
+                          },
+                        ]}>
+                        <Text style={{ color: t.text, fontSize: 13 }}>
+                          {tv ? NAZVY_TVARU[tv] : 'neuvedeno'}
+                        </Text>
+                      </Pressable>
+                    ),
+                  )}
+                </View>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => setPrebarvuje(true)}
+                style={({ pressed }) => [
+                  s.obrysovy,
+                  { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
+                ]}>
+                <View style={s.barvaRadek}>
+                  <SiluetaZnacky
+                    barva={znacka.boje.barva}
+                    tvar={znacka.boje.tvar}
+                    znaceni={znacka.boje.znaceni}
+                    vychoziVypln={t.tlumeny}
+                    lem={barvaNaVyplni(t, t.papir, t.tlumeny)}
+                  />
+                  <Text style={[s.obrysovyText, { color: t.text }]}>
+                    {znacka.boje.barva ? NAZVY_BAREV[znacka.boje.barva] : 'barva neuvedena'}
+                    {znacka.boje.tvar ? `, ${NAZVY_TVARU[znacka.boje.tvar]}` : ''}
+                  </Text>
+                </View>
+              </Pressable>
+            )
           ) : null}
 
           {akce.includes('vys') && prvek ? (
@@ -338,6 +465,29 @@ const styly = (t: Barvy) =>
     },
     obrysovyText: { fontSize: 16, fontWeight: '600' },
     poradi: { flexDirection: 'row', gap: 10, marginTop: 12 },
+    prebarveni: { marginTop: 18 },
+    // Dvě řady po čtyřech, 56 x 56: obrazovka se otevře jednou za ráno,
+    // takže je to nejlevnější místo, kde se dá platit velikostí.
+    // <b>Dvě řady po čtyřech</b> (rozhodnutí 11). Šířka je spočítaná,
+    // ne odhadnutá: 4 x 56 + 3 x 10 mezery = 254, takže se pátý vzorek
+    // nevejde ani na širším telefonu a mřížka zůstane, jak se rozhodlo.
+    vzorky: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6, maxWidth: 254 },
+    tvary: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 },
+    vzorek: {
+      width: 56,
+      height: 56,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    tvarChip: {
+      minHeight: 44,
+      justifyContent: 'center',
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderRadius: 10,
+    },
+    barvaRadek: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     sipka: {
       flex: 1,
       minHeight: 48,

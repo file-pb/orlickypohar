@@ -5569,6 +5569,58 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/znaceni": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "P\u0159ep\u00ed\u0161e barvu, tvar, druh zna\u010den\u00ed a pozn\u00e1mku",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. <b>M\u011b\u0159en\u00ed se nem\u011bn\u00ed</b> \u2014 poloha, p\u0159esnost, zdroj ani \u010das; m\u011bn\u00ed se to, \u010d\u00edm ta zna\u010dka je. Pos\u00edl\u00e1 se cel\u00e1 \u010dtve\u0159ice, proto\u017ee `null` u ka\u017ed\u00e9 z nich znamen\u00e1 \u201eneuvedeno\" a mus\u00ed j\u00edt nastavit. Do p\u0159ijat\u00e9 trati nejde a p\u0159enastaven\u00fd z\u00e1znam se nep\u0159ebarvuje \u2014 \u010d\u00edm ta zna\u010dka je, \u0159ekne ta, kter\u00e1 stoj\u00ed te\u010f.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "boje",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZnaceniBojeVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/fotky": {
             "post": {
                 "tags": [
@@ -14759,6 +14811,51 @@
                     "poradatelZapisujeVysledky": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "uzavrenoAutomatemV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "draha": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "posledniStartV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "time"
+                    },
+                    "mistoKonani": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "napovedaMista": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "napovedaDrahy": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "napovedaPoslednihoStartu": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "time"
                     }
                 }
             },
@@ -14855,6 +14952,25 @@
                             "string"
                         ],
                         "format": "date"
+                    },
+                    "mistoKonani": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "draha": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "posledniStartV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "time"
                     },
                     "startovne": {
                         "type": [
@@ -15599,6 +15715,47 @@
                         ]
                     },
                     "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "ZnaceniBojeVstup": {
+                "type": "object",
+                "properties": {
+                    "barva": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BarvaBoje"
+                            }
+                        ]
+                    },
+                    "tvar": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/TvarBoje"
+                            }
+                        ]
+                    },
+                    "znaceni": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhZnaceni"
+                            }
+                        ]
+                    },
+                    "popis": {
                         "type": [
                             "null",
                             "string"

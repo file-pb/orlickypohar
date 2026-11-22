@@ -5360,6 +5360,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/znaceni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Přepíše barvu, tvar, druh značení a poznámku
+         * @description Pořadatel regaty, nebo rozhodčí. <b>Měření se nemění</b> — poloha, přesnost, zdroj ani čas; mění se to, čím ta značka je. Posílá se celá čtveřice, protože `null` u každé z nich znamená „neuvedeno" a musí jít nastavit. Do přijaté trati nejde a přenastavený záznam se nepřebarvuje — čím ta značka je, řekne ta, která stojí teď.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    boje: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZnaceniBojeVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/fotky": {
         parameters: {
             query?: never;
@@ -9099,6 +9144,16 @@ export interface components {
             delkaProceduryMin: number;
             /** @default false */
             poradatelZapisujeVysledky: boolean;
+            /** Format: date-time */
+            uzavrenoAutomatemV?: null | string;
+            draha?: null | string;
+            /** Format: time */
+            posledniStartV?: null | string;
+            mistoKonani?: null | string;
+            napovedaMista?: null | string;
+            napovedaDrahy?: null | string;
+            /** Format: time */
+            napovedaPoslednihoStartu?: null | string;
         };
         ZastavkaVolbaDto: {
             slug: string;
@@ -9124,6 +9179,10 @@ export interface components {
             poradatelZapisujeVysledky?: null | boolean;
             /** Format: date */
             uzaverkaPrihlasek?: null | string;
+            mistoKonani?: null | string;
+            draha?: null | string;
+            /** Format: time */
+            posledniStartV?: null | string;
             startovne?: null | string;
             /** Format: date-time */
             prvniVyzyvaciZnameni?: null | string;
@@ -9326,6 +9385,12 @@ export interface components {
             kdy: string;
             kdo: null | string;
             duvod: null | string;
+        };
+        ZnaceniBojeVstup: {
+            barva?: null | components["schemas"]["BarvaBoje"];
+            tvar?: null | components["schemas"]["TvarBoje"];
+            znaceni?: null | components["schemas"]["DruhZnaceni"];
+            popis?: null | string;
         };
         ZnakVstup: {
             znak: null | string;
