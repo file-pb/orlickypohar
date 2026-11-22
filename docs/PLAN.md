@@ -10859,13 +10859,16 @@ i v Dependabot secrets, ověřeno tím, že jeho PR poprvé prošly buildem.
 3. <b>Sezení se skutečným pořadatelem.</b> Ze 37 scénářů
    (`docs/SCENARE-OVLADANI.md`) jsou skupiny E a F odjeté reprodukcí,
    zbytek ne; scénář A7 (minulá sezóna) neodjetý v mocku.
-4. <b>Testy správy přes HTTP.</b>
+4. ~~<b>Testy správy přes HTTP.</b>~~ — <b>hotovo 22. 11. 2026</b>
+   (`582265e7`): `TestoveTokeny` podepisují testovací tokeny a
+   `PostgresFixture.KlientJako` z nich udělá klienta, takže správa jde
+   zkoušet přes HTTP. Čtyři testy hlídají, že se tím podpis nezměkčil.
 
 ### Drobnosti
 
 1. Odsazení tabule na demo ročnících.
-2. Kategorie lodi, když ji loď přece jen změní (viz *Zbývá doladit*,
-   bod 4).
+2. ~~Kategorie lodi, když ji loď přece jen změní~~ — **hotovo
+   22. 11. 2026** (`ea19dc98`), viz *Zbývá doladit*, bod 4.
 
 ### Co se nasadilo 20. 10. 2026
 
@@ -10959,13 +10962,16 @@ závodu, a pozná se to až tím, že se appka otevře po delší době.
 3. <b>Sezení se skutečným pořadatelem.</b> Ze 37 scénářů
    (`docs/SCENARE-OVLADANI.md`) jsou skupiny E a F odjeté reprodukcí,
    zbytek ne; scénář A7 (minulá sezóna) neodjetý v mocku.
-4. <b>Testy správy přes HTTP.</b>
+4. ~~<b>Testy správy přes HTTP.</b>~~ — <b>hotovo 22. 11. 2026</b>
+   (`582265e7`): `TestoveTokeny` podepisují testovací tokeny a
+   `PostgresFixture.KlientJako` z nich udělá klienta, takže správa jde
+   zkoušet přes HTTP. Čtyři testy hlídají, že se tím podpis nezměkčil.
 
 ### Drobnosti
 
 1. Odsazení tabule na demo ročnících.
-2. Kategorie lodi, když ji loď přece jen změní (viz *Zbývá doladit*,
-   bod 4).
+2. ~~Kategorie lodi, když ji loď přece jen změní~~ — **hotovo
+   22. 11. 2026** (`ea19dc98`), viz *Zbývá doladit*, bod 4.
 
 ---
 

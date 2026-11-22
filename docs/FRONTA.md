@@ -156,12 +156,38 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
   a **Scalar** šel rovnou na 3.1.1 (`12f22c9f`), protože nabízená 3.0.0 byla
   o tři vydání pozadu a poznámky k vydání k ní nejsou nikde — major se tedy
   ověřil během, ne čtením. Živé hlášení už žádné není.
-- **Testy správy přes HTTP** (z fronty v plánu k 20. 10.).
-- **Odsazení tabule na demo ročnících.**
+- **Odsazení tabule na demo ročnících** — **chybí zadání, a je to jediná
+  věc, která na té položce drží.** Ten řádek nemá nikde vysvětlení: v plánu
+  stojí dvakrát touž větou (*Drobnosti*, bod 1) a `TABULE-DIVAK.md` slovo
+  „demo" neobsahuje. Na mocku tabule vypadá takhle (ověřeno 22. 11.,
+  `2026-nanecisto`, regata *Pohár slunce*): panel s pořadím končí asi v 55 %
+  výšky a mezi ním a běžícím pruhem dole zbývá prázdný pás. Jestli jde
+  o tohle, je to oprava na pár řádků — ale není to specifické pro demo
+  ročník, protože sloupce se stejně krátí na deset lodí (*a další 3*).
+  **Napiš k tomu větu, co se ti na tabuli nelíbilo, a vezme se to.**
+
+- **Zrušený krok `Deploy` obejde ověření verze** (`AGENTS.md`, oddíl
+  o nasazení). Pátý reset přenosu 22. 11. neskončil nenulovým kódem
+  `curl`u, ale stavem `cancelled` — větev, která selhání zapamatuje,
+  neproběhla a ověření `/verze` se přeskočilo na svém `if: !cancelled()`.
+  Úloha spadla, aniž se kdokoliv podíval na produkci; ta přitom běžela
+  přesně to, co se posílalo. Záplata je **volba**, ne psaní: buď falešná
+  červená, která přes `needs: [nasazeni]` přeskočí vydání do telefonů,
+  nebo zrušený běh, který se pět minut nedá zabít.
 
 ---
 
 ## Co z fronty vypadlo
+
+**22. 11. večer** vypadly obě *Drobnosti* z plánu, které byly prací.
+**Kategorie lodi** (`ea19dc98`): správce loď přeřadí u ní na obrazovce
+lodí. Návrh to ale říkal zavádějivě — body se nepřenesou, *přepočítají*
+se, protože vznikají uvnitř kategorie, takže přeřazení změní pořadí obou
+a body i lodím, které nic neudělaly; proto je úkon za zaškrtnutím.
+**Testy správy přes HTTP** (`582265e7`): fixtura umí podepsat testovací
+token, takže správa jde zkoušet přes HTTP, a čtyři testy hlídají, že se
+tím ověřování podpisu nezměkčilo. Zbylá *Drobnost* — odsazení tabule —
+zůstává, protože k ní nikde není zadání; viz skupinu F.
 
 **Z oponentury rozhodčího** se zavřelo K1, K3, K5, K6, K7 (v appce), K8, R3,
 R4, R6, R9, R10, R12, R13 (cesta komise), R17, R19, R33, R34, R35, R36, R37,
