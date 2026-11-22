@@ -45,6 +45,12 @@ echo
 echo "== Shoda v cíli =="
 node --experimental-strip-types ./shoda.test.ts
 
+# Místní čas Orlíku proti okamžiku. Dvě pasti: server jede v UTC a posun
+# se musí počítat k tomu dni, ne k dnešku.
+echo
+echo "== Čas Orlíku =="
+node --experimental-strip-types ./cas-praha.test.ts
+
 # Fronta mapových dlaždic. „Mapa se občas nevykreslí celá" (pozorování 11):
 # počítadlo padalo do záporu a druhá vlna požadavků šla na zdroj celá naráz.
 echo
