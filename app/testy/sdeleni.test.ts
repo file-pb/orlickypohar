@@ -16,6 +16,7 @@ import assert from 'node:assert/strict';
 
 import {
   SDELENI,
+  SDELENI_STAVBA,
   cekejNaSdeleni,
   hostJeNaMiste,
   prihlasHosta,
@@ -56,6 +57,23 @@ await zkus('odkaz vede na zveřejněné zásady, ne na domovskou stránku', () =
   assert.ok(SDELENI.odkaz.endsWith('/osobni-udaje'), SDELENI.odkaz);
 });
 
+await zkus('sdělení pro stavbu trati mluví o poloze a nelže o pozadí', () => {
+  // Vlastní text schválně: stavitel trati čte polohu jen na popředí.
+  // Vykládat mu o zavřené appce by bylo matoucí — a nepravdivé.
+  const t = textSdeleni(SDELENI_STAVBA);
+  assert.match(t, /poloh/i);
+  assert.match(t, /pozad[íi]/i, 'má říct, co se na pozadí neděje');
+  assert.ok(SDELENI_STAVBA.ucely.length >= 1);
+  assert.notEqual(SDELENI_STAVBA.nadpis, SDELENI.nadpis, 'dva různé případy, dva nadpisy');
+});
+
+await zkus('text se skládá z toho, co dostane, ne z výchozího', () => {
+  // Kdyby `textSdeleni` ignorovala parametr, ukázal by se staviteli text
+  // o záznamu trasy a živém přenosu — tedy o něčem, co nedělá.
+  assert.ok(textSdeleni(SDELENI_STAVBA).includes(SDELENI_STAVBA.ucely[0]));
+  assert.ok(!textSdeleni(SDELENI_STAVBA).includes(SDELENI.ucely[0]));
+});
+
 await zkus('tlačítko dál a tlačítko zrušit nejsou totéž', () => {
   assert.notEqual(SDELENI.dal, SDELENI.zrusit);
 });
@@ -69,7 +87,7 @@ await zkus('bez hosta se nečeká na nikoho a odpověď je „ne"', async () => 
 
 await zkus('souhlas se propíše a dialog se zavolá jednou', async () => {
   let kolikrat = 0;
-  const odhlas = prihlasHosta((odpoved) => { kolikrat += 1; odpoved(true); });
+  const odhlas = prihlasHosta((_obsah, odpoved) => { kolikrat += 1; odpoved(true); });
   assert.equal(hostJeNaMiste(), true);
   assert.equal(await cekejNaSdeleni(), true);
   assert.equal(kolikrat, 1);
@@ -78,7 +96,7 @@ await zkus('souhlas se propíše a dialog se zavolá jednou', async () => {
 });
 
 await zkus('zavření dialogu není souhlas', async () => {
-  const odhlas = prihlasHosta((odpoved) => odpoved(false));
+  const odhlas = prihlasHosta((_obsah, odpoved) => odpoved(false));
   assert.equal(await cekejNaSdeleni(), false);
   odhlas();
 });
@@ -87,7 +105,7 @@ await zkus('druhá odpověď téhož dialogu se zahodí', async () => {
   // Dialog umí odpovědět dvakrát: tlačítkem a pak ještě zavřením. První
   // odpověď platí — jinak by klepnutí na „Rozumím" přebilo zavření, nebo
   // naopak.
-  const odhlas = prihlasHosta((odpoved) => {
+  const odhlas = prihlasHosta((_obsah, odpoved) => {
     odpoved(true);
     odpoved(false);
   });

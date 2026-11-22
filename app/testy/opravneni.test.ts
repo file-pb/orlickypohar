@@ -12,12 +12,14 @@
  * (`nahrady/`): měří se naše rozhodování, ne Expo.
  */
 import assert from 'node:assert/strict';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 import * as Location from 'expo-location';
 import { klepni, posledniDialog, zapomenDialog, zavri } from 'react-native';
 
-import { SDELENI, prihlasHosta } from '../src/lib/tracker/sdeleni.ts';
-import { zadejOpravneni } from '../src/lib/tracker/uloha.ts';
+import { SDELENI, SDELENI_STAVBA, prihlasHosta } from '../src/lib/tracker/sdeleni.ts';
+import { zadejOpravneni, zadejPopredi } from '../src/lib/tracker/uloha.ts';
 
 let prosly = 0;
 async function zkus(nazev: string, f: () => Promise<void> | void) {
@@ -36,8 +38,8 @@ function odznovu() {
  * volání polohy — pořadí se jinak dokázat nedá.
  */
 function hostKtery(odpovi: boolean) {
-  return prihlasHosta((odpoved) => {
-    Location.volani.push('sdeleni');
+  return prihlasHosta((obsah, odpoved) => {
+    Location.volani.push(obsah === SDELENI_STAVBA ? 'sdeleni-stavba' : 'sdeleni');
     odpoved(odpovi);
   });
 }
@@ -109,6 +111,66 @@ await zkus('v systémovém dialogu „Zrušit" taky zastaví, „Rozumím" pust�
   // a to je to, co se tu měří.
   assert.equal(await dal, 'bez-popredi');
   assert.deepEqual(Location.volani, ['cti-pozadi', 'zadej-popredi']);
+});
+
+await zkus('stavba trati se taky nezeptá dřív než sdělení, a jen na popředí', async () => {
+  odznovu();
+  Location.nastav({ popredi: 'denied' });
+  const odhlas = hostKtery(true);
+  assert.equal(await zadejPopredi(), 'bez-popredi');
+  odhlas();
+  // Vlastní text, a žádná žádost o pozadí: stavitel se dívá na obrazovku,
+  // na Androidu 11+ by ho dotaz na pozadí poslal do nastavení pro nic.
+  assert.deepEqual(Location.volani, ['cti-popredi', 'sdeleni-stavba', 'zadej-popredi']);
+});
+
+await zkus('zavřené sdělení zastaví i stavbu trati', async () => {
+  odznovu();
+  const odhlas = hostKtery(false);
+  assert.equal(await zadejPopredi(), 'bez-sdeleni');
+  odhlas();
+  assert.deepEqual(Location.volani.filter((v) => v.startsWith('zadej')), []);
+});
+
+await zkus('s povoleným popředím se stavba trati neptá na nic', async () => {
+  odznovu();
+  Location.nastav({ popredi: 'granted' });
+  const odhlas = hostKtery(true);
+  assert.equal(await zadejPopredi(), 'ok');
+  odhlas();
+  assert.deepEqual(Location.volani, ['cti-popredi']);
+});
+
+await zkus('o oprávnění k poloze si nikdo neříká mimo uloha.ts', () => {
+  // <b>Tohle je ta hlídka, která tu chyběla.</b> Testy výš měří, že
+  // `zadejOpravneni` a `zadejPopredi` pustí sdělení napřed — ale neřeknou
+  // nic o nové obrazovce, která si zavolá Expo sama. Přesně tak vznikla
+  // 22. 11. 2026 díra v `hooks/use-poloha.ts`: stavba trati se ptala na
+  // polohu bez jediného slova vysvětlení a nikdo si toho půl měsíce
+  // nevšiml. Obě funkce níž jsou jediné legální místo.
+  const POVOLENO = 'src/lib/tracker/uloha.ts';
+  // Hledá se **volání**, ne slovo: `sdeleni-o-poloze.tsx` ten název cituje
+  // v komentáři z dokumentace Expa a hlídka na něj napoprvé skočila.
+  const hledane = /\.request(Foreground|Background)PermissionsAsync\s*\(/;
+
+  const hrisnici: string[] = [];
+  const projdi = (slozka: string) => {
+    for (const polozka of readdirSync(slozka)) {
+      const cesta = join(slozka, polozka);
+      if (statSync(cesta).isDirectory()) { projdi(cesta); continue; }
+      if (!/\.tsx?$/.test(polozka)) continue;
+      const kde = cesta.replace(/^\.\.\//, '');
+      if (kde === POVOLENO) continue;
+      if (hledane.test(readFileSync(cesta, 'utf8'))) hrisnici.push(kde);
+    }
+  };
+  projdi('../src');
+
+  assert.deepEqual(
+    hrisnici,
+    [],
+    `o polohu si říká i ${hrisnici.join(', ')} — musí to jít přes zadejOpravneni nebo zadejPopredi v ${POVOLENO}`,
+  );
 });
 
 console.log(`\n${prosly} kontrol prošlo`);

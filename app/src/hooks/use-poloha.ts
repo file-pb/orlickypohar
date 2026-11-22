@@ -19,6 +19,7 @@ import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 
 import type { Fix } from '@/lib/stavba/poloha';
+import { zadejPopredi } from '@/lib/tracker/uloha';
 
 export type StavPolohy = {
   fix: Fix | null;
@@ -38,9 +39,13 @@ export function usePoloha(bezi: boolean): StavPolohy {
     let zivy = true;
 
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      // <b>Přes `zadejPopredi`, ne přímo na Expo.</b> Tahle cesta byla do
+      // 22. 11. 2026 jediná, kudy si appka řekla o polohu bez jediného
+      // slova vysvětlení — systémový dotaz vyskočil uprostřed stavby
+      // trati a nebylo z něj poznat, k čemu.
+      const stav = await zadejPopredi();
       if (!zivy) return;
-      if (status !== 'granted') {
+      if (stav !== 'ok') {
         setOpravneni('ne');
         return;
       }

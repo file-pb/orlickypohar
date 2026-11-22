@@ -130,6 +130,12 @@ export default function OsobniUdaje() {
         nezaznamenává nic.
       </p>
       <p>
+        <b>Jedna výjimka, a není to záznam:</b> pořadatel, který staví trať, má
+        v appce obrazovku, kde se klepnutím zaměří bójka v místě, kde zrovna stojí.
+        Tam appka polohu čte, dokud je ta obrazovka otevřená — na pozadí nic neběží
+        a po jejím zavření čtení skončí. Ukládá se poloha bójky, ne trasa stavitele.
+      </p>
+      <p>
         <b>Běží dál, i když telefon zhasne,</b> a proto si appka řekne o oprávnění „Vždy".
         Závod trvá hodiny a telefon leží v kapse nebo pod plachtou; s mírnějším oprávněním
         by záznam skončil, jak zhasne displej, a chybějící prostředek trasy se pozná

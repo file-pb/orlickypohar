@@ -18,7 +18,14 @@ import * as TaskManager from 'expo-task-manager';
 import { baterieProcent, obnovBaterii } from './baterie';
 import { hlasim, ozviSeAsync, zacniKdyzJeCas } from './hlasim-se';
 import { zkusZiveAsync } from './nahravani';
-import { SDELENI, cekejNaSdeleni, hostJeNaMiste, textSdeleni } from './sdeleni';
+import {
+  SDELENI,
+  SDELENI_STAVBA,
+  cekejNaSdeleni,
+  hostJeNaMiste,
+  textSdeleni,
+  type Sdeleni,
+} from './sdeleni';
 import { bezicZaznam, zapisBody } from './zaznam';
 
 export const ULOHA = 'orlickypohar-zaznam-trasy';
@@ -117,7 +124,7 @@ export async function zadejOpravneni(): Promise<StavOpravneni> {
   // každým spuštěním záznamu by byl jen zdržení u vody.
   if ((await Location.getBackgroundPermissionsAsync()).status === 'granted') return 'ok';
 
-  if (!(await sdeleniPotvrzeno())) return 'bez-sdeleni';
+  if (!(await sdeleniPotvrzeno(SDELENI))) return 'bez-sdeleni';
 
   const popredi = await Location.requestForegroundPermissionsAsync();
   if (popredi.status !== 'granted') return 'bez-popredi';
@@ -137,8 +144,8 @@ export async function zadejOpravneni(): Promise<StavOpravneni> {
  * a vynechat sdělení nejde — Play by appku odmítl. Systémový dialog je
  * ošklivější, ale pravidlo plní stejně.
  */
-async function sdeleniPotvrzeno(): Promise<boolean> {
-  if (hostJeNaMiste()) return cekejNaSdeleni();
+async function sdeleniPotvrzeno(obsah: Sdeleni): Promise<boolean> {
+  if (hostJeNaMiste()) return cekejNaSdeleni(obsah);
   return new Promise<boolean>((hotovo) => {
     let odpovezeno = false;
     const odpovez = (souhlas: boolean) => {
@@ -147,16 +154,35 @@ async function sdeleniPotvrzeno(): Promise<boolean> {
       hotovo(souhlas);
     };
     Alert.alert(
-      SDELENI.nadpis,
-      textSdeleni(),
+      obsah.nadpis,
+      textSdeleni(obsah),
       [
-        { text: SDELENI.zrusit, style: 'cancel', onPress: () => odpovez(false) },
-        { text: SDELENI.dal, onPress: () => odpovez(true) },
+        { text: obsah.zrusit, style: 'cancel', onPress: () => odpovez(false) },
+        { text: obsah.dal, onPress: () => odpovez(true) },
       ],
       // Zavření mimo tlačítka se nesmí brát jako souhlas.
       { cancelable: true, onDismiss: () => odpovez(false) },
     );
   });
+}
+
+/**
+ * Oprávnění <b>jen k poloze na popředí</b> — pro stavbu trati.
+ *
+ * <b>Proč ne `zadejOpravneni`:</b> ta se ptá i na pozadí, což u stavby
+ * trati není potřeba a na Androidu 11+ by poslala stavitele do systémového
+ * nastavení kvůli oprávnění, které nikdy nevyužije.
+ *
+ * <b>Sdělení jde i tady napřed.</b> Prominentní sdělení žádá Play jen
+ * u pozadí, ale systémový dotaz bez vysvětlení je matoucí tak jako tak —
+ * a tahle cesta byla do 22. 11. 2026 jediná, kudy se dalo k dotazu na
+ * polohu dojít úplně bez kontextu.
+ */
+export async function zadejPopredi(): Promise<'ok' | 'bez-sdeleni' | 'bez-popredi'> {
+  if ((await Location.getForegroundPermissionsAsync()).status === 'granted') return 'ok';
+  if (!(await sdeleniPotvrzeno(SDELENI_STAVBA))) return 'bez-sdeleni';
+  const popredi = await Location.requestForegroundPermissionsAsync();
+  return popredi.status === 'granted' ? 'ok' : 'bez-popredi';
 }
 
 /**

@@ -3,7 +3,7 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Akce, Radek } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
-import { SDELENI, prihlasHosta } from '@/lib/tracker/sdeleni';
+import { prihlasHosta, type Sdeleni } from '@/lib/tracker/sdeleni';
 
 /**
  * Dialog, který se ukáže **před** systémovým dotazem na polohu.
@@ -22,26 +22,20 @@ import { SDELENI, prihlasHosta } from '@/lib/tracker/sdeleni';
  */
 export function SdeleniOPoloze() {
   const t = useTheme();
-  const [odpoved, setOdpoved] = useState<((souhlas: boolean) => void) | null>(null);
-
-  useEffect(
-    () =>
-      prihlasHosta((o) => {
-        // Obal schválně: `useState` by holou funkci vzal jako úpravu
-        // předchozí hodnoty a zavolal ji místo uložení.
-        setOdpoved(() => o);
-      }),
-    [],
+  const [ptani, setPtani] = useState<{ obsah: Sdeleni; odpoved: (souhlas: boolean) => void } | null>(
+    null,
   );
 
+  useEffect(() => prihlasHosta((obsah, odpoved) => setPtani({ obsah, odpoved })), []);
+
   function odpovez(souhlas: boolean) {
-    odpoved?.(souhlas);
-    setOdpoved(null);
+    ptani?.odpoved(souhlas);
+    setPtani(null);
   }
 
   return (
     <Modal
-      visible={odpoved !== null}
+      visible={ptani !== null}
       transparent
       animationType="fade"
       // Systémové tlačítko zpět na Androidu. Je to odchod z dialogu, ne
@@ -52,20 +46,20 @@ export function SdeleniOPoloze() {
           {/* Dlouhý text na malém telefonu v krajině: tlačítka musí zůstat
               dosažitelná, jinak z dialogu není cesta dál ani zpátky. */}
           <ScrollView>
-            <Text style={[s.nadpis, { color: t.text }]}>{SDELENI.nadpis}</Text>
-            <Text style={[s.veta, { color: t.text }]}>{SDELENI.uvod}</Text>
-            {SDELENI.ucely.map((u) => (
+            <Text style={[s.nadpis, { color: t.text }]}>{ptani?.obsah.nadpis}</Text>
+            <Text style={[s.veta, { color: t.text }]}>{ptani?.obsah.uvod}</Text>
+            {(ptani?.obsah.ucely ?? []).map((u) => (
               <View key={u} style={s.odrazka}>
                 <Text style={[s.puntik, { color: t.voda }]}>•</Text>
                 <Text style={[s.veta, s.odrazkaText, { color: t.text }]}>{u}</Text>
               </View>
             ))}
-            <Text style={[s.veta, { color: t.tlumeny }]}>{SDELENI.zaver}</Text>
-            <Radek text={SDELENI.odkazPopis} href={SDELENI.odkaz} barva={t.voda} />
+            <Text style={[s.veta, { color: t.tlumeny }]}>{ptani?.obsah.zaver}</Text>
+            <Radek text={ptani?.obsah.odkazPopis ?? ""} href={(ptani?.obsah.odkaz ?? "") as never} barva={t.voda} />
           </ScrollView>
 
-          <Akce text={SDELENI.dal} onPress={() => odpovez(true)} />
-          <Akce text={SDELENI.zrusit} barva={t.tlumeny} onPress={() => odpovez(false)} />
+          <Akce text={ptani?.obsah.dal ?? ""} onPress={() => odpovez(true)} />
+          <Akce text={ptani?.obsah.zrusit ?? ""} barva={t.tlumeny} onPress={() => odpovez(false)} />
         </View>
       </View>
     </Modal>

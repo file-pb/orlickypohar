@@ -65,13 +65,50 @@ export const SDELENI = {
   zrusit: 'Zrušit',
 } as const;
 
+/**
+ * Sdělení před polohou <b>na popředí</b> — stavba trati.
+ *
+ * <b>Proč vlastní text a ne ten výš.</b> Stavitel trati čte polohu jen
+ * tehdy, když se dívá na obrazovku; na pozadí nic neběží. Vykládat mu
+ * o zavřené appce a o živém přenosu divákům by bylo matoucí a nepravdivé.
+ *
+ * <b>Play tohle sdělení nevyžaduje</b> — prominentní sdělení se váže na
+ * polohu na pozadí (`answer/9799150`). Je tu proto, že *User Data*
+ * (`answer/10144311`) chce vysvětlení před každou žádostí o citlivý údaj,
+ * a hlavně proto, že systémový dotaz bez kontextu je u stavby trati
+ * matoucí sám o sobě: ptá se uprostřed práce a není z něj poznat, k čemu.
+ */
+export const SDELENI_STAVBA = {
+  nadpis: 'Stavba trati potřebuje polohu',
+
+  uvod:
+    'Při stavbě trati appka čte polohu telefonu, dokud máš tuhle obrazovku '
+    + 'otevřenou, a to k tomuhle:',
+
+  ucely: [
+    'zaměření bójky v místě, kde zrovna stojíš — klepnutím se uloží poloha lodi',
+  ],
+
+  zaver:
+    'Na pozadí se nic nezaznamenává a po zavření obrazovky appka polohu číst '
+    + 'přestane. Záznam trasy je něco jiného a pouští se zvlášť.',
+
+  odkaz: 'https://orlickypohar.klihovka.cz/osobni-udaje',
+  odkazPopis: 'Co se s polohou děje a kdo ji vidí',
+
+  dal: 'Rozumím, pokračovat',
+  zrusit: 'Zrušit',
+} as const;
+
+export type Sdeleni = typeof SDELENI | typeof SDELENI_STAVBA;
+
 /** Totéž jedním textem — pro systémový dialog, který odrážky neumí. */
-export function textSdeleni(): string {
+export function textSdeleni(obsah: Sdeleni = SDELENI): string {
   return [
-    SDELENI.uvod,
-    ...SDELENI.ucely.map((u) => `• ${u}`),
-    SDELENI.zaver,
-    SDELENI.odkaz,
+    obsah.uvod,
+    ...obsah.ucely.map((u) => `• ${u}`),
+    obsah.zaver,
+    obsah.odkaz,
   ].join('\n\n');
 }
 
@@ -79,12 +116,13 @@ type Odpoved = (souhlas: boolean) => void;
 
 /**
  * Kdo dialog kreslí. Jeden, přihlášený z `_layout.tsx` — tedy z korzene
- * zásobníku, aby byl na místě na každé obrazovce, odkud se dá záznam
- * spustit.
+ * zásobníku, aby byl na místě na každé obrazovce, odkud se o polohu dá
+ * požádat. Dostává i <b>co</b> má vykreslit: texty jsou dva, pro trasu
+ * a pro stavbu trati.
  */
-let host: ((odpoved: Odpoved) => void) | null = null;
+let host: ((obsah: Sdeleni, odpoved: Odpoved) => void) | null = null;
 
-export function prihlasHosta(ukaz: (odpoved: Odpoved) => void): () => void {
+export function prihlasHosta(ukaz: (obsah: Sdeleni, odpoved: Odpoved) => void): () => void {
   host = ukaz;
   return () => {
     // Jen svoje: kdyby se mezitím přihlásil jiný, tenhle úklid mu ho
@@ -102,12 +140,12 @@ export function hostJeNaMiste(): boolean {
  * Ukáže sdělení a čeká, jak posádka rozhodne. `false` znamená „dál ne" —
  * ať to bylo tlačítkem *Zrušit*, nebo zavřením dialogu.
  */
-export function cekejNaSdeleni(): Promise<boolean> {
+export function cekejNaSdeleni(obsah: Sdeleni = SDELENI): Promise<boolean> {
   const ukaz = host;
   if (!ukaz) return Promise.resolve(false);
   return new Promise<boolean>((hotovo) => {
     let odpovezeno = false;
-    ukaz((souhlas) => {
+    ukaz(obsah, (souhlas) => {
       // Dialog může odpovědět dvakrát — tlačítkem a pak ještě zavřením.
       // Druhá odpověď by přepsala první a `Promise` to stejně ignoruje,
       // takže se zahazuje tady, aby se o tom nemuselo myslet nahoře.
