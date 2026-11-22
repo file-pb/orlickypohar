@@ -86,7 +86,10 @@ dořešené:
 
 ## Hodnocení obsahu
 
-Dotazník vyplň na kategorii **Odkazy a nástroje** (ne hra). Všechny otázky
+Kategorie se vybírá ze tří možností a správná je **Všechny ostatní typy
+aplikací** — není to hra a není to appka na komunikaci, chat v ní není.
+E-mail do formuláře dej tentýž veřejný kontakt; Google ho sdílí
+s hodnotícími institucemi IARC. Všechny otázky
 na násilí, sex, drogy, hazard a nevhodný jazyk jsou **ne**. Appka
 neobsahuje uživatelsky tvořený obsah ani chat — novinky a výsledky píše
 pořadatel, ne uživatelé.
