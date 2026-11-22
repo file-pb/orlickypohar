@@ -204,7 +204,13 @@ services:
       # na stránce /osobni-udaje. Prázdná znamená, že stránka o adrese mlčí
       # a pošle čtenáře za pořadatelem regaty — mlčet je lepší než napsat
       # adresu, která nikomu nechodí.
-      KONTAKT_UDAJE: ""
+      #
+      # <b>Od 22. 11. 2026 vyplněná, protože ji žádá Google Play.</b>
+      # Deklarace Zabezpečení údajů chce adresu, kde se dá požádat o smazání
+      # účtu, a ta stránka (/osobni-udaje/smazani-uctu) musí popsat postup —
+      # „napiš pořadateli" postupem není. Plus-adresa schválně: pošta chodí
+      # do běžné schránky a jde filtrovat, až ji vyberou roboti z webu.
+      KONTAKT_UDAJE: "filipburda75+orlickypohar@gmail.com"
     labels:
       # Výměna bez výpadku: nový kontejner nabíhá vedle starého a starý se
       # zastaví teprve, až je nový zdravý (platform/deploy-hook/README.md).
