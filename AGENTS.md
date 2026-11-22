@@ -523,6 +523,15 @@ a právě ten rozdíl tu chybí. **Je to otevřená věc**, ne opravená: zápla
 by znamenala vybrat si mezi falešnou červenou, která přeskočí vydání do
 telefonů, a zrušeným během, který se pět minut nedá zabít.
 
+**Nepleť si to s druhým „cancelled", které je v pořádku.** Skupina
+souběžnosti `build-deploy-${{ github.ref }}` drží na `main` **jediný
+čekající běh**, takže novější push ten starší čekající zruší. Pozná se to
+spolehlivě: zrušený běh má `jobs: []` — žádná úloha v něm neproběhla, tedy
+ani nasazení. O ověření nikdo nepřichází, protože CI staví strom, ne diff:
+co ten commit přinesl, se ověří v tom novějším. Doloženo 22. 11. 2026:
+`582265e7` vznikl v 21:31:52 UTC a zemřel v 21:32:55, sedm vteřin po
+commitu `a83ed589`.
+
 Viník v cestě potvrzený není a oprava ho nepotřebuje. Jedno ale víme:
 **pevný strop na minutě to není.** První nasazení po téhle opravě
 (`b870bd39`) trvalo 118 s a přerušené nebylo. Resety jsou nahodilé.
