@@ -10,7 +10,7 @@ ARG ZRCADLO=ghcr.io/file-pb/orlickypohar/zrcadlo
 # měsíční přesyn tiše změní základ: tentýž commit by se před ním a po něm
 # postavil z jiného obrazu. Datum přepisuje přesyn sám — ohlásí
 # `::notice::`, které soubory se mají změnit (platform/docs/KVOTY.md, K7).
-ARG ZRCADLO_ZNACKA=2026-10
+ARG ZRCADLO_ZNACKA=2026-11
 FROM ${ZRCADLO}/node:22-alpine-${ZRCADLO_ZNACKA} AS build
 WORKDIR /src
 

@@ -9,7 +9,7 @@ ARG ZRCADLO=ghcr.io/file-pb/orlickypohar/zrcadlo
 # měsíční přesyn tiše změní základ: tentýž commit by se před ním a po něm
 # postavil z jiného obrazu. Datum přepisuje přesyn sám — ohlásí
 # `::notice::`, které soubory se mají změnit (platform/docs/KVOTY.md, K7).
-ARG ZRCADLO_ZNACKA=2026-10
+ARG ZRCADLO_ZNACKA=2026-11
 FROM ${ZRCADLO}/python:3.13-slim-${ZRCADLO_ZNACKA}
 
 # Kola rasterio nesou GDAL, ale libexpat berou ze systému a slim image
