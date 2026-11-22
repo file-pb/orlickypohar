@@ -159,3 +159,9 @@ echo "== Akce v detailu prvku =="
 echo
 echo "== Potvrzení zahození =="
 "${NODE[@]}" ./potvrzeni.test.ts
+
+# Obecná fronta úkonů. Jádro je v tom, že se stojí po druzích: odmítnutý
+# prvek trati zastaví i ty za ním, ale sebrání bóje nemá co blokovat.
+echo
+echo "== Outbox =="
+TEST_DB=":memory:" "${NODE[@]}" ./outbox.test.ts
