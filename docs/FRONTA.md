@@ -115,18 +115,23 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
   vodě"*. Až stavitel barvy dostane, má si vzít **tu tabulku**, ne vyrobit
   třetí zdroj. Ověřeno 18. 11.: jediné dva výskyty těch dvou tokenů
   v `trat.tsx` jsou texty chyb.
-- **Přestavba trati z appky.** Filip, 21. 11.: *„má to jít odevšad."*
-  Revize trati na webu je hotová — přijatou trať odemkne přestavba a
-  veřejně se hlásí —, ale v appce ten úkon není, přestože ho API pouští
-  pořadateli i rozhodčímu (`POST …/trat/prestavba`). `stavba.tsx` o něm
-  jen mluví. Patří k obrazovce stavitele, tedy té druhé session.
 - **Vypsání jako plný dokument J1** (R1, R8). Osnova stojí, dva body si
   aplikace dosadí sama (skupina A), dva vydává Miloš a místo konání nevede
   nikdo (skupina B). Teprve pak je to dokument, o kterém R8 mluví.
-- **Obecný outbox.** V kódu není a blokuje push *„déšť do hodiny"*. Dvě
-  jednoúčelové fronty jsou vzor, ne náhrada: `app/src/lib/cekajici-start.ts`
-  drží úkon procedury a `tracker/nahravani.ts` dávku bodů. Stavitel ho
-  nepotřebuje — potřeboval atomický zápis prvku, a ten je od `232fa0ae`.
+- **Obecná offline fronta v appce.** Opraveno 22. 11.: zápis v plánu
+  z 20. 10. říká „outbox v kódu není", a to platí **jen o appce**. Na
+  serveru outbox je a běží — `Features/Upozorneni/Odeslani.cs` s tabulkou,
+  `OdesilaniUloha` jako hostovaná úloha a `ExpoPush` na doručení. V appce
+  jsou dnes **tři** jednoúčelové fronty: `cekajici-start.ts` (úkon
+  procedury), `tracker/nahravani.ts` (dávka bodů) a od 21. 11.
+  `stavba/fronta.ts` (prvky trati). Pravidlo repozitáře zní *knihovna až
+  u třetí kopie*, takže ta chvíle právě nastala. Sahat do toho ale teď
+  znamená sahat do souboru, který druhá session právě píše.
+- **Push „déšť do hodiny" nedrží fronta, ale chybějící zdroj.** Projekt má
+  vodočet z Povodí Vltavy, teplotu hladiny z Landsatu a blesky z EUMETSAT;
+  předpověď srážek na hodinu dopředu nemá žádnou (ověřeno 22. 11.: slovo
+  „srážky" není v API nikde). Který zdroj a za jakých podmínek posílat, je
+  rozhodnutí, ne práce — patří do skupiny C.
 
 ## F) Údržba a drobnosti
 
