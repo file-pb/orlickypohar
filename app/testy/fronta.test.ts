@@ -28,6 +28,7 @@ import {
   type PrvekKPostaveni,
 } from '../src/lib/stavba/fronta.ts';
 import { odesliFrontu } from '../src/lib/stavba/odesilani.ts';
+import { jeVadaPrvku } from '../src/lib/stavba/odesilani.ts';
 
 let prosly = 0;
 function zkus(nazev: string, f: () => void | Promise<void>) {
@@ -270,6 +271,21 @@ await zkus('opakované potvrzení téhož prvku nezaloží druhý záznam', () =
 await zkus('postavené se řadí podle pořadí na trati, ne podle času', () => {
   const vsechny = postavene(SERIE, ZAVOD).map((p) => p.prvekId);
   assert.deepEqual(vsechny, [...vsechny].sort((x, y) => x - y));
+});
+
+zkus('vadu prvku hlásí jedině 400, protože tak jdou ven věty pravidel', () => {
+  assert.equal(jeVadaPrvku(400), true);
+});
+
+zkus('výpadek proxy při nasazení není vada prvku', () => {
+  // Tohle je ten případ, kvůli kterému rozlišení vzniklo: 502 od proxy
+  // během nasazení označilo platný prvek za odmítnutý a nabídlo jediné
+  // východisko — smazat nenahraditelné měření.
+  for (const stav of [500, 502, 503, 504]) assert.equal(jeVadaPrvku(stav), false);
+});
+
+zkus('ani chybějící rozsah a vypršení nejsou vada prvku', () => {
+  for (const stav of [404, 408, 429]) assert.equal(jeVadaPrvku(stav), false);
 });
 
 console.log(`  ${prosly} prošlo`);

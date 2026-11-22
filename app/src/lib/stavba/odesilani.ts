@@ -14,6 +14,38 @@
  * </para>
  */
 import { OdmitnutoServerem, postavPrvek, type PostavPrvek, type PrvekSpravy } from '../api';
+
+/**
+ * <b>Je to vada prvku, nebo vada okolností?</b> (rozhodnutí 6 prvního
+ * konzilia nad stavitelem trati, postaveno 22. 11. 2026.)
+ *
+ * <para>
+ * Dokud se to nerozlišovalo, označil `posliZaSebe` za odmítnutí každý
+ * ne-ok stav kromě 401 — tedy i <b>502 od proxy, když se zrovna
+ * nasazuje během závodního dne</b>. Prvek tím dostal razítko „server
+ * ho odmítl", fronta stála a jediná nabízená cesta ven mazala
+ * <b>nenahraditelné měření</b>: polohu, ke které se musí dojet lodí.
+ * </para>
+ *
+ * <para>
+ * <b>Vadu prvku hlásí jedině 400</b>, protože tak server vydává věty
+ * svých pravidel (<c>Results.BadRequest(new { error })</c>): „bóje je
+ * sebraná z vody", „trať je zamčená". To se opakováním nespraví a
+ * stavitel o tom musí vědět.
+ * </para>
+ *
+ * <para>
+ * <b>Všechno ostatní je okolnost</b> — 404 u rozsahu, 5xx, výpadek
+ * proxy, vypršení. Prvek je v pořádku, jen se právě teď nedá odeslat,
+ * takže se zkouší dál a karta se neukáže. Chyba padá na stranu
+ * opatrnosti schválně: nejhorší, co udělá špatně zařazená okolnost, je
+ * další pokus; nejhorší, co udělá špatně zařazená vada prvku, je smazané
+ * měření.
+ * </para>
+ */
+export function jeVadaPrvku(stav: number): boolean {
+  return stav === 400;
+}
 import {
   cekajici,
   hotovo,
@@ -75,7 +107,10 @@ export async function odesliFrontu(
     } catch (e) {
       if (e instanceof OdmitnutoServerem) {
         const duvod = e.duvod ?? 'Server prvek odmítl.';
-        zapisPotiz(prvni.id, duvod, true);
+        // <b>Vada prvku, nebo vada okolností?</b> Viz `jeVadaPrvku` —
+        // na tom rozdílu visí, jestli se stavitel dozví „zahoď", nebo
+        // „zkouším dál".
+        zapisPotiz(prvni.id, duvod, jeVadaPrvku(e.stav));
         return { odeslano, stoji: prvni, proc: duvod };
       }
 
