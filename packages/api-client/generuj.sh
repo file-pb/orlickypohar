@@ -2,15 +2,23 @@
 # Vyrobí typy pro web i appku z jednoho zdroje — z OpenAPI dokumentu API.
 #
 # Proč se dokument stahuje z běžícího API a ne z buildu: aplikace při startu
-# pouští migrace, takže bez databáze nenaběhne, a databáze na pracovním stroji
-# nejede (Docker Hub je odsud nedostupný). Běžící instance je tedy jediný
-# zdroj — a je to zároveň ta, se kterou klienti doopravdy mluví.
+# pouští migrace, takže bez databáze nenaběhne. Běžící instance je tedy
+# zdroj — a produkce je navíc ta, se kterou klienti doopravdy mluví.
 #
 # Snímek dokumentu se commituje schválně: změna kontraktu je pak vidět
 # v diffu pull requestu, ne až v chybě klienta.
 #
 #   ./generuj.sh                                  # z produkce
 #   API=http://localhost:8080 ./generuj.sh        # z lokálního API
+#
+# POZOR na lokální zdroj: bez nakonfigurované identity se chráněné endpointy
+# neregistrují vůbec (`if (identita)` v `Program.cs:241`), takže dokument
+# vyjde o 127 cest kratší a generovaný klient tiše ztratí celou správu.
+# Ověřeno 22. 11. 2026: 18 cest místo 145. Lokální API proto potřebuje
+# `Identita__Authority`, `Identita__Audience` (adresa nemusí být dostupná,
+# jen neprázdná) a `Fotky__Endpoint`, `Fotky__Bucket`, `Fotky__VerejnaAdresa`.
+# Dřív tu stálo, že na pracovním stroji nejede databáze a Docker Hub je
+# nedostupný — ani jedno neplatí (viz oddíl o pastech v AGENTS.md).
 set -euo pipefail
 
 kde=$(cd "$(dirname "$0")" && pwd)

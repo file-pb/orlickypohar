@@ -141,23 +141,22 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
 
 ## F) Údržba a drobnosti
 
-- **Dvanáct otevřených Dependabot PR**, všechny se zelenou kontrolou
-  (22. 11.). Nejsou to ale jedna dávka — rozpadají se na tři:
-  - **Tři nativní moduly appky** — `react-native-safe-area-context` (#534),
-    `@react-native-community/datetimepicker` (#553) a `expo-sharing` (#546).
-    Mění **otisk**, takže po nich vydané telefony přestanou dostávat
-    aktualizace po síti, dokud si někdo nenainstaluje nové APK. Patří do
-    jedné dávky a hned s vydáním buildu, ne po jednom.
-  - **Pět serverových** — Testcontainers (#557), coverlet (#547), AWSSDK.S3
-    (#555), JwtBearer a pět dalších (#540), a **Scalar 2.18 → 3.0** (#556),
-    jediný major v hromadě; ten chce pohled, zbytek je rutina.
-  - **Čtyři mimo běžící službu** — rasterio (#554), numpy (#552),
-    docker/login-action (#533), actions/setup-dotnet (#530).
-  Živé hlášení už žádné není: `picomatch` se zavřelo.
+- **Tři otevřené Dependabot PR, a všechny tři jsou tatáž věc**:
+  `react-native-safe-area-context` (#534),
+  `@react-native-community/datetimepicker` (#553) a `expo-sharing` (#546) —
+  **nativní moduly appky**. Mění **otisk**, takže telefony s dnes
+  nainstalovanou appkou po jejich sloučení přestanou dostávat aktualizace
+  po síti, dokud si někdo nenainstaluje nové APK. Patří do jedné dávky
+  a hned s vydáním buildu, ne po jednom.
+  **Drží je zkouška stavitele ze skupiny D**: sloučit je dřív, než si Filip
+  projde těch 23 bodů na telefonu, by znamenalo, že mu appka v ruce tiše
+  zůstane na starém JavaScriptu — přesně ta past, co 17. 11. stála půl
+  hodiny (`AGENTS.md`, oddíl o pastech). Až po zkoušce.
+  Zbylých devět se zavřelo: osm mimo appku sloučil `5298ff4e` (#560)
+  a **Scalar** šel rovnou na 3.1.1 (`12f22c9f`), protože nabízená 3.0.0 byla
+  o tři vydání pozadu a poznámky k vydání k ní nejsou nikde — major se tedy
+  ověřil během, ne čtením. Živé hlášení už žádné není.
 - **Testy správy přes HTTP** (z fronty v plánu k 20. 10.).
-- **Kategorie lodi, když ji loď přece jen změní** (nové plachty, přeměření).
-  Návrh stojí v *Zbývá doladit*, bod 4: správce ji smí přepsat a pořadí se
-  přepočítá, historie se nevede, dokud se neukáže, že je potřeba.
 - **Odsazení tabule na demo ročnících.**
 
 ---

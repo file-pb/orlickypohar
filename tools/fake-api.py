@@ -27,6 +27,10 @@ OSOBY = {o["klic"]: o for o in D["osoby"]}
 KAT = {p["lod"]: p["kategorie"] for p in D["prihlasky"]}
 # Kategorie se řadí podle série, ne abecedně — jinak Nad7m předběhne Race.
 KAT_PORADI = {k["nazev"]: k["poradi"] for k in D["kategorie"]}
+# Importní soubor kategorie čísluje jen pořadím, API jim dává id. Správa
+# lodí přeřazuje podle čísla, takže je mock musí mít taky.
+KAT_ID = {k["nazev"]: i + 1
+          for i, k in enumerate(sorted(D["kategorie"], key=lambda k: k["poradi"]))}
 
 # Mock vznikl před workflow výsledků a o stavu zápisu neví. Doplní se
 # stejně, jako to dělá import: čísla ze sešitu rozhodčího jsou potvrzená
@@ -2247,6 +2251,12 @@ def lod_sprava_dto(klic):
     }
 
 
+def kategorie_spravy_dto():
+    """Kategorie ročníku pro nabídku přeřazení, v pořadí zobrazení."""
+    return [{"id": KAT_ID[k["nazev"]], "nazev": k["nazev"], "poradi": k["poradi"]}
+            for k in sorted(D["kategorie"], key=lambda k: k["poradi"])]
+
+
 def ted_iso():
     from datetime import datetime, timezone
     return datetime.now(timezone.utc).isoformat()
@@ -3773,6 +3783,8 @@ class H(BaseHTTPRequestHandler):
             return self.urci_kapitana(int(m.group(1)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/vazby/(\d+)/role$', cesta)):
             return self.zmen_roli(int(m.group(1)), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/kategorie$', cesta)):
+            return self.zmen_kategorii(int(m.group(1)))
 
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)$', cesta)):
             return self.uprav_zastavku(m.group(1))
@@ -3976,6 +3988,29 @@ class H(BaseHTTPRequestHandler):
             stara["role"] = "Posadka"
             stara["roleUrcilId"], stara["roleUrcenaV"] = urcil, ted
 
+        return self._prazdna_odpoved()
+
+    def zmen_kategorii(self, lod_id):
+        """
+        Přeřadí loď do jiné kategorie ročníku.
+
+        Mock tím doopravdy přepočítá pořadí, protože `KAT` čte i počítání
+        bodů — body v rozjížďce vznikají uvnitř kategorie. Přeřazení tedy
+        na obrazovce pořadí seriálu změní obě kategorie, stejně jako v API.
+        """
+        klic = self._lod_nebo_404(lod_id)
+        if not klic:
+            return None
+
+        kam = (self.telo_zadosti() or {}).get("kategorieId")
+        nazev = next((n for n, i in KAT_ID.items() if i == kam), None)
+        if not nazev:
+            return self.chyba(400, "Taková kategorie v ročníku není.")
+
+        KAT[klic] = nazev
+        for p in D["prihlasky"]:
+            if p["lod"] == klic:
+                p["kategorie"] = nazev
         return self._prazdna_odpoved()
 
     def zmen_roli(self, lod_id, vazba_id):
@@ -6392,6 +6427,7 @@ class H(BaseHTTPRequestHandler):
                 "lod": lod_sprava_dto(klic),
                 "zmeny": [zmena_dto(z) for z in reversed(ZMENY_ROLI)
                           if z["lodId"] == PRIHLASKA_ID[klic]],
+                "kategorie": kategorie_spravy_dto(),
             }
         elif cesta == f'/sprava/serie/{D["slug"]}':
             if not self.headers.get("authorization"):

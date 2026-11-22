@@ -150,8 +150,15 @@ public record LodSpravaDto(
 public record ZmenaRoleDto(
     string Kdo, RoleKLodi? Predchozi, RoleKLodi? Nova, string? Zmenil, DateTimeOffset ZmenenoV);
 
-/// <summary>Loď, její vazby a historie změn — podklad jedné obrazovky.</summary>
-public record LodDetailSpravaDto(LodSpravaDto Lod, IReadOnlyList<ZmenaRoleDto> Zmeny);
+/// <summary>
+/// Loď, její vazby a historie změn — podklad jedné obrazovky. <c>Kategorie</c>
+/// jsou kategorie ročníku, do kterých jde loď přeřadit; obrazovka je potřebuje
+/// ke stejnému úkonu, takže jedou s detailem a ne druhým dotazem.
+/// </summary>
+public record LodDetailSpravaDto(
+    LodSpravaDto Lod,
+    IReadOnlyList<ZmenaRoleDto> Zmeny,
+    IReadOnlyList<KategorieSpravaDto> Kategorie);
 
 /// <summary>Koho má správce určit kapitánem.</summary>
 public record UrceniKapitanaVstup(Guid UzivatelId);
@@ -255,7 +262,15 @@ public class KapitanstviSprava(AppDbContext db, TimeProvider cas, ILogger<Kapita
                 z.Uzivatel!.Zobrazovane, z.Predchozi, z.Nova, z.Zmenil!.Zobrazovane, z.ZmenenoV))
             .ToListAsync(ct);
 
-        return new LodDetailSpravaDto(lod, zmeny);
+        // Kategorie ročníku patří k témuž detailu: přeřazení lodi je úkon
+        // nad ní, ne nad vazbami, a obrazovka je jedna.
+        var kategorie = await db.Kategorie
+            .Where(k => k.SerieId == serieId)
+            .OrderBy(k => k.Poradi).ThenBy(k => k.Nazev)
+            .Select(k => new KategorieSpravaDto(k.Id, k.Nazev, k.Poradi))
+            .ToListAsync(ct);
+
+        return new LodDetailSpravaDto(lod, zmeny, kategorie);
     }
 
     /// <summary>

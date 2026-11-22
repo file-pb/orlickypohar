@@ -45,6 +45,16 @@ public static class KapitanstviEndpoints
                 "je jeden úkon v jedné transakci. Majitel zůstává majitelem. " +
                 "Opakované určení téhož člověka jen potvrdí roli, kterou už má.");
 
+        g.MapPut("/{lod:int}/kategorie", ZmenKategoriiAsync)
+            .WithSummary("Přeřadí loď do jiné kategorie ročníku")
+            .WithDescription(
+                "Správce ročníku. Loď jede celý rok v jedné kategorii, ale změnit ji " +
+                "přece jen může — nové plachty, přeměření. Body se počítají uvnitř " +
+                "kategorie, takže se přeřazením přepočítají OBĚ kategorie: i lodím, " +
+                "které s přeřazenou lodí celý rok soupeřily, se změní body za odjeté " +
+                "zastávky. Historie se nevede. Přeřazení do kategorie, ve které loď " +
+                "už je, projde a nic nezmění.");
+
         g.MapPut("/{lod:int}/vazby/{vazba:int}/role", ZmenRoliAsync)
             .WithSummary("Změní roli jedné vazby k lodi")
             .WithDescription(
@@ -111,6 +121,18 @@ public static class KapitanstviEndpoints
         if (!await VRocnikuAsync(db, rozsah!.SerieId, lod, ct)) return Results.NotFound();
 
         var chyba = await sprava.UrciKapitanaAsync(lod, vstup.UzivatelId, spravce, ct);
+        return chyba is null ? Results.NoContent() : Results.BadRequest(new { error = chyba });
+    }
+
+    private static async Task<IResult> ZmenKategoriiAsync(
+        string serie, int lod, ZmenaKategorieVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, KategorieLodiSprava kategorie, AppDbContext db, CancellationToken ct)
+    {
+        var (rozsah, spravce, odpoved) = await SpravceAsync(serie, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+        if (!await VRocnikuAsync(db, rozsah!.SerieId, lod, ct)) return Results.NotFound();
+
+        var chyba = await kategorie.ZmenAsync(rozsah.SerieId, lod, vstup.KategorieId, spravce, ct);
         return chyba is null ? Results.NoContent() : Results.BadRequest(new { error = chyba });
     }
 

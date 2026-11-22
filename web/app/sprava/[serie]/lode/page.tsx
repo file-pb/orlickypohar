@@ -16,7 +16,13 @@ import {
   type ZmenaRole,
 } from "@/lib/lode-sprava";
 import { nactiPrehled, type Ucet } from "@/lib/sprava";
-import { odeberVazbuAkce, potvrdRoliAkce, urciKapitanaAkce, zmenRoliAkce } from "./akce";
+import {
+  odeberVazbuAkce,
+  potvrdRoliAkce,
+  urciKapitanaAkce,
+  zmenKategoriiAkce,
+  zmenRoliAkce,
+} from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -36,6 +42,7 @@ const HOTOVO: Record<string, string> = {
   potvrzeno: "Role je potvrzená. Párování podle e-mailu do ní už nesáhne.",
   role: "Role je změněná.",
   odebrano: "Vazba je odebraná. Párování podle e-mailu ji nevrátí.",
+  kategorie: "Loď je přeřazená. Pořadí obou kategorií je přepočítané.",
 };
 
 /**
@@ -235,6 +242,10 @@ function Detail({
   const uLodi = new Set(detail.lod.vazby.map((v) => v.uzivatelId));
   const ostatni = ucty.filter((u) => !uLodi.has(u.id));
 
+  // Kategorie, ve které loď jede. Seznam lodí nese jméno, nabídka potřebuje
+  // číslo — spojí se jménem, protože v ročníku je jméno kategorie unikátní.
+  const aktualni = detail.kategorie.find((k) => k.nazev === lod.kategorie);
+
   return (
     <>
       <h2>{lod.nazev}: kdo k lodi patří</h2>
@@ -282,6 +293,41 @@ function Detail({
           <p className="poznamka">
             Vazba vznikne jako určená správcem. Dosavadní kapitán spadne na
             posádku, majitel zůstane majitelem.
+          </p>
+        </form>
+      )}
+
+      <h2>Kategorie</h2>
+      {detail.kategorie.length < 2 ? (
+        <p className="prazdno">
+          Ročník má jedinou kategorii ({lod.kategorie}), takže přeřazovat není
+          kam. Kategorie se zakládají nahráním ročníku.
+        </p>
+      ) : (
+        <form action={zmenKategoriiAkce} className="formular">
+          <input type="hidden" name="serie" value={serie} />
+          <input type="hidden" name="lod" value={lod.lodId} />
+          <label>
+            Kategorie, ve které loď jede
+            <select name="kategorie" defaultValue={String(aktualni?.id ?? "")}>
+              {detail.kategorie.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.nazev}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="volba">
+            <input type="checkbox" name="vim" value="ano" />
+            Vím, že se tím přepočítají body i ostatním lodím
+          </label>
+          <button type="submit">Přeřadit</button>
+          <p className="poznamka">
+            Loď jede celý rok v jedné kategorii. Přeřazení je na nové plachty
+            nebo přeměření — <b>body se nepřenesou, přepočítají se</b>: počítají
+            se uvnitř kategorie, takže se změní pořadí té staré i té nové, a to
+            i lodím, které s touhle lodí celý rok soupeřily. Historie přeřazení
+            se nevede.
           </p>
         </form>
       )}

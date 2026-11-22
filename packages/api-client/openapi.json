@@ -6,7 +6,7 @@
     },
     "servers": [
         {
-            "url": "http://orlickypohar-api.klihovka.cz/"
+            "url": "http://127.0.0.1:55081/"
         }
     ],
     "paths": {
@@ -3728,6 +3728,65 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/protestni-lhuta": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zkr\u00e1t\u00ed protestn\u00ed lh\u016ftu rozj\u00ed\u017e\u010fky",
+                "description": "Sm\u00ed rozhod\u010d\u00ed ro\u010dn\u00edku, s povinn\u00fdm d\u016fvodem. Pr\u00e1zdn\u00e9 `do` znamen\u00e1 \u201ekon\u010d\u00ed te\u010f\". Jen zkr\u00e1tit: pozd\u011bj\u0161\u00ed \u010das ne\u017e dv\u011b hodiny od dojezdu posledn\u00ed lodi se odm\u00edt\u00e1, stejn\u011b jako lh\u016fta u rozj\u00ed\u017e\u010fky, ze kter\u00e9 nikdo nedokon\u010dil, a lh\u016fta, kter\u00e1 u\u017e uplynula.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZkraceniLhutyVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RozjizdkaSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/pohar": {
             "post": {
                 "tags": [
@@ -5369,6 +5428,50 @@
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/UrceniKapitanaVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/lode/{lod}/kategorie": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "P\u0159e\u0159ad\u00ed lo\u010f do jin\u00e9 kategorie ro\u010dn\u00edku",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku. Lo\u010f jede cel\u00fd rok v jedn\u00e9 kategorii, ale zm\u011bnit ji p\u0159ece jen m\u016f\u017ee \u2014 nov\u00e9 plachty, p\u0159em\u011b\u0159en\u00ed. Body se po\u010d\u00edtaj\u00ed uvnit\u0159 kategorie, tak\u017ee se p\u0159e\u0159azen\u00edm p\u0159epo\u010d\u00edtaj\u00ed OB\u011a kategorie: i lod\u00edm, kter\u00e9 s p\u0159e\u0159azenou lod\u00ed cel\u00fd rok soupe\u0159ily, se zm\u011bn\u00ed body za odjet\u00e9 zast\u00e1vky. Historie se nevede. P\u0159e\u0159azen\u00ed do kategorie, ve kter\u00e9 lo\u010f u\u017e je, projde a nic nezm\u011bn\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZmenaKategorieVstup"
                             }
                         }
                     },
@@ -8209,28 +8312,6 @@
                     }
                 }
             },
-            "ChybaNastaveni": {
-                "required": [
-                    "error"
-                ],
-                "type": "object",
-                "properties": {
-                    "error": {
-                        "type": "string"
-                    }
-                }
-            },
-            "ChybaTrasy": {
-                "required": [
-                    "error"
-                ],
-                "type": "object",
-                "properties": {
-                    "error": {
-                        "type": "string"
-                    }
-                }
-            },
             "CilZTrasovaniDto": {
                 "required": [
                     "procNe",
@@ -8780,6 +8861,28 @@
                     }
                 }
             },
+            "ChybaNastaveni": {
+                "required": [
+                    "error"
+                ],
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ChybaTrasy": {
+                "required": [
+                    "error"
+                ],
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                }
+            },
             "IFormFile": {
                 "type": "string",
                 "format": "binary"
@@ -8873,6 +8976,27 @@
                 ],
                 "type": "object",
                 "properties": {
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "KategorieSpravaDto": {
+                "required": [
+                    "id",
+                    "nazev",
+                    "poradi"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
                     "nazev": {
                         "type": "string"
                     },
@@ -9135,7 +9259,8 @@
             "LodDetailSpravaDto": {
                 "required": [
                     "lod",
-                    "zmeny"
+                    "zmeny",
+                    "kategorie"
                 ],
                 "type": "object",
                 "properties": {
@@ -9146,6 +9271,12 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/ZmenaRoleDto"
+                        }
+                    },
+                    "kategorie": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/KategorieSpravaDto"
                         }
                     }
                 }
@@ -12115,6 +12246,20 @@
                         "format": "date-time"
                     },
                     "limitUplynul": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "lhutaZkracena": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "duvodZkraceniLhuty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "smiZkratitLhutu": {
                         "type": "boolean",
                         "default": false
                     }
@@ -15654,6 +15799,25 @@
                     "Simulace"
                 ]
             },
+            "ZkraceniLhutyVstup": {
+                "required": [
+                    "do",
+                    "duvod"
+                ],
+                "type": "object",
+                "properties": {
+                    "do": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "duvod": {
+                        "type": "string"
+                    }
+                }
+            },
             "ZkraceniVstup": {
                 "required": [
                     "prvek"
@@ -15722,6 +15886,18 @@
                     },
                     "poZamku": {
                         "type": "boolean"
+                    }
+                }
+            },
+            "ZmenaKategorieVstup": {
+                "required": [
+                    "kategorieId"
+                ],
+                "type": "object",
+                "properties": {
+                    "kategorieId": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },

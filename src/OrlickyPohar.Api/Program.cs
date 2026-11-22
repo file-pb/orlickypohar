@@ -110,6 +110,7 @@ try
     // Nárok na loď, který potvrzuje kapitán.
     builder.Services.AddScoped<NarokySprava>();
     builder.Services.AddScoped<KapitanstviSprava>();
+    builder.Services.AddScoped<KategorieLodiSprava>();
     // Bóje na trati: pípnutí polohy pořadatelem z webu i z appky.
     builder.Services.AddScoped<BojeSprava>();
     builder.Services.AddScoped<TratSprava>();

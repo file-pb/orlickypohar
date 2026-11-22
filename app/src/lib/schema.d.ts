@@ -3776,6 +3776,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/protestni-lhuta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Zkrátí protestní lhůtu rozjížďky
+         * @description Smí rozhodčí ročníku, s povinným důvodem. Prázdné `do` znamená „končí teď". Jen zkrátit: pozdější čas než dvě hodiny od dojezdu poslední lodi se odmítá, stejně jako lhůta u rozjížďky, ze které nikdo nedokončil, a lhůta, která už uplynula.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZkraceniLhutyVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RozjizdkaSpravaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/pohar": {
         parameters: {
             query?: never;
@@ -5186,6 +5233,50 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": components["schemas"]["UrceniKapitanaVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/lode/{lod}/kategorie": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Přeřadí loď do jiné kategorie ročníku
+         * @description Správce ročníku. Loď jede celý rok v jedné kategorii, ale změnit ji přece jen může — nové plachty, přeměření. Body se počítají uvnitř kategorie, takže se přeřazením přepočítají OBĚ kategorie: i lodím, které s přeřazenou lodí celý rok soupeřily, se změní body za odjeté zastávky. Historie se nevede. Přeřazení do kategorie, ve které loď už je, projde a nic nezmění.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    lod: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZmenaKategorieVstup"];
                 };
             };
             responses: {
@@ -7483,12 +7574,6 @@ export interface components {
             znaceni?: null | components["schemas"]["DruhZnaceni"];
             popis?: null | string;
         };
-        ChybaNastaveni: {
-            error: string;
-        };
-        ChybaTrasy: {
-            error: string;
-        };
         CilZTrasovaniDto: {
             procNe: null | string;
             prujezdy: components["schemas"]["PrujezdCilemDto"][];
@@ -7630,6 +7715,12 @@ export interface components {
                 [key: string]: string[];
             };
         };
+        ChybaNastaveni: {
+            error: string;
+        };
+        ChybaTrasy: {
+            error: string;
+        };
         /** Format: binary */
         IFormFile: string;
         JaDto: {
@@ -7650,6 +7741,13 @@ export interface components {
             cisloCsj?: null | string;
         };
         KategorieDto: {
+            nazev: string;
+            /** Format: int32 */
+            poradi: number;
+        };
+        KategorieSpravaDto: {
+            /** Format: int32 */
+            id: number;
             nazev: string;
             /** Format: int32 */
             poradi: number;
@@ -7721,6 +7819,7 @@ export interface components {
         LodDetailSpravaDto: {
             lod: components["schemas"]["LodSpravaDto"];
             zmeny: components["schemas"]["ZmenaRoleDto"][];
+            kategorie: components["schemas"]["KategorieSpravaDto"][];
         };
         LodNaZastavceDto: {
             /** Format: int32 */
@@ -8457,6 +8556,11 @@ export interface components {
             protestniLimit?: null | string;
             /** @default false */
             limitUplynul: boolean;
+            /** @default false */
+            lhutaZkracena: boolean;
+            duvodZkraceniLhuty?: null | string;
+            /** @default false */
+            smiZkratitLhutu: boolean;
         };
         RozjizdkaVstup: {
             /** Format: int32 */
@@ -9406,6 +9510,11 @@ export interface components {
         ZdrojPolohy: "Telefon" | "Mapa" | "Qr";
         /** @enum {unknown} */
         ZdrojTrasy: "Gps" | "Simulace";
+        ZkraceniLhutyVstup: {
+            /** Format: date-time */
+            do: null | string;
+            duvod: string;
+        };
         ZkraceniVstup: {
             /** Format: int32 */
             prvek: number;
@@ -9425,6 +9534,10 @@ export interface components {
             naJizdy: boolean;
             duvod: null | string;
             poZamku: boolean;
+        };
+        ZmenaKategorieVstup: {
+            /** Format: int32 */
+            kategorieId: number;
         };
         ZmenaRoleDto: {
             kdo: string;

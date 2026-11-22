@@ -1,7 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { odeberVazbu, urciKapitana, zmenRoli, type RoleKLodi } from "@/lib/lode-sprava";
+import {
+  odeberVazbu,
+  urciKapitana,
+  zmenKategorii,
+  zmenRoli,
+  type RoleKLodi,
+} from "@/lib/lode-sprava";
 
 /**
  * Akce obrazovky lodí ročníku. Každá se vrací na tutéž loď, ať dopadla jak
@@ -62,4 +68,26 @@ export async function odeberVazbuAkce(formular: FormData) {
   const { serie, lod, vazba } = cisla(formular);
 
   zpet(serie, lod, await odeberVazbu(serie, lod, vazba), "odebrano");
+}
+
+/**
+ * Přeřadí loď do jiné kategorie ročníku. Potvrzení je schválně dvoufázové
+ * (zaškrtnutí ve formuláři): přeřazením se přepočítá pořadí obou kategorií,
+ * tedy i body lodí, které s touhle lodí celý rok soupeřily.
+ */
+export async function zmenKategoriiAkce(formular: FormData) {
+  const { serie, lod } = cisla(formular);
+  const kategorie = Number(formular.get("kategorie") ?? 0);
+  const vim = formular.get("vim") === "ano";
+
+  if (!kategorie) zpet(serie, lod, "Vyber kategorii, do které loď patří.", "");
+  if (!vim)
+    zpet(
+      serie,
+      lod,
+      "Zaškrtni, že víš o přepočtu — přeřazením se změní body i ostatním lodím.",
+      "",
+    );
+
+  zpet(serie, lod, await zmenKategorii(serie, lod, kategorie), "kategorie");
 }

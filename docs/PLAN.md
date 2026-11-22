@@ -9655,9 +9655,21 @@ tři zodpovězené a otevřený zůstává jen čtvrtý.
    nevidí — je pro roboty a monitoring, a ty na výpadek upozorní z
    `/health` samy. Zůstává tedy 200 a správná stránka; přehodnotit se to
    má, až bude web mít middleware z jiného důvodu.
-4. **Co když loď kategorii přece jen změní** (nové plachty, přeměření).
-   Návrh: správce ji smí přepsat a pořadí se přepočítá. Historie se nevede,
-   dokud se neukáže, že je potřeba.
+4. ~~**Co když loď kategorii přece jen změní**~~ — **hotovo 22. 11. 2026.**
+   Správce ročníku loď přeřadí u ní na obrazovce lodí
+   (`PUT …/lode/{lod}/kategorie`, `Features/Lode/KategorieLodi.cs`);
+   historie se nevede, jak návrh chtěl, a zůstává tedy i v *Co z toho
+   vědomě nedělat*.
+
+   **Jedna věc vyšla jinak, než jak to tam bylo napsané.** „Pořadí se
+   přepočítá" zní jako že si loď odnese body a jen se zařadí jinam —
+   jenže body v rozjížďce vznikají **uvnitř kategorie** a vítěz má 1
+   (`Bodovani.BodyRozjizdky`, seskupení podle kategorie je
+   `Bodovani.cs:209`). Přeřazení proto přepočítá **obě** kategorie: změní
+   body i lodím, které s přeřazenou lodí celý rok soupeřily a na vodě se
+   ničeho nedopustily. Ověřeno na mocku: přesun SOCKY z Race do Pod7m
+   posunul MODRÉ CAFE z 10 na 9 bodů a JOY z 12 na 15. Proto je úkon na
+   webu za zaškrtnutím, ne za holým tlačítkem.
 
 ## Konec rozjížďky je rozhodnutí (Filip, 20. 10. 2026)
 

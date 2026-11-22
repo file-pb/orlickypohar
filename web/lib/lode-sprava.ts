@@ -19,6 +19,7 @@ export type VazbaSpravy = S["VazbaSpravaDto"];
 export type LodDetail = S["LodDetailSpravaDto"];
 export type ZmenaRole = S["ZmenaRoleDto"];
 export type RoleKLodi = S["RoleKLodi"];
+export type KategorieSpravy = S["KategorieSpravaDto"];
 
 const KOREN = (serie: string) => `${API}/sprava/serie/${encodeURIComponent(serie)}/lode`;
 
@@ -111,3 +112,13 @@ export const zmenRoli = (serie: string, lod: number, vazba: number, role: RoleKL
 /** Odebere vazbu k lodi. Posledního kapitána odebrat nejde. */
 export const odeberVazbu = (serie: string, lod: number, vazba: number) =>
   zapis(`${KOREN(serie)}/${lod}/vazby/${vazba}`, "DELETE");
+
+/**
+ * Přeřadí loď do jiné kategorie ročníku — nové plachty, přeměření.
+ *
+ * <b>Body se nepřenesou, přepočítají se.</b> Počítají se uvnitř kategorie,
+ * takže se změní pořadí obou — i lodím, které s přeřazenou lodí celý rok
+ * soupeřily. Obrazovka to musí říct dřív, než se to zmáčkne.
+ */
+export const zmenKategorii = (serie: string, lod: number, kategorieId: number) =>
+  zapis(`${KOREN(serie)}/${lod}/kategorie`, "PUT", { kategorieId });
