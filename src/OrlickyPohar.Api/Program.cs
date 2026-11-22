@@ -122,6 +122,10 @@ try
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
     if (builder.Configuration.GetValue<bool>("Kontakty:Uklid"))
         builder.Services.AddHostedService<UklidKontaktu>();
+    // Regata, u které se zapomnělo na konec dne, se po dvou dnech zavře
+    // sama (Filip, 21. 11. 2026). Zavírá, nepodepisuje — viz `Uzavirani`.
+    if (builder.Configuration.GetValue<bool>("Zavody:Uzavirani"))
+        builder.Services.AddHostedService<UzavreniRegat>();
     // Upozornění: zápis do outboxu, evidence zařízení a odesílání přes Expo.
     // Zápis do fronty běží vždycky — je to jen řádek v téže transakci jako
     // změna. Odesílá se jen tam, kde je to zapnuté: testy ani vývoj nemají

@@ -76,6 +76,10 @@ services:
       Prevzate__Fotky: "true"
       # Kontakty kapitánů se jednou denně mažou po konci následující sezóny.
       Kontakty__Uklid: "true"
+      # Regata, u které se zapomnělo na konec dne, se po dvou dnech zavře
+      # sama (Filip, 21. 11. 2026). Zavírá, nepodepisuje, a regatu, ve které
+      # se nic nejelo, nechá stát.
+      Zavody__Uzavirani: "true"
       # Odesílání upozornění z outboxu přes Expo. Zapnuté schválně hned,
       # i když zatím žádný telefon registrovaný není: úkol pro odběr, který
       # nikdo nemá, se odbaví jako hotový, takže fronta nenaroste do zásoby

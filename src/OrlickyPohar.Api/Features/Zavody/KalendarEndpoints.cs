@@ -191,7 +191,8 @@ public static class KalendarEndpoints
                 z.PocetSkrtu, z.KoeficientDoSerie, z.PosunDoSerie, z.ProcesniDej,
                 z.UzaverkaPrihlasek, z.Startovne, z.PrvniVyzyvaciZnameni,
                 z.DelkaProceduryMin,
-                z.PoradatelZapisujeVysledky);
+                z.PoradatelZapisujeVysledky,
+                z.UzavrenoAutomatemV);
         }
     }
 

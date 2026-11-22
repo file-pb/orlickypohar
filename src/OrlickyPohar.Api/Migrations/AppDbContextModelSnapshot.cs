@@ -2160,6 +2160,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<DateOnly?>("UzaverkaPrihlasek")
                         .HasColumnType("date");
 
+                    b.Property<DateTimeOffset?>("UzavrenoAutomatemV")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("Vyhodnoceni")
                         .HasColumnType("integer");
 

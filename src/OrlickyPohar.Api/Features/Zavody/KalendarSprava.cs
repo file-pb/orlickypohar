@@ -54,7 +54,10 @@ public record ZastavkaRadek(
     int DelkaProceduryMin = Procedura.DelkaVychozi,
     // Smí dojezdy zapisovat i pořadatel (Filip, 21. 11. 2026). Aditivně,
     // na konci. Viz `Zavod.PoradatelZapisujeVysledky`.
-    bool PoradatelZapisujeVysledky = false);
+    bool PoradatelZapisujeVysledky = false,
+    // Kdy regatu zavřel server sám, protože se na konec dne zapomnělo.
+    // Aditivně, na konci. Viz `Uzavirani`.
+    DateTimeOffset? UzavrenoAutomatemV = null);
 
 public record PrehledZastavekDto(
     string Serie,

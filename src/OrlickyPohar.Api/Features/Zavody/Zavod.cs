@@ -469,6 +469,20 @@ public class Zavod
     /// </summary>
     public bool PoradatelZapisujeVysledky { get; set; }
 
+    /// <summary>
+    /// Kdy regatu zavřel server sám, protože se na konec dne zapomnělo —
+    /// <c>null</c>, když ji zavřel člověk (nebo zavřená není).
+    ///
+    /// <para>
+    /// <b>Proč se to vede</b> (Filip, 21. 11. 2026): *„pokud na to
+    /// zapomeneme, udělej ho za dva dny sám."* Automat, po kterém nezůstane
+    /// stopa, vypadá na obrazovce jako lidský úkon — a kdo pak hledá, proč
+    /// je regata odjetá, nenajde nikoho, kdo by to odklepl. Pravidlo je
+    /// v <see cref="Uzavirani"/>, úloha v <see cref="UzavreniRegat"/>.
+    /// </para>
+    /// </summary>
+    public DateTimeOffset? UzavrenoAutomatemV { get; set; }
+
     // --- Výsledek závodu → body do seriálu ---
 
     /// <summary>Váha závodu v seriálu, běžně 1.0.</summary>
