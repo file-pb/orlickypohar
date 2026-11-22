@@ -51,7 +51,10 @@ public record VypsaniVstup(
     Vyhodnoceni Vyhodnoceni,
     int PocetSkrtuSerie,
     PravidlaBodovani Pravidla,
-    bool MaSmernice);
+    bool MaSmernice,
+    // Dva body, které vydává pořadatel sám (nález R21). Aditivně, na konci.
+    string? Draha = null,
+    TimeOnly? PosledniStartV = null);
 
 /// <summary>
 /// <b>Vypsání závodu jako dokument.</b> Čisté funkce, bez databáze.
@@ -133,9 +136,9 @@ public static class Vypsani
             new("J1.1(4)", "Závodící třídy a podmínky přihlášení", Tridy(v)),
             new("J1.1(5)", "Přihlášky, uzávěrka a startovné", Prihlasky(v)),
             new("J1.1(6)", "Časy vyzývacích znamení", VyzyvaciZnameni(v)),
-            new("J1.3(4)", "Dráha", null),
+            new("J1.3(4)", "Dráha", Draha(v)),
             new("J1.3(5)", "Bodování", Bodovani(v)),
-            new("J1.3(7)", "Kdy se poslední den už nestartuje", null),
+            new("J1.3(7)", "Kdy se poslední den už nestartuje", PosledniStart(v)),
             new("J1.2(6)", "Lhůta pro změny bodování (ZPJ 90.3(e))", null),
             new("J1.3(8)", "Odepření práva na odvolání (ZPJ 70.3)", null),
         };
@@ -191,6 +194,23 @@ public static class Vypsani
             ? null
             : $"Závodí se v těchto třídách: {string.Join(", ", v.Kategorie)}. "
               + "Loď jede celý ročník v jedné třídě.";
+
+    /// <summary>
+    /// Dráha, jak ji vydal pořadatel. <b>Nic se nedopisuje</b>: kdyby
+    /// aplikace přidala větu o tom, že trať se staví na vodě, tvrdila by
+    /// za pořadatele něco, co v jeho dokumentu nestojí.
+    /// </summary>
+    private static string? Draha(VypsaniVstup v) =>
+        string.IsNullOrWhiteSpace(v.Draha) ? null : v.Draha.Trim();
+
+    /// <summary>
+    /// Hodina, po které se poslední den nestartuje — doslova tak, jak to
+    /// říká vzor vypsání.
+    /// </summary>
+    private static string? PosledniStart(VypsaniVstup v) =>
+        v.PosledniStartV is { } kdy
+            ? $"Žádná rozjížďka nebude startována po {kdy:HH:mm} hod."
+            : null;
 
     private static string? Prihlasky(VypsaniVstup v)
     {

@@ -57,7 +57,13 @@ public record ZastavkaRadek(
     bool PoradatelZapisujeVysledky = false,
     // Kdy regatu zavřel server sám, protože se na konec dne zapomnělo.
     // Aditivně, na konci. Viz `Uzavirani`.
-    DateTimeOffset? UzavrenoAutomatemV = null);
+    DateTimeOffset? UzavrenoAutomatemV = null,
+    // Dva body vypsání, které vydává pořadatel sám (R21), a k nim nápověda
+    // z ročníku — ne předvyplnění: co se nevyplní, zůstane prázdné.
+    string? Draha = null,
+    TimeOnly? PosledniStartV = null,
+    string? NapovedaDrahy = null,
+    TimeOnly? NapovedaPoslednihoStartu = null);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -123,6 +129,10 @@ public record ZastavkaVstup(
     // termínu by je jinak vymazala.
     /// <summary>Termín uzávěrky přihlášek — J1.1(5).</summary>
     DateOnly? UzaverkaPrihlasek = null,
+    /// <summary>Popis dráhy do vypsání — J1.3(4). Volný text.</summary>
+    string? Draha = null,
+    /// <summary>Po kolikáté hodině se poslední den nestartuje — J1.3(7).</summary>
+    TimeOnly? PosledniStartV = null,
     /// <summary>Výše startovného a za co se platí — J1.1(5). Volný text.</summary>
     string? Startovne = null,
     /// <summary>Čas vyzývacího znamení první rozjížďky — J1.1(6), tedy T−5.</summary>
@@ -157,6 +167,29 @@ public class KalendarSprava(AppDbContext db)
 {
     /// <summary>Zastávka i s identifikátorem — ten se ven neposílá, ale rozsah se ptá na něj.</summary>
     public record Zaznam(int Id, Zavod Zavod);
+
+    /// <summary>
+    /// Co napovědět formuláři u dvou bodů vypsání, které vydává pořadatel
+    /// sám — dráha a hodina posledního startu (R21, Filip 21. 11. 2026).
+    /// Bere se z celého ročníku, protože se jezdí pořád stejně.
+    /// <para>
+    /// <b>Je to nápověda, ne předvyplnění</b>: pravidla jsou
+    /// v <see cref="Napovedy"/>, tohle je jen dotaz k nim.
+    /// </para>
+    /// </summary>
+    public async Task<(string? Draha, TimeOnly? PosledniStart)> NapovedyAsync(
+        int serieId, CancellationToken ct)
+    {
+        var zdroj = await db.Zavody
+            .Where(z => z.SerieId == serieId && (z.Draha != null || z.PosledniStartV != null))
+            .Select(z => new { z.Datum, z.Draha, z.PosledniStartV })
+            .ToListAsync(ct);
+
+        return (
+            Napovedy.Posledni(zdroj.Select(z => (z.Datum, z.Draha))),
+            Napovedy.Median(zdroj.Where(z => z.PosledniStartV is not null)
+                .Select(z => z.PosledniStartV!.Value)));
+    }
 
     /// <summary>
     /// Všechny zastávky ročníku, seřazené jako kalendář.
@@ -224,6 +257,8 @@ public class KalendarSprava(AppDbContext db)
             PoradatelZapisujeVysledky = vstup.PoradatelZapisujeVysledky ?? false,
             UzaverkaPrihlasek = vstup.UzaverkaPrihlasek,
             Startovne = Prazdne(vstup.Startovne),
+            Draha = Prazdne(vstup.Draha),
+            PosledniStartV = vstup.PosledniStartV,
             PrvniVyzyvaciZnameni = vstup.PrvniVyzyvaciZnameni?.ToUniversalTime(),
             DelkaProceduryMin = vstup.DelkaProceduryMin ?? Procedura.DelkaVychozi,
             Stav = StavZavodu.Planovany,
@@ -311,6 +346,8 @@ public class KalendarSprava(AppDbContext db)
             vstup.PoradatelZapisujeVysledky ?? zastavka.PoradatelZapisujeVysledky;
         zastavka.UzaverkaPrihlasek = vstup.UzaverkaPrihlasek ?? zastavka.UzaverkaPrihlasek;
         zastavka.Startovne = Prazdne(vstup.Startovne) ?? zastavka.Startovne;
+        zastavka.Draha = Prazdne(vstup.Draha) ?? zastavka.Draha;
+        zastavka.PosledniStartV = vstup.PosledniStartV ?? zastavka.PosledniStartV;
         zastavka.PrvniVyzyvaciZnameni =
             vstup.PrvniVyzyvaciZnameni?.ToUniversalTime() ?? zastavka.PrvniVyzyvaciZnameni;
         zastavka.DelkaProceduryMin = vstup.DelkaProceduryMin ?? zastavka.DelkaProceduryMin;

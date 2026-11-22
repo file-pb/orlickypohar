@@ -248,6 +248,8 @@ public static class ZavodEndpoints
                 z.PocetSkrtu, z.KoeficientDoSerie, z.PosunDoSerie, z.Vyhodnoceni,
                 SerieNazev = z.Serie!.Nazev, z.Serie.Rok,
                 SkrtySerie = z.Serie.PocetSkrtu, z.Serie.VerzePravidel,
+                // Dva body, které vydává pořadatel sám (R21).
+                z.Draha, z.PosledniStartV,
             })
             .FirstOrDefaultAsync(ct);
 
@@ -272,7 +274,8 @@ public static class ZavodEndpoints
             zavod.PocetSkrtu, zavod.KoeficientDoSerie, zavod.PosunDoSerie, zavod.Vyhodnoceni,
             zavod.SkrtySerie,
             PravidlaBodovani.Podle(zavod.VerzePravidel),
-            maSmernice)));
+            maSmernice,
+            zavod.Draha, zavod.PosledniStartV)));
     }
 
     private static async Task<Results<Ok<ZavodDetailDto>, NotFound>> DetailAsync(

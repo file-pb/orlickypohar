@@ -2096,6 +2096,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("DelkaProceduryMin")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Draha")
+                        .HasColumnType("text");
+
                     b.Property<int>("Druh")
                         .HasColumnType("integer");
 
@@ -2123,6 +2126,9 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.Property<int>("Poradi")
                         .HasColumnType("integer");
+
+                    b.Property<TimeOnly?>("PosledniStartV")
+                        .HasColumnType("time without time zone");
 
                     b.Property<int>("PosunDoSerie")
                         .HasColumnType("integer");

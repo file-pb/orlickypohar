@@ -77,9 +77,14 @@ public static class KalendarEndpoints
         var nazev = await db.Serie.Where(s => s.Id == rozsah.SerieId)
             .Select(s => s.Nazev).FirstAsync(ct);
 
+        // Nápověda do formuláře: jednou na požadavek, ne u každé zastávky.
+        var napovedy = await sprava.NapovedyAsync(rozsah.SerieId, ct);
+
         return Results.Ok(new PrehledZastavekDto(
             serie, nazev, pohled.SmiKalendar,
-            (await sprava.VypisAsync(rozsah.SerieId, ct)).Select(pohled.Radek).ToList()));
+            (await sprava.VypisAsync(rozsah.SerieId, ct))
+            .Select(z => pohled.Radek(z, napovedy))
+            .ToList()));
     }
 
     private static async Task<IResult> ZalozAsync(
@@ -170,7 +175,9 @@ public static class KalendarEndpoints
     private sealed record Pohled(
         bool SmiKalendar, bool SmiPublikovat, bool OrganizatorRocniku, IReadOnlyList<int> Zavody)
     {
-        public ZastavkaRadek Radek(KalendarSprava.Zaznam zaznam)
+        public ZastavkaRadek Radek(
+            KalendarSprava.Zaznam zaznam,
+            (string? Draha, TimeOnly? PosledniStart) napoveda = default)
         {
             var z = zaznam.Zavod;
             var organizator = OrganizatorRocniku || Zavody.Contains(zaznam.Id);
@@ -192,7 +199,9 @@ public static class KalendarEndpoints
                 z.UzaverkaPrihlasek, z.Startovne, z.PrvniVyzyvaciZnameni,
                 z.DelkaProceduryMin,
                 z.PoradatelZapisujeVysledky,
-                z.UzavrenoAutomatemV);
+                z.UzavrenoAutomatemV,
+                z.Draha, z.PosledniStartV,
+                napoveda.Draha, napoveda.PosledniStart);
         }
     }
 
@@ -220,6 +229,8 @@ public static class KalendarEndpoints
         var pohled = await PohledAsync(kdo, rozsahy, zastavka.SerieId, ct)
                      ?? new Pohled(false, false, false, []);
 
-        return pohled.Radek(new KalendarSprava.Zaznam(zastavka.Id, zastavka));
+        return pohled.Radek(
+            new KalendarSprava.Zaznam(zastavka.Id, zastavka),
+            await sprava.NapovedyAsync(zastavka.SerieId, ct));
     }
 }

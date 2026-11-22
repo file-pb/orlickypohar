@@ -483,6 +483,32 @@ public class Zavod
     /// </summary>
     public DateTimeOffset? UzavrenoAutomatemV { get; set; }
 
+    /// <summary>
+    /// <b>Popis dráhy do vypsání</b> — J1.3(4). Volný text, jak ho dnes
+    /// Miloš píše do plachetní směrnice: *„start a cíl u koupacího mola
+    /// Mariny Orlík … obeplout točnou bóji levobokem a zpět do cíle."*
+    ///
+    /// <para>
+    /// <b>Proč text a ne odkaz na trať</b> (nález R21): trať se staví na
+    /// vodě podle větru a v době vypsání ještě není. Vypsání přitom musí
+    /// vyjít dřív, než se otevřou přihlášky — tenhle bod tedy popisuje, jak
+    /// se obvykle jezdí, ne kde přesně budou bóje.
+    /// </para>
+    /// <para>
+    /// <b>Per regatu, s našeptáváním</b> (Filip, 21. 11. 2026: *„pro každou
+    /// regatu extra, ale s našeptáváním z mediánu"*). U textu se našeptává
+    /// poslední použitý, ne medián — průměrovat věty nejde.
+    /// </para>
+    /// </summary>
+    public string? Draha { get; set; }
+
+    /// <summary>
+    /// <b>Po kolikáté hodině se poslední den už nestartuje</b> — J1.3(7).
+    /// Ve vzoru vypsání: *„žádná rozjížďka nebude startována po 16:00."*
+    /// Prázdné znamená, že to regata nevyhlašuje, ne že je to nula.
+    /// </summary>
+    public TimeOnly? PosledniStartV { get; set; }
+
     // --- Výsledek závodu → body do seriálu ---
 
     /// <summary>Váha závodu v seriálu, běžně 1.0.</summary>
