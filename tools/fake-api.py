@@ -3736,6 +3736,12 @@ class H(BaseHTTPRequestHandler):
                 return None
             return self.uloz_nastaveni(m.group(1))
 
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/boje/(\d+)/znaceni$', cesta)):
+            if self.token_nesedi() or self.prava_nesedi():
+                return None
+            return self.znaceni_boje(m.group(1), int(m.group(2)), self.telo_zadosti())
+
         # <b>Registrace zařízení je bez přihlášení</b> — veřejná upozornění
         # nesmějí vyžadovat účet (plán, *Dvě úrovně upozornění*). Proto
         # stojí **před** kontrolou tokenu, která platí pro zbytek správy.
@@ -4693,6 +4699,34 @@ class H(BaseHTTPRequestHandler):
             return self.chyba(400, "Rozjížďka se nejede, zkrácení se už nemění.")
 
         t["zkracenoUPrvkuId"] = t["zkracenoV"] = t["zkratil"] = None
+        return self._prazdna_odpoved()
+
+    def znaceni_boje(self, slug, boje_id, vstup):
+        """Přepíše, **čím ta značka je** — barvu, tvar, druh a poznámku.
+
+        Měření se nedotkne: poloha, přesnost, zdroj ani čas se nemění.
+        Opsané z `BojeSprava.ZnaceniAsync` i s tím, že přenastavený
+        záznam se nepřebarvuje (platí jen pro dobu, kdy platil) a sebraný
+        ano — špatně zapsanou barvu musí jít opravit i večer na břehu.
+        """
+        if (zamceno := proc_nejde_stavet(slug, self._vybrana_trat())):
+            return self.chyba(400, zamceno)
+        if not self.zastavka(slug):
+            return None
+
+        b = next((x for x in BOJE.get(slug, []) if x["id"] == boje_id), None)
+        if not b:
+            return self.chyba(400, "Taková bóje u téhle regaty není.")
+        if b["nahrazenaV"] is not None:
+            return self.chyba(
+                400,
+                "Tenhle záznam je přenastavený. Čím ta značka je, řekni u té, "
+                "která stojí teď.")
+
+        b["barva"] = vstup.get("barva")
+        b["tvar"] = vstup.get("tvar")
+        b["znaceni"] = vstup.get("znaceni")
+        b["popis"] = (vstup.get("popis") or "").strip() or None
         return self._prazdna_odpoved()
 
     def seber_boji(self, slug, boje_id):

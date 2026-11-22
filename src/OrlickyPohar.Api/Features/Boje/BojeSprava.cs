@@ -231,6 +231,56 @@ public class BojeSprava(
         return true;
     }
 
+    /// <summary>
+    /// Přepíše <b>značení</b> bóje — barvu, tvar, druh a poznámku. Vrací
+    /// chybu, nebo <c>null</c>.
+    ///
+    /// <para>
+    /// <b>Měření se tím nedotkne.</b> Poloha, přesnost, zdroj ani čas se
+    /// nemění; mění se to, čím ta značka je. Pípnutí si barvu a tvar po
+    /// staré bóji schválně přebírá, takže je to vlastnost toho kusu
+    /// plastu, ne záznamu o jeho poloze.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Zámek platí stejně jako u pípnutí.</b> Do přijaté trati se
+    /// nesahá — veřejně vydaná trať nese i barvu a tiše ji přebarvit by
+    /// znamenalo změnit, co už někdo viděl.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Nahrazený záznam se nepřebarvuje</b>, protože platí jen pro
+    /// dobu, kdy platil, a čím ta bóje je, říká dnes její nástupce.
+    /// <b>Sebraná ano</b>: sebrání je razítko o tom, že bóje už ve vodě
+    /// není, ne o tom, že se na ni zapomnělo — a špatně zapsanou barvu
+    /// musí jít opravit i večer na břehu.
+    /// </para>
+    /// </summary>
+    public async Task<string?> ZnaceniAsync(
+        int zavodId, int bojeId, ZnaceniBojeVstup vstup, CancellationToken ct)
+    {
+        if (await trate.ProcNejdeStavetAsync(zavodId, ct) is { } zamceno) return zamceno;
+
+        var boje = await db.Boje.FirstOrDefaultAsync(
+            b => b.Id == bojeId && b.ZavodId == zavodId, ct);
+        if (boje is null) return "Taková bóje u téhle regaty není.";
+        if (boje.NahrazenaV is not null)
+            return "Tenhle záznam je přenastavený. Čím ta značka je, řekni u té, "
+                   + "která stojí teď.";
+
+        boje.Barva = vstup.Barva;
+        boje.Tvar = vstup.Tvar;
+        boje.Znaceni = vstup.Znaceni;
+        boje.Popis = (vstup.Popis ?? "").Trim() is { Length: > 0 } popis ? popis : null;
+        await db.SaveChangesAsync(ct);
+
+        log.LogInformation(
+            "Značení bóje {Boje} u regaty {Zavod} přepsáno na {Barva}/{Tvar}/{Znaceni}",
+            bojeId, zavodId, boje.Barva, boje.Tvar, boje.Znaceni);
+
+        return null;
+    }
+
     /// <summary>Označí bóji za sebranou. Ze zápisu nemizí.</summary>
     public async Task<string?> SeberAsync(int zavodId, int bojeId, CancellationToken ct)
     {

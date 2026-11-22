@@ -54,6 +54,15 @@ public static class BojeEndpoints
             .WithSummary("Označí bóji za sebranou z vody")
             .WithDescription("Pořadatel regaty, nebo rozhodčí. Ze zápisu bóje nemizí.");
 
+        g.MapPut("/{boje:int}/znaceni", ZnaceniAsync)
+            .WithSummary("Přepíše barvu, tvar, druh značení a poznámku")
+            .WithDescription(
+                "Pořadatel regaty, nebo rozhodčí. <b>Měření se nemění</b> — poloha, "
+                + "přesnost, zdroj ani čas; mění se to, čím ta značka je. Posílá se celá "
+                + "čtveřice, protože `null` u každé z nich znamená „neuvedeno\" a musí jít "
+                + "nastavit. Do přijaté trati nejde a přenastavený záznam se nepřebarvuje — "
+                + "čím ta značka je, řekne ta, která stojí teď.");
+
         // Token jde v hlavičce, ne v cookie — proti podvrženému formuláři
         // tu není co chránit, stejně jako u fotky papírového zápisu.
         g.MapPost("/{boje:int}/fotky", FotkaAsync)
@@ -126,6 +135,18 @@ public static class BojeEndpoints
         if (chyba is not null) return Results.BadRequest(new { error = chyba });
 
         return Results.Created((string?)null, boje);
+    }
+
+    private static async Task<IResult> ZnaceniAsync(
+        string serie, string zavod, int boje, ZnaceniBojeVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, BojeSprava sprava, CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+        if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        var chyba = await sprava.ZnaceniAsync(rozsah.ZavodId.Value, boje, vstup, ct);
+        return chyba is null ? Results.NoContent() : Results.BadRequest(new { error = chyba });
     }
 
     private static async Task<IResult> SeberAsync(

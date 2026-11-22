@@ -114,6 +114,124 @@ public class BojeTests(PostgresFixture fixture)
     private static PipnutiVstup ZMapy(string nazev, ZdrojPolohy zdroj = ZdrojPolohy.Mapa) =>
         new(nazev, 0, 49.4957254, 14.1841419, null, null, zdroj);
 
+    /// <summary>
+    /// <b>Značení se přepisuje, měření ne</b> (rozhodnutí 7 druhého
+    /// konzilia, 22. 11. 2026). Barva a tvar popisují tentýž kus plastu —
+    /// pípnutí si je po staré bóji schválně přebírá —, takže špatně
+    /// zapsanou barvu musí jít opravit bez toho, aby vznikl nový záznam
+    /// o poloze.
+    /// </summary>
+    [Fact]
+    public async Task Znaceni_jde_prepsat_a_polohy_se_to_nedotkne()
+    {
+        var (db, boje) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (postavena, _) = await boje.PipniAsync(
+            zavod.Id,
+            new PipnutiVstup("Otočná 1", 0, 49.516, 14.165, 5, null, null, BarvaBoje.Zluta),
+            kdo.Id,
+            default);
+
+        Assert.Null(await boje.ZnaceniAsync(
+            zavod.Id,
+            postavena!.Id,
+            new ZnaceniBojeVstup(BarvaBoje.Oranzova, TvarBoje.Kuzelova, DruhZnaceni.NaseBoje,
+                "  kotva se trhá  "),
+            default));
+
+        var po = await db.Boje.AsNoTracking().SingleAsync(b => b.Id == postavena.Id);
+        Assert.Equal(BarvaBoje.Oranzova, po.Barva);
+        Assert.Equal(TvarBoje.Kuzelova, po.Tvar);
+        Assert.Equal(DruhZnaceni.NaseBoje, po.Znaceni);
+        // Poznámka se ořízne a prázdná je `null`, ne mezera.
+        Assert.Equal("kotva se trhá", po.Popis);
+
+        // A tohle je ta podstatná věc: měření se nehnulo a nevznikl druhý
+        // záznam. Jinak by z opravy barvy bylo pípnutí, které se nestalo.
+        Assert.Equal(49.516, po.Sirka);
+        Assert.Equal(5, po.PresnostM);
+        Assert.Equal(postavena.PostavenaV, po.PostavenaV);
+        Assert.Equal(1, await db.Boje.CountAsync(b => b.ZavodId == zavod.Id));
+    }
+
+    /// <summary>
+    /// <b>`null` znamená „neuvedeno" a musí jít nastavit.</b> Proto se
+    /// posílá celá čtveřice: částečná úprava by prázdno neuměla odlišit
+    /// od „nech, jak bylo".
+    /// </summary>
+    [Fact]
+    public async Task Znaceni_jde_i_vymazat()
+    {
+        var (db, boje) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (postavena, _) = await boje.PipniAsync(
+            zavod.Id,
+            new PipnutiVstup("Bóje", 0, 49.516, 14.165, 5, null, null, BarvaBoje.Zluta,
+                TvarBoje.Kulova),
+            kdo.Id,
+            default);
+
+        Assert.Null(await boje.ZnaceniAsync(
+            zavod.Id, postavena!.Id, new ZnaceniBojeVstup(), default));
+
+        var po = await db.Boje.AsNoTracking().SingleAsync(b => b.Id == postavena.Id);
+        Assert.Null(po.Barva);
+        Assert.Null(po.Tvar);
+        Assert.Null(po.Popis);
+    }
+
+    /// <summary>
+    /// Do přijaté trati se nesahá. Veřejně vydaná trať nese i barvu, takže
+    /// tiché přebarvení by změnilo, co už někdo viděl.
+    /// </summary>
+    [Fact]
+    public async Task Znaceni_do_prijate_trati_nejde()
+    {
+        var (db, boje, trate) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (postavena, _) = await boje.PipniAsync(zavod.Id, Bod("Otočná"), kdo.Id, default);
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+
+        Assert.NotNull(await boje.ZnaceniAsync(
+            zavod.Id, postavena!.Id, new ZnaceniBojeVstup(BarvaBoje.Modra), default));
+
+        var po = await db.Boje.AsNoTracking().SingleAsync(b => b.Id == postavena.Id);
+        Assert.Null(po.Barva);
+    }
+
+    /// <summary>
+    /// Přenastavený záznam platí jen pro dobu, kdy platil — čím ta značka
+    /// je, řekne dnes její nástupce. <b>Sebraná se přebarvit smí</b>:
+    /// špatně zapsanou barvu musí jít opravit i večer na břehu.
+    /// </summary>
+    [Fact]
+    public async Task Nahrazeny_zaznam_se_neprebarvuje_sebrany_ano()
+    {
+        var (db, boje) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (stara, _) = await boje.PipniAsync(zavod.Id, Bod("Otočná"), kdo.Id, default);
+        var (nova, _) = await boje.PipniAsync(
+            zavod.Id, Bod("Otočná", 49.517, stara!.Id), kdo.Id, default);
+
+        Assert.NotNull(await boje.ZnaceniAsync(
+            zavod.Id, stara.Id, new ZnaceniBojeVstup(BarvaBoje.Modra), default));
+
+        // Nástupce ano — a pak i po sebrání.
+        Assert.Null(await boje.ZnaceniAsync(
+            zavod.Id, nova!.Id, new ZnaceniBojeVstup(BarvaBoje.Modra), default));
+        Assert.Null(await boje.SeberAsync(zavod.Id, nova.Id, default));
+        Assert.Null(await boje.ZnaceniAsync(
+            zavod.Id, nova.Id, new ZnaceniBojeVstup(BarvaBoje.Zelena), default));
+
+        var po = await db.Boje.AsNoTracking().SingleAsync(b => b.Id == nova.Id);
+        Assert.Equal(BarvaBoje.Zelena, po.Barva);
+    }
+
     [Fact]
     public async Task Postavena_boje_dostane_poradi_za_posledni()
     {

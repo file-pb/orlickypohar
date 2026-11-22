@@ -342,6 +342,32 @@ public record PipnutiVstup(
     // server — cizí hodiny se nesmí brát naslepo.
     DateTimeOffset? PostavenaV = null);
 
+/// <summary>
+/// <b>Čím ta značka je</b> — barva, tvar, druh značení a poznámka.
+///
+/// <para>
+/// <b>Není to měření, a proto to jde přepsat na místě.</b> Poloha,
+/// přesnost, zdroj a čas jsou záznam o tom, kde bóje stála, a ty se
+/// nepřepisují nikdy: přenastavení je nový záznam. Barva a tvar ale
+/// popisují <b>tentýž kus plastu</b> — pípnutí si je po staré bóji
+/// schválně přebírá —, takže když se zapsaly špatně, oprava je oprava,
+/// ne nové měření. Do konzilia (rozhodnutí 7, 21. 11. 2026) to patří
+/// jako věc, která se mění <i>jednou za ráno, z jedné krabice bójí</i>.
+/// </para>
+///
+/// <para>
+/// <b>Přepisuje se celá čtveřice</b>, proto PUT a ne záplata:
+/// <c>null</c> u každé z nich znamená <i>neuvedeno</i> a musí jít
+/// nastavit. Částečná úprava by „neuvedeno" neuměla odlišit od
+/// „nech, jak bylo".
+/// </para>
+/// </summary>
+public record ZnaceniBojeVstup(
+    BarvaBoje? Barva = null,
+    TvarBoje? Tvar = null,
+    DruhZnaceni? Znaceni = null,
+    string? Popis = null);
+
 /// <summary>Pravidla pípnutí. Čisté funkce, bez databáze.</summary>
 public static class Pipnuti
 {
