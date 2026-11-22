@@ -34,9 +34,10 @@ postavené a nasazené (22. 11.):
 | **Uzavření regaty** | Úkon existoval (Vypsaný → Odjetý); přibyl automat po dvou dnech od konce posledního závodního dne. Zavírá, nepodepisuje, a regatu, ve které se nic nejelo, nechá stát |
 | **Dráha a hodina posledního startu** | Dvě kolonky u regaty, s nápovědou z ročníku — medián hodiny, poslední použitá dráha. K tomu **místo konání**, které vypsání do 22. 11. mělo zadrátované jako „neuvedené" |
 
-> **Zbývá k nim formulář.** Tři nové kolonky (místo, dráha, hodina) a věta
-> „uzavřeno samo" čekají na vygenerovaný kontrakt z produkce — stejná
-> dvoukrokovka jako u velení a u přepínače zápisu.
+> **Formulář je hotový** (22. 11., `62eb314b`): vypsání má vlastní sekci
+> u regaty (`/sprava/<ročník>/vypsani/<regata>`) se všemi sedmi kolonkami
+> a nápovědou z ročníku, karta kalendáře nese štítek *uzavřeno samo*.
+> Vzhled na produkci ověřený není — správa chce přihlášení.
 
 ## B) Čeká na Miloše — zpráva je napsaná, zbývá ji poslat
 
