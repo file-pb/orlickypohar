@@ -83,16 +83,6 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
   která jako jediná nese i směrnici. Ostatních osm stojí ve stavu *Plánovaný*.
   Jsou to termíny a texty, ne práce v repozitáři.
 
-- **Integrační testy nejdou spustit na tomhle stroji, a stálo to za jednu
-  noc dvě červené main** (22. 11.: jednou session stavitele, jednou mě).
-  Příčina není Docker Hub, jak se dosud psalo — **`docker` tu není vůbec**
-  a nativní Postgres taky ne, takže Testcontainers nemá co spustit. Autor
-  se o chybě v integračním testu dozví až z CI, tedy po pushi, a mezitím
-  za tou červenou stojí fronta cizích commitů. Dvě cesty ven: doinstalovat
-  runtime (colima nebo Docker Desktop, případně `postgresql@17`), nebo dát
-  fixtuře zadní vrátka v podobě `POSTGRES_URL` na už běžící databázi.
-  Obojí je rozhodnutí o stroji, ne práce v repozitáři, proto je to tady
-  a ne ve skupině A.
 
 ## D) Postavené, ale neověřené — čeká na telefon a na vodu
 
@@ -195,6 +185,17 @@ z appky*, postavily `a4710ffa`, `34605f3d` a `4b9c256d`.
 (`8dee3387`, 15 testů), verze 3 souhlasu s podmínkami účasti (`8a254875`,
 6 testů a nová kontrola rozchodu znění v CI) a verze buildu na `/appka`
 (`0b00bb36`). Čtvrtá se rozpadla při čtení kódu — barvy bójí, viz skupinu E.
+
+**22. 11. odpoledne** vypadlo **„integrační testy nejdou na tomhle
+stroji"**, a to beze zbytku. Dvakrát se k té položce napsala špatná
+příčina — nejdřív nedostupný Docker Hub, pak že kontejnerový runtime na
+stroji není vůbec. Filip řekl *„docker tu asi mám"* a měl pravdu: Docker
+Desktop je nainstalovaný, jen přesunutý do `/Applications/Vývoj`, zatímco
+symlinky v `/usr/local/bin` míří na starou cestu a visí naprázdno. Proto
+`which docker` nic nenašel. Stačilo appku spustit: **1186 testů zelených
+za 19 s**, integrační včetně, a Testcontainers si socket najde samo bez
+jediné proměnné. Oprava je v `AGENTS.md`; za tou noční dvojicí červených
+main tedy nestál stroj, ale dvakrát nedoložené tvrzení o něm.
 
 **21. 11.** vypadly z A další dvě položky, a ani jedna nebyla práce.
 **Graf tlaku na stránce regaty už tam je** — `BokVitr` ho nese spolu

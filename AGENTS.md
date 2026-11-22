@@ -36,7 +36,7 @@ a poučení z minulých chyb. Tenhle repozitář popisuje **jen konvence kódu**
 Rychlé ověření, že to celé drží:
 
 ```bash
-dotnet test --filter "Category!=Integracni"     # musí projít bez Dockeru
+dotnet test                                     # celá sada; chce běžící Docker Desktop
 ssh deploy@178.105.62.172 'docker ps'           # musí vypsat kontejnery
 curl -s https://orlickypohar-api.klihovka.cz/health   # musí vrátit Healthy
 ```
@@ -52,9 +52,9 @@ curl -s https://orlickypohar-api.klihovka.cz/health   # musí vrátit Healthy
 | Kde co běží a co když spadne | [platform/docs/PROVOZ.md](https://github.com/file-pb/platform/blob/main/docs/PROVOZ.md) |
 | Chyby, které už jednou stály čas | [platform/docs/POUCENI.md](https://github.com/file-pb/platform/blob/main/docs/POUCENI.md) |
 
-**Co na novém stroji nepůjde a je to v pořádku:** integrační testy
-(`Category=Integracni`) potřebují Docker Hub, který je z firemní sítě
-nedostupný. Běží v CI. Na stroji s běžnou sítí jdou pustit i lokálně.
+**Integrační testy** (`Category=Integracni`) potřebují běžící Docker
+Desktop; na tomhle stroji leží v `/Applications/Vývoj`, takže `docker`
+v cestě není, ale testům to nevadí. Podrobně níž, u pastí nasazení.
 
 ## Kde je zbytek
 
@@ -247,22 +247,35 @@ u klienta.
 `*.klihovka.cz`, takže `api.orlickypohar.klihovka.cz` selže na TLS dřív, než
 požadavek dojde na server. Proto `orlickypohar-api.klihovka.cz`.
 
-**Integrační testy lokálně nejedou, a je to horší, než stálo tady.**
-Dosud tu bylo napsané, že je nedostupný Docker Hub. Ověřeno 22. 11. 2026:
-na tomhle stroji **není kontejnerový runtime vůbec** — `docker` ani
-`colima` nejsou v cestě, `Docker.app` není nainstalovaná a `psql` taky
-ne. Testcontainers tedy nemá co spustit a nejde o síť.
+**Integrační testy lokálně jedou. Stačí spustit Docker Desktop.**
+Dvakrát se tu stálo na špatné příčině: nejdřív že je nedostupný Docker
+Hub, pak 22. 11. 2026 že na stroji není kontejnerový runtime vůbec.
+Obojí bylo mylné. Docker Desktop **nainstalovaný je**, jen leží
+v `/Applications/Vývoj/Docker.app` — a symlinky v `/usr/local/bin`
+pořád míří na `/Applications/Docker.app`, tedy naprázdno. Proto
+`which docker` nic nenajde a vypadá to jako chybějící instalace.
 
-Praktický následek stál jednu noc dvě červená CI: **chybu v integračním
-testu se dozvíš až z běhu po pushi**, a do té doby za tou červenou stojí
-fronta cizích commitů, protože nasazení čeká na testy. Proto:
+Co doopravdy potřebuješ: **běžící démon**, nic víc.
 
-1. před pushem pusť `dotnet test --filter "Category!=Integracni"`;
+```sh
+open -a "/Applications/Vývoj/Docker.app"   # chvíli naskakuje
+dotnet test                                 # celá sada, i integrační
+```
+
+Testcontainers si socket najde samo přes `~/.docker`; `DOCKER_HOST` ani
+`TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE` nastavovat nemusíš a `docker`
+v cestě k testům vůbec není potřeba. Ověřeno 22. 11. 2026: **1186 testů
+zelených za 19 s**, a jedna integrační třída i s prázdným prostředím.
+
+Dokud se to nevědělo, stála ta neznalost za jednu noc dvě červená CI,
+protože chybu v integračním testu bylo vidět teprve z běhu po pushi.
+Pravidlo z toho zůstává i teď, kdy se dá otestovat lokálně:
+
+1. před pushem pusť celou sadu, ne jen `--filter "Category!=Integracni"`;
 2. a po pushi se na běh **podívej, než začneš další věc**.
 
-Cesty ven jsou dvě a obě jsou rozhodnutí, ne práce: doinstalovat runtime
-(colima, Docker Desktop, nebo `postgresql@17`), nebo dát fixtuře zadní
-vrátka přes `POSTGRES_URL` na běžící databázi.
+Kdyby démon nejel a bylo to naspěch, `--filter "Category!=Integracni"`
+projde bez něj — ale integrační chybu ti to nenajde.
 
 ## Zdraví a nasazení
 
