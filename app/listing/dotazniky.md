@@ -35,18 +35,19 @@ konzole je česky, ale appku kontroluje kdokoliv ve světě.
 
 Název pokynů: `Crew view and track recording`
 
+Jméno i heslo nech prázdné. Formulář chce **aspoň jeden typ pokynu** —
+buď přihlašovací údaje, nebo vysvětlení — a klíč k lodi se do kolonky pro
+heslo napsat nedá. Pole s vysvětlením má **limit 500 znaků**, text je na
+433:
+
 ```
-Results, race calendar and series standings are public and require no sign-in.
+Results, calendar and standings are public — no sign-in needed.
 
-To see the on-water crew screen without an account, open the menu (three dots,
-top right) and choose "Ukázka pro závodníka" (racer demo). It shows the same
-screen the crew sees during a race, with sample data.
+Crew screen without an account: open the menu (three dots, top right) and choose "Ukázka pro závodníka" (racer demo). It shows what the crew sees during a race, with sample data.
 
-Track recording requires a boat key issued by the boat's captain, so it cannot
-be opened with a username and password. We will provide a test key on request.
+Track recording needs a boat key issued by the boat's captain, not a username and password. We can send a test key on request.
 
-Race management screens require an account with organiser permissions granted
-by the series referee.
+Race management needs an account with organiser permissions.
 ```
 
 **Tenhle úkol je první v řadě** — dokud není hotový, konzole nepustí ani
