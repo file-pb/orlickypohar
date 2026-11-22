@@ -60,11 +60,35 @@ async function nactiJaZeServeru(): Promise<Sezeni> {
     // standardní chování OAuth a nic tajného tam není. Zahodit ji znamená
     // poslat člověka hledat příčinu do logu serveru, což u „nefunguje mi
     // přihlášení" nikdo neudělá.
-    return { ja: null, duvod: duvodZHlavicky(odpoved.headers.get("www-authenticate")) };
+    const zHlavicky = duvodZHlavicky(odpoved.headers.get("www-authenticate"));
+    if (zHlavicky) return { ja: null, duvod: zHlavicky };
+
+    // Ne každé odmítnutí je o tokenu. Od 22. 11. 2026 umí `/ja` vrátit 503
+    // se stropem účtů, a to je úplně jiná věc než prošlé přihlášení — bez
+    // tohohle by hlavička tvrdila „API token odmítlo" člověku, jehož token
+    // je v pořádku a jen se nemá kde založit účet.
+    return { ja: null, duvod: await duvodZTela(odpoved) };
   } catch {
     // Nedostupné API nesmí shodit hlavičku na veřejné stránce.
     return { ja: null, duvod: "API se nedaří zavolat." };
   }
+}
+
+/**
+ * Důvod z těla odpovědi. API vydává chyby dvěma tvary: `{ error }` u vlastních
+ * hlášek a ProblemDetails (`title`, `detail`) u stavů, které vrací rovnou
+ * framework. Čte se obojí, protože obojí je pravda o tom, co se stalo.
+ */
+async function duvodZTela(odpoved: Response) {
+  try {
+    const telo = (await odpoved.json()) as { error?: string; detail?: string; title?: string };
+    const duvod = telo?.error ?? telo?.detail ?? telo?.title;
+    if (duvod) return duvod;
+  } catch {
+    // Tělo nemusí být JSON. Pak zbývá jen stav.
+  }
+
+  return `API odpovědělo ${odpoved.status}.`;
 }
 
 /** Z `Bearer error="invalid_token", error_description="..."` vytáhne popis. */

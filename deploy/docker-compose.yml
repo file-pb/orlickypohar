@@ -95,6 +95,19 @@ services:
       # Prázdná hodnota funkci vypíná: smazání naší strany proběhne a účtenka
       # přizná, že přihlášení u poskytovatele trvá.
       Identita__ZruseniUctu: "/v2/users/{subjekt}"
+      # Strop zakládání účtů. Účet vzniká prvním přihlášením na `/ja`, takže
+      # držitel jednoho platného tokenu umí vyrábět řádky — a limit na hraně
+      # proti tomu nestačí, `ratelimit-standard` pouští 30 požadavků za
+      # sekundu na adresu. Stovku účtů Orlický pohár nepřekročí (Filip,
+      # 22. 11. 2026), takže pětistovka je pětinásobná rezerva a zároveň
+      # hranice, za kterou už něco není v pořádku.
+      #
+      # Denní rozpočet je proti kolotoči „přihlas se — smaž — přihlas se":
+      # smazaný účet zůstává jako náhrobek a další přihlášení založí nový
+      # řádek, takže jeden účet u poskytovatele by tabulku nafukoval bez
+      # konce. Překročení se loguje jako chyba, ne jako varování.
+      Identita__NejvicUctu: "500"
+      Identita__NejvicUctuZaDen: "20"
       # Regata, u které se zapomnělo na konec dne, se po dvou dnech zavře
       # sama (Filip, 21. 11. 2026). Zavírá, nepodepisuje, a regatu, ve které
       # se nic nejelo, nechá stát.

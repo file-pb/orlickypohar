@@ -38,12 +38,31 @@ export default async function Hotovo({ searchParams }: Parametry) {
   const poskytovatelZrusen = parametry.poskytovatel === "ano";
   const duvod = parametry.duvod;
 
+  // Stalo se vůbec něco? U nás, nebo u poskytovatele — stačí jedno.
+  const stalo = radky.length > 0 || poskytovatelZrusen;
+
   return (
     <Boky>
-      <h1>Účet je smazaný</h1>
-      <p className="podtitulek">
-        Je to hotové a nedá se to vzít zpátky. Odhlásili jsme tě i tady.
-      </p>
+      {/* Nadpis se řídí tím, co se opravdu stalo. „Účet je smazaný" nad
+          stránkou, kde se nesmazalo nic a přihlášení zůstalo, je to nejhorší
+          možné místo pro nepravdu — je to první a často jediný řádek, který
+          si člověk přečte. */}
+      {stalo ? (
+        <>
+          <h1>Účet je smazaný</h1>
+          <p className="podtitulek">
+            Je to hotové a nedá se to vzít zpátky. Odhlásili jsme tě i tady.
+          </p>
+        </>
+      ) : (
+        <>
+          <h1>Nebylo co smazat</h1>
+          <p className="podtitulek">
+            Odhlásili jsme tě, ale smazat se nic nemuselo a přihlášení
+            u poskytovatele zůstalo. Co dál, stojí níž.
+          </p>
+        </>
+      )}
 
       <h2>Co ubylo</h2>
       {radky.length > 0 ? (
@@ -56,8 +75,9 @@ export default async function Hotovo({ searchParams }: Parametry) {
         </ul>
       ) : (
         <p>
-          U nás nebylo co mazat — účet nikdy nedostal oprávnění ani vazbu
-          k lodi. Přihlášení je zrušené, a to je celé.
+          <b>Nic.</b> U nás tenhle účet nikdy nevznikl — žádné oprávnění, žádná
+          vazba k lodi, žádný kontakt. Není to chyba: stačí, že ses nikdy
+          nedostal dál než k přihlášení.
         </p>
       )}
 
@@ -71,9 +91,19 @@ export default async function Hotovo({ searchParams }: Parametry) {
       ) : (
         <>
           <p>
-            <b>Zůstalo.</b> {duvod ?? "Zrušení se nepovedlo."} Naše strana je
-            přitom smazaná — přihlásit se tím účtem sice půjde, ale nebude tu
-            k čemu: vznikl by nový, prázdný účet bez jediného oprávnění.
+            <b>Zůstalo.</b> {duvod ?? "Zrušení se nepovedlo."}{" "}
+            {radky.length > 0 ? (
+              <>
+                Naše strana je přitom smazaná — přihlásit se tím účtem sice
+                půjde, ale nebude tu k čemu: vznikl by nový, prázdný účet bez
+                jediného oprávnění.
+              </>
+            ) : (
+              <>
+                Přihlásit se tím účtem tedy pořád půjde, jen tu po něm nic
+                nezůstalo.
+              </>
+            )}
           </p>
           {ucetUPoskytovatele && (
             <p>

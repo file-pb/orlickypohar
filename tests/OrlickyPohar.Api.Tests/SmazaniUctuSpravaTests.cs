@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
@@ -316,5 +317,84 @@ public class SmazaniUctuSpravaTests(PostgresFixture fixture)
     {
         var (_, smazani, _) = Sluzby();
         Assert.Null(await smazani.SmazAsync(Guid.CreateVersion7(), default));
+    }
+
+    /// <summary>
+    /// Uživatelé s vlastní konfigurací stropu. Limity se berou relativně
+    /// k tomu, co v databázi zrovna je — <b>kolekce ji sdílí</b>, takže
+    /// absolutní číslo by záviselo na tom, co stihly ostatní testy.
+    /// </summary>
+    private static Uzivatele SeStropem(AppDbContext db, int? nejvic = null, int? zaDen = null) =>
+        new(db, new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Identita:NejvicUctu"] = (nejvic ?? 0).ToString(),
+            ["Identita:NejvicUctuZaDen"] = (zaDen ?? 0).ToString(),
+        }).Build());
+
+    [Fact]
+    public async Task Strop_zastavi_zakladani_novych_uctu()
+    {
+        var (db, _, _) = Sluzby();
+        var zivych = await db.Uzivatele.CountAsync(u => u.SmazanV == null);
+
+        // Strop přesně na dnešním počtu: další účet se už nesmí založit.
+        var plno = SeStropem(db, nejvic: zivych);
+
+        var chyba = await Assert.ThrowsAsync<UctuJePlno>(() => plno.NajdiNeboZalozAsync(
+            Vydavatel, $"sub-strop-{Guid.NewGuid():N}", "Nový", "novy@example.test",
+            TimeProvider.System, default));
+
+        Assert.Contains(zivych.ToString(), chyba.Message);
+    }
+
+    [Fact]
+    public async Task Pod_stropem_se_zaklada_dal()
+    {
+        var (db, _, _) = Sluzby();
+        var zivych = await db.Uzivatele.CountAsync(u => u.SmazanV == null);
+
+        // Kontrola obráceně: strop o jeden výš musí jeden účet pustit. Bez
+        // ní by test výš prošel i tehdy, kdyby se nezakládalo nikdy.
+        var jdeTo = SeStropem(db, nejvic: zivych + 1);
+
+        var uzivatel = await jdeTo.NajdiNeboZalozAsync(
+            Vydavatel, $"sub-pod-stropem-{Guid.NewGuid():N}", "Nový", "novy2@example.test",
+            TimeProvider.System, default);
+
+        Assert.NotEqual(Guid.Empty, uzivatel.Id);
+    }
+
+    [Fact]
+    public async Task Denni_rozpocet_zastavi_zakladani()
+    {
+        var (db, _, _) = Sluzby();
+        var odPolnoci = StropUctu.OdPolnoci(DateTimeOffset.UtcNow);
+        var dnes = await db.Uzivatele.CountAsync(u => u.ZalozenV >= odPolnoci);
+
+        var vycerpano = SeStropem(db, zaDen: dnes);
+
+        await Assert.ThrowsAsync<UctuJePlno>(() => vycerpano.NajdiNeboZalozAsync(
+            Vydavatel, $"sub-rozpocet-{Guid.NewGuid():N}", "Nový", "novy3@example.test",
+            TimeProvider.System, default));
+    }
+
+    [Fact]
+    public async Task Znamy_ucet_se_pres_strop_dostane()
+    {
+        var (db, _, uzivatele) = Sluzby();
+        var subjekt = $"sub-znamy-{Guid.NewGuid():N}";
+
+        var prvni = await uzivatele.NajdiNeboZalozAsync(
+            Vydavatel, subjekt, "Jan Známý", "znamy@example.test", TimeProvider.System, default);
+
+        // Tohle je ta vlastnost, kvůli které strop smí existovat: <b>nesmí
+        // vyhodit toho, kdo účet už má</b>. Jinak by z brzdy proti zátěži
+        // byla závora před lidmi, kteří se zrovna chtějí přihlásit.
+        var plno = SeStropem(db, nejvic: 1, zaDen: 1);
+
+        var druhe = await plno.NajdiNeboZalozAsync(
+            Vydavatel, subjekt, "Jan Známý", "znamy@example.test", TimeProvider.System, default);
+
+        Assert.Equal(prvni.Id, druhe.Id);
     }
 }

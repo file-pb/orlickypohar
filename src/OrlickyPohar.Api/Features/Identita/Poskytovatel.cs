@@ -159,7 +159,7 @@ public static class Poskytovatel
 /// <summary>
 /// Překlad přihlášení na interní <c>UserId</c> a načtení jeho práv.
 /// </summary>
-public class Uzivatele(AppDbContext db)
+public class Uzivatele(AppDbContext db, IConfiguration config)
 {
     /// <summary>
     /// Najde uživatele podle dvojice <c>(issuer, subject)</c>, a když ho
@@ -190,6 +190,26 @@ public class Uzivatele(AppDbContext db)
             znamy.NaposledyPrihlasenV = ted;
             await db.SaveChangesAsync(ct);
             return znamy;
+        }
+
+        // Odsud dál se zakládá, a jen sem patří strop: kdo účet má, prošel
+        // větví výš a žádné počítání se ho netýká. Dva dotazy navíc tedy
+        // platí jen první přihlášení v životě účtu.
+        var nejvic = config.GetValue("Identita:NejvicUctu", StropUctu.NejvicVychozi);
+        var zaDen = config.GetValue("Identita:NejvicUctuZaDen", StropUctu.ZaDenVychozi);
+
+        var zivych = await db.Uzivatele.CountAsync(u => u.SmazanV == null, ct);
+        var odPolnoci = StropUctu.OdPolnoci(ted);
+        var zaDnes = await db.Uzivatele.CountAsync(u => u.ZalozenV >= odPolnoci, ct);
+
+        if (StropUctu.ProcNezalozit(zivych, zaDnes, nejvic, zaDen) is { } proc)
+        {
+            // Chyba, ne varování: buď někdo zkouší nafouknout tabulku, nebo
+            // projekt vyrostl a strop se má zvednout vědomě. Obojí se má
+            // dozvědět člověk, ne zůstat v grafu.
+            Log.Error("Účet se nezaložil: {Duvod} Živých {Zivych}, dnes {Dnes}.",
+                proc, zivych, zaDnes);
+            throw new UctuJePlno(proc);
         }
 
         var uzivatel = new Uzivatel
