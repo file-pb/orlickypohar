@@ -64,12 +64,6 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
 - **Kdo appku nemá, se o přeloženém termínu nedozví** (zbytek K5). Zpráva
   odchází odběrem ročníku, tedy jen do telefonů. Druhý kanál je rozhodnutí
   (mail? SMS? vůbec?), ne práce.
-- **Má vypsání říct, co pohár nevyhlašuje?** Dva ze čtyř prázdných bodů —
-  *lhůta pro změny bodování* (J1.2(6)) a *odepření práva na odvolání*
-  (J1.3(8)) — nejsou ve vzoru vypsání ani ve směrnici. R21 z toho čte, že
-  je pohár **nevyhlašuje**, ne že se zapomněly. Dokument je dnes ukazuje
-  v seznamu chybějících, jako by se na ně čekalo. Věta *„pohár nevyhlašuje"*
-  je ale tvrzení o závodu, ne údaj z dat — proto to rozhodnutí.
 - **Licence** — **Play je zaplacená** (Filip, 22. 11.), Apple 99 USD ročně
   dodělá. Co z toho přesto zbývá a v repozitáři to vidět je: `app/eas.json`
   má `submit.production` prázdné, takže vydání na Play není čím odeslat

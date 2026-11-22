@@ -126,6 +126,39 @@ public static class Vypsani
         + "a uznává rozhodčí; co v něm chybí, se musí doplnit, než se otevřou "
         + "přihlášky.";
 
+    /// <summary>
+    /// <b>Co pohár nevyhlašuje, dokument říká naplno</b> (Filip,
+    /// 22. 11. 2026, na otázku *„má vypsání říct, co pohár
+    /// nevyhlašuje?"*: ano).
+    ///
+    /// <para>
+    /// Tyhle dva body Dodatku J1 nejsou ve vzoru vypsání ani v plachetní
+    /// směrnici poháru (nález R21). Do 22. 11. 2026 proto stály
+    /// v dokumentu jako <c>null</c>, tedy mezi chybějícími — a dokument
+    /// tím o sobě tvrdil něco nepravdivého: že se na ně čeká. Nečeká se
+    /// na ně, pohár je nevyhlašuje, a to je samo o sobě údaj, který
+    /// závodník potřebuje znát.
+    /// </para>
+    /// <para>
+    /// <b>Nemění se podle dat</b>, proto konstanta vedle
+    /// <see cref="PodleZpj"/> a ne funkce vstupu: je to prohlášení
+    /// poháru, ne údaj o regatě. Až by některá regata lhůtu vyhlásit
+    /// chtěla, přestane to být konstanta — a bude to změna pravidla,
+    /// která se má dít vědomě.
+    /// </para>
+    /// </summary>
+    private const string NevyhlasujeLhutu =
+        "Pohár lhůtu pro změny bodování nevyhlašuje.";
+
+    /// <summary>
+    /// Druhá polovina téhož rozhodnutí. <b>Neodepírá</b> je silnější
+    /// tvrzení než *„nevyhlašuje"* a je to tak správně: odepřít právo na
+    /// odvolání jde jen tím, že se to ve vypsání napíše (ZPJ 70.3).
+    /// Nenapsané tedy znamená neodepřené, ne nerozhodnuté.
+    /// </summary>
+    private const string NeodepiraOdvolani =
+        "Pohár právo na odvolání neodepírá.";
+
     /// <summary>Sestaví vypsání podle osnovy Dodatku J1.</summary>
     public static VypsaniDto Sestav(VypsaniVstup v)
     {
@@ -140,8 +173,8 @@ public static class Vypsani
             new("J1.3(4)", "Dráha", Draha(v)),
             new("J1.3(5)", "Bodování", Bodovani(v)),
             new("J1.3(7)", "Kdy se poslední den už nestartuje", PosledniStart(v)),
-            new("J1.2(6)", "Lhůta pro změny bodování (ZPJ 90.3(e))", null),
-            new("J1.3(8)", "Odepření práva na odvolání (ZPJ 70.3)", null),
+            new("J1.2(6)", "Lhůta pro změny bodování (ZPJ 90.3(e))", NevyhlasujeLhutu),
+            new("J1.3(8)", "Odepření práva na odvolání (ZPJ 70.3)", NeodepiraOdvolani),
         };
 
         return new VypsaniDto(

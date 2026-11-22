@@ -293,4 +293,21 @@ public class VypsaniTests
         Assert.DoesNotContain("Kdy se poslední den už nestartuje", doplnene.Chybi);
         Assert.Equal(prazdne.Chybi.Count - 2, doplnene.Chybi.Count);
     }
+
+    /// <summary>
+    /// Co pohár nevyhlašuje, dokument říká naplno (Filip, 22. 11. 2026).
+    /// Do té doby ty dva body stály mezi chybějícími, takže dokument
+    /// tvrdil, že se na ně čeká.
+    /// </summary>
+    [Fact]
+    public void Body_ktere_pohar_nevyhlasuje_to_rikaji_a_nechybi()
+    {
+        var d = Vypsani.Sestav(Vstup());
+
+        Assert.Equal("Pohár lhůtu pro změny bodování nevyhlašuje.", Text(d, "J1.2(6)"));
+        Assert.Equal("Pohár právo na odvolání neodepírá.", Text(d, "J1.3(8)"));
+
+        Assert.DoesNotContain("Lhůta pro změny bodování (ZPJ 90.3(e))", d.Chybi);
+        Assert.DoesNotContain("Odepření práva na odvolání (ZPJ 70.3)", d.Chybi);
+    }
 }
