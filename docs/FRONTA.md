@@ -135,8 +135,19 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
 
 ## F) Údržba a drobnosti
 
-- **Dvanáct otevřených Dependabot PR** (#530 až #557) a jedno živé hlášení
-  **high** — picomatch, `#43`.
+- **Dvanáct otevřených Dependabot PR**, všechny se zelenou kontrolou
+  (22. 11.). Nejsou to ale jedna dávka — rozpadají se na tři:
+  - **Tři nativní moduly appky** — `react-native-safe-area-context` (#534),
+    `@react-native-community/datetimepicker` (#553) a `expo-sharing` (#546).
+    Mění **otisk**, takže po nich vydané telefony přestanou dostávat
+    aktualizace po síti, dokud si někdo nenainstaluje nové APK. Patří do
+    jedné dávky a hned s vydáním buildu, ne po jednom.
+  - **Pět serverových** — Testcontainers (#557), coverlet (#547), AWSSDK.S3
+    (#555), JwtBearer a pět dalších (#540), a **Scalar 2.18 → 3.0** (#556),
+    jediný major v hromadě; ten chce pohled, zbytek je rutina.
+  - **Čtyři mimo běžící službu** — rasterio (#554), numpy (#552),
+    docker/login-action (#533), actions/setup-dotnet (#530).
+  Živé hlášení už žádné není: `picomatch` se zavřelo.
 - **Testy správy přes HTTP** (z fronty v plánu k 20. 10.).
 - **Kategorie lodi, když ji loď přece jen změní** (nové plachty, přeměření).
   Návrh stojí v *Zbývá doladit*, bod 4: správce ji smí přepsat a pořadí se
