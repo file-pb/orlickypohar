@@ -44,6 +44,8 @@ postavené a nasazené (22. 11.):
 
 ## B) Čeká na Miloše — zpráva je napsaná, zbývá ji poslat
 
+Text k odeslání stojí v [`OTAZKY-MILOS.md`](OTAZKY-MILOS.md).
+
 Z osmi otázek zbyly **tři**: pět jich 21. 11. odpadlo, protože dvě věci
 aplikace už umí (revize trati v editoru bójí, vyloučení obojím způsobem)
 a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách).
