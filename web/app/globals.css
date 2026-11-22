@@ -1159,6 +1159,15 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   color: var(--text); font-size: 0.9rem; font-weight: 500;
 }
 .menu .nabidka a:hover { background: var(--zvyrazneni); text-decoration: none; }
+/* <b>Nadpis skupiny</b> — Závodím / Fandím / Legislativa. Tlumený a malý:
+   je to orientační bod, ne položka, a nesmí vypadat klikatelně. Odstup
+   shora drží skupiny od sebe; u první by byl nadbytečný. */
+.menu .nabidka .skupina {
+  padding: 0.5rem 0.6rem 0.15rem;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--tlumeny);
+}
+.menu .nabidka .skupina:first-child { padding-top: 0.2rem; }
 /* „Vzhled podle systému" je formulář, ale v nabídce vypadá jako položka. */
 .menu .nabidka form { margin: 0; border-top: 1px solid var(--linka); padding-top: 0.15rem; }
 .menu .nabidka button {
@@ -6274,6 +6283,15 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
    Cíl 44 px patří sem, do komponenty — ne do jedné obrazovky, jinak má
    správa regaty cíl o 12 px menší než ročník. */
 @media (pointer: coarse) {
+  /* <b>Položka nabídky je pod palcem cíl.</b> S výplní 0,45 rem vycházela
+     na 37 px (změřeno na 375 px) — a v nabídce jsou položky nalepené na
+     sebe, takže minutí znamená otevřít cizí stránku, ne klepnout vedle.
+     Nadpisy skupin se netýkají: na ty se neklepe. */
+  .menu .nabidka a,
+  .profil .nabidka a {
+    display: flex; align-items: center; min-height: 44px;
+  }
+
   /* Štítek role je na dotyk cíl, ne jen popisek — 2,2 rem je minimum,
      pod kterým se do něj na telefonu trefuje palcem na dvakrát. */
   button.stitek-role { min-height: 2.2rem; padding: 0.45rem 0.75rem; font-size: 0.8rem; }

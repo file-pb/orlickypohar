@@ -5,7 +5,6 @@ import { nactiSerie } from "@/lib/api";
 import { maSezeni, nactiJa } from "@/lib/ja";
 import { prava } from "@/lib/co-smim";
 import { OdkazJinam } from "@/app/odkaz-jinam";
-import { Domu } from "@/app/domu";
 import { Menu } from "@/app/menu";
 import { Logo, ZnakPozadi } from "@/app/logo";
 import { PruhUkazky } from "@/app/ukazka";
@@ -87,13 +86,17 @@ export default async function Layout({ children }: { children: React.ReactNode }
             </Link>
             {/* Podtitulek tu byl nadbytečný — totéž stojí hned pod fotkou. */}
             <nav>
-              {/* Značka vede domů taky, ale to není vidět — na telefonu je
-                  z ní jen logo. Vypsaný odkaz stojí jedno slovo. Na samotné
-                  domovské stránce mizí: odkaz sám na sebe je jen šum. */}
-              <Domu />
-              {/* Ročník a pořadí jsou nejčastější cesta dál (Filip, 15. 9. 2026).
-                  Na úzkém displeji se nevejdou a jdou do kebabu, kde jsou
-                  i Historie, Pravidla a Appka. */}
+              {/* <b>Domů se přestěhovalo do nabídky</b> (Filip, postřeh 2:
+                  *„horní menu se zkrátí na Ročník a Domů se nakonec
+                  schová"*). Cestu domů nese značka vlevo, na kterou se
+                  kliká odjakživa; vypsaný odkaz vedle ní byl druhá cesta
+                  k témuž.
+
+                  <b>Ročník a pořadí tu zatím zůstávají.</b> Zkrácení „jen
+                  na Ročník" patří k oknu ročníku s taby — teprve tam je
+                  průběžné pořadí tabem a odkaz v hlavičce by byl zdvojení.
+                  Odebrat ho dřív by nejčastější cestu (Filip, 15. 9. 2026)
+                  schovalo do kebabu, aniž by za ni něco nastoupilo. */}
               {rocnik && (
                 <>
                   <OdkazJinam className="jen-siroke" href={`/serie/${rocnik.slug}`}>
