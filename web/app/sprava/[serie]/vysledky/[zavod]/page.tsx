@@ -25,7 +25,9 @@ import {
   stavAkce,
   stavTratiURozjizdkyAkce,
   tratRozjizdceAkce,
+  zkraceniLhutyAkce,
 } from "../akce";
+import { mistniZOkamziku } from "@/lib/cas-praha";
 import { StejnaTrat } from "@/app/sprava/stejna-trat";
 import { NadpisUkonu, PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
 
@@ -42,6 +44,7 @@ type Parametry = {
     cislo?: string;
     nastav?: StavVysledku;
     revize?: string;
+    lhuta?: string;
   }>;
 };
 
@@ -272,6 +275,7 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
                 zavod={zavod}
                 rozjizdka={r}
                 otevriRevizi={zpravy.revize === String(r.cislo)}
+                otevriLhutu={zpravy.lhuta === String(r.cislo)}
                 trat={podleRozjizdky.get(r.cislo)}
                 stejnaTrat={stejnaTrat.get(r.cislo) ?? []}
                 naVyber={naVyber}
@@ -328,6 +332,7 @@ function Rozjizdka({
   zavod,
   rozjizdka,
   otevriRevizi,
+  otevriLhutu,
   trat,
   stejnaTrat,
   naVyber,
@@ -337,6 +342,8 @@ function Rozjizdka({
   zavod: string;
   rozjizdka: RozjizdkaRadek;
   otevriRevizi: boolean;
+  /** Rozbalit zkrácení lhůty? Po odmítnutém pokusu, aby text nebyl pryč. */
+  otevriLhutu: boolean;
   /** Trať rozjížďky, nebo `undefined`. */
   trat?: TratNaVyber;
   /** Čísla rozjížděk, které jedou totéž. Prázdné, když je trať jedinečná. */
@@ -471,10 +478,81 @@ function Rozjizdka({
             hour: "2-digit",
             minute: "2-digit",
           })}{" "}
-          — dvě hodiny po dojezdu poslední lodi (ZPJ 60.3(b)). Do té doby
-          <b>podepsat nejde</b>. Že nikdo neprotestoval, aplikace neví; hlídá
-          jen to, že lhůta na podání ještě běží.
+          — {rozjizdka.lhutaZkracena ? "zkrácená lhůta" : "dvě hodiny po dojezdu poslední lodi"}{" "}
+          (ZPJ 60.3(b)). Do té doby <b>podepsat nejde</b>. Že nikdo
+          neprotestoval, aplikace neví; hlídá jen to, že lhůta na podání
+          ještě běží.
         </p>
+      )}
+
+      {/* <b>Zkrácení zůstává napsané i po podpisu.</b> Je to úkon, který
+          závodníkům ubral čas z pravidla, takže se nemá kam vytratit —
+          „lhůta uplynula" by za měsíc nikomu neřeklo, že uplynula dřív,
+          než měla. Vlastní odstavec proto, že limit sám se po podpisu
+          přestane kreslit. */}
+      {rozjizdka.lhutaZkracena && (
+        <p className="poznamka">
+          <b>Protestní lhůta byla zkrácena</b>
+          {rozjizdka.protestniLimit && (
+            <>
+              {" "}
+              na{" "}
+              {new Date(rozjizdka.protestniLimit).toLocaleString("cs-CZ", {
+                timeZone: "Europe/Prague",
+                day: "numeric",
+                month: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </>
+          )}
+          {rozjizdka.duvodZkraceniLhuty ? `: ${rozjizdka.duvodZkraceniLhuty}` : "."}
+        </p>
+      )}
+
+      {/* <b>Zkrátit lhůtu jde jen na výslovný pokyn</b> (Filip,
+          22. 11. 2026: *„tu bych umožnil zkrátit, ale jen na výslovný
+          pokyn"*). Proto je to rozbalovač s povinným důvodem, ne tlačítko
+          vedle podpisu: dvě hodiny z ZPJ 60.3(b) jsou čas závodníků na
+          protest a kdo jim ho ubere, má to podepsané svým jménem.
+          Prodloužit nejde a nabídka na to ani nemá pole — delší lhůta by
+          byla vypsání, ne úkon u zápisu. Komu to API nepustí, ten tu
+          rozbalovač nevidí (`smiZkratitLhutu`). */}
+      {rozjizdka.smiZkratitLhutu && (
+        <details className="uprava" open={otevriLhutu}>
+          <summary>Zkrátit protestní lhůtu</summary>
+          <form action={zkraceniLhutyAkce} className="formular">
+            <input type="hidden" name="serie" value={serie} />
+            <input type="hidden" name="zavod" value={zavod} />
+            <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+            <label>
+              Do kdy
+              {/* Předplněné na lhůtu, jak běží teď — odtud se posouvá dolů.
+                  Prázdné pole je pokyn „končí hned", ne chyba. */}
+              <input
+                type="datetime-local"
+                name="do"
+                defaultValue={mistniZOkamziku(rozjizdka.protestniLimit)}
+              />
+            </label>
+            <label>
+              Proč
+              <textarea
+                name="duvod"
+                required
+                rows={2}
+                maxLength={400}
+                placeholder="Všichni závodníci na vodě i na břehu se vzdali práva protestovat."
+              />
+            </label>
+            <button type="submit">Zkrátit lhůtu</button>
+            <p className="poznamka">
+              Prázdný čas znamená <b>hned</b>. Dřív než dojela poslední loď
+              lhůta skončit nemůže a prodloužit ji nejde. Zapíše se, kdo
+              zkrátil, kdy a proč — a zůstane to u rozjížďky napsané.
+            </p>
+          </form>
+        </details>
       )}
 
       {/* <b>Jeden krok má váhu, ostatní jsou po ruce</b> (18. 11. 2026).
@@ -714,6 +792,8 @@ function hotovo(stav: string, cislo?: string, nastav?: StavVysledku) {
       return `${kdo} se počítá do poháru.`;
     case "mimoPohar":
       return `${kdo} je mimo pohár. Do výsledku regaty se počítá dál.`;
+    case "lhutaZkracena":
+      return `${kdo}: protestní lhůta je zkrácená. Důvod je u ní zapsaný.`;
     default:
       return "Hotovo.";
   }

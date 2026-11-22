@@ -30,7 +30,7 @@ postavené a nasazené (22. 11.):
 | Co | Jak to dopadlo |
 | --- | --- |
 | **Zámek startovní listiny** | Visí na tom dřívějším ze dvou: vyhlášená rozprava (otevřené okno dne), nebo zapsaný čas startu. Dvacetiminutová mezera mezi klubovnou a zápisem času zmizela |
-| **Protestní lhůta drží podpis** | `Protesty.ProcNejdePodepsat` se zbývajícími minutami a koncem v čase Orlíku; web tlačítko během lhůty nenabízí. Rozjížďka bez dojezdu nečeká |
+| **Protestní lhůta drží podpis** | `Protesty.ProcNejdePodepsat` se zbývajícími minutami a koncem v čase Orlíku; web tlačítko během lhůty nenabízí. Rozjížďka bez dojezdu nečeká. **Zkrátit** ji jde na výslovný pokyn s povinným důvodem (rozbalovač u rozjížďky, `Protesty.ProcNejdeZkratit`); prodloužit ne, pod dojezd poslední lodi ne, uplynulou ne, a zkrácení zůstane napsané i po podpisu |
 | **Uzavření regaty** | Úkon existoval (Vypsaný → Odjetý); přibyl automat po dvou dnech od konce posledního závodního dne. Zavírá, nepodepisuje, a regatu, ve které se nic nejelo, nechá stát |
 | **Dráha a hodina posledního startu** | Dvě kolonky u regaty, s nápovědou z ročníku — medián hodiny, poslední použitá dráha. K tomu **místo konání**, které vypsání do 22. 11. mělo zadrátované jako „neuvedené" |
 

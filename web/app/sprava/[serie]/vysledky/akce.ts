@@ -6,8 +6,10 @@ import {
   pridejRozjizdku,
   publikuj,
   zaradDoPoharu,
+  zkratLhutu,
   type StavVysledku,
 } from "@/lib/vysledky";
+import { okamzikZMistniho } from "@/lib/cas-praha";
 import { klonujTrat, nactiTrate, odvazTrat, posunTrat, priradTrat, zalozDalsiTrat } from "@/lib/trat";
 
 /**
@@ -43,6 +45,46 @@ export async function stavAkce(formular: FormData) {
 
   redirect(
     kam(serie, zavod, chyba ? { chyba } : { stav: "prepnuto", cislo: String(cislo), nastav: stav }),
+  );
+}
+
+/**
+ * Zkrácení protestní lhůty. <b>Důvod je povinný</b> — bez něj je to
+ * nedoložené zkrácení lhůty, kterou mají závodníci z pravidel
+ * (ZPJ 60.3(b)), a právě proto se zapisuje kdo, kdy a proč.
+ *
+ * Prázdný čas znamená „končí hned": server dosadí přítomnost. Jinak se
+ * místní zápis z `datetime-local` přeloží na okamžik v čase Orlíku —
+ * bez toho by „18:30" znamenalo 18:30 UTC, tedy o hodinu až dvě později,
+ * než rozhodčí myslel.
+ */
+export async function zkraceniLhutyAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const cislo = Number(formular.get("cislo") ?? 0);
+  const duvod = String(formular.get("duvod") ?? "").trim();
+  const mistni = String(formular.get("do") ?? "").trim();
+
+  // Stejná odbočka jako u revize: kdyby se na prázdný důvod přišlo až
+  // z druhé strany drátu, rozepsaný text by se cestou ztratil.
+  if (!duvod)
+    redirect(kam(serie, zavod, { chyba: "Napiš, proč se lhůta zkracuje.", lhuta: String(cislo) }));
+
+  // <b>Neplatný zápis se nedosazuje na „hned"</b>: prázdné pole je pokyn,
+  // rozbitý tvar je nedorozumění, a zkrátit lhůtu omylem na přítomnost by
+  // bylo horší než nic neudělat.
+  const doKdy = mistni ? okamzikZMistniho(mistni) : null;
+  if (mistni && !doKdy)
+    redirect(kam(serie, zavod, { chyba: "Času nerozumím. Zkus to znovu.", lhuta: String(cislo) }));
+
+  const chyba = await zkratLhutu(serie, zavod, cislo, doKdy, duvod);
+
+  redirect(
+    kam(
+      serie,
+      zavod,
+      chyba ? { chyba, lhuta: String(cislo) } : { stav: "lhutaZkracena", cislo: String(cislo) },
+    ),
   );
 }
 

@@ -187,6 +187,33 @@ export async function prepniStav(
   });
 }
 
+/**
+ * Zkrátí protestní lhůtu rozjížďky a zapíše, kdo a proč.
+ *
+ * <b>Jen na výslovný pokyn</b> (Filip, 22. 11. 2026: *„tu bych umožnil
+ * zkrátit, ale jen na výslovný pokyn"*). Prodloužit nejde, zkrátit pod
+ * dojezd poslední lodi taky ne a uplynulou lhůtu už se zkracovat nemá co —
+ * hlídá to server (`Protesty.ProcNejdeZkratit`), tady se jen posílá.
+ *
+ * <b>`doKdy` je okamžik, ne místní zápis z formuláře.</b> Přes drát jde
+ * ISO v UTC; překlad z `datetime-local` dělá `okamzikZMistniho`, protože
+ * co znamená „18:30", rozhoduje čas Orlíku. Prázdné `null` znamená
+ * „končí hned".
+ */
+export async function zkratLhutu(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  doKdy: string | null,
+  duvod: string,
+): Promise<string | null> {
+  return zapis(
+    kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/protestni-lhuta`),
+    { do: doKdy, duvod },
+    "POST",
+  );
+}
+
 export const nactiZapis = (serie: string, zavod: string, cislo: number) =>
   cti<ZapisRozjizdky>(kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}`));
 
