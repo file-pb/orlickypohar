@@ -19,6 +19,7 @@ type S = components["schemas"];
 export type PrehledZastavek = S["PrehledZastavekDto"];
 export type ZastavkaRadek = S["ZastavkaRadek"];
 export type ZastavkaVstup = S["ZastavkaVstup"];
+export type VypsaniKolonkyVstup = S["VypsaniKolonkyVstup"];
 export type StavZavodu = S["StavZavodu"];
 export type DruhZastavky = S["DruhZastavky"];
 export type Vyhodnoceni = NonNullable<S["Vyhodnoceni"]>;
@@ -175,6 +176,27 @@ export async function uloz(
   vstup: ZastavkaVstup,
 ): Promise<string | null> {
   return zapis(kam(serie, `/${encodeURIComponent(zavod)}`), "PUT", vstup);
+}
+
+/**
+ * Jedna zastávka i s kolonkami vypsání a nápovědami. Bere se z přehledu
+ * ročníku, protože nápověda se počítá z celého ročníku a jednu zastávku
+ * zvlášť API nevydává.
+ */
+export async function zastavka(serie: string, zavod: string): Promise<ZastavkaRadek | null> {
+  const { stav, prehled } = await nactiKalendar(serie);
+  if (stav !== "ok" || !prehled) return null;
+
+  return prehled.zastavky.find((z) => z.slug === zavod) ?? null;
+}
+
+/** Uloží kolonky vypsání. Prázdné je prázdné — maže se tím, ne „neměnit". */
+export async function ulozVypsani(
+  serie: string,
+  zavod: string,
+  vstup: VypsaniKolonkyVstup,
+): Promise<string | null> {
+  return zapis(kam(serie, `/${encodeURIComponent(zavod)}/vypsani`), "PUT", vstup);
 }
 
 export async function prepniStav(

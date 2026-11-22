@@ -440,6 +440,15 @@ function Zastavka({
             pohled: v kalendáři na webu prostě není. Štítek zůstává
             i u šrafy — šrafa říká „něčím se to liší", slovo říká čím. */}
         {!zastavka.publikovano && <span className="stitek neverejne">nezveřejněno</span>}
+        {/* <b>Zavřel to automat, ne člověk</b> (Filip, 21. 11. 2026:
+            *„pokud na to zapomeneme, udělej ho za dva dny sám"*). Bez
+            tohohle štítku vypadá odjetá regata, jako by konec dne někdo
+            odklepl — a kdo pak hledá kdo, nenajde nikoho. */}
+        {zastavka.uzavrenoAutomatemV && (
+          <span className="stitek" title="Na konec dne se zapomnělo, server regatu zavřel po dvou dnech.">
+            uzavřeno samo
+          </span>
+        )}
       </div>
 
       <div className="detail">

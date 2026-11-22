@@ -2875,6 +2875,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/vypsani": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Uloží kolonky vypsání závodu
+         * @description Pořadatel téhle regaty, nebo rozhodčí ročníku. Posílají se všechny kolonky najednou a prázdná se maže — je to jediné místo, kde se vypsání vyplňuje, takže překlep musí jít vzít zpět. Termínu, názvu ani počtů do poháru se to netýká.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VypsaniKolonkyVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZastavkaRadek"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/stav": {
         parameters: {
             query?: never;
@@ -8937,6 +8983,19 @@ export interface components {
             serieNazev: string;
             body: components["schemas"]["BodVypsani"][];
             chybi: string[];
+        };
+        VypsaniKolonkyVstup: {
+            mistoKonani?: null | string;
+            draha?: null | string;
+            /** Format: time */
+            posledniStartV?: null | string;
+            /** Format: date */
+            uzaverkaPrihlasek?: null | string;
+            startovne?: null | string;
+            /** Format: date-time */
+            prvniVyzyvaciZnameni?: null | string;
+            /** Format: int32 */
+            delkaProceduryMin?: null | number;
         };
         VysledekDto: {
             lod: string;

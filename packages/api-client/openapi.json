@@ -2659,6 +2659,55 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/vypsani": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ulo\u017e\u00ed kolonky vyps\u00e1n\u00ed z\u00e1vodu",
+                "description": "Po\u0159adatel t\u00e9hle regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Pos\u00edlaj\u00ed se v\u0161echny kolonky najednou a pr\u00e1zdn\u00e1 se ma\u017ee \u2014 je to jedin\u00e9 m\u00edsto, kde se vyps\u00e1n\u00ed vypl\u0148uje, tak\u017ee p\u0159eklep mus\u00ed j\u00edt vz\u00edt zp\u011bt. Term\u00ednu, n\u00e1zvu ani po\u010dt\u016f do poh\u00e1ru se to net\u00fdk\u00e1.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VypsaniKolonkyVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZastavkaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/stav": {
             "post": {
                 "tags": [
@@ -14114,6 +14163,57 @@
                         "items": {
                             "type": "string"
                         }
+                    }
+                }
+            },
+            "VypsaniKolonkyVstup": {
+                "type": "object",
+                "properties": {
+                    "mistoKonani": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "draha": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "posledniStartV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "time"
+                    },
+                    "uzaverkaPrihlasek": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    },
+                    "startovne": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "prvniVyzyvaciZnameni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "delkaProceduryMin": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
                     }
                 }
             },

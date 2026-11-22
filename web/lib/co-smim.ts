@@ -462,6 +462,34 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
         pozadavek: { role: "Rozhodci", serie },
       },
     ],
+    // <b>Vypsání závodu</b> (nálezy R1, R8 a R21). V Milošově seznamu sekcí
+    // ze 27. 10. 2026 stojí **první** — „vypsani zavodu - plachetni
+    // smernice - zavodni trat - prihlasky - startovni listina" — a byla to
+    // jediná z nich, která v aplikaci neexistovala: dokument se vydával
+    // z dat, ale ta data neměl kudy nikdo vyplnit.
+    //
+    // Táž dvě práva jako u směrnice, a ze stejného důvodu: vypsání vydává
+    // pořadatel a uznává rozhodčí, takže na něj musí oba.
+    [
+      {
+        nazev: "Vypsání závodu",
+        uzky: "Vypsání",
+        kratky: "vypsání",
+        popis: "Místo konání, dráha, uzávěrka, startovné, časy.",
+        kam: kam("/vypsani"),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie, zavod },
+      },
+      {
+        nazev: "Vypsání závodu",
+        uzky: "Vypsání",
+        kratky: "vypsání",
+        popis: "Místo konání, dráha, uzávěrka, startovné, časy.",
+        kam: kam("/vypsani"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
     [
       {
         nazev: "Plachetní směrnice",

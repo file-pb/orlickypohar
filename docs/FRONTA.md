@@ -71,6 +71,17 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
   k 20. 10.; **stav na produkci jsem nekontroloval**, takže je možné, že je to
   mezitím hotové.
 
+- **Integrační testy nejdou spustit na tomhle stroji, a stálo to za jednu
+  noc dvě červené main** (22. 11.: jednou session stavitele, jednou mě).
+  Příčina není Docker Hub, jak se dosud psalo — **`docker` tu není vůbec**
+  a nativní Postgres taky ne, takže Testcontainers nemá co spustit. Autor
+  se o chybě v integračním testu dozví až z CI, tedy po pushi, a mezitím
+  za tou červenou stojí fronta cizích commitů. Dvě cesty ven: doinstalovat
+  runtime (colima nebo Docker Desktop, případně `postgresql@17`), nebo dát
+  fixtuře zadní vrátka v podobě `POSTGRES_URL` na už běžící databázi.
+  Obojí je rozhodnutí o stroji, ne práce v repozitáři, proto je to tady
+  a ne ve skupině A.
+
 ## D) Postavené, ale neověřené — čeká na telefon a na vodu
 
 - **Zkouška stavitele trati**: `ZKOUSKA-STAVITELE.md`, **23 bodů**,
@@ -118,15 +129,14 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
 - **Vypsání jako plný dokument J1** (R1, R8). Osnova stojí, dva body si
   aplikace dosadí sama (skupina A), dva vydává Miloš a místo konání nevede
   nikdo (skupina B). Teprve pak je to dokument, o kterém R8 mluví.
-- **Obecná offline fronta v appce.** Opraveno 22. 11.: zápis v plánu
-  z 20. 10. říká „outbox v kódu není", a to platí **jen o appce**. Na
-  serveru outbox je a běží — `Features/Upozorneni/Odeslani.cs` s tabulkou,
-  `OdesilaniUloha` jako hostovaná úloha a `ExpoPush` na doručení. V appce
-  jsou dnes **tři** jednoúčelové fronty: `cekajici-start.ts` (úkon
-  procedury), `tracker/nahravani.ts` (dávka bodů) a od 21. 11.
-  `stavba/fronta.ts` (prvky trati). Pravidlo repozitáře zní *knihovna až
-  u třetí kopie*, takže ta chvíle právě nastala. Sahat do toho ale teď
-  znamená sahat do souboru, který druhá session právě píše.
+- ~~**Obecná offline fronta v appce.**~~ **Postaveno 22. 11. 2026**
+  (`d0fa64b9`, `a641a5d1`) session stavitele: `app/src/lib/outbox.ts` stojí
+  **po druzích, ne globálně** — u prvků trati určuje pořadí server podle
+  doručení, takže odmítnutý prvek musí zastavit i ty za ním, kdežto sebrání
+  jedné bóje nemá co blokovat přebarvení druhé. Prvním uživatelem jsou
+  akce detailu značky, které do té doby bez signálu padaly. Dávka bodů
+  trasy se do něj nestěhuje (tisíce řádků, byl by to druhý tracker) a
+  fronta prvků trati až po vodě.
 - **Push „déšť do hodiny" nedrží fronta, ale chybějící zdroj.** Projekt má
   vodočet z Povodí Vltavy, teplotu hladiny z Landsatu a blesky z EUMETSAT;
   předpověď srážek na hodinu dopředu nemá žádnou (ověřeno 22. 11.: slovo
