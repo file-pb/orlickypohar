@@ -36,7 +36,7 @@ a poučení z minulých chyb. Tenhle repozitář popisuje **jen konvence kódu**
 Rychlé ověření, že to celé drží:
 
 ```bash
-dotnet test                                     # celá sada; chce běžící Docker Desktop
+colima start && dotnet test                     # celá sada; bez runtimu integrační přeskočí
 ssh deploy@178.105.62.172 'docker ps'           # musí vypsat kontejnery
 curl -s https://orlickypohar-api.klihovka.cz/health   # musí vrátit Healthy
 ```
@@ -53,9 +53,9 @@ curl -s https://orlickypohar-api.klihovka.cz/health   # musí vrátit Healthy
 | Chyby, které už jednou stály čas | [platform/docs/POUCENI.md](https://github.com/file-pb/platform/blob/main/docs/POUCENI.md) |
 
 **Integrační testy** (`Category=Integracni`) potřebují běžící kontejnerový
-runtime. Na tomhle stroji jede od 22. 11. 2026 colima a `docker context`
-ukazuje na ni; Docker Desktop v `/Applications/Vývoj` je zastavený.
-Podrobně níž, u pastí.
+runtime. Na tomhle stroji je to od 22. 11. 2026 **colima** — tak to Filip
+rozhodl; Docker Desktop zůstává nainstalovaný v `/Applications/Vývoj`, ale
+zastavený. Podrobně níž, u pastí.
 
 ## Kde je zbytek
 
@@ -254,15 +254,18 @@ takže `DOCKER_HOST` ani `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`
 nastavovat nemusíš.
 
 ```sh
-colima start        # nebo: open -a "/Applications/Vývoj/Docker.app"
+colima start        # po restartu stroje je potřeba; sama se nespustí
 dotnet test         # celá sada, integrační včetně
 ```
 
-Na stroji jsou od 22. 11. 2026 **dva runtimy** a `docker context` ukazuje
-na **colimu**. Desktop leží v `/Applications/Vývoj/Docker.app` a je
-zastavený. Kdyby colima zmizela, kontext visí na mrtvém soketu a
-`docker` příkazy spadnou se záhadnou chybou — zpátky se přepne
-`docker context use desktop-linux`.
+**Runtime je colima**, rozhodnuto 22. 11. 2026. `docker context` na ni
+ukazuje, Docker Desktop (`/Applications/Vývoj/Docker.app`) je zastavený a
+zůstává jen jako záloha — zapne se `docker context use desktop-linux` plus
+spuštěním aplikace. Dvě pasti: colima **není služba** (`brew services list`
+ji má jako `none`), takže po restartu Macu neběží a `docker` příkazy
+spadnou se záhadnou chybou na mrtvém soketu — pomůže `colima start`. A
+Desktop se zastavuje jedině `docker desktop stop`; `osascript -e 'quit app
+"Docker"'` procesy nechá běžet.
 
 **Proč to tady stálo třikrát špatně**, než se to ověřilo. Nejdřív že je
 nedostupný Docker Hub (byla to prý firemní síť), pak 22. 11. 2026 že na
@@ -541,7 +544,7 @@ Bez databáze a bez Dockeru, v CI běží první:
 - **`SerieTests`** — průběžné pořadí proti **skutečnému sešitu rozhodčího**
   (`data/2026-poradi-rozhodci.json`). Nejcennější zkouška, jakou ten kód má.
 
-Značka `Category=Integracni`, potřebují Docker, běží jen v CI:
+Značka `Category=Integracni`, potřebují běžící runtime — lokálně stejně jako v CI:
 
 - **`ImportTests`** — idempotence a mazání proti reálnému PostgreSQL přes
   Testcontainers. Schválně ne in-memory provider: stojí to na unikátních
