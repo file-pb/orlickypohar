@@ -54,12 +54,14 @@ public class UzavreniRegat(IServiceScopeFactory sluzby, TimeProvider cas, ILogge
     public static async Task<List<string>> UzavriAsync(
         AppDbContext db, DateTimeOffset ted, CancellationToken ct)
     {
-        // Hrubé síto podle data: termín starší než lhůta. Jemné síto
+        // Hrubé síto podle data: poslední vypsaný den starší než lhůta —
+        // u dvoudenní regaty tedy ten druhý, ne ten první. Jemné síto
         // (skutečný konec dne) se počítá až na vybraných.
         var hranice = DateOnly.FromDateTime((ted - Uzavirani.Lhuta).UtcDateTime);
 
         var kandidati = await db.Zavody
-            .Where(z => z.Stav == StavZavodu.Vypsany && z.Datum <= hranice)
+            .Where(z => z.Stav == StavZavodu.Vypsany
+                        && (z.DatumKonce ?? z.Datum) <= hranice)
             .Select(z => new
             {
                 Zavod = z,
@@ -75,7 +77,8 @@ public class UzavreniRegat(IServiceScopeFactory sluzby, TimeProvider cas, ILogge
         foreach (var k in kandidati)
         {
             if (!Uzavirani.MaSeUzavrit(
-                    k.Zavod.Stav, k.MaOdjetou, k.KonecDne, k.Zavod.Datum, ted)) continue;
+                    k.Zavod.Stav, k.MaOdjetou, k.KonecDne,
+                    k.Zavod.Datum, k.Zavod.DatumKonce, ted)) continue;
 
             k.Zavod.Stav = StavZavodu.Odjety;
             k.Zavod.UzavrenoAutomatemV = ted;

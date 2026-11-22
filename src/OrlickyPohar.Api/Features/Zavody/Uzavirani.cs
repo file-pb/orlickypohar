@@ -33,19 +33,47 @@ public static class Uzavirani
     public static readonly TimeSpan Lhuta = TimeSpan.FromDays(2);
 
     /// <summary>
-    /// Od kdy se lhůta měří: od konce posledního závodního dne, a když
-    /// žádný neběžel, od konce dne, na který byla regata vypsaná.
+    /// Od kdy se lhůta měří: od <b>pozdějšího</b> ze dvou konců — konce
+    /// posledního okna závodního dne a konce posledního vypsaného dne.
     ///
     /// <para>
-    /// <b>Datum samo nestačí</b> (a proto se nebere první): dvacetičtyřhodinovka
-    /// začíná jeden den a končí druhý, takže by se jí lhůta rozešla o celý
-    /// den. Okno závodního dne zná skutečný konec, protože ho buď někdo
-    /// zavřel, nebo doběhl jeho tvrdý konec.
+    /// <b>Proč pozdější z nich, a ne okno samo</b> (Filip, 22. 11. 2026:
+    /// *„pohlídej past u dvojdenních regat, ten konec je na konci
+    /// posledního dne"*): okno vzniká rozpravou, tedy jedno na každý den,
+    /// který se doopravdy jel. U dvoudenní regaty, kde se první den jel
+    /// a druhý teprve přijde, je posledním známým oknem to z prvního dne —
+    /// a kdyby se podle něj měřilo, robot by regatu zavřel, zatímco se
+    /// pořád jede. Vypsaný konec je naopak znám dopředu, takže drží dolní
+    /// mez: dřív než dva dny po posledním vypsaném dni se nezavírá nikdy.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Okno přesto nejde vynechat.</b> Dvacetičtyřhodinovka má jeden
+    /// závodní den, který přeteče do druhého kalendářního; její okno končí
+    /// až za vypsaným dnem a tehdy rozhoduje ono.
     /// </para>
     /// </summary>
-    public static DateTimeOffset Zacatek(DateTimeOffset? konecPoslednihoDne, DateOnly datum) =>
-        konecPoslednihoDne
-        ?? new DateTimeOffset(datum.ToDateTime(TimeOnly.MaxValue), TimeSpan.Zero);
+    public static DateTimeOffset Zacatek(
+        DateTimeOffset? konecPoslednihoOkna, DateOnly datum, DateOnly? datumKonce)
+    {
+        var vypsany = KonecVypsanehoDne(datumKonce ?? datum);
+        return konecPoslednihoOkna is { } okno && okno > vypsany ? okno : vypsany;
+    }
+
+    /// <summary>
+    /// Konec závodního dne podle kalendáře, tedy midnight na Orlíku — ne
+    /// v UTC, ve kterém server běží. V letním čase je to o dvě hodiny
+    /// dřív než půlnoc UTC a ta hodina rozhoduje o tom, který den se lhůta
+    /// počítá.
+    /// </summary>
+    private static DateTimeOffset KonecVypsanehoDne(DateOnly den)
+    {
+        var pulnocPoKonci = den.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        return new DateTimeOffset(pulnocPoKonci, Praha.GetUtcOffset(pulnocPoKonci));
+    }
+
+    private static readonly TimeZoneInfo Praha =
+        TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
 
     /// <summary>
     /// Má se tahle regata zavřít sama? <c>true</c> jen pro vypsanou regatu,
@@ -55,10 +83,11 @@ public static class Uzavirani
     public static bool MaSeUzavrit(
         StavZavodu stav,
         bool maOdjetouRozjizdku,
-        DateTimeOffset? konecPoslednihoDne,
+        DateTimeOffset? konecPoslednihoOkna,
         DateOnly datum,
+        DateOnly? datumKonce,
         DateTimeOffset ted) =>
         stav == StavZavodu.Vypsany
         && maOdjetouRozjizdku
-        && ted >= Zacatek(konecPoslednihoDne, datum) + Lhuta;
+        && ted >= Zacatek(konecPoslednihoOkna, datum, datumKonce) + Lhuta;
 }

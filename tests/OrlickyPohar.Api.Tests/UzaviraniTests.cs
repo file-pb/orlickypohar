@@ -9,47 +9,86 @@ namespace OrlickyPohar.Api.Tests;
 public class UzaviraniTests
 {
     private static readonly DateOnly Datum = new(2026, 5, 2);
-    private static readonly DateTimeOffset KonecDne = new(2026, 5, 2, 17, 0, 0, TimeSpan.Zero);
+
+    /// <summary>Konec vypsaného dne: půlnoc na Orlíku, v květnu 22:00 UTC.</summary>
+    private static readonly DateTimeOffset KonecDne = new(2026, 5, 2, 22, 0, 0, TimeSpan.Zero);
+
+    /// <summary>Okno prvního dne, zavřené v podvečer.</summary>
+    private static readonly DateTimeOffset KonecOkna = new(2026, 5, 2, 17, 0, 0, TimeSpan.Zero);
 
     private static bool Uzavrit(
         DateTimeOffset ted,
         StavZavodu stav = StavZavodu.Vypsany,
         bool odjeta = true,
-        DateTimeOffset? konec = null) =>
-        Uzavirani.MaSeUzavrit(stav, odjeta, konec ?? KonecDne, Datum, ted);
+        DateTimeOffset? konecOkna = null,
+        DateOnly? datumKonce = null) =>
+        Uzavirani.MaSeUzavrit(stav, odjeta, konecOkna ?? KonecOkna, Datum, datumKonce, ted);
 
     [Fact]
-    public void Dva_dny_po_konci_dne_se_zavre()
+    public void Dva_dny_po_konci_vypsaneho_dne_se_zavre()
     {
         Assert.False(Uzavrit(KonecDne.AddDays(2).AddMinutes(-1)));
         Assert.True(Uzavrit(KonecDne.AddDays(2)));
     }
 
     [Fact]
-    public void Bez_okna_se_meri_od_konce_dne_terminu()
+    public void Okno_zavrene_drive_nez_skonci_den_lhutu_nezkracuje()
     {
-        // Okno nikdo neotevřel: lhůta běží od půlnoci termínu, ne od
-        // půlnoci, kterou má datum na začátku.
-        var ted = new DateTimeOffset(Datum.ToDateTime(TimeOnly.MaxValue), TimeSpan.Zero)
-                  + Uzavirani.Lhuta;
+        // Pořadatel zavřel den v 17:00, ale vypsaný je celý den. Dřív než
+        // dva dny po jeho konci se nezavírá.
+        Assert.False(Uzavrit(KonecOkna.AddDays(2)));
+    }
 
-        // Přímo, ne přes pomocníka: ten by `null` nahradil koncem okna.
-        Assert.True(Uzavirani.MaSeUzavrit(
-            StavZavodu.Vypsany, maOdjetouRozjizdku: true, konecPoslednihoDne: null, Datum, ted));
-        Assert.False(Uzavirani.MaSeUzavrit(
-            StavZavodu.Vypsany, maOdjetouRozjizdku: true, konecPoslednihoDne: null, Datum,
-            ted.AddMinutes(-1)));
+    [Fact]
+    public void Dvoudenni_regata_se_neridi_oknem_prvniho_dne()
+    {
+        // Past, na kterou Filip ukázal 22. 11.: první den se jel a jeho
+        // okno se zavřelo, druhý den teprve přijde. Podle okna by robot
+        // zavřel regatu, která ještě běží.
+        var druhyDen = Datum.AddDays(1);
+        var konecDruhehoDne = new DateTimeOffset(2026, 5, 3, 22, 0, 0, TimeSpan.Zero);
+
+        Assert.False(Uzavrit(KonecOkna.AddDays(2), datumKonce: druhyDen));
+        Assert.False(Uzavrit(konecDruhehoDne.AddDays(2).AddMinutes(-1), datumKonce: druhyDen));
+        Assert.True(Uzavrit(konecDruhehoDne.AddDays(2), datumKonce: druhyDen));
     }
 
     [Fact]
     public void Dvacetictyrhodinovka_se_meri_od_konce_okna_ne_od_data()
     {
-        // Začne druhého v poledne a skončí třetího; podle data by se
-        // zavřela o den dřív, než doopravdy skončila.
+        // Jeden závodní den přes dva kalendářní: začne druhého v poledne
+        // a skončí třetího. Okno končí za vypsaným dnem, takže rozhoduje.
         var konec = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
 
-        Assert.False(Uzavrit(konec.AddDays(2).AddHours(-1), konec: konec));
-        Assert.True(Uzavrit(konec.AddDays(2), konec: konec));
+        Assert.False(Uzavrit(konec.AddDays(2).AddHours(-1), konecOkna: konec));
+        Assert.True(Uzavrit(konec.AddDays(2), konecOkna: konec));
+    }
+
+    [Fact]
+    public void Bez_okna_se_meri_od_konce_vypsaneho_dne()
+    {
+        // Okno nikdo neotevřel: lhůta běží od konce termínu, ne od
+        // půlnoci, kterou má datum na začátku.
+        Assert.True(Uzavirani.MaSeUzavrit(
+            StavZavodu.Vypsany, maOdjetouRozjizdku: true, konecPoslednihoOkna: null,
+            Datum, datumKonce: null, KonecDne + Uzavirani.Lhuta));
+        Assert.False(Uzavirani.MaSeUzavrit(
+            StavZavodu.Vypsany, maOdjetouRozjizdku: true, konecPoslednihoOkna: null,
+            Datum, datumKonce: null, KonecDne + Uzavirani.Lhuta - TimeSpan.FromMinutes(1)));
+    }
+
+    [Fact]
+    public void Konec_dne_se_bere_v_case_Orliku_ne_v_UTC()
+    {
+        // Půlnoc na Orlíku je v květnu 22:00 UTC. Kdyby se počítala
+        // půlnoc UTC, lhůta by se o ty dvě hodiny opozdila — a v jiný den
+        // roku o jednu, podle letního času.
+        Assert.Equal(KonecDne, Uzavirani.Zacatek(null, Datum, null));
+
+        var listopad = new DateOnly(2026, 11, 2);
+        Assert.Equal(
+            new DateTimeOffset(2026, 11, 2, 23, 0, 0, TimeSpan.Zero),
+            Uzavirani.Zacatek(null, listopad, null));
     }
 
     [Theory]
