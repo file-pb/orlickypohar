@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -124,6 +125,7 @@ public static class Poskytovatel
 
         sluzby.AddAuthorization();
         sluzby.AddHttpClient<Profily>();
+        sluzby.AddHttpClient<Ucty>();
         return true;
     }
 
@@ -350,6 +352,92 @@ public class Profily(HttpClient klient, IConfiguration config, TimeProvider cas)
         finally
         {
             Zamek.Release();
+        }
+    }
+}
+
+/// <summary>
+/// Zrušení přihlášení u poskytovatele identity.
+///
+/// <para>
+/// <b>Jde to tokenem toho člověka, ne správcovským účtem.</b> Poskytovatel
+/// umí smazání sebe sama: pošle se mu tentýž přístupový token, se kterým
+/// člověk klepl na tlačítko, a jeho vlastní subjekt. Je to tatáž cesta,
+/// jakou se vedle načítá profil z <c>userinfo</c> — jen jiná metoda.
+/// </para>
+/// <para>
+/// <b>Proč ne servisní účet.</b> Token servisního účtu s právem mazat
+/// uživatele umí smazat <b>kteréhokoliv</b> člověka v organizaci, správce
+/// taky; po úniku je to nejhorší věc, která může na serveru ležet, a musel
+/// by navíc existovat jako tajemství v <c>/run/secrets</c> dřív, než se
+/// vůbec nasadí. Tokenem uživatele není co ukrást: dosáhne jen na toho,
+/// komu byl vydán. Rozhodl Filip, 22. 11. 2026.
+/// </para>
+/// <para>
+/// <b>Tvar cesty je konfigurace, ne kód</b> — stejně jako autorita a publikum.
+/// <c>Identita__ZruseniUctu</c> drží cestu se zástupkou <c>{subjekt}</c>
+/// a díky tomu se tenhle soubor pořád nedozví, kdo je za přihlášením;
+/// výměna poskytovatele je změna proměnné, ne třídy. Prázdná hodnota
+/// <b>funkci vypíná</b>: smazání naší strany proběhne a účtenka řekne, že
+/// přihlášení u poskytovatele zrušené není. Mlčet by bylo horší než přiznat
+/// to — tentýž důvod, proč se bez <c>KONTAKT_UDAJE</c> adresa na stránce
+/// nevymýšlí.
+/// </para>
+/// <para>
+/// <b>Token musí mít poskytovatelovo API ve svém publiku.</b> Žádá se o to
+/// už při přihlášení (rozsah navíc v <c>IDENTITA_SCOPE</c>), ne tady —
+/// publikum tokenu nejde dodatečně rozšířit. Když chybí, poskytovatel
+/// odpoví 401 nebo 403 a účtenka to řekne.
+/// </para>
+/// </summary>
+public class Ucty(HttpClient klient, IConfiguration config)
+{
+    /// <summary>
+    /// Je zrušení u poskytovatele vůbec nastavené? Ptá se na to i endpoint,
+    /// aby účtenka nelhala o tom, co se zkoušelo.
+    /// </summary>
+    public bool Nastaveno =>
+        !string.IsNullOrWhiteSpace(config["Identita:Authority"])
+        && !string.IsNullOrWhiteSpace(config["Identita:ZruseniUctu"]);
+
+    /// <summary>
+    /// Zruší přihlášení u poskytovatele. Vrací <c>null</c>, když se to
+    /// povedlo, jinak důvod k zobrazení.
+    /// <para>
+    /// <b>Nevyhazuje.</b> Volá se po tom, co je naše strana smazaná, takže
+    /// výjimka by znamenala pětistovku nad dokončenou nevratnou operací —
+    /// člověk by nevěděl, že jeho data už jsou pryč, a zkoušel by to znovu.
+    /// </para>
+    /// </summary>
+    public async Task<string?> ZrusAsync(string token, string subjekt, CancellationToken ct)
+    {
+        if (!Nastaveno) return "Zrušení přihlášení u poskytovatele identity není nastavené.";
+
+        var adresa = $"{config["Identita:Authority"]!.TrimEnd('/')}"
+            + config["Identita:ZruseniUctu"]!.Replace("{subjekt}", Uri.EscapeDataString(subjekt));
+
+        try
+        {
+            using var pozadavek = new HttpRequestMessage(HttpMethod.Delete, adresa);
+            pozadavek.Headers.Authorization = new("Bearer", token);
+
+            var odpoved = await klient.SendAsync(pozadavek, ct);
+
+            // Už zrušený účet je výsledek, ne chyba: druhé odeslání téhož
+            // formuláře nemá skončit červeně.
+            if (odpoved.IsSuccessStatusCode || odpoved.StatusCode == HttpStatusCode.NotFound)
+                return null;
+
+            Log.Warning("Zrušení účtu u poskytovatele vrátilo {Stav}.", (int)odpoved.StatusCode);
+
+            return odpoved.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
+                ? "Poskytovatel identity zrušení odmítl — přihlášení u něj trvá."
+                : $"Poskytovatel identity odpověděl {(int)odpoved.StatusCode}.";
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Log.Warning(ex, "Zrušení účtu u poskytovatele se nepodařilo zavolat.");
+            return "Poskytovatele identity se nepodařilo zavolat — přihlášení u něj trvá.";
         }
     }
 }

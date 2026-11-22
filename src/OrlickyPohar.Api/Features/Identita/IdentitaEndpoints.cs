@@ -82,7 +82,84 @@ public static class IdentitaEndpoints
                 "Majitel, kapitán, posádka, fanoušek. Vazba vzniká shodou e-mailu " +
                 "s kontaktem na přihlášce, kódem od pořadatele, nebo nárokem, " +
                 "který potvrdí kapitán.");
+
+        // Zápis, ne `DELETE /ja`: potvrzení se posílá v těle a tělo u metody
+        // DELETE je sice dovolené, ale proxy i klienti se k němu chovají
+        // různě. Nová cesta je navíc aditivní změna API — starší vydání
+        // appky o ní neví a nerozbije se.
+        app.MapPost("/ja/smazani", SmazaniAsync)
+            .RequireAuthorization()
+            .Produces<SmazaniUctuDto>()
+            .WithTags("Identita")
+            .WithSummary("Smaže účet přihlášeného a zruší mu přihlášení u poskytovatele")
+            .WithDescription(
+                "Nevratné. V těle musí přijít přesně opsané potvrzovací slovo. " +
+                "Zmizí přihlášení, oprávnění, vazby k lodím, nároky, pomocnictví, " +
+                "velení a osobní kontakty; závodní záznamy zůstávají a ukazují na " +
+                "bezejmenný účet. Odpověď je účtenka: čeho kolik ubylo a jestli se " +
+                "povedlo zrušit i přihlášení u poskytovatele identity.");
     }
+
+    // Návratový typ je `IResult`, ne `Results<…>`: chyba se vydává ve tvaru
+    // `{ "error": "…" }` jako všude jinde v tomhle API (viz `KodyEndpoints`)
+    // a anonymní objekt se do typovaného výsledku zapsat nedá. Tvar úspěchu
+    // hlásí `.Produces<SmazaniUctuDto>()` u registrace.
+    private static async Task<IResult>
+        SmazaniAsync(
+            ClaimsPrincipal kdo,
+            HttpContext ctx,
+            SmazaniUctuVstup vstup,
+            Rozsahy rozsahy,
+            SmazaniUctu smazani,
+            Ucty ucty,
+            IConfiguration config,
+            CancellationToken ct)
+    {
+        if (kdo.Ucet() is not { } ucet) return Results.Unauthorized();
+
+        // Potvrzení ověřuje server, ne formulář. Žádost bez opsaného slova
+        // nesmí projít ani z curlu — jinak je to potvrzení jen ozdoba.
+        if (Potvrzeni.ProcNejde(vstup.Potvrzeni) is { } proc)
+            return Results.BadRequest(new { error = proc });
+
+        // Kdo se nikdy nepřihlásil, nemá u nás co mazat. Není to ale chyba:
+        // přihlášení u poskytovatele existuje a zrušit se má tak jako tak.
+        var uzivatelId = await rozsahy.UzivatelIdAsync(kdo, ct);
+
+        var uctenka = uzivatelId is { } id
+            ? await smazani.SmazAsync(id, ct) ?? Prazdna
+            : Prazdna;
+
+        // Zrušit účet se smí jen u toho poskytovatele, který token vydal.
+        // Bez téhle kontroly by stačila stará vazba na jiného vydavatele
+        // a jeho subjekt by se poslal na adresu dnešního poskytovatele —
+        // tedy cizí identifikátor na cizí API.
+        var autorita = (config["Identita:Authority"] ?? "").TrimEnd('/');
+        var vydavatel = ucet.Issuer.TrimEnd('/');
+
+        if (!string.Equals(autorita, vydavatel, StringComparison.OrdinalIgnoreCase))
+            return Results.Ok(uctenka with
+            {
+                PoskytovatelDuvod = "Přihlášení je od jiného poskytovatele, než který je nastavený.",
+            });
+
+        // Token se bere z hlavičky, protože poskytovateli se posílá tentýž,
+        // se kterým člověk klepl na tlačítko — maže sám sebe.
+        var token = ctx.Request.Headers.Authorization
+            .ToString()
+            .Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase);
+
+        var duvod = await ucty.ZrusAsync(token, ucet.Subject, ct);
+
+        return Results.Ok(uctenka with
+        {
+            PoskytovatelZrusen = duvod is null,
+            PoskytovatelDuvod = duvod,
+        });
+    }
+
+    /// <summary>Účtenka pro případ, kdy u nás nebylo co mazat.</summary>
+    private static readonly SmazaniUctuDto Prazdna = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     private static async Task<Results<Ok<List<MojeLodDto>>, UnauthorizedHttpResult>> MojeLodeAsync(
         ClaimsPrincipal kdo, Rozsahy rozsahy, Parovani parovani, CancellationToken ct)
