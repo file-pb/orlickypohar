@@ -29,15 +29,28 @@ a záznam trasy (klíč k lodi, `src/lib/klic.ts`).
 
 **V appce je ale ukázkový režim** (`src/lib/ukazka.ts`, v nabídce *Ukázka
 pro závodníka*), který ukáže pohled posádky na vodě bez účtu i bez klíče.
-Do pole s pokyny pro kontrolora patří proto tohle:
+V konzoli vyber **„Některé nebo všechny funkce jsou omezené"**, uživatelské
+jméno a heslo nech prázdné a do pokynů dej tohle. **Anglicky schválně:**
+konzole je česky, ale appku kontroluje kdokoliv ve světě.
+
+Název pokynů: `Crew view and track recording`
 
 ```
-Výsledky, kalendář a průběžné pořadí jsou veřejné bez přihlášení.
-Obrazovku, kterou vidí posádka na vodě, si lze projít bez účtu přes
-nabídku (tři tečky vpravo nahoře) → „Ukázka pro závodníka".
-Záznam trasy vyžaduje klíč k lodi, který posádce vydá kapitán; na
-vyžádání dodáme testovací klíč.
+Results, race calendar and series standings are public and require no sign-in.
+
+To see the on-water crew screen without an account, open the menu (three dots,
+top right) and choose "Ukázka pro závodníka" (racer demo). It shows the same
+screen the crew sees during a race, with sample data.
+
+Track recording requires a boat key issued by the boat's captain, so it cannot
+be opened with a username and password. We will provide a test key on request.
+
+Race management screens require an account with organiser permissions granted
+by the series referee.
 ```
+
+**Tenhle úkol je první v řadě** — dokud není hotový, konzole nepustí ani
+dotazník na cílové publikum a obsah.
 
 ## Zabezpečení údajů (Data safety)
 
