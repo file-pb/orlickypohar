@@ -156,15 +156,19 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
   a **Scalar** šel rovnou na 3.1.1 (`12f22c9f`), protože nabízená 3.0.0 byla
   o tři vydání pozadu a poznámky k vydání k ní nejsou nikde — major se tedy
   ověřil během, ne čtením. Živé hlášení už žádné není.
-- **Odsazení tabule na demo ročnících** — **chybí zadání, a je to jediná
-  věc, která na té položce drží.** Ten řádek nemá nikde vysvětlení: v plánu
-  stojí dvakrát touž větou (*Drobnosti*, bod 1) a `TABULE-DIVAK.md` slovo
-  „demo" neobsahuje. Na mocku tabule vypadá takhle (ověřeno 22. 11.,
-  `2026-nanecisto`, regata *Pohár slunce*): panel s pořadím končí asi v 55 %
-  výšky a mezi ním a běžícím pruhem dole zbývá prázdný pás. Jestli jde
-  o tohle, je to oprava na pár řádků — ale není to specifické pro demo
-  ročník, protože sloupce se stejně krátí na deset lodí (*a další 3*).
-  **Napiš k tomu větu, co se ti na tabuli nelíbilo, a vezme se to.**
+- **Odsazení tabule na demo ročnících** — **zadání existuje, jen zatím není
+  v repozitáři.** Napsalo ho konzilium *Režie tabule*, dokončené 22. 11.
+  ve 22:12: `.tabule` má dnes padding 2,7 % výšky a 2,0 % šířky
+  (`globals.css:3658`), kdežto broadcast title-safe je 5 % a televize bez
+  vypnutého overscanu ořezává 2 až 5 %. Ořez tedy padne přesně do krajních
+  znaků, nejdřív vpravo v žebříčku, kde stojí body a čas. Rozhodnutí je
+  vodorovně `5 × --tv`, svisle `3 × --tv`, a cena je reálná: sloupec pořadí
+  se zúží, nebo mapa přijde o ~115 px. Patří to do **dávky 2** toho závěru,
+  spolu s `--linka-tv` a `--srafou` u dema — odtud i to „na demo ročnících".
+  **Tenhle řádek se maže až tou dávkou, ne dřív, a hlavně:** závěr leží
+  neverzovaný v `docs/konzilium/rezie-tabule/` na větvi
+  `konzilium/rezie-tabule` v hlavním checkoutu, která není nikde odeslaná.
+  Dokud se nezveřejní, je 160 kB rozhodnutí jen na jednom disku.
 
 - **Zrušený krok `Deploy` obejde ověření verze** (`AGENTS.md`, oddíl
   o nasazení). Pátý reset přenosu 22. 11. neskončil nenulovým kódem
