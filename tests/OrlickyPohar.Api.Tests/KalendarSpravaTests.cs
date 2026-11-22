@@ -198,4 +198,69 @@ public class KalendarSpravaTests(PostgresFixture fixture)
         var upravene = await VypisAsync(serieId);
         Assert.Equal(Vyhodnoceni.Oboje, upravene.Single(z => z.Slug == "jarni-vitr").Vyhodnoceni);
     }
+
+    /// <summary>
+    /// <b>Kolonky vypsání se ukládají a prázdné maže</b> (R21, obrazovka
+    /// z 22. 11. 2026). Je to rozdíl proti <c>UpravAsync</c>, kde prázdno
+    /// znamená „neměnit": tamten formulář posouvá termín a nesmí cestou
+    /// shodit, co přišlo importem, kdežto tenhle je jediné místo, kde se
+    /// vypsání vyplňuje — a bez mazání by se překlep nedal vzít zpět.
+    /// </summary>
+    [Fact]
+    public async Task Vypsani_se_ulozi_a_prazdne_pole_maze()
+    {
+        var serieId = await RocnikAsync("kalendar-vypsani");
+        var (zastavka, _) = await SpravaAsync(s =>
+            s.ZalozAsync(serieId, Vstup("Jarní vítr", 5, 15), default));
+        Assert.NotNull(zastavka);
+
+        var chyba = await SpravaAsync(async s =>
+            await s.VypsaniAsync(zastavka!, new VypsaniKolonkyVstup(
+                MistoKonani: "  Marina Orlík  ",
+                Draha: "start u mola, točná levobokem",
+                PosledniStartV: new TimeOnly(16, 0),
+                Startovne: "450 Kč",
+                DelkaProceduryMin: 5), default));
+
+        Assert.Null(chyba);
+
+        var ulozena = await VeSluzbeAsync(sp => sp.GetRequiredService<AppDbContext>()
+            .Zavody.AsNoTracking().SingleAsync(z => z.Id == zastavka!.Id));
+
+        // Okraje se ořezávají: „ Marina Orlík " a „Marina Orlík" je totéž
+        // místo, ale v dokumentu by se lišilo.
+        Assert.Equal("Marina Orlík", ulozena.MistoKonani);
+        Assert.Equal("start u mola, točná levobokem", ulozena.Draha);
+        Assert.Equal(new TimeOnly(16, 0), ulozena.PosledniStartV);
+
+        // A teď to podstatné: prázdný formulář vymaže, nenechá staré.
+        Assert.Null(await SpravaAsync(async s =>
+            await s.VypsaniAsync(zastavka!, new VypsaniKolonkyVstup(), default)));
+
+        var prazdna = await VeSluzbeAsync(sp => sp.GetRequiredService<AppDbContext>()
+            .Zavody.AsNoTracking().SingleAsync(z => z.Id == zastavka!.Id));
+
+        Assert.Null(prazdna.MistoKonani);
+        Assert.Null(prazdna.Draha);
+        Assert.Null(prazdna.PosledniStartV);
+        Assert.Null(prazdna.Startovne);
+        // Délka procedury prázdná být nemůže — bez ní by se nedal spustit
+        // odpočet. Vrací se na výchozích pět minut podle ZPJ 26.
+        Assert.Equal(Procedura.DelkaVychozi, prazdna.DelkaProceduryMin);
+    }
+
+    /// <summary>Délka procedury má mez; nesmyslnou vrátí jako chybu, ne jako uloženou.</summary>
+    [Fact]
+    public async Task Nesmyslna_delka_procedury_se_neulozi()
+    {
+        var serieId = await RocnikAsync("kalendar-vypsani-delka");
+        var (zastavka, _) = await SpravaAsync(s =>
+            s.ZalozAsync(serieId, Vstup("Izolepa", 6, 20), default));
+        Assert.NotNull(zastavka);
+
+        var chyba = await SpravaAsync(async s =>
+            await s.VypsaniAsync(zastavka!, new VypsaniKolonkyVstup(DelkaProceduryMin: 0), default));
+
+        Assert.NotNull(chyba);
+    }
 }

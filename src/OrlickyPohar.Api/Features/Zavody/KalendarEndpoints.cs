@@ -51,6 +51,20 @@ public static class KalendarEndpoints
                 "Rozhodčí ročníku. Adresa se nemění, ani když se změní název. Posun " +
                 "termínu u potvrzené a dál zapíše původní datum.");
 
+        // <b>Vypsání závodu</b> (nálezy R1, R8, R21). Vlastní cesta, ne
+        // rozšíření úpravy termínu: termín je věc rozhodčího, kdežto
+        // vypsání <b>vydává pořadatel</b> („Vydává ho pořadatel a uznává
+        // rozhodčí", `Vypsani.Navrh`). Kdyby to viselo na téže bráně,
+        // nemohl by pořadatel vyplnit vlastní dokument.
+        g.MapPut("/{zavod}/vypsani", VypsaniAsync)
+            .Produces<ZastavkaRadek>()
+            .WithSummary("Uloží kolonky vypsání závodu")
+            .WithDescription(
+                "Pořadatel téhle regaty, nebo rozhodčí ročníku. Posílají se všechny "
+                + "kolonky najednou a prázdná se maže — je to jediné místo, kde se "
+                + "vypsání vyplňuje, takže překlep musí jít vzít zpět. Termínu, názvu "
+                + "ani počtů do poháru se to netýká.");
+
         g.MapPost("/{zavod}/stav", StavAsync)
             .Produces<ZastavkaRadek>()
             .WithSummary("Posune regatu v jejím životním cyklu")
@@ -120,6 +134,27 @@ public static class KalendarEndpoints
             return Results.Forbid();
 
         if (await sprava.UpravAsync(zastavka, vstup, ct, upozorneni) is { } chyba)
+            return Results.BadRequest(new { error = chyba });
+
+        return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, zastavka, ct));
+    }
+
+    private static async Task<IResult> VypsaniAsync(
+        string serie, string zavod, VypsaniKolonkyVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, KalendarSprava sprava, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, rozsahy, sprava, ct) is not { } zastavka)
+            return Results.NotFound();
+
+        // Pořadatel téhle zastávky, nebo rozhodčí ročníku. Správce oboje
+        // pokrývá přes `Prava.Pokryva`, takže se neptá zvlášť.
+        var smi = await rozsahy.SmiAsync(
+                      kdo, new Pozadavek(Role.Organizator, zastavka.SerieId, zastavka.Id), ct)
+                  || await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, zastavka.SerieId), ct);
+
+        if (!smi) return Results.Forbid();
+
+        if (await sprava.VypsaniAsync(zastavka, vstup, ct) is { } chyba)
             return Results.BadRequest(new { error = chyba });
 
         return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, zastavka, ct));

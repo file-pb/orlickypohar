@@ -87,6 +87,27 @@ public record PrehledZastavekDto(
 /// </para>
 /// </para>
 /// </summary>
+/// <summary>
+/// <b>Kolonky vypsání závodu</b> (Dodatek J1, nálezy R1, R8 a R21).
+///
+/// <para>
+/// <b>Prázdné znamená smazat, ne „neměnit"</b> — a je to rozdíl proti
+/// <see cref="ZastavkaVstup"/> schválně. Tam je prázdno „neměnit", protože
+/// ten formulář slouží k posunu termínu a nesmí cestou shodit, co do
+/// ročníku přišlo importem. Tenhle formulář je naopak <b>jediné místo,
+/// kde se vypsání vyplňuje</b>, posílá vždycky všechny kolonky — a bez
+/// možnosti vymazat by se překlep nedal vzít zpět.
+/// </para>
+/// </summary>
+public record VypsaniKolonkyVstup(
+    string? MistoKonani = null,
+    string? Draha = null,
+    TimeOnly? PosledniStartV = null,
+    DateOnly? UzaverkaPrihlasek = null,
+    string? Startovne = null,
+    DateTimeOffset? PrvniVyzyvaciZnameni = null,
+    int? DelkaProceduryMin = null);
+
 public record ZastavkaVstup(
     string Nazev,
     DateOnly Datum,
@@ -293,6 +314,30 @@ public class KalendarSprava(AppDbContext db)
     /// adresáta poslalo na jiný den.
     /// </summary>
     private static string Den(DateOnly d) => $"{d.Day}. {d.Month}. {d.Year}";
+
+    /// <summary>
+    /// Uloží kolonky vypsání. Prázdné je prázdné — viz
+    /// <see cref="VypsaniKolonkyVstup"/>.
+    /// </summary>
+    public async Task<string?> VypsaniAsync(
+        Zavod zastavka, VypsaniKolonkyVstup vstup, CancellationToken ct)
+    {
+        // Délka procedury je jediná kolonka s mezí: ZPJ 26 mluví o pěti
+        // minutách a hvězdička u něj pouští jinou délku, ale ne libovolnou.
+        if (vstup.DelkaProceduryMin is { } delka
+            && Procedura.ProcNejdeDelka(delka) is { } chyba) return chyba;
+
+        zastavka.MistoKonani = Prazdne(vstup.MistoKonani);
+        zastavka.Draha = Prazdne(vstup.Draha);
+        zastavka.PosledniStartV = vstup.PosledniStartV;
+        zastavka.UzaverkaPrihlasek = vstup.UzaverkaPrihlasek;
+        zastavka.Startovne = Prazdne(vstup.Startovne);
+        zastavka.PrvniVyzyvaciZnameni = vstup.PrvniVyzyvaciZnameni;
+        zastavka.DelkaProceduryMin = vstup.DelkaProceduryMin ?? Procedura.DelkaVychozi;
+
+        await db.SaveChangesAsync(ct);
+        return null;
+    }
 
     public async Task<string?> UpravAsync(
         Zavod zastavka, ZastavkaVstup vstup, CancellationToken ct,
