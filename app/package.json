@@ -51,7 +51,8 @@
     "lint": "expo lint",
     "telefon": "bash scripts/telefon.sh",
     "apk": "bash scripts/apk.sh",
-    "testy": "bash testy/spust.sh"
+    "testy": "bash testy/spust.sh",
+    "aab": "bash scripts/aab.sh"
   },
   "private": true,
   "overrides": {
