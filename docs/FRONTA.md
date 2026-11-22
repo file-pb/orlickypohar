@@ -24,24 +24,19 @@ položka ve skupině E je právě to ověření.
 
 ## A) Nic to nedrží — dá se vzít hned
 
-Čtyři položky, které vznikly **21. 11. z Filipových odpovědí** na otázky pro
-Miloše: rozhodnuté jsou, nic na nich nevisí, jen se musí postavit.
+**Skupina A je prázdná.** Všechny čtyři položky z Filipových odpovědí jsou
+postavené a nasazené (22. 11.):
 
-| Odkud | Co zbývá | Kde se to dnes vidí | Velikost |
-| --- | --- | --- | --- |
-| **R39** | **Zámek startovní listiny visí na špatném hřebíku.** Rozprava je vyhlášený okamžik (*„řeknu to, je to podle situace v klubovně"*), ale listina zaklapne až tím, že někdo zapíše čas startu. Mezi rozpravou a zapsaným časem smí pořadatel do listiny dál sahat. Opravit na *to dřívější z obou* — vyhlášená rozprava, nebo zapsaný čas | `PrihlaskySprava.PoRozpraveAsync` je jeden řádek: *existuje rozjížďka se `StartV`?* | malá: řádek a test |
-| **K2** | **Podpis se nepustí, dokud běží protestní lhůta.** Dvě hodiny od dojezdu poslední lodi; Filip: *„dvě hodiny jsou v poho."* Zbývající čas musí stát u tlačítka, ne až v chybě, a rozjížďka, ze které nikdo nedojel, nečeká — nemá od čeho | limit se dnes počítá a píše, ale nezamyká nic | malá až střední |
-| **návod, bod 17** | **Uzavření regaty jako úkon na konci dne, a automat po dvou dnech.** Filip: *„úkon, který na konci dne uděláme; pokud na to zapomeneme, udělej ho za dva dny sám."* Automat zavírá, **nepodepisuje** — podmínku „protesty jsou vyřízené" aplikace neumí ověřit. Dva dny od konce posledního závodního dne. Na obrazovce má být vidět, že to udělal automat | úloha na pozadí jako `UklidKontaktu`; dnes regatu nezavírá nic | střední |
-| **R21** | **Dráha a „po kolikáté se nestartuje" do vypsání**, per regata — Filip: *„pro každou regatu extra, ale s našeptáváním z mediánu."* Medián jde spočítat z hodiny; u dráhy se našeptá **poslední použitá**, protože průměrovat věty nejde | `Vypsani.cs:136` a `:138` jsou pořád `null` | střední |
+| Co | Jak to dopadlo |
+| --- | --- |
+| **Zámek startovní listiny** | Visí na tom dřívějším ze dvou: vyhlášená rozprava (otevřené okno dne), nebo zapsaný čas startu. Dvacetiminutová mezera mezi klubovnou a zápisem času zmizela |
+| **Protestní lhůta drží podpis** | `Protesty.ProcNejdePodepsat` se zbývajícími minutami a koncem v čase Orlíku; web tlačítko během lhůty nenabízí. Rozjížďka bez dojezdu nečeká |
+| **Uzavření regaty** | Úkon existoval (Vypsaný → Odjetý); přibyl automat po dvou dnech od konce posledního závodního dne. Zavírá, nepodepisuje, a regatu, ve které se nic nejelo, nechá stát |
+| **Dráha a hodina posledního startu** | Dvě kolonky u regaty, s nápovědou z ročníku — medián hodiny, poslední použitá dráha. K tomu **místo konání**, které vypsání do 22. 11. mělo zadrátované jako „neuvedené" |
 
-> Rozšíření `kontrast.test.ts` o páry stavitele má od 21. 11. majitele:
-> dopíše ho session stavitele spolu s akcemi detailu, aby se měřilo proti
-> hotovým tvarům.
-
-Nová položka odtamtud: **`KonecBojeDto` nenese čas postavení a přesnost**,
-a závěr konzilia je u detailu značky chce — předčítají se do vysílačky. Je
-to aditivní změna API, stejného druhu jako ta, která tam přidala zdroj,
-barvu a tvar. Majitele zatím nemá.
+> **Zbývá k nim formulář.** Tři nové kolonky (místo, dráha, hodina) a věta
+> „uzavřeno samo" čekají na vygenerovaný kontrakt z produkce — stejná
+> dvoukrokovka jako u velení a u přepínače zápisu.
 
 ## B) Čeká na Miloše — zpráva je napsaná, zbývá ji poslat
 
