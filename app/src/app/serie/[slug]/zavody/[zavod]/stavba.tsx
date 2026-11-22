@@ -26,6 +26,8 @@ import {
 import { pismoNaVyplni } from '@/lib/kontrast';
 import { mojeOpravneni } from '@/lib/opravneni';
 import { lzePotvrdit, vyprselo } from '@/lib/stavba/potvrzeni';
+import { posliUkony } from '@/lib/stavba/ukony';
+import { cekajici as cekajiciUkony } from '@/lib/outbox';
 import { jePouzePomocnik } from '@/lib/role';
 import {
   opakovaniUJmena,
@@ -136,6 +138,10 @@ export default function StavbaTrati() {
   const [zahazuje, setZahazuje] = useState<number | null>(null);
   const [otevrenoV, setOtevrenoV] = useState<number | null>(null);
 
+  // Kolik úkonů detailu čeká na signál. Patří do dolního pruhu: je to
+  // dluh vůči serveru a stavitel o něm musí vědět dřív, než odjede.
+  const [cekaUkonu, setCekaUkonu] = useState(0);
+
   const { data: zavodData, chyba: chybaZavodu, nacita, obnov } = useData(
     useCallback(() => nactiRozestavenouTrat(slug, zavod), [slug, zavod]),
   );
@@ -191,8 +197,13 @@ export default function StavbaTrati() {
     setPosila(true);
     try {
       const vysledek = await odesliFrontu(slug, zavod);
+      // Úkony detailu (sebrání, značení, pořadí, mazání, přesun) jdou
+      // vlastní frontou: na pořadí prvků nezávisí, takže je odmítnutý
+      // prvek nemá co blokovat.
+      const ukony = await posliUkony();
+      setCekaUkonu(cekajiciUkony().length);
       obnovFrontu();
-      if (vysledek.odeslano > 0) await nactiPrvky();
+      if (vysledek.odeslano > 0 || ukony.odeslano > 0) await nactiPrvky();
     } finally {
       setPosila(false);
     }
@@ -654,7 +665,10 @@ export default function StavbaTrati() {
           zamcena={zamcena}
           jePomocnik={jePouzePomocnik(ja ?? null, slug, zavod)}
           onZavri={() => setVybrana(null)}
-          onZmena={nactiPrvky}
+          onZmena={async () => {
+            await nactiPrvky();
+            setCekaUkonu(cekajiciUkony().length);
+          }}
         />
       ) : null}
 
@@ -676,6 +690,7 @@ export default function StavbaTrati() {
           {(prvky?.length ?? 0) + fronta.length} {pocetPrvku((prvky?.length ?? 0) + fronta.length)}
           {' · '}
           {popisPresnosti(fix)}
+          {cekaUkonu > 0 ? ` · ${cekaUkonu} ${cekaUkonu === 1 ? 'úkon čeká' : 'úkonů čeká'}` : ''}
           {copipat ? ` · ${copipat}` : ''}
         </Text>
 

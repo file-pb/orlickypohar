@@ -4,14 +4,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Barvy } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { type PrvekSpravy } from '@/lib/api';
 import {
-  pipni,
-  seberBoji,
-  smazPrvek,
-  upravPrvek,
-  znaceniBoje,
-  type PrvekSpravy,
-} from '@/lib/api';
+  posliUkony,
+  zaradPoradi,
+  zaradPresun,
+  zaradSebrani,
+  zaradSmazani,
+  zaradZnaceni,
+} from '@/lib/stavba/ukony';
 import { akceDetailu } from '@/lib/detail-prvku';
 import { barvaNaVyplni, pismoNaVyplni } from '@/lib/kontrast';
 import { opakovaniUJmena, type ZnackaNaOse } from '@/lib/radka-trati';
@@ -97,19 +98,38 @@ export function DetailZnacky({
   const prvek = znacka.prvky.length === 1 ? znacka.prvky[0] : null;
 
   /**
-   * Udělá úkon a načte trať znovu.
+   * Zařadí úkon do fronty a hned ho zkusí poslat.
    *
-   * <b>Zavírá se jen u toho, co detail vyčerpá.</b> Po přesunu, sebrání
-   * nebo smazání není na co se dívat; barvu a tvar ale člověk mění
-   * jedním dechem — zavřít mu obrazovku po prvním klepnutí by znamenalo
-   * otevřít ji znovu kvůli druhému.
+   * <para>
+   * <b>Bez signálu se nic neztratí.</b> Do 22. 11. 2026 tudy šlo volání
+   * API napřímo, takže na vodě spadlo a stavitel dostal „nepovedlo se
+   * to" — jenže signál se mu nevrátí tím, že to zkusí potřetí. Úkon se
+   * teď zapíše na disk a odejde, až bude kam.
+   * </para>
+   *
+   * <para>
+   * <b>Rozdíl mezi vadou a okolností nese obrazovku.</b> Když server
+   * úkon odmítne větou pravidla, detail zůstane otevřený i s tou větou:
+   * rozhodnout musí člověk. Když chybí signál, je úkon zapsaný a není na
+   * co čekat — zavře se stejně jako při úspěchu a čeká se ve frontě.
+   * </para>
+   *
+   * <b>Zavírá se jen u toho, co detail vyčerpá.</b> Barvu a tvar člověk
+   * mění jedním dechem; zavřít mu obrazovku po prvním klepnutí by
+   * znamenalo otevřít ji znovu kvůli druhému.
    */
-  const udelej = async (co: () => Promise<unknown>, zavri = true) => {
+  const udelej = async (zarad: () => void, zavri = true) => {
     if (pracuje) return;
     setPracuje(true);
     setChyba(null);
     try {
-      await co();
+      zarad();
+      const v = await posliUkony();
+      const odmitnuty = v.stoji.find((x) => x.odmitnuto);
+      if (odmitnuty) {
+        setChyba(odmitnuty.proc);
+        return;
+      }
       await onZmena();
       if (zavri) onZavri();
     } catch (e) {
@@ -120,12 +140,15 @@ export function DetailZnacky({
   };
 
   const presun = () =>
-    udelej(async () => {
+    udelej(() => {
       if (!fix) throw new Error('Bez polohy se přesunout nedá.');
       // Jméno, barva, tvar i značení si přenastavená bóje přebírá po té
       // staré — je to tentýž kus plastu, jen jinde. Pořadí nechává
       // server: `poradi: 0` znamená „po té staré".
-      await pipni(serie, zavod, {
+      //
+      // <b>Čas stisku jde s sebou</b>: bez signálu úkon poleží a serverový
+      // čas zápisu by byl čas, kdy telefon chytil síť.
+      zaradPresun({ serie, zavod }, znacka.boje.nazev, {
         nazev: znacka.boje.nazev,
         poradi: 0,
         sirka: fix.sirka,
@@ -133,11 +156,12 @@ export function DetailZnacky({
         presnostM: fix.presnostM ?? null,
         nahrazujeId: znacka.boje.id,
         zdroj: 'Telefon',
+        postavenaV: new Date().toISOString(),
       });
     });
 
   const prerovnej = (nahoru: boolean) =>
-    udelej(async () => {
+    udelej(() => {
       if (!prvek?.id) throw new Error('Tenhle prvek ještě nedošel na server.');
       const serazene = [...prvky].sort((x, y) => x.poradi - y.poradi);
       const kde = serazene.findIndex((p) => p.id === prvek.id);
@@ -146,10 +170,11 @@ export function DetailZnacky({
 
       [serazene[kde], serazene[kam]] = [serazene[kam], serazene[kde]];
       // Posílá se celý tvar prvku, protože server sadu přepisuje celou;
-      // mění se jen ty dva, kterým pořadí nesedí.
+      // mění se jen ty dva, kterým pořadí nesedí. Oba jdou do fronty
+      // jako dva úkony téhož druhu, takže dojdou v pořadí.
       for (const [i, p] of serazene.entries()) {
         if (p.poradi === i + 1) continue;
-        await upravPrvek(serie, zavod, p.id, {
+        zaradPoradi({ serie, zavod }, p.id, {
           typ: p.typ,
           poradi: i + 1,
           bojeAId: p.a.id,
@@ -215,7 +240,9 @@ export function DetailZnacky({
           {akce.includes('sebrat') ? (
             <Pressable
               disabled={pracuje}
-              onPress={() => udelej(() => seberBoji(serie, zavod, znacka.boje.id))}
+              onPress={() =>
+                udelej(() => zaradSebrani({ serie, zavod }, znacka.boje.id, znacka.boje.nazev))
+              }
               style={({ pressed }) => [
                 s.obrysovy,
                 { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
@@ -244,7 +271,7 @@ export function DetailZnacky({
                         onPress={() =>
                           udelej(
                             () =>
-                              znaceniBoje(serie, zavod, znacka.boje.id, {
+                              zaradZnaceni({ serie, zavod }, znacka.boje.id, znacka.boje.nazev, {
                                 barva: b,
                                 tvar: znacka.boje.tvar,
                                 znaceni: znacka.boje.znaceni,
@@ -291,7 +318,7 @@ export function DetailZnacky({
                         onPress={() =>
                           udelej(
                             () =>
-                              znaceniBoje(serie, zavod, znacka.boje.id, {
+                              zaradZnaceni({ serie, zavod }, znacka.boje.id, znacka.boje.nazev, {
                                 barva: znacka.boje.barva,
                                 tvar: tv,
                                 znaceni: znacka.boje.znaceni,
@@ -376,7 +403,11 @@ export function DetailZnacky({
                 <View style={s.poradi}>
                   <Pressable
                     disabled={pracuje}
-                    onPress={() => udelej(() => smazPrvek(serie, zavod, prvek.id!))}
+                    onPress={() =>
+                      udelej(() =>
+                        zaradSmazani({ serie, zavod }, prvek.id!, znacka.boje.nazev),
+                      )
+                    }
                     style={({ pressed }) => [
                       s.sipka,
                       { borderColor: t.stavZruseny, opacity: pressed ? 0.6 : 1 },
