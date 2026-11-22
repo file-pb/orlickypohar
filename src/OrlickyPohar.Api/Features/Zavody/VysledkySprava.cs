@@ -37,11 +37,19 @@ public record RozjizdkaSpravaRadek(
     string? DuvodZruseni = null,
     /// <summary>
     /// Kdy končí protestní časový limit (ZPJ 60.3(b), nález K2) —
-    /// <c>null</c>, dokud žádná loď nedokončila. Neuplynulý limit
-    /// <b>nic nezamyká</b>, viz <see cref="Protesty"/>.
+    /// <c>null</c>, dokud žádná loď nedokončila. Dokud běží, <b>drží
+    /// podpis</b> (od 22. 11. 2026), a rozhodčí ho smí zkrátit; obojí
+    /// vysvětluje <see cref="Protesty"/>.
     /// </summary>
     DateTimeOffset? ProtestniLimit = null,
-    bool LimitUplynul = false);
+    bool LimitUplynul = false,
+    // Zkrácená lhůta se pozná i po podpisu: limit, který končí jinde než
+    // dvě hodiny po dojezdu, je rozhodnutí člověka a patří k němu věta.
+    bool LhutaZkracena = false,
+    string? DuvodZkraceniLhuty = null,
+    // Smí ten, kdo se dívá, lhůtu zkrátit? Jen rozhodčí, a jen dokud
+    // lhůta běží — uplynulou není co zkracovat.
+    bool SmiZkratitLhutu = false);
 
 public record PrehledVysledkuDto(
     string Serie,
@@ -110,6 +118,14 @@ public record ZastavkaVysledkyDto(
     IReadOnlyList<int> KPublikaci);
 
 public record StavVysledkuVstup(StavVysledku Stav, string? Duvod = null);
+
+/// <summary>
+/// Zkrácení protestní lhůty. <c>Do</c> prázdné znamená „končí teď" — to je
+/// ten případ z klubovny, kdy všichni dojeli a nikdo neprotestoval.
+/// <c>Duvod</c> je povinný: výslovný pokyn, který se nikam nezapíše, je
+/// k nerozeznání od chyby v hodinách.
+/// </summary>
+public record ZkraceniLhutyVstup(DateTimeOffset? Do, string Duvod);
 
 /// <summary>
 /// Čtení a zápis workflow výsledků.
@@ -215,7 +231,7 @@ public class VysledkySprava(AppDbContext db, TimeProvider cas)
         // ne při každém přepnutí stavu.
         if (na == StavVysledku.Schvaleno
             && Protesty.ProcNejdePodepsat(await PosledniDojezdAsync(rozjizdka.Id, ct),
-                cas.GetUtcNow()) is { } lhuta)
+                cas.GetUtcNow(), rozjizdka.ProtestniLhutaDo) is { } lhuta)
             return lhuta;
 
         if (na == StavVysledku.KRevizi) rozjizdka.DuvodRevize = duvod!.Trim();
@@ -237,6 +253,43 @@ public class VysledkySprava(AppDbContext db, TimeProvider cas)
             rozjizdka.Stav = await StavPodleZapisuAsync(rozjizdka, ct);
 
         rozjizdka.StavVysledku = na;
+        await db.SaveChangesAsync(ct);
+        return null;
+    }
+
+    /// <summary>
+    /// Zkrátí protestní lhůtu rozjížďky na výslovný pokyn rozhodčího
+    /// (Filip, 22. 11. 2026). Vrací text chyby, nebo <c>null</c>.
+    ///
+    /// <para>
+    /// <b>Důvod je povinný</b> a ukládá se spolu s tím, kdo pokyn vydal.
+    /// Zkrácení je výjimka z pravidla, které jinak podpis drží; bez
+    /// podpisu a bez věty by se po sezóně nedalo poznat, jestli to byl
+    /// pokyn, nebo rozbité hodiny na serveru.
+    /// </para>
+    /// <para>
+    /// <b>Vlastní úkon, ne volba u podpisu.</b> Kdyby to byla volba
+    /// u podpisu, mizela by s ním z obrazovky — a to je přesně ta věc,
+    /// kterou bude někdo za týden dohledávat.
+    /// </para>
+    /// </summary>
+    public async Task<string?> ZkratLhutuAsync(
+        Rozjizdka rozjizdka, DateTimeOffset? naKdy, string? duvod, Guid? kdo,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(duvod))
+            return "Zkrácení protestní lhůty má povinný důvod.";
+
+        var ted = cas.GetUtcNow();
+        var kam = naKdy ?? ted;
+
+        if (Protesty.ProcNejdeZkratit(
+                await PosledniDojezdAsync(rozjizdka.Id, ct), kam, ted) is { } chyba)
+            return chyba;
+
+        rozjizdka.ProtestniLhutaDo = kam;
+        rozjizdka.LhutuZkratilId = kdo;
+        rozjizdka.DuvodZkraceniLhuty = duvod.Trim();
         await db.SaveChangesAsync(ct);
         return null;
     }

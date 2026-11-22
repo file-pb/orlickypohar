@@ -831,6 +831,35 @@ public class Rozjizdka : Fotky.IMaFotku
     public string? DuvodZruseni { get; set; }
 
     /// <summary>
+    /// Na kdy rozhodčí zkrátil protestní lhůtu téhle rozjížďky. Prázdné,
+    /// dokud nikdo nezkrátil — pak platí výchozí dvě hodiny od dojezdu
+    /// poslední lodi (<see cref="Protesty"/>).
+    ///
+    /// <para>
+    /// <b>Zadání</b> (Filip, 22. 11. 2026): *„protestní lhůtu bych umožnil
+    /// zkrátit, ale jen na výslovný pokyn."* Proto je to vlastní úkon
+    /// s vlastním sloupcem a vlastním důvodem, ne volba u podpisu:
+    /// zkrácení má jít poznat i potom, co se pořadí podepsalo, a má se
+    /// vědět, kdo ho vydal.
+    /// </para>
+    /// <para>
+    /// <b>Jen zkrátit, ne prodloužit.</b> Pozdější čas než výchozí lhůta
+    /// se odmítá — kdyby se mohla posouvat dopředu, byla by to změna
+    /// směrnice, a tu aplikace nevydává.
+    /// </para>
+    /// </summary>
+    public DateTimeOffset? ProtestniLhutaDo { get; set; }
+
+    /// <summary>Kdo lhůtu zkrátil. Prázdné, dokud nikdo nezkrátil.</summary>
+    public Guid? LhutuZkratilId { get; set; }
+
+    /// <summary>
+    /// Proč se lhůta zkrátila. Povinné — výslovný pokyn, který se nikam
+    /// nezapíše, je k nerozeznání od chyby v hodinách.
+    /// </summary>
+    public string? DuvodZkraceniLhuty { get; set; }
+
+    /// <summary>
     /// Kolikátá podoba sady výsledků to je. Roste s každým uložením.
     /// <para>
     /// <b>Je to ochrana proti přepsání novější opravy starými daty</b>

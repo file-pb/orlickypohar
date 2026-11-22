@@ -1766,6 +1766,9 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(400)
                         .HasColumnType("character varying(400)");
 
+                    b.Property<string>("DuvodZkraceniLhuty")
+                        .HasColumnType("text");
+
                     b.Property<string>("DuvodZruseni")
                         .HasColumnType("text");
 
@@ -1775,11 +1778,17 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<DateTimeOffset?>("KonecV")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("LhutuZkratilId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset?>("OpakovacOd")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("OpakovanychStartu")
                         .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ProtestniLhutaDo")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("Publikovano")
                         .HasColumnType("boolean");

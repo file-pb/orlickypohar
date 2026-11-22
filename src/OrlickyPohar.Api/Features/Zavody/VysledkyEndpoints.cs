@@ -233,6 +233,15 @@ public static class VysledkyEndpoints
                 "Řadou po jednom kroku; správce smí přeskočit. Zpátky se chodí " +
                 "vrácením k revizi, a to má povinný důvod.");
 
+        g.MapPost("/{zavod}/rozjizdky/{cislo:int}/protestni-lhuta", ZkratLhutuAsync)
+            .Produces<RozjizdkaSpravaRadek>()
+            .WithSummary("Zkrátí protestní lhůtu rozjížďky")
+            .WithDescription(
+                "Smí rozhodčí ročníku, s povinným důvodem. Prázdné `do` znamená " +
+                "„končí teď\". Jen zkrátit: pozdější čas než dvě hodiny od dojezdu " +
+                "poslední lodi se odmítá, stejně jako lhůta u rozjížďky, ze které " +
+                "nikdo nedokončil, a lhůta, která už uplynula.");
+
         g.MapPost("/{zavod}/rozjizdky/{cislo:int}/pohar", DoSerieAsync)
             .Produces<RozjizdkaSpravaRadek>()
             .WithSummary("Zařadí rozjížďku do poháru, nebo ji z něj vyndá")
@@ -604,6 +613,33 @@ public static class VysledkyEndpoints
         return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
     }
 
+    /// <summary>
+    /// Zkrácení protestní lhůty na výslovný pokyn rozhodčího (Filip,
+    /// 22. 11. 2026). <b>Pořadateli regaty se nenabízí</b>: lhůta je
+    /// pravidlo závodu, ne provozní věc dne, a zkrátit ji znamená vzít
+    /// někomu čas na protest.
+    /// </summary>
+    private static async Task<IResult> ZkratLhutuAsync(
+        string serie, string zavod, int cislo, ZkraceniLhutyVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, PomocniciSprava pomocnici, TimeProvider cas,
+        CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+
+        if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct))
+            return Results.Forbid();
+
+        var chyba = await sprava.ZkratLhutuAsync(
+            rozjizdka, vstup.Do, vstup.Duvod, await rozsahy.UzivatelIdAsync(kdo, ct), ct);
+
+        if (chyba is not null) return Results.BadRequest(new { error = chyba });
+
+        return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, pomocnici, cas, ct));
+    }
+
     private static async Task<IResult> StavAsync(
         string serie, string zavod, int cislo, StavVysledkuVstup vstup, ClaimsPrincipal kdo,
         Rozsahy rozsahy, VysledkySprava sprava, PomocniciSprava pomocnici, TimeProvider cas,
@@ -835,10 +871,16 @@ public static class VysledkyEndpoints
                 DuvodZruseni: r.DuvodZruseni,
                 // Protestní limit (ZPJ 60.3(b), nález K2). Počítá se tady,
                 // ne v prohlížeči: lhůta je pravidlo, ne zobrazení, a dvě
-                // místa by se rozešla. Nic nezamyká — proč, stojí
-                // u `Protesty`.
-                ProtestniLimit: Protesty.Limit(posledniDojezd),
-                LimitUplynul: Protesty.Uplynul(posledniDojezd, ted));
+                // místa by se rozešla. Co dělá, stojí u `Protesty`.
+                ProtestniLimit: Protesty.Limit(posledniDojezd, r.ProtestniLhutaDo),
+                LimitUplynul: Protesty.Uplynul(posledniDojezd, ted, r.ProtestniLhutaDo),
+                LhutaZkracena: r.ProtestniLhutaDo is not null,
+                DuvodZkraceniLhuty: r.DuvodZkraceniLhuty,
+                // Zkrátit jde jen běžící lhůtu, a jen rozhodčímu. Správce
+                // ho pokrývá přes `Prava.Pokryva`, takže se neptá zvlášť.
+                SmiZkratitLhutu: Rozhodci
+                                 && Protesty.Limit(posledniDojezd, r.ProtestniLhutaDo) is not null
+                                 && !Protesty.Uplynul(posledniDojezd, ted, r.ProtestniLhutaDo));
         }
     }
 
