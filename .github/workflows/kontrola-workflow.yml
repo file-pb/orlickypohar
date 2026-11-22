@@ -1,0 +1,58 @@
+# Kontrola souborů workflow nástrojem `actionlint`.
+#
+# <b>Proč vlastní soubor, a ne úloha v `build-deploy.yml`.</b> Chyba, kvůli
+# které tohle vzniklo, zabije **celý** workflow dřív, než se spustí jediná
+# jeho úloha — kontrola uvnitř `build-deploy.yml` by tedy nikdy nekontrolovala
+# ten soubor, ve kterém by seděla. Check, který se neumí podívat na to, co
+# hlídá, je horší než žádný, protože se na něj začne spoléhat. Proto to leží
+# vedle: tenhle soubor zůstane platný i ve chvíli, kdy je `build-deploy.yml`
+# rozbitý, a vypíše proč.
+#
+# <b>Co se stalo 22. 11. 2026.</b> Do kroku v `build-deploy.yml` se dostalo
+# `env: ZRUSENO: ${{ cancelled() }}`. `cancelled()` je status check funkce
+# a smí stát jen v `if:` — pro `jobs.<job_id>.steps.env` je povolená jediná
+# zvláštní funkce, `hashFiles`. GitHub proto workflow odmítl celý: běh
+# 45076919836 u `abf33cfa` skončil v tutéž vteřinu, v jaké vznikl,
+# s **nulou úloh**, bez jediné anotace a s prázdným logem. Z běhu samotného
+# se příčina nedala poznat; `actionlint` ji vypsal na první pokus i s číslem
+# řádku. Nejelo kvůli tomu nic — ani testy, ani nasazení.
+#
+# <b>Lokálně</b>: `brew install actionlint` a
+# `actionlint .github/workflows/build-deploy.yml`.
+name: kontrola-workflow
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/**']
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Verze se připíná stejně jako zbytek platformních závislostí, ať se
+      # kontrola nerozbije sama od sebe novým vydáním nástroje.
+      #
+      # <b>SC1111 se ignoruje.</b> Shellcheck jím hlásí „unicode quote",
+      # protože typografické uvozovky bývají nechtěný pozůstatek kopírování
+      # z webu. Tady jsou naopak správně: v `echo` se píše česká próza do
+      # souhrnu běhu a `„Klid“` má vypadat takhle. Jiné nálezy shellchecku
+      # se neignorují — červená kontrola, kterou nikdo nemůže spravit, je
+      # kontrola, kterou nikdo nečte.
+      - name: actionlint
+        env:
+          VERZE: "1.7.12"
+        run: |
+          curl -fsSL \
+            "https://github.com/rhysd/actionlint/releases/download/v${VERZE}/actionlint_${VERZE}_linux_amd64.tar.gz" \
+            | tar -xz actionlint
+          ./actionlint -color -ignore 'SC1111' .github/workflows/*.yml

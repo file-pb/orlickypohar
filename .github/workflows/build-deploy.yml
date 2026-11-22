@@ -791,10 +791,27 @@ jobs:
       # <b>Vydání do telefonů to neřeší.</b> `aktualizace-appky` visí na
       # `needs: [nasazeni]`, takže se po zrušeném nasazení přeskočí dál;
       # cesta ven je ruční spuštění úlohy.
+      # Stav zrušení se sem musí donést výstupem kroku, ne výrazem.
+      # `cancelled()` je status check funkce a ta smí stát **jen v `if:`**:
+      # pro `jobs.<job_id>.steps.env` je povolená jediná zvláštní funkce,
+      # `hashFiles`. Workflow s `${{ cancelled() }}` v `env:` GitHub odmítne
+      # celý — běh skončí v tutéž vteřinu, v jaké vznikl, s nulou úloh,
+      # bez jediné anotace a bez logu, takže se příčina z něj nepozná.
+      # Stalo se to 22. 11. 2026 běhu 45076919836 u `abf33cfa` a nejelo
+      # kvůli tomu nic. Pozná to `actionlint` (`brew install actionlint`,
+      # `actionlint .github/workflows/build-deploy.yml`) — a protože tenhle
+      # druh chyby zabije celý workflow dřív než jeho vlastní úlohy, hlídá
+      # ho od té doby **samostatný** `kontrola-workflow.yml`, který zůstane
+      # platný i tehdy, když je tenhle soubor rozbitý.
+      - name: Je běh zrušený?
+        id: zruseno
+        if: ${{ cancelled() }}
+        run: echo "ano=true" >> "$GITHUB_OUTPUT"
+
       - name: Ověřit, co doopravdy běží
         if: ${{ always() && steps.kontrola.outputs.nasadit == 'ano' }}
         env:
-          ZRUSENO: ${{ cancelled() }}
+          ZRUSENO: ${{ steps.zruseno.outputs.ano }}
         run: |
           ocekavano='${{ github.sha }}'
           prenos='${{ steps.deploy.outputs.prenos }}'
@@ -829,7 +846,7 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          for i in $(seq 1 20); do
+          for _ in $(seq 1 20); do
             api=$(curl -fsS --max-time 20 "$API_URL/verze" 2>/dev/null \
               | python3 -c "import json,sys; print(json.load(sys.stdin).get('verze',''))" 2>/dev/null || true)
             web=$(curl -fsS --max-time 20 "$WEB_URL/verze" 2>/dev/null \
