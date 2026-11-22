@@ -52,9 +52,9 @@ curl -s https://orlickypohar-api.klihovka.cz/health   # musí vrátit Healthy
 | Kde co běží a co když spadne | [platform/docs/PROVOZ.md](https://github.com/file-pb/platform/blob/main/docs/PROVOZ.md) |
 | Chyby, které už jednou stály čas | [platform/docs/POUCENI.md](https://github.com/file-pb/platform/blob/main/docs/POUCENI.md) |
 
-**Integrační testy** (`Category=Integracni`) potřebují běžící Docker
-Desktop; na tomhle stroji leží v `/Applications/Vývoj`, takže `docker`
-v cestě není, ale testům to nevadí. Podrobně níž, u pastí nasazení.
+**Integrační testy** (`Category=Integracni`) potřebují běžící kontejnerový
+runtime; na tomhle stroji je Docker Desktop v `/Applications/Vývoj`
+a od 22. 11. 2026 vedle něj i colima. Podrobně níž, u pastí.
 
 ## Kde je zbytek
 
@@ -276,6 +276,15 @@ Pravidlo z toho zůstává i teď, kdy se dá otestovat lokálně:
 
 Kdyby démon nejel a bylo to naspěch, `--filter "Category!=Integracni"`
 projde bez něj — ale integrační chybu ti to nenajde.
+
+**Od 22. 11. 2026 je tu vedle Desktopu i colima** (`brew install colima
+docker`, `colima start`) a s ní i `docker` v cestě — věta výš o tom, že
+ho `which docker` nenajde, platila do té instalace. Na testech to nic
+nemění, ty si socket najdou samy; změnilo se jedno: **`docker context`
+ukazuje na colimu**, takže když ji někdo zastaví, kontext zůstane viset
+na mrtvém soketu a `docker` příkazy spadnou se záhadnou chybou. Zpátky
+se přepne `docker context use desktop-linux`.
+
 
 ## Zdraví a nasazení
 
