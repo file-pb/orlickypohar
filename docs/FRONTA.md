@@ -37,7 +37,10 @@ postavené a nasazené (22. 11.):
 > **Formulář je hotový** (22. 11., `62eb314b`): vypsání má vlastní sekci
 > u regaty (`/sprava/<ročník>/vypsani/<regata>`) se všemi sedmi kolonkami
 > a nápovědou z ročníku, karta kalendáře nese štítek *uzavřeno samo*.
-> Vzhled na produkci ověřený není — správa chce přihlášení.
+> Vzhled na produkci ověřený není — správa chce přihlášení. A má co dělat:
+> u *Jarního větru* jsou dnes J1.1(5), J1.1(6) i J1.3(4) prázdné a místo
+> konání se ve vypsání pořád tiskne jako *neuvedené* (ověřeno na produkci
+> 22. 11.). Vyplnění těch sedmi kolonek ty tři body zaplní.
 
 ## B) Čeká na Miloše — zpráva je napsaná, zbývá ji poslat
 
@@ -68,9 +71,10 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
 - **Licence** — Play 25 USD jednorázově, Apple 99 USD ročně. Bez nich se nová
   appka k pořadatelům dostane jedině kabelem, a zrovna stavitel trati je
   funkce, kterou budou chtít mít v telefonu bez tvé asistence.
-- **Publikovat zbylé zastávky 2027 a plachetní směrnici.** Z fronty v plánu
-  k 20. 10.; **stav na produkci jsem nekontroloval**, takže je možné, že je to
-  mezitím hotové.
+- **Publikovat zbylé zastávky 2027 a plachetní směrnici.** Ověřeno na produkci
+  22. 11.: ročník má devět zastávek a vypsaná je **jedna** — *Jarní vítr*,
+  která jako jediná nese i směrnici. Ostatních osm stojí ve stavu *Plánovaný*.
+  Jsou to termíny a texty, ne práce v repozitáři.
 
 - **Integrační testy nejdou spustit na tomhle stroji, a stálo to za jednu
   noc dvě červené main** (22. 11.: jednou session stavitele, jednou mě).
