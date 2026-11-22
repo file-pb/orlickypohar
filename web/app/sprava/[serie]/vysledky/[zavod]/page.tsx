@@ -351,6 +351,11 @@ function Rozjizdka({
   // Krok, na který se čeká — ten jediný dostane váhu.
   const naVpred = krokVpred(rozjizdka.stavVysledku, rozjizdka.mozneStavy);
   const vpred = naVpred ? { na: naVpred, ...krokZe(rozjizdka.stavVysledku, naVpred) } : null;
+  // <b>Čeká podpis na protestní lhůtu?</b> Rozhoduje server (vydává
+  // `protestniLimit` a `limitUplynul`), stránka se jen řídí tím, co
+  // dostala — druhý výpočet v prohlížeči by se s tím rozešel.
+  const cekaNaLhutu =
+    vpred?.na === "Schvaleno" && !!rozjizdka.protestniLimit && !rozjizdka.limitUplynul;
   // Zbyde po vyzdvižení hlavního kroku ještě něco do rozbalovače?
   const maDalsiUkony =
     rozjizdka.mozneStavy.some(
@@ -447,13 +452,13 @@ function Rozjizdka({
         </p>
       )}
 
-      {/* <b>Protestní časový limit</b> (ZPJ 60.3(b), nález K2). Aplikace
-          o protestech neví nic — nemá kam je zapsat —, takže tohle
-          <b>nic nezamyká</b>: zamykala by podle hodin, ne podle skutečnosti,
-          a na regatě, kde nikdo neprotestoval a všichni chtějí domů, by
-          držela podpis dvě hodiny pro nic. Je to věta, ne zámek. Lhůtu
-          přitom umí dopočítat jediná ze všech, protože čas dojezdu poslední
-          lodi zná. */}
+      {/* <b>Protestní časový limit</b> (ZPJ 60.3(b), nález K2). Od
+          22. 11. 2026 <b>drží podpis</b> — Filip: *„dvě hodiny jsou v poho,
+          klidně."* Do té doby to byla jen věta a stálo u ní, že aplikace
+          o protestech neví, takže nehlídá. Pořád o nich neví: tohle nehlídá,
+          že je čisto, hlídá uplynutí lhůty na podání. Rozhodčí tím
+          nedostane jistotu, dostane čas. Rozjížďka, ze které nikdo
+          nedokončil, nečeká — není od čeho měřit. */}
       {rozjizdka.protestniLimit && !rozjizdka.limitUplynul && (
         <p className="poznamka">
           <b>Protestní limit běží</b> do{" "}
@@ -466,8 +471,9 @@ function Rozjizdka({
             hour: "2-digit",
             minute: "2-digit",
           })}{" "}
-          — dvě hodiny po dojezdu poslední lodi (ZPJ 60.3(b)). Podepsat jde
-          i teď; aplikace o protestech neví, takže to nehlídá za tebe.
+          — dvě hodiny po dojezdu poslední lodi (ZPJ 60.3(b)). Do té doby
+          <b>podepsat nejde</b>. Že nikdo neprotestoval, aplikace neví; hlídá
+          jen to, že lhůta na podání ještě běží.
         </p>
       )}
 
@@ -485,7 +491,17 @@ function Rozjizdka({
           <input type="hidden" name="zavod" value={zavod} />
           <input type="hidden" name="cislo" value={rozjizdka.cislo} />
           <input type="hidden" name="stav" value={vpred.na} />
-          <button type="submit" title={vpred.popis} aria-label={`${vpred.tlacitko} — ${vpred.popis}`}>
+          {/* <b>Podpis počká na konec protestní lhůty.</b> Zamyká to
+              server (`Protesty.ProcNejdePodepsat`); tady se tlačítko jen
+              nenabízí, aby se na odmítnutí nepřišlo až po klepnutí. Platí
+              to na podpis, ne na ostatní kroky — vrátit k revizi nebo
+              zrušit rozjížďku jde pořád. */}
+          <button
+            type="submit"
+            disabled={cekaNaLhutu}
+            title={cekaNaLhutu ? "Podepsat půjde, až uplyne protestní lhůta." : vpred.popis}
+            aria-label={`${vpred.tlacitko} — ${cekaNaLhutu ? "čeká na konec protestní lhůty" : vpred.popis}`}
+          >
             {vpred.tlacitko}
           </button>
         </form>

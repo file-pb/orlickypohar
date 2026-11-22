@@ -3,48 +3,68 @@ using OrlickyPohar.Api.Features.Zavody;
 namespace OrlickyPohar.Api.Tests;
 
 /// <summary>
-/// Protestní časový limit (ZPJ 60.3(b), nález K2).
+/// Protestní časový limit (ZPJ 60.3(b), nález K2). Čisté funkce, bez databáze.
+///
 /// <para>
-/// Celé protesty se nestaví — to je velká věc s vlastním rozhodnutím.
-/// Tohle je ten kus, na který aplikace data má, a tvrdí se oběma směry:
-/// lhůta, která by uplynula vždycky nebo nikdy, by prošla polovinou
-/// tvrzení.
+/// Do 22. 11. 2026 byl limit <b>jen věta na obrazovce</b>. Filip ho toho dne
+/// proměnil v zámek: *„dvě hodiny jsou v poho, klidně."* Co se tím nemění:
+/// aplikace pořád neví, jestli nějaký protest visí — hlídá uplynutí lhůty,
+/// ne čistotu pořadí.
 /// </para>
 /// </summary>
 public class ProtestyTests
 {
-    private static readonly DateTimeOffset Dojezd =
-        new(2026, 5, 16, 13, 40, 0, TimeSpan.FromHours(2));
+    private static readonly DateTimeOffset Dojezd = new(2026, 5, 2, 14, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public void Limit_je_dve_hodiny_po_dojezdu_posledni_lodi()
+    public void Behem_lhuty_podpis_nejde()
     {
-        Assert.Equal(Dojezd.AddHours(2), Protesty.Limit(Dojezd));
-        Assert.Equal(TimeSpan.FromHours(2), Protesty.Lhuta);
+        var chyba = Protesty.ProcNejdePodepsat(Dojezd, Dojezd.AddMinutes(30));
+
+        Assert.NotNull(chyba);
+        // Zbývající čas musí být v hlášce: zamčené tlačítko bez čísla
+        // vypadá jako porucha.
+        Assert.Contains("90 min", chyba, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Dokud_nikdo_nedojel_limit_neexistuje()
+    public void Po_lhute_podpis_jde()
     {
-        // Není od čeho měřit — a to je jiná zpráva než „už uplynul".
+        Assert.Null(Protesty.ProcNejdePodepsat(Dojezd, Dojezd + Protesty.Lhuta));
+        Assert.Null(Protesty.ProcNejdePodepsat(Dojezd, Dojezd.AddHours(3)));
+    }
+
+    [Fact]
+    public void Rozjizdka_bez_dojezdu_necka()
+    {
+        // Nikdo nedokončil (všichni DNF, nebo se zrušila). Není od čeho
+        // měřit — držet podpis donekonečna by znamenalo, že takovou
+        // rozjížďku nejde zavřít.
+        Assert.Null(Protesty.ProcNejdePodepsat(null, Dojezd.AddDays(1)));
+    }
+
+    [Fact]
+    public void Hlaska_pise_cas_Orliku_ne_serveru()
+    {
+        // Server jede v UTC. Dojezd ve 14:00 UTC druhého května je
+        // v Praze 16:00, takže limit padne v 18:00 — a to musí být
+        // v hlášce, jinak posílá rozhodčího čekat o dvě hodiny jinam.
+        var chyba = Protesty.ProcNejdePodepsat(Dojezd, Dojezd.AddMinutes(1));
+
+        Assert.NotNull(chyba);
+        Assert.Contains("18:00", chyba, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Limit_a_Uplynul_drzi_tentyz_okamzik()
+    {
+        var limit = Protesty.Limit(Dojezd);
+
+        Assert.Equal(Dojezd + Protesty.Lhuta, limit);
+        Assert.False(Protesty.Uplynul(Dojezd, limit!.Value.AddSeconds(-1)));
+        Assert.True(Protesty.Uplynul(Dojezd, limit.Value));
+        // Z neznámého dojezdu se netvrdí ani jedno.
+        Assert.False(Protesty.Uplynul(null, Dojezd.AddDays(1)));
         Assert.Null(Protesty.Limit(null));
-        Assert.False(Protesty.Uplynul(null, Dojezd.AddDays(7)));
-    }
-
-    [Fact]
-    public void Pred_limitem_jeste_ne_a_na_nem_uz_ano()
-    {
-        Assert.False(Protesty.Uplynul(Dojezd, Dojezd.AddMinutes(119)));
-        Assert.True(Protesty.Uplynul(Dojezd, Dojezd.AddHours(2)));
-        Assert.True(Protesty.Uplynul(Dojezd, Dojezd.AddHours(3)));
-    }
-
-    [Fact]
-    public void Zona_dojezdu_na_limit_nema_vliv()
-    {
-        // Tentýž okamžik zapsaný v jiné zóně musí dát tentýž limit —
-        // jinak by lhůta záležela na tom, odkud se zapisovalo.
-        var vUtc = Dojezd.ToUniversalTime();
-        Assert.Equal(Protesty.Limit(Dojezd), Protesty.Limit(vUtc));
     }
 }

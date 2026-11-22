@@ -208,6 +208,16 @@ public class VysledkySprava(AppDbContext db, TimeProvider cas)
         if (Workflow.ProcNejde(rozjizdka.StavVysledku, na, spravce) is { } chyba) return chyba;
         if (Workflow.ProcNejdeBezDuvodu(na, duvod) is { } bezDuvodu) return bezDuvodu;
 
+        // <b>Podpis počká na protestní lhůtu</b> (ZPJ 60.3(b), nález K2;
+        // rozhodl Filip 22. 11. 2026). Ptá se jen u podpisu — u revize,
+        // zrušení ani potvrzení už podepsaného pořadí by to nedávalo
+        // smysl, a dotaz do databáze se tím platí jednou za rozjížďku,
+        // ne při každém přepnutí stavu.
+        if (na == StavVysledku.Schvaleno
+            && Protesty.ProcNejdePodepsat(await PosledniDojezdAsync(rozjizdka.Id, ct),
+                cas.GetUtcNow()) is { } lhuta)
+            return lhuta;
+
         if (na == StavVysledku.KRevizi) rozjizdka.DuvodRevize = duvod!.Trim();
         // Důvod zrušení se ukládá zvlášť od důvodu revize — obojí může
         // u rozjížďky platit najednou (nález R13, 28. 10. 2026).
@@ -230,6 +240,17 @@ public class VysledkySprava(AppDbContext db, TimeProvider cas)
         await db.SaveChangesAsync(ct);
         return null;
     }
+
+    /// <summary>
+    /// Kdy dojela poslední loď téhle rozjížďky — <c>null</c>, když žádná
+    /// nedokončila. Lodě s kódem (DNF, OCS) dojezd nemají, a to je
+    /// správně: pravidlo mluví o tom, kdy poslední loď <b>dokončí</b>.
+    /// Tentýž výpočet dělá <c>RozjizdkyAsync</c> pro celou zastávku.
+    /// </summary>
+    private Task<DateTimeOffset?> PosledniDojezdAsync(int rozjizdkaId, CancellationToken ct) =>
+        db.Vysledky
+            .Where(v => v.RozjizdkaId == rozjizdkaId)
+            .MaxAsync(v => v.DojezdV, ct);
 
     /// <summary>
     /// Kam rozjížďka patří, když přestala být zrušená: podle toho, jestli

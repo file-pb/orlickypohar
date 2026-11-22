@@ -600,8 +600,30 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
     /// pozdě, ale pořád dřív, než se vyjede.
     /// </para>
     /// </summary>
-    public Task<bool> PoRozpraveAsync(int zavodId, CancellationToken ct) =>
-        db.Rozjizdky.AnyAsync(r => r.ZavodId == zavodId && r.StartV != null, ct);
+    /// <summary>
+    /// <b>Proběhla rozprava?</b> Platí to dřívější ze dvou: buď ji někdo
+    /// vyhlásil (otevřelo se okno závodního dne), nebo je zapsaný čas
+    /// startu některé rozjížďky.
+    ///
+    /// <para>
+    /// <b>Proč obojí</b> (Filip, 21. 11. 2026: *„řeknu to … je to podle
+    /// situace v klubovně"*). Do té doby visel zámek jen na zapsaném času
+    /// startu — a mezi vyhlášenou rozpravou a zapsáním toho času, což je
+    /// klidně dvacet minut, směl pořadatel do listiny dál sahat, přestože
+    /// *„po rozpravě mění listinu jen rozhodčí"* (R38, R39). Vyhlášení
+    /// není nový úkon, který by šel zapomenout: je to totéž tlačítko,
+    /// kterým se otvírá závodní den a bez kterého se nerozjede trasování.
+    /// </para>
+    /// <para>
+    /// <b>Zapsaný čas startu zůstává jako druhá cesta</b>, ne jako
+    /// náhrada. Kdo rozpravu odklikne a čas zapíše, zamkne listinu tím
+    /// prvním; kdo tlačítko mine a rovnou startuje, zamkne ji tím druhým.
+    /// Odemknout zpátky to nejde ani jednou cestou — a to je záměr.
+    /// </para>
+    /// </summary>
+    public async Task<bool> PoRozpraveAsync(int zavodId, CancellationToken ct) =>
+        await db.Okna.AnyAsync(o => o.ZavodId == zavodId, ct)
+        || await db.Rozjizdky.AnyAsync(r => r.ZavodId == zavodId && r.StartV != null, ct);
 
     private void Zaznamenej(Ucast ucast, StavUcasti? ze, StavUcasti na, Guid? kdo, string? duvod) =>
         ucast.Zmeny.Add(new ZmenaUcasti

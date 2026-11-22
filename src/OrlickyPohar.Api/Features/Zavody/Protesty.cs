@@ -60,4 +60,43 @@ public static class Protesty
     /// </summary>
     public static bool Uplynul(DateTimeOffset? posledniDojezd, DateTimeOffset ted) =>
         Limit(posledniDojezd) is { } limit && ted >= limit;
+
+    /// <summary>
+    /// Proč nejde podepsat pořadí — nebo <c>null</c>.
+    ///
+    /// <para>
+    /// <b>Od 22. 11. 2026 lhůta podpis drží</b> (Filip: *„dvě hodiny jsou
+    /// v poho, klidně"*). Do té doby to byla jen věta na obrazovce, a stálo
+    /// u ní, že aplikace o protestech neví, takže nehlídá. Pořád o nich
+    /// neví — tohle nehlídá, že je čisto, hlídá jen to, že lhůta na podání
+    /// uplynula. Rozhodčí tím nedostane jistotu, dostane čas.
+    /// </para>
+    /// <para>
+    /// <b>Rozjížďka, ze které nikdo nedokončil, nečeká.</b> Lhůta se měří
+    /// od dojezdu poslední lodi; bez dojezdu není od čeho měřit, a držet
+    /// podpis donekonečna by znamenalo, že se zrušená rozjížďka nedá
+    /// zavřít. Je to tentýž důvod, proč <see cref="Uplynul"/> u neznámého
+    /// času vrací <c>false</c>, jen obrácený: tam se netvrdí, že prošla,
+    /// tady se netvrdí, že běží.
+    /// </para>
+    /// </summary>
+    public static string? ProcNejdePodepsat(DateTimeOffset? posledniDojezd, DateTimeOffset ted)
+    {
+        if (Limit(posledniDojezd) is not { } limit || ted >= limit) return null;
+
+        var zbyva = limit - ted;
+        var minut = (int)Math.Ceiling(zbyva.TotalMinutes);
+        return $"Protestní lhůta běží ještě {minut} min, do "
+               + $"{TimeZoneInfo.ConvertTime(limit, Praha):HH:mm}. "
+               + "Podepsat jde, až uplyne (ZPJ 60.3(b)).";
+    }
+
+    /// <summary>
+    /// Čas se píše v čase Orlíku, ne serveru. Server jede v UTC
+    /// (`deploy/docker-compose.yml` žádné <c>TZ</c> nenastavuje), takže by
+    /// hláška v létě ukazovala o dvě hodiny dřív — tutéž past měl web
+    /// u zobrazení limitu.
+    /// </summary>
+    private static readonly TimeZoneInfo Praha =
+        TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
 }
