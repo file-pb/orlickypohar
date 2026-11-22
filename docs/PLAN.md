@@ -10718,6 +10718,67 @@ nejsou cesty skrz zámek na serveru — jsou to data, bez kterých by zámek
 nemohl rozhodnout. Rozdíl je v tom, jestli ochranu obcházíš, nebo ji
 zpravuješ.
 
+## Den rozhodčího dostal čtyři zámky a vypsání obrazovku (22. 11. 2026)
+
+Filip prošel 21. 11. osm otázek, které měly jít Milošovi, a pět z nich
+zodpověděl sám — buď proto, že to aplikace už umí, nebo proto, že je to
+jeho rozhodnutí. Z odpovědí vzniklo tohle; Milošovi zbyly tři otázky.
+
+**Zámek startovní listiny visel na špatném hřebíku.** Rozprava je
+vyhlášený okamžik (*„řeknu to, je to podle situace v klubovně"*), ale
+listina zaklapla až zapsaným časem startu. Mezi klubovnou a zápisem času
+— klidně dvacet minut — směl pořadatel do listiny dál sahat, přestože po
+rozpravě ji podle R38 a R39 mění jen rozhodčí. Nově platí **to dřívější
+z obou**: otevřené okno závodního dne, nebo zapsaný čas. Vyhlášení není
+nový úkon, který by šel zapomenout — je to totéž tlačítko, bez kterého se
+nerozjede trasování.
+
+**Protestní lhůta drží podpis** (*„dvě hodiny jsou v poho, klidně"*). Do
+té doby se jen psala u rozjížďky a vedle stálo, že podepsat jde i tak.
+Hláška nese zbývající minuty a konec v čase Orlíku, web tlačítko během
+lhůty nenabízí, server to odmítne i tak. Rozjížďka, ze které nikdo
+nedokončil, nečeká — není od čeho měřit. Co se tím nemění: aplikace pořád
+neví, jestli nějaký protest visí; hlídá uplynutí lhůty na podání, ne
+čistotu pořadí. Rozhodčí tím nedostane jistotu, dostane čas.
+
+**Uzavření regaty má automat** (*„úkon, který na konci dne uděláme; pokud
+na to zapomeneme, udělej ho za dva dny sám"*). Úkon existoval jako posun
+Vypsaný → Odjetý; přibyla úloha na pozadí, pátá v řadě po vodočtu,
+přejatých, kontaktech a upozorněních. **Zavírá, nepodepisuje** —
+podmínku „protesty jsou vyřízené" aplikace ověřit neumí. A regatu, ve
+které se nic nejelo, nechá stát: „odjetý" znamená, že se jelo, a robot by
+jinak u závodu, který se nekonal a nikdo ho nezrušil, tvrdil něco, co se
+nestalo. Lhůta se měří od konce posledního závodního dne, ne od data —
+u 24hodinovky by se to rozešlo o celý den.
+
+**Zápis dojezdů pořadatelem je přepínač u regaty**, výchozí ne. Spor dvou
+zadání (Milošovo *„pouze rozhodčí"* proti Filipovu ze 16. 10. *„pořadatel,
+dokud je zápis otevřený"*) se tím nezavírá rozhodnutím za někoho, ale
+volbou u každé regaty. Jedna brána pro web i appku, takže se to nedá
+obejít druhým klientem; správce, rozhodčí ani pomocník u vody na přepínači
+nevisí.
+
+**A vypsání dostalo obrazovku, která mu chyběla od začátku.** Dokument se
+generoval z dat od 28. 10., jenže ta data neměl kudy nikdo vyplnit:
+čtyři body z jedenácti proto zůstávaly prázdné a místo konání bylo v kódu
+napevno „neuvedené". V Milošově seznamu sekcí přitom stojí *vypsání
+závodu* **první** a byla to jediná z nich, kterou aplikace neměla. Nová
+sekce u regaty vyplňuje místo konání, dráhu, hodinu posledního startu,
+uzávěrku, startovné, čas vyzývacího znamení a délku procedury.
+
+Dvě pravidla, která u ní stojí za zapamatování. **Prázdné pole maže** —
+jinde ve správě znamená prázdno „neměnit", protože ty formuláře slouží
+k něčemu jinému; tenhle je jediné místo, kde se vypsání vyplňuje, a bez
+mazání by se překlep nedal vzít zpět. A **nenapovídá se předvyplněním**:
+medián hodiny a poslední použitá dráha stojí v nápovědě pod polem, ne
+v poli. Předvyplněná hodnota se uloží i tomu, kdo si jí nevšiml, a
+dokument by pak tvrdil něco, co nikdo nenapsal.
+
+Z původní čtveřice prázdných bodů zbývají dva — lhůta pro změny bodování
+a odepření práva na odvolání —, a ty podle R21 pohár **nevyhlašuje**:
+nejsou ve vzoru vypsání ani ve směrnici. Jestli to má dokument říct
+slovy, je otevřená otázka na Filipa.
+
 ## Fronta k 20. 10. 2026
 
 > **Překonané 18. 11. 2026.** Co z tohohle oddílu zbývá, stojí ve `FRONTA.md`
