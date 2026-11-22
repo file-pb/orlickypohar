@@ -497,15 +497,31 @@ a hostitelem je proxy a ta umí spojení zahodit nad nasazením, které už
 doběhlo. Krok `Deploy` proto návratový kód `curl`u jen zapamatuje a verdikt
 vynáší až ověření `/verze`.
 
-Změřeno čtyřikrát se stejným tvarem — 10. 11. 2026 u `fed3857` vrátila proxy
+Změřeno pětkrát se stejným tvarem — 10. 11. 2026 u `fed3857` vrátila proxy
 520 po 43 s; 17. 11. 2026 třikrát `curl: (56) Recv failure: Connection reset
 by peer` po ~60 s (běhy 44182164236 u `e80c6e20`, 44186217325 u `4f6390a2`
-a 44196148901 u `c526d726`). Pokaždé API i web vydávaly přesně ten commit,
-který se posílal, a opakované spuštění spadlé úlohy prošlo.
+a 44196148901 u `c526d726`); 22. 11. 2026 jednou u `12f22c9f` (běh
+45070281902). Pokaždé API i web vydávaly přesně ten commit, který se
+posílal, a opakované spuštění spadlé úlohy prošlo.
 
 Ten čtvrtý případ je nejčistší důkaz, protože ho nepřečetl člověk ručně:
 spadl v 23:05, a **následující běh si v kroku „Co běží na produkci" přečetl
 `c526d726`** — nasazení tedy proběhlo, zatímco úloha hlásila selhání.
+
+**Ten pátý je jiný a oprava ho nechytá.** Krok `Deploy` neskončil nenulovým
+kódem `curl`u, ale po 57 s stavem **`cancelled`** — takže větev `|| kod=$?`
+vůbec neproběhla, `prenos=selhal` se nenastavilo a krok `Ověřit, co
+doopravdy běží` se **přeskočil** na svém `if: !cancelled()`. Úloha tedy
+spadla, aniž by se kdokoliv podíval na produkci; ta přitom běžela `12f22c9f`
+na API i na webu, tedy přesně to, co se posílalo. Následek je ten známý:
+`aktualizace-appky` se kvůli `needs: [nasazeni]` neprovedla. Tady to
+samo zarostlo, protože hned další push nasadil novější commit.
+
+`!cancelled()` tam stojí schválně, aby zrušený běh nedržel pět minut
+čekáním na `/verze`. Jenže zrušení kroku a zrušení běhu se tím nerozliší,
+a právě ten rozdíl tu chybí. **Je to otevřená věc**, ne opravená: záplata
+by znamenala vybrat si mezi falešnou červenou, která přeskočí vydání do
+telefonů, a zrušeným během, který se pět minut nedá zabít.
 
 Viník v cestě potvrzený není a oprava ho nepotřebuje. Jedno ale víme:
 **pevný strop na minutě to není.** První nasazení po téhle opravě
