@@ -70,9 +70,14 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
   je pohár **nevyhlašuje**, ne že se zapomněly. Dokument je dnes ukazuje
   v seznamu chybějících, jako by se na ně čekalo. Věta *„pohár nevyhlašuje"*
   je ale tvrzení o závodu, ne údaj z dat — proto to rozhodnutí.
-- **Licence** — Play 25 USD jednorázově, Apple 99 USD ročně. Bez nich se nová
-  appka k pořadatelům dostane jedině kabelem, a zrovna stavitel trati je
-  funkce, kterou budou chtít mít v telefonu bez tvé asistence.
+- **Licence** — **Play je zaplacená** (Filip, 22. 11.), Apple 99 USD ročně
+  dodělá. Co z toho přesto zbývá a v repozitáři to vidět je: `app/eas.json`
+  má `submit.production` prázdné, takže vydání na Play není čím odeslat
+  (chybí účet služby a kanál), a veřejný záznam appka nemá — Play na
+  `cz.klihovka.orlickypohar` vrací 404 (ověřeno 22. 11.; uzavřený test by
+  se taky nezobrazil, tak to tvrdí jen tolik, že publikovaná není).
+  Podklady pro záznam hotové jsou (`app/listing`: ikona 512, feature
+  1024×500, odpovědi na dotazníky).
 - **Publikovat zbylé zastávky 2027 a plachetní směrnici.** Ověřeno na produkci
   22. 11.: ročník má devět zastávek a vypsaná je **jedna** — *Jarní vítr*,
   která jako jediná nese i směrnici. Ostatních osm stojí ve stavu *Plánovaný*.
