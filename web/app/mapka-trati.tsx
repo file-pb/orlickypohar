@@ -9,7 +9,7 @@ import {
 } from "@/lib/trat";
 import { spojniceTrati, type UzelTrati } from "@/lib/voda";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
-import { ZnakBoje } from "@/app/znak-boje";
+import { MAPA_LEM, MAPA_VYPLN, ZnakBoje } from "@/app/znak-boje";
 import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
 
 /**
@@ -359,7 +359,16 @@ export function MapkaTrati({ prvky }: { prvky: PrvekNaMape[] }) {
                 tvar podle značení. Prázdné kolečko pro „něco, co není
                 bóje" tu bývalo do doby, než značení existovalo. */}
             {b.konce.map((k, i) => (
-              <ZnakBoje key={i} x={k.x} y={k.y} barva={k.barva} tvar={k.tvar} znaceni={k.znaceni} />
+              <ZnakBoje
+                key={i}
+                x={k.x}
+                y={k.y}
+                barva={k.barva}
+                tvar={k.tvar}
+                znaceni={k.znaceni}
+                vychoziVypln={MAPA_VYPLN}
+                lem={MAPA_LEM}
+              />
             ))}
             {/* Šipka průjezdu u startu. Dřív se nekreslila vůbec, protože
                 směr v datech nebyl a vymyslet si ho by byla lež; od

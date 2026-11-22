@@ -1,4 +1,4 @@
-import { ZnakBoje } from "@/app/znak-boje";
+import { MAPA_LEM, MAPA_VYPLN, ZnakBoje } from "@/app/znak-boje";
 import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
 import { NAZVY_SMERU, type SvetovaStrana } from "@/lib/trat";
 import type { Stopa, TypStavby } from "@/lib/stavba-prvku";
@@ -193,6 +193,8 @@ export function NahledPrvku({
               tvar={z.tvar}
               znaceni={z.znaceni}
               plasticita="odlesk"
+              vychoziVypln={MAPA_VYPLN}
+              lem={MAPA_LEM}
             />
             </g>
           );

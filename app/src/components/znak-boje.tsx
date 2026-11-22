@@ -1,4 +1,4 @@
-import Svg, { Circle, G, Path, Polygon, Rect } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G, Path, Polygon, Rect } from 'react-native-svg';
 
 import type { components } from '@/lib/schema';
 
@@ -70,7 +70,14 @@ export const NAZVY_TVARU: Record<NonNullable<TvarBoje>, string> = {
   Plamenak: 'plameňák',
 };
 
-/** Kolik plastičnosti značka unese; na kartě stačí `objem`. */
+/**
+ * Kolik plastičnosti značka unese; na kartě stačí `objem`.
+ *
+ * <b>`odlesk` do 22. 11. 2026 nic nedělal.</b> Typ ho nabízel, komponenta
+ * ho neobsluhovala, takže kdo ho předal, dostal tiše `objem` — a to je
+ * horší než hodnotu nemít: vypadá to jako volba, která se neprosadila.
+ * Doplněno při srovnávání ikonek s webem, odkud je geometrie opsaná.
+ */
 export type Plasticita = 'zadna' | 'objem' | 'odlesk';
 
 function ZakladniZnak({
@@ -253,6 +260,18 @@ export function ZnakBoje({
           bezLemu
         />
       </G>
+      {plasticita === 'odlesk' && (
+        /* Ostrý odlesk až u velkého náhledu: při osmnácti bodech je z něj
+           bílá tečka, která vypadá jako chyba vykreslení. */
+        <Ellipse
+          cx={x - r * 0.3}
+          cy={y - r * 0.38}
+          rx={r * 0.26}
+          ry={r * 0.17}
+          fill="#ffffff"
+          opacity={0.55}
+        />
+      )}
     </G>
   );
 }
@@ -283,6 +302,12 @@ export function SiluetaZnacky({
   /** Lem dopočítaný z podkladu karty. */
   lem: string;
 }) {
+  // <b>Bez barvy, tvaru i značení se nekreslí nic</b> (srovnání s webem,
+  // 22. 11. 2026). Dosud tu vyšla tlumená silueta, tedy kolečko tvrdící,
+  // že značka je kulová — a kulatá je ve skutečnosti ta neznalost.
+  // Prázdno aspoň nelže; žlábek řádky si šířku drží sám.
+  if (!barva && !tvar && !znaceni) return null;
+
   const popis =
     [NAZVY_ZNACENI[znaceni ?? 'zadne'], barva && NAZVY_BAREV[barva], tvar && NAZVY_TVARU[tvar]]
       .filter(Boolean)

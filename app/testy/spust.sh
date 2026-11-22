@@ -29,6 +29,10 @@ echo "== Písmo na barevné výplni =="
 "${NODE[@]}" ./kontrast.test.ts
 
 echo
+echo "== Výklad plavebního značení =="
+"${NODE[@]}" ./znak-vyhlaska.test.ts
+
+echo
 echo "== Proužek spojení =="
 "${NODE[@]}" ./prouzek.test.ts
 

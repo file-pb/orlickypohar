@@ -33,6 +33,22 @@ export const BARVY: Record<NonNullable<BarvaBoje>, string> = {
   Ruzova: "#f06ba8",
 };
 
+/**
+ * Výplň a lem značky <b>nad fotomapou</b>. Dokud měla komponenta výchozí
+ * hodnoty, byly to právě tyhle — a to byla past: červená znamená pravou
+ * stranu plavební dráhy, kdežto `Barva` je nepovinná schválně, takže na
+ * bílé kartě vyšel celý seznam červený. Appka to vyřešila tím, že výchozí
+ * hodnoty nemá a volající je musí předat; web to od 22. 11. 2026 dělá
+ * stejně a tohle je ta dvojice, kterou mapa předává výslovně.
+ *
+ * <b>Na kartách se dnes předává totéž, a to je dědictví, ne rozhodnutí.</b>
+ * Mění se to jedním místem u volajícího, ne tady — proto je oddělené.
+ */
+export const MAPA_VYPLN = "#c1121f";
+
+/** Bílý lem drží siluetu nad vodou, lesem i nad bílou bójí. */
+export const MAPA_LEM = "#fff";
+
 export const NAZVY_BAREV: Record<NonNullable<BarvaBoje>, string> = {
   Cervena: "červená",
   Zelena: "zelená",
@@ -113,28 +129,29 @@ function ZakladniZnak({
   znaceni,
   vyplnPrepis,
   bezLemu = false,
-  vychoziVypln = "#c1121f",
-  lem = "#fff",
+  vychoziVypln,
+  lem,
 }: {
   /** Čím přebarvit výplň. Používá vrstva světla, viz `Plasticita`. */
   vyplnPrepis?: string;
   /** Vrstva světla lem nemá — obkroužila by sama sebe uvnitř značky. */
   bezLemu?: boolean;
   /**
-   * Čím se kreslí značka <b>bez zapsané barvy</b>. Výchozí červená je
-   * psaná pro mapu, kde je značka nad fotem a červená čte jako *pravá
-   * strana plavební dráhy*. Na bílé kartě by to byl celý seznam červený,
-   * protože `Barva` je nepovinná schválně — tam se předá `tlumeny`.
-   * (Nález B druhého konzilia, 21. 11. 2026.)
+   * Čím se kreslí značka <b>bez zapsané barvy</b>. <b>Povinné</b>, a to
+   * je ta oprava z 22. 11. 2026: dokud tu stála výchozí červená, kreslila
+   * se značka bez barvy jako *pravá strana plavební dráhy*, protože
+   * `Barva` je nepovinná schválně. Mapa předává <see cref="MAPA_VYPLN"/>,
+   * karta má předat tlumenou. (Nález B druhého konzilia, 21. 11. 2026;
+   * appka to tak měla první.)
    */
-  vychoziVypln?: string;
+  vychoziVypln: string;
   /**
-   * Barva lemu. Výchozí bílá drží značku nad fotomapou; na `papir` je
+   * Barva lemu, <b>taky povinná</b>. Nad fotomapou bílá; na `papir` je
    * bílá na bílé <b>1,00:1</b>, takže žlutá, bílá, růžová a oranžová
    * silueta zůstanou pod mezí 3:1 bez obrysu. Karta proto předá lem
    * dopočítaný ze svého podkladu.
    */
-  lem?: string;
+  lem: string;
   x: number;
   y: number;
   r?: number;
@@ -161,19 +178,19 @@ function ZakladniZnak({
         <path
           d={`M ${x - r} ${y + r * 0.25} H ${x + r} L ${x + r * 0.65} ${y + r} H ${x - r * 0.6} Z`}
           fill="#dfe5ea"
-          stroke="#fff"
+          stroke={lem}
           strokeWidth={2}
           strokeLinejoin="round"
         />
         <path
           d={`M ${x} ${y + r * 0.2} V ${y - r * 1.15}`}
-          stroke="#fff"
+          stroke={lem}
           strokeWidth={2.4}
         />
         <path
           d={`M ${x + r * 0.16} ${y - r} L ${x + r * 0.95} ${y + r * 0.1} H ${x + r * 0.16} Z`}
           fill="#dfe5ea"
-          stroke="#fff"
+          stroke={lem}
           strokeWidth={2}
           strokeLinejoin="round"
         />
@@ -190,7 +207,7 @@ function ZakladniZnak({
           ` C ${x - r} ${y - r * 0.1}, ${x} ${y - r * 1.15}, ${x} ${y - r * 1.15} Z`
         }
         fill="#9aa6af"
-        stroke="#fff"
+        stroke={lem}
         strokeWidth={2.4}
       />
     );
@@ -290,10 +307,10 @@ export function ZnakBoje({
   tvar?: TvarBoje;
   znaceni?: DruhZnaceni;
   plasticita?: Plasticita;
-  /** Výplň bez zapsané barvy; bez ní platí červená pro mapu. Viz `ZakladniZnak`. */
-  vychoziVypln?: string;
-  /** Barva lemu; bez ní bílá pro mapu. Viz `ZakladniZnak`. */
-  lem?: string;
+  /** Výplň bez zapsané barvy. Povinná — viz `ZakladniZnak`. */
+  vychoziVypln: string;
+  /** Barva lemu. Povinná — viz `ZakladniZnak`. */
+  lem: string;
 }) {
   const zaklad = (
     <ZakladniZnak
@@ -326,6 +343,10 @@ export function ZnakBoje({
           tvar={tvar}
           znaceni={znaceni}
           vychoziVypln={vychoziVypln}
+          /* Lem se předává, i když ho `bezLemu` potlačí: lodička a kapka
+             ho kreslí vlastními cestami, takže parametr musí být vždycky
+             po ruce. */
+          lem={lem}
           vyplnPrepis="#ffffff"
           bezLemu
         />
@@ -380,7 +401,22 @@ export function ZnakVRadku({
       aria-label={popis}
     >
       <title>{popis}</title>
-      <ZnakBoje x={11} y={11} r={7} barva={barva} tvar={tvar} znaceni={znaceni} plasticita="objem" />
+      {/* <b>Dvojice se předává výslovně</b> (22. 11. 2026). Jsou to
+          tytéž hodnoty, co tu platily jako výchozí, takže se vzhled
+          nemění — jen už není skrytá. Že má řádek v seznamu kreslit
+          bezbarvou značku červeně, je dědictví, ne rozhodnutí; až se
+          rozhodne jinak, mění se tenhle jeden řádek. */}
+      <ZnakBoje
+        x={11}
+        y={11}
+        r={7}
+        barva={barva}
+        tvar={tvar}
+        znaceni={znaceni}
+        plasticita="objem"
+        vychoziVypln={MAPA_VYPLN}
+        lem={MAPA_LEM}
+      />
     </svg>
   );
 }

@@ -17,6 +17,7 @@ import { akceDetailu } from '@/lib/detail-prvku';
 import { barvaNaVyplni, pismoNaVyplni } from '@/lib/kontrast';
 import { opakovaniUJmena, type ZnackaNaOse } from '@/lib/radka-trati';
 import { BARVY, NAZVY_BAREV, NAZVY_TVARU, SiluetaZnacky } from '@/components/znak-boje';
+import { znakPodleVyhlasky } from '@/lib/znak-vyhlaska';
 import { azimut, vzdalenostM } from '@/lib/stavba-prvku';
 import type { Fix, Posudek } from '@/lib/stavba/poloha';
 
@@ -361,6 +362,21 @@ export function DetailZnacky({
                     {znacka.boje.tvar ? `, ${NAZVY_TVARU[znacka.boje.tvar]}` : ''}
                   </Text>
                 </View>
+
+                {/* <b>Co ta kombinace znamená na vodě</b> (doplněno
+                    22. 11. 2026 srovnáním s webem, který to říká od
+                    začátku). Kdo na Vltavě jezdí, pozná to i bez věty;
+                    je to pro toho, kdo bóji zadává a chce si ověřit, že
+                    vybral správně. Když vyhláška kombinaci nezná, nestojí
+                    tu nic — domýšlet význam je horší než mlčet. */}
+                {znakPodleVyhlasky(znacka.boje.barva, znacka.boje.tvar) ? (
+                  <Text style={[s.radek, { color: t.tlumeny }]}>
+                    Podle vyhlášky:{' '}
+                    <Text style={{ color: t.text }}>
+                      {znakPodleVyhlasky(znacka.boje.barva, znacka.boje.tvar)}
+                    </Text>
+                  </Text>
+                ) : null}
               </Pressable>
             )
           ) : null}

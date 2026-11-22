@@ -18,7 +18,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu, zPixelu } from "@/lib/mapa";
-import { NAZVY_BAREV, NAZVY_TVARU, ZnakBoje } from "@/app/znak-boje";
+import { MAPA_LEM, MAPA_VYPLN, NAZVY_BAREV, NAZVY_TVARU, ZnakBoje } from "@/app/znak-boje";
 import { NAZVY_STRAN, nazevTypu, type TypPrvku } from "@/lib/trat";
 import { CELKEM, ZnakTridy } from "@/app/tridy";
 import type { Poloha } from "@/lib/voda";
@@ -1590,6 +1590,8 @@ export function MapaTrackeru({
                       barva={k.barva}
                       tvar={k.tvar}
                       znaceni={k.znaceni}
+                      vychoziVypln={MAPA_VYPLN}
+                      lem={MAPA_LEM}
                     />
                   ))}
                   <text x={uzel.x + 12} y={uzel.y + 4} className="nacrt-znacka">

@@ -1,6 +1,14 @@
 "use client";
 
-import { BARVY, NAZVY_BAREV, NAZVY_TVARU, ZnakBoje, znakPodleVyhlasky } from "@/app/znak-boje";
+import {
+  BARVY,
+  MAPA_LEM,
+  MAPA_VYPLN,
+  NAZVY_BAREV,
+  NAZVY_TVARU,
+  ZnakBoje,
+  znakPodleVyhlasky,
+} from "@/app/znak-boje";
 import type { BarvaBoje, TvarBoje } from "@/lib/boje";
 import Link from "@/app/sprava/odkaz";
 import { useRouter } from "next/navigation";
@@ -410,7 +418,16 @@ export function Pipani({
               onClick={() => setTvar(tvar === x ? "" : x)}
             >
               <svg viewBox="0 0 22 22" width="18" height="18" aria-hidden="true">
-                <ZnakBoje x={11} y={11} r={7} barva={barva || undefined} tvar={x} plasticita="objem" />
+                <ZnakBoje
+                  x={11}
+                  y={11}
+                  r={7}
+                  barva={barva || undefined}
+                  tvar={x}
+                  plasticita="objem"
+                  vychoziVypln={MAPA_VYPLN}
+                  lem={MAPA_LEM}
+                />
               </svg>{" "}
               {NAZVY_TVARU[x]}
             </button>
