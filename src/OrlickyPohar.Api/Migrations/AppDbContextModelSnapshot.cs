@@ -2106,6 +2106,9 @@ namespace OrlickyPohar.Api.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
 
+                    b.Property<string>("MistoKonani")
+                        .HasColumnType("text");
+
                     b.Property<string>("Nazev")
                         .IsRequired()
                         .HasMaxLength(120)

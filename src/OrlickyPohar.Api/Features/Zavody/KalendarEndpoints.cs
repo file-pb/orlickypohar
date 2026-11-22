@@ -177,7 +177,7 @@ public static class KalendarEndpoints
     {
         public ZastavkaRadek Radek(
             KalendarSprava.Zaznam zaznam,
-            (string? Draha, TimeOnly? PosledniStart) napoveda = default)
+            (string? Misto, string? Draha, TimeOnly? PosledniStart) napoveda = default)
         {
             var z = zaznam.Zavod;
             var organizator = OrganizatorRocniku || Zavody.Contains(zaznam.Id);
@@ -200,8 +200,8 @@ public static class KalendarEndpoints
                 z.DelkaProceduryMin,
                 z.PoradatelZapisujeVysledky,
                 z.UzavrenoAutomatemV,
-                z.Draha, z.PosledniStartV,
-                napoveda.Draha, napoveda.PosledniStart);
+                z.Draha, z.PosledniStartV, z.MistoKonani,
+                napoveda.Misto, napoveda.Draha, napoveda.PosledniStart);
         }
     }
 

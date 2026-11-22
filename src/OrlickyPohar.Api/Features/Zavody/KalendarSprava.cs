@@ -62,6 +62,8 @@ public record ZastavkaRadek(
     // z ročníku — ne předvyplnění: co se nevyplní, zůstane prázdné.
     string? Draha = null,
     TimeOnly? PosledniStartV = null,
+    string? MistoKonani = null,
+    string? NapovedaMista = null,
     string? NapovedaDrahy = null,
     TimeOnly? NapovedaPoslednihoStartu = null);
 
@@ -129,6 +131,8 @@ public record ZastavkaVstup(
     // termínu by je jinak vymazala.
     /// <summary>Termín uzávěrky přihlášek — J1.1(5).</summary>
     DateOnly? UzaverkaPrihlasek = null,
+    /// <summary>Místo konání — J1.1(1). Volný text.</summary>
+    string? MistoKonani = null,
     /// <summary>Popis dráhy do vypsání — J1.3(4). Volný text.</summary>
     string? Draha = null,
     /// <summary>Po kolikáté hodině se poslední den nestartuje — J1.3(7).</summary>
@@ -177,15 +181,17 @@ public class KalendarSprava(AppDbContext db)
     /// v <see cref="Napovedy"/>, tohle je jen dotaz k nim.
     /// </para>
     /// </summary>
-    public async Task<(string? Draha, TimeOnly? PosledniStart)> NapovedyAsync(
+    public async Task<(string? Misto, string? Draha, TimeOnly? PosledniStart)> NapovedyAsync(
         int serieId, CancellationToken ct)
     {
         var zdroj = await db.Zavody
-            .Where(z => z.SerieId == serieId && (z.Draha != null || z.PosledniStartV != null))
-            .Select(z => new { z.Datum, z.Draha, z.PosledniStartV })
+            .Where(z => z.SerieId == serieId
+                        && (z.MistoKonani != null || z.Draha != null || z.PosledniStartV != null))
+            .Select(z => new { z.Datum, z.MistoKonani, z.Draha, z.PosledniStartV })
             .ToListAsync(ct);
 
         return (
+            Napovedy.Posledni(zdroj.Select(z => (z.Datum, z.MistoKonani))),
             Napovedy.Posledni(zdroj.Select(z => (z.Datum, z.Draha))),
             Napovedy.Median(zdroj.Where(z => z.PosledniStartV is not null)
                 .Select(z => z.PosledniStartV!.Value)));
@@ -257,6 +263,7 @@ public class KalendarSprava(AppDbContext db)
             PoradatelZapisujeVysledky = vstup.PoradatelZapisujeVysledky ?? false,
             UzaverkaPrihlasek = vstup.UzaverkaPrihlasek,
             Startovne = Prazdne(vstup.Startovne),
+            MistoKonani = Prazdne(vstup.MistoKonani),
             Draha = Prazdne(vstup.Draha),
             PosledniStartV = vstup.PosledniStartV,
             PrvniVyzyvaciZnameni = vstup.PrvniVyzyvaciZnameni?.ToUniversalTime(),
@@ -346,6 +353,7 @@ public class KalendarSprava(AppDbContext db)
             vstup.PoradatelZapisujeVysledky ?? zastavka.PoradatelZapisujeVysledky;
         zastavka.UzaverkaPrihlasek = vstup.UzaverkaPrihlasek ?? zastavka.UzaverkaPrihlasek;
         zastavka.Startovne = Prazdne(vstup.Startovne) ?? zastavka.Startovne;
+        zastavka.MistoKonani = Prazdne(vstup.MistoKonani) ?? zastavka.MistoKonani;
         zastavka.Draha = Prazdne(vstup.Draha) ?? zastavka.Draha;
         zastavka.PosledniStartV = vstup.PosledniStartV ?? zastavka.PosledniStartV;
         zastavka.PrvniVyzyvaciZnameni =

@@ -509,6 +509,26 @@ public class Zavod
     /// </summary>
     public TimeOnly? PosledniStartV { get; set; }
 
+    /// <summary>
+    /// <b>Místo konání</b> — J1.1(1), a ve skutečném vypsání stojí hned
+    /// třikrát: v záhlaví („Marina Orlík – Vltava – Orlická přehrada"),
+    /// jako vlastní oddíl a jako závodní plocha.
+    ///
+    /// <para>
+    /// <b>Dokument o něm do 22. 11. 2026 lhal.</b> `Zahlavi()` psalo
+    /// natvrdo *„Místo konání: neuvedené"* a komentář to hájil tím, že
+    /// `Zavod` ten údaj nevede — což byla pravda, ale nález R21 ukázal, že
+    /// je to povinná položka, ne volitelná. Sídlo pořadatele to není:
+    /// klub v Písku a závod na Orlíku jsou dvě různá místa.
+    /// </para>
+    /// <para>
+    /// <b>Jedna kolonka, ne tři.</b> Rozdělit místo na záhlaví, oddíl
+    /// a závodní plochu má smysl, až to někdo bude chtít psát různě; tři
+    /// prázdné kolonky by dnes znamenaly tři místa, kde chybí totéž.
+    /// </para>
+    /// </summary>
+    public string? MistoKonani { get; set; }
+
     // --- Výsledek závodu → body do seriálu ---
 
     /// <summary>Váha závodu v seriálu, běžně 1.0.</summary>

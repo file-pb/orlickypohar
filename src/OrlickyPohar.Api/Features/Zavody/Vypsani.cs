@@ -54,7 +54,8 @@ public record VypsaniVstup(
     bool MaSmernice,
     // Dva body, které vydává pořadatel sám (nález R21). Aditivně, na konci.
     string? Draha = null,
-    TimeOnly? PosledniStartV = null);
+    TimeOnly? PosledniStartV = null,
+    string? MistoKonani = null);
 
 /// <summary>
 /// <b>Vypsání závodu jako dokument.</b> Čisté funkce, bez databáze.
@@ -151,10 +152,13 @@ public static class Vypsani
     }
 
     /// <summary>
-    /// Záhlaví. <b>Místo konání se nedosazuje</b> — aplikace ho nevede
-    /// nikde (`Zavod` ho nemá a sídlo pořadatele je něco jiného), takže by
-    /// „Orlická přehrada" bylo vymyšlené, ne vygenerované. Proto je tenhle
-    /// bod vždycky zčásti neúplný; doplnit se dá jedině údajem v datech.
+    /// Záhlaví. <b>Místo konání se dosazuje od 22. 11. 2026</b>
+    /// (<see cref="Zavod.MistoKonani"/>). Do té doby tu stálo natvrdo
+    /// „neuvedené" s odůvodněním, že aplikace ten údaj nevede — vedla ho
+    /// opravdu nikde, jenže podle nálezu R21 je to povinná položka
+    /// vypsání, ne volitelná, takže chyběla data, ne důvod. Sídlo
+    /// pořadatele to pořád není: klub v Písku a závod na Orlíku jsou dvě
+    /// různá místa, a prázdné se dál přizná jako prázdné.
     /// </summary>
     private static string Zahlavi(VypsaniVstup v)
     {
@@ -172,7 +176,9 @@ public static class Vypsani
         radky.Add(string.IsNullOrWhiteSpace(v.Poradatel)
             ? "Pořadatel: neuvedený"
             : $"Pořadatel: {v.Poradatel.Trim()}");
-        radky.Add("Místo konání: neuvedené");
+        radky.Add(string.IsNullOrWhiteSpace(v.MistoKonani)
+            ? "Místo konání: neuvedené"
+            : $"Místo konání: {v.MistoKonani.Trim()}");
 
         return string.Join("\n", radky);
     }

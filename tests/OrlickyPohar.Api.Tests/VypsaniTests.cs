@@ -24,7 +24,10 @@ public class VypsaniTests
         Vyhodnoceni vyhodnoceni = Vyhodnoceni.PoKategoriich,
         int skrtySerie = 1,
         bool maSmernice = true,
-        IReadOnlyList<string>? kategorie = null) =>
+        IReadOnlyList<string>? kategorie = null,
+        string? draha = null,
+        TimeOnly? posledniStart = null,
+        string? misto = null) =>
         new(
             "Orlický pohár 2027", 2027,
             "Jarní vítr", new DateOnly(2027, 5, 15), null,
@@ -35,7 +38,8 @@ public class VypsaniTests
             skrtyRegaty, koeficient, posun, vyhodnoceni,
             skrtySerie,
             PravidlaBodovani.V1,
-            maSmernice);
+            maSmernice,
+            draha, posledniStart, misto);
 
     private static string? Text(VypsaniDto d, string bod) =>
         d.Body.Single(b => b.Bod == bod).Text;
@@ -206,5 +210,87 @@ public class VypsaniTests
     public void Dokument_se_hlasi_jako_navrh()
     {
         Assert.Contains("uznává rozhodčí", Vypsani.Navrh);
+    }
+
+    /// <summary>
+    /// <b>Místo konání se dosazuje</b> (R21). Do 22. 11. 2026 tu stálo
+    /// natvrdo „neuvedené", protože aplikace ten údaj nevedla — povinná
+    /// položka vypsání to přitom je.
+    /// </summary>
+    [Fact]
+    public void Misto_konani_stoji_v_zahlavi()
+    {
+        Assert.Contains(
+            "Místo konání: Marina Orlík",
+            Text(Vypsani.Sestav(Vstup(misto: " Marina Orlík ")), "J1.1(1)")!,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Nevyplnene_misto_se_prizna()
+    {
+        Assert.Contains(
+            "Místo konání: neuvedené",
+            Text(Vypsani.Sestav(Vstup()), "J1.1(1)")!,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// <b>Dráha a hodina posledního startu</b> (R21): dva body, které
+    /// vydává pořadatel sám. Prázdné zůstanou prázdné — a tím se objeví
+    /// v seznamu chybějících, což je pravda, ne nedodělek.
+    /// </summary>
+    [Fact]
+    public void Draha_se_vypise_tak_jak_ji_poradatel_zapsal()
+    {
+        var d = Vypsani.Sestav(Vstup(draha: "start u mola, točná levobokem"));
+
+        Assert.Equal("start u mola, točná levobokem", Text(d, "J1.3(4)"));
+        // Nic se nedopisuje: věta o tom, že se trať staví až na vodě, by
+        // byla tvrzení za pořadatele.
+        Assert.DoesNotContain("J1.3(4)", d.Chybi.DefaultIfEmpty(""));
+    }
+
+    [Fact]
+    public void Hodina_posledniho_startu_mluvi_jako_vzor_vypsani()
+    {
+        Assert.Equal(
+            "Žádná rozjížďka nebude startována po 16:00 hod.",
+            Text(Vypsani.Sestav(Vstup(posledniStart: new TimeOnly(16, 0))), "J1.3(7)"));
+    }
+
+    [Fact]
+    public void Bez_drahy_a_hodiny_dokument_prizna_ze_je_nezna()
+    {
+        var d = Vypsani.Sestav(Vstup());
+
+        Assert.Null(Text(d, "J1.3(4)"));
+        Assert.Null(Text(d, "J1.3(7)"));
+        Assert.Contains("Dráha", d.Chybi);
+        Assert.Contains("Kdy se poslední den už nestartuje", d.Chybi);
+    }
+
+    /// <summary>
+    /// Vyplněním dvou bodů se seznam chybějících o ty dva zkrátí. Co
+    /// v něm zbude z té čtveřice R21 — lhůta pro změny bodování a odepření
+    /// práva na odvolání —, pohár nevyhlašuje vůbec.
+    /// </summary>
+    [Fact]
+    public void Vyplnene_body_ze_seznamu_chybejicich_zmizi()
+    {
+        var prazdne = Vypsani.Sestav(Vstup());
+        var doplnene = Vypsani.Sestav(Vstup(
+            draha: "start u mola", posledniStart: new TimeOnly(16, 0), misto: "Marina Orlík"));
+
+        // Absolutní počet tu nehlídám: v seznamu chybí i body, které
+        // závisí na jiných kolonkách (uzávěrka, startovné, vyzývací
+        // znamení). Hlídá se, že zmizely právě tyhle dva — a že místo
+        // konání v seznamu není ani předtím, protože patří do záhlaví,
+        // které text má vždycky.
+        Assert.Contains("Dráha", prazdne.Chybi);
+        Assert.Contains("Kdy se poslední den už nestartuje", prazdne.Chybi);
+        Assert.DoesNotContain("Dráha", doplnene.Chybi);
+        Assert.DoesNotContain("Kdy se poslední den už nestartuje", doplnene.Chybi);
+        Assert.Equal(prazdne.Chybi.Count - 2, doplnene.Chybi.Count);
     }
 }
