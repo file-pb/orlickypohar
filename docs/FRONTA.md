@@ -170,14 +170,17 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
   `konzilium/rezie-tabule` v hlavním checkoutu, která není nikde odeslaná.
   Dokud se nezveřejní, je 160 kB rozhodnutí jen na jednom disku.
 
-- **Zrušený krok `Deploy` obejde ověření verze** (`AGENTS.md`, oddíl
-  o nasazení). Pátý reset přenosu 22. 11. neskončil nenulovým kódem
-  `curl`u, ale stavem `cancelled` — větev, která selhání zapamatuje,
-  neproběhla a ověření `/verze` se přeskočilo na svém `if: !cancelled()`.
-  Úloha spadla, aniž se kdokoliv podíval na produkci; ta přitom běžela
-  přesně to, co se posílalo. Záplata je **volba**, ne psaní: buď falešná
-  červená, která přes `needs: [nasazeni]` přeskočí vydání do telefonů,
-  nebo zrušený běh, který se pět minut nedá zabít.
+- **Zrušený krok `Deploy` ověření verze už neobejde** (22. 11.). Stálo tu,
+  že záplata je volba mezi falešnou červenou a nezabitelným během; volba to
+  nebyla. Ověření běží na `always()` a po zrušení se produkce **jednou**
+  zeptá — bez čekací smyčky, takže zrušení nic nedrží — a napíše do souhrnu,
+  co na obou službách doopravdy běží. Verdikt si ta větev nepřisvojuje
+  (`exit 0`): úloha je červená tak jako tak, mizí jen hádání. Ověřeno
+  proti běžící produkci, než se to poslalo.
+  **Co to neřeší:** `aktualizace-appky` visí na `needs: [nasazeni]`, takže
+  se po zrušeném nasazení přeskočí dál a cesta ven je ruční spuštění.
+  A *proč* se krok zruší, se z běhu 45070281902 nedoloží — log toho jobu
+  GitHub nemá (`BlobNotFound`), takže se opravil následek, ne příčina.
 
 ---
 

@@ -772,15 +772,63 @@ jobs:
       #
       # Čeká se omezeně (20 × 15 s) a pak se **musí** vědět.
       #
-      # `!cancelled()` a ne `always()`: po zrušení běhu nemá smysl pět minut
-      # čekat na `/verze` a držet tím zrušení.
+      # <b>`always()`, a po zrušení se jen jednou zeptá</b> (22. 11. 2026).
+      # Stálo tu `!cancelled()` s tím, že po zrušení nemá smysl pět minut
+      # čekat na `/verze` a držet tím zrušení. To čekání smysl nemá, ale
+      # ten dotaz ano: `Deploy` se dá zrušit uprostřed, a to je právě
+      # chvíle, kdy se nikdo nedozví, co na produkci zůstalo. Běh
+      # 45070281902 (`12f22c9f`): krok `Deploy` skončil po 57 s stavem
+      # `cancelled`, ověření se přeskočilo, úloha spadla — a produkce
+      # přitom běžela přesně ten commit, který se posílal. Proč se krok
+      # zrušil, se už nedoloží: log toho jobu GitHub nemá
+      # (`BlobNotFound`), takže se tu nehádá příčina, opravuje se následek.
+      #
+      # Po zrušení tedy jeden dotaz bez čekací smyčky, výsledek do souhrnu,
+      # a `exit 0`: verdikt si tahle větev nepřisvojuje. Úloha je zrušená
+      # nebo červená tak jako tak a nic se nezměkčuje — jen se přestane
+      # tipovat, co na produkci je.
+      #
+      # <b>Vydání do telefonů to neřeší.</b> `aktualizace-appky` visí na
+      # `needs: [nasazeni]`, takže se po zrušeném nasazení přeskočí dál;
+      # cesta ven je ruční spuštění úlohy.
       - name: Ověřit, co doopravdy běží
-        if: ${{ !cancelled() && steps.kontrola.outputs.nasadit == 'ano' }}
+        if: ${{ always() && steps.kontrola.outputs.nasadit == 'ano' }}
+        env:
+          ZRUSENO: ${{ cancelled() }}
         run: |
           ocekavano='${{ github.sha }}'
           prenos='${{ steps.deploy.outputs.prenos }}'
           kod='${{ steps.deploy.outputs.kod }}'
           chyba=0
+
+          if [ "$ZRUSENO" = "true" ]; then
+            api=$(curl -fsS --max-time 20 "$API_URL/verze" 2>/dev/null \
+              | python3 -c "import json,sys; print(json.load(sys.stdin).get('verze',''))" 2>/dev/null || true)
+            web=$(curl -fsS --max-time 20 "$WEB_URL/verze" 2>/dev/null \
+              | python3 -c "import json,sys; print(json.load(sys.stdin).get('verze',''))" 2>/dev/null || true)
+            echo "Běh byl zrušen; nečeká se, jen se jednou přečte produkce."
+            echo "čekáno: $ocekavano"
+            echo "API:    ${api:-neodpovědělo}"
+            echo "web:    ${web:-neodpovědělo}"
+            {
+              echo "### Zrušeno uprostřed nasazení"
+              echo
+              if [ "$api" = "$ocekavano" ] && [ "$web" = "$ocekavano" ]; then
+                echo "Obě služby vydávají \`$ocekavano\`, takže nasazení"
+                echo "proběhlo ještě před zrušením. Vydání do telefonů se"
+                echo "ale přeskočilo — spusť úlohu ručně."
+              else
+                echo "Produkce nevydává nasazovaný commit. Spusť úlohu znovu."
+              fi
+              echo
+              echo "| | verze |"
+              echo "|---|---|"
+              echo "| čekáno | \`$ocekavano\` |"
+              echo "| API | \`${api:-neodpovědělo}\` |"
+              echo "| web | \`${web:-neodpovědělo}\` |"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           for i in $(seq 1 20); do
             api=$(curl -fsS --max-time 20 "$API_URL/verze" 2>/dev/null \
               | python3 -c "import json,sys; print(json.load(sys.stdin).get('verze',''))" 2>/dev/null || true)
