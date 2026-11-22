@@ -92,18 +92,18 @@ export default async function Layout({ children }: { children: React.ReactNode }
                   kliká odjakživa; vypsaný odkaz vedle ní byl druhá cesta
                   k témuž.
 
-                  <b>Ročník a pořadí tu zatím zůstávají.</b> Zkrácení „jen
-                  na Ročník" patří k oknu ročníku s taby — teprve tam je
-                  průběžné pořadí tabem a odkaz v hlavičce by byl zdvojení.
-                  Odebrat ho dřív by nejčastější cestu (Filip, 15. 9. 2026)
-                  schovalo do kebabu, aniž by za ni něco nastoupilo. */}
+                  <b>Zbyl Ročník</b>, jak postřeh 2 chtěl. Průběžné pořadí
+                  z hlavičky odešlo, protože je <b>tabem okna ročníku</b>
+                  (`pruh-serie.tsx`, `klic: "poradi"`) — a dva odkazy na
+                  totéž o patro od sebe se čtou jako dvě různá místa.
+
+                  Nejčastější cesta se tím neprodlužuje: tab je vidět hned
+                  po otevření ročníku, a kdo chce pořadí rovnou, má ho
+                  v nabídce pod *Fandím*. */}
               {rocnik && (
                 <>
                   <OdkazJinam className="jen-siroke" href={`/serie/${rocnik.slug}`}>
                     Ročník {rocnik.rok}
-                  </OdkazJinam>
-                  <OdkazJinam className="jen-siroke" href={`/serie/${rocnik.slug}/poradi`}>
-                    Průběžné pořadí
                   </OdkazJinam>
                 </>
               )}

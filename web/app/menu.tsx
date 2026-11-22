@@ -46,9 +46,16 @@ export function Menu({
         <OdkazJinam href="/appka">Appka do telefonu</OdkazJinam>
 
         <strong className="skupina">Fandím</strong>
-        {/* Na širokém displeji stojí ročník a pořadí v hlavičce, na úzkém
-            se nevejdou — tady jsou pro obě šířky, protože skupina, ve
-            které chybí to hlavní, se čte jako nekompletní. */}
+        {/* <b>Ročník je tu i v hlavičce, a to schválně.</b> Vypadá to jako
+            zdvojení, ale není to týž případ jako průběžné pořadí, které
+            z hlavičky odešlo: to má své místo jako tab uvnitř ročníku, tedy
+            o patro níž, a dva odkazy do různých pater se čtou jako dvě
+            různá místa. Ročník v hlavičce je naproti tomu **zkratka k témuž
+            cíli, který nabídka vypisuje celý** — a skupina *Fandím* bez
+            něj by byla nekompletní.
+
+            Na úzkém displeji se odkaz v hlavičce stejně nevejde (`jen-siroke`),
+            takže tam je nabídka jediná cesta. */}
         {rocnik && (
           <>
             <OdkazJinam href={`/serie/${rocnik.slug}`}>Ročník {rocnik.rok}</OdkazJinam>
