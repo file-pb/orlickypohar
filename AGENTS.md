@@ -53,8 +53,9 @@ curl -s https://orlickypohar-api.klihovka.cz/health   # musí vrátit Healthy
 | Chyby, které už jednou stály čas | [platform/docs/POUCENI.md](https://github.com/file-pb/platform/blob/main/docs/POUCENI.md) |
 
 **Integrační testy** (`Category=Integracni`) potřebují běžící kontejnerový
-runtime; na tomhle stroji je Docker Desktop v `/Applications/Vývoj`
-a od 22. 11. 2026 vedle něj i colima. Podrobně níž, u pastí.
+runtime. Na tomhle stroji jede od 22. 11. 2026 colima a `docker context`
+ukazuje na ni; Docker Desktop v `/Applications/Vývoj` je zastavený.
+Podrobně níž, u pastí.
 
 ## Kde je zbytek
 
@@ -247,43 +248,44 @@ u klienta.
 `*.klihovka.cz`, takže `api.orlickypohar.klihovka.cz` selže na TLS dřív, než
 požadavek dojde na server. Proto `orlickypohar-api.klihovka.cz`.
 
-**Integrační testy lokálně jedou. Stačí spustit Docker Desktop.**
-Dvakrát se tu stálo na špatné příčině: nejdřív že je nedostupný Docker
-Hub, pak 22. 11. 2026 že na stroji není kontejnerový runtime vůbec.
-Obojí bylo mylné. Docker Desktop **nainstalovaný je**, jen leží
-v `/Applications/Vývoj/Docker.app` — a symlinky v `/usr/local/bin`
-pořád míří na `/Applications/Docker.app`, tedy naprázdno. Proto
-`which docker` nic nenajde a vypadá to jako chybějící instalace.
-
-Co doopravdy potřebuješ: **běžící démon**, nic víc.
+**Integrační testy lokálně jedou.** Chtějí **běžící kontejnerový
+runtime**, nic víc: Testcontainers si socket najde samo přes `~/.docker`,
+takže `DOCKER_HOST` ani `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`
+nastavovat nemusíš.
 
 ```sh
-open -a "/Applications/Vývoj/Docker.app"   # chvíli naskakuje
-dotnet test                                 # celá sada, i integrační
+colima start        # nebo: open -a "/Applications/Vývoj/Docker.app"
+dotnet test         # celá sada, integrační včetně
 ```
 
-Testcontainers si socket najde samo přes `~/.docker`; `DOCKER_HOST` ani
-`TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE` nastavovat nemusíš a `docker`
-v cestě k testům vůbec není potřeba. Ověřeno 22. 11. 2026: **1186 testů
-zelených za 19 s**, a jedna integrační třída i s prázdným prostředím.
+Na stroji jsou od 22. 11. 2026 **dva runtimy** a `docker context` ukazuje
+na **colimu**. Desktop leží v `/Applications/Vývoj/Docker.app` a je
+zastavený. Kdyby colima zmizela, kontext visí na mrtvém soketu a
+`docker` příkazy spadnou se záhadnou chybou — zpátky se přepne
+`docker context use desktop-linux`.
 
-Dokud se to nevědělo, stála ta neznalost za jednu noc dvě červená CI,
-protože chybu v integračním testu bylo vidět teprve z běhu po pushi.
-Pravidlo z toho zůstává i teď, kdy se dá otestovat lokálně:
+**Proč to tady stálo třikrát špatně**, než se to ověřilo. Nejdřív že je
+nedostupný Docker Hub (byla to prý firemní síť), pak 22. 11. 2026 že na
+stroji není runtime vůbec. Ani jedno nebyla pravda: Desktop byl
+nainstalovaný celou dobu, jen přesunutý do `/Applications/Vývoj`,
+zatímco symlinky v `/usr/local/bin` míří na `/Applications/Docker.app`,
+kde už neleží — proto `which docker` nic nenašel a vypadalo to jako
+chybějící instalace. (`docker` je v cestě až od `brew install colima
+docker`.) Hub dostupný je taky.
+
+Ověřeno 22. 11. 2026, po instalaci colimy a se zastaveným Desktopem:
+**387 integračních testů za 10 s**, celá sada 1186 za 19 s.
+
+Ta neznalost stála jednu noc **dvě červená CI**, protože chybu
+v integračním testu bylo vidět teprve z běhu po pushi. Pravidlo z toho
+zůstává i teď, kdy se dá otestovat lokálně:
 
 1. před pushem pusť celou sadu, ne jen `--filter "Category!=Integracni"`;
 2. a po pushi se na běh **podívej, než začneš další věc**.
 
-Kdyby démon nejel a bylo to naspěch, `--filter "Category!=Integracni"`
-projde bez něj — ale integrační chybu ti to nenajde.
-
-**Od 22. 11. 2026 je tu vedle Desktopu i colima** (`brew install colima
-docker`, `colima start`) a s ní i `docker` v cestě — věta výš o tom, že
-ho `which docker` nenajde, platila do té instalace. Na testech to nic
-nemění, ty si socket najdou samy; změnilo se jedno: **`docker context`
-ukazuje na colimu**, takže když ji někdo zastaví, kontext zůstane viset
-na mrtvém soketu a `docker` příkazy spadnou se záhadnou chybou. Zpátky
-se přepne `docker context use desktop-linux`.
+Kdyby žádný runtime neběžel a bylo to naspěch, `--filter
+"Category!=Integracni"` projde bez něj — ale integrační chybu ti to
+nenajde.
 
 
 ## Zdraví a nasazení
