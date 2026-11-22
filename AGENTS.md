@@ -214,6 +214,25 @@ jinak než na produkci a nešlo to poznat odnikud než z výsledkové tabulky.
 Proto je v `Dockerfile` `icu-libs` a porovnává se explicitně přes `cs-CZ`;
 Program.cs při startu upozorní, kdyby ICU zase zmizelo.
 
+**Bezpečnostní varování z `next build` mluví o tom, co máš nainstalované,
+ne o tom, co je v repozitáři.** Build se na zranitelné verzi jednou zastaví
+s doporučením `next upgrade --agent=security` a projde až napodruhé. Jenže
+tu verzi čte z `node_modules`, takže zastaralý checkout vyvolá poplach nad
+závislostí, která je v `package.json` dávno opravená — a nabídnutý příkaz
+by tu uškodil, protože Next je připnutý přesně jako zbytek platformních
+závislostí a upgrade by to připnutí přepsal. **Nejdřív porovnej, co je
+nainstalované, s tím, co je v `package.json`:**
+
+```bash
+node -e "console.log(require('./web/node_modules/next/package.json').version)"
+```
+
+Nesedí-li to, je oprava `npm --prefix web ci`, ne upgrade. Ověřeno
+22. 11. 2026: ze sedmi checkoutů na stroji měly tři starou instalaci a dvě
+z nich verzi ve zranitelném rozsahu GHSA-mfr8-8qww-v76h (16.3.0–16.4.4),
+přestože `main` je od 17. 11. na 16.4.6 (`b1ff6209`). Worktree se po
+vytvoření neinstalují samy a `git pull` do `node_modules` nesáhne.
+
 **Instalace přes kabel nestačí, když je v kanálu novější aktualizace.**
 `app/scripts/iphone.sh` postaví Release a nainstaluje ho, jenže appka má
 v `app.json` `fallbackToCacheTimeout: 5000`: při startu počká až pět vteřin
