@@ -34,7 +34,7 @@ env:
   # přesyn ohlásí posun základního obrazu, přepíše se datum tady a ve třech
   # Dockerfilech — to je ta jediná změna, kterou přesyn stojí, a je na ní
   # vidět, kdy se základ posunul (platform/docs/KVOTY.md, nález K7).
-  ZRCADLO_ZNACKA: '2026-10'
+  ZRCADLO_ZNACKA: '2026-11'
 
 # Jedna rozdělaná sada běhů na větev. Druhý push do téže větve ten předchozí
 # **zruší** — starší výsledek už nikoho nezajímá a minuty Actions jsou kvóta
