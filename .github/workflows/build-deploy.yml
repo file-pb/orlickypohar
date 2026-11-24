@@ -1241,8 +1241,25 @@ jobs:
           # a má zapojenou cestu do obchodu; `@latest` by znamenal, že si
           # v něm cizí balík může spustit kód. Repozitář pinuje akce na
           # otisk commitu z téhož důvodu.
-          npx -y eas-cli@27.11.0 build --platform android --profile production \
-            --non-interactive --auto-submit
+          #
+          # Selhání se zabalí do srozumitelné věty: nejčastější příčina na
+          # začátku je, že klíč servisního účtu na EAS ještě není, a hlášení
+          # z CLI to samo o sobě neřekne.
+          if ! npx -y eas-cli@27.11.0 build --platform android --profile production \
+            --non-interactive --auto-submit; then
+            {
+              echo "### Balíček se nepostavil nebo se nenahrál do Play"
+              echo ""
+              echo "Příčina je v logu kroku. Když se build povedl a spadlo až nahrání,"
+              echo "nejčastěji chybí na EAS **klíč servisního účtu Google** — vyrobí se"
+              echo "v Play Console (*API access*), nahraje se do credentials projektu"
+              echo "na expo.dev a v repozitáři být nemá."
+              echo ""
+              echo "Samo se to podruhé nezkusí, protože otisk už sedí. Cesta ven je"
+              echo "ruční spuštění workflow s volbou **nahrat_znovu**."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
 
       - name: Co z toho vyšlo
         if: ${{ always() && steps.spice.outputs.aktualni == 'ano' }}
