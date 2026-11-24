@@ -51,10 +51,13 @@ fi
 # Otisk dnešního stromu. `expo-updates` z `node_modules`, ne přes `npx -y`:
 # otisk musí počítat tatáž verze, která ho počítala při buildu, jinak by
 # `POTREBA` bylo natrvalo `ano`.
-if ! otisk_json=$(npx --no-install expo-updates fingerprint:generate --platform android 2>&1); then
+# <b>Bez `2>&1`.</b> První podoba slila chybový výstup do toho, co se pak
+# parsuje jako JSON — a stačilo jediné varování na stderr, aby z toho byl
+# `JSONDecodeError`. Lokálně nepadlo nic, v CI hned první běh. Diagnostika
+# proto teče do logu úlohy, kde je k přečtení, a ne do hodnoty.
+if ! otisk_json=$(npx --no-install expo-updates fingerprint:generate --platform android); then
   echo "POTREBA=nevim"
-  echo "Otisk se nepodařilo spočítat. Chybí `npm ci` v app/?" >&2
-  printf '%s\n' "$otisk_json" >&2
+  echo "Otisk se nepodařilo spočítat. Chybí \`npm ci\` v app/?" >&2
   exit 1
 fi
 if ! otisk=$(printf '%s' "$otisk_json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["hash"])' 2>&1); then
@@ -65,14 +68,12 @@ if ! otisk=$(printf '%s' "$otisk_json" | python3 -c 'import json,sys; print(json
 fi
 
 # `--status finished`: rozdělaný ani spadlý build o stavu obchodu nic
-# neříká. Chybová hlášení se schválně **nezahazují** — bez nich by člověk
-# u selhání neměl z čeho poznat příčinu.
+# neříká. Chybový výstup se sem zase neslévá — poučení z téhož běhu.
 if ! seznam=$(EXPO_TOKEN="$token" npx -y "eas-cli@${EAS_VERZE}" build:list \
   --platform android --profile "$profil" --status finished \
-  --limit 1 --json --non-interactive 2>&1); then
+  --limit 1 --json --non-interactive); then
   echo "POTREBA=nevim"
-  echo "Dotaz na EAS selhal:" >&2
-  printf '%s\n' "$seznam" >&2
+  echo "Dotaz na EAS selhal; příčina je výš v logu." >&2
   exit 1
 fi
 
