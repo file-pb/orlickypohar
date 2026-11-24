@@ -183,6 +183,13 @@ services:
       # Ročníky s vymyšlenými výsledky. Web u nich ukáže pruh, že data nejsou
       # skutečná. Až se ukazovat přestanou, stačí smazat tenhle řádek.
       UKAZKOVE_SERIE: "2026-nanecisto"
+      # Odkaz do Google Play. Dokud je prázdný, stránka `/appka` rozdává
+      # soubor jako dřív; jak se vyplní, stane se Play hlavní cestou
+      # a soubor zůstane jako náhradní. Vzniká teprve v konzoli Play —
+      # odkaz pro testery se objeví až u aplikace ve stavu *Published* —
+      # proto se sem vkládá rukou a je to jediná ruční věc, která
+      # v cestě appky do telefonu zbyla.
+      PLAY_URL: ""
       # Poslední build appky. Každý build má jinou adresu, takže se to mění
       # tady, ne v kódu — `npm run apk` v app/ vypíše novou.
       APK_URL: "https://expo.dev/artifacts/eas/8YcMeZUaKB_P_NPdjaz7SR8rGayJBMZSVRuOUb1bT-E.apk"
