@@ -2073,13 +2073,20 @@ def _nasad_boje():
         # na něm stojí — startovní plavidlo, startovní bóje.
         boje("start u plavidla", 1, 49.5163, 14.1651, 4.0, "2026-10-08T07:12:00+00:00",
              znaceni="Plavidlo"),
+        # <b>Tvar i barva tu nejsou ozdoba.</b> Dokud je neměla žádná
+        # otočná, ukazoval seznam trati čtyři kolečka a jedno prázdné
+        # místo — slovník tvarů (kuželová, válcová, plovatka, sférický
+        # vršek) se na obrazovku nedostal a nedalo se posoudit.
+        # Přenastavená bóje má tvar týž: je to ta samá bóje jinde.
         boje("bóje 1", 2, 49.5201, 14.1702, 6.0, "2026-10-08T07:20:00+00:00",
-             nahrazena="2026-10-08T08:05:00+00:00"),
-        boje("bóje 1", 2, 49.5208, 14.1711, 3.0, "2026-10-08T08:05:00+00:00"),
+             nahrazena="2026-10-08T08:05:00+00:00",
+             barva="Oranzova", tvar="Kuzelova", znaceni="NaseBoje"),
+        boje("bóje 1", 2, 49.5208, 14.1711, 3.0, "2026-10-08T08:05:00+00:00",
+             barva="Oranzova", tvar="Kuzelova", znaceni="NaseBoje"),
         # Jedna odečtená z mapy, ať je na čem vidět, že se měřená od
         # opsané pozná — a že u ní přesnost schválně chybí.
         boje("cíl", 3, 49.4957254, 14.1841419, None, "2026-10-08T08:40:00+00:00",
-             zdroj="Mapa"),
+             zdroj="Mapa", barva="Cervena", tvar="Valcova", znaceni="NaseBoje"),
     ]
 
     # Jako migrace: regata, která bóje má, dostane trať ve stavu

@@ -91,6 +91,7 @@ function ZakladniZnak({
   bezLemu = false,
   vychoziVypln,
   lem,
+  silaLemu = 3,
 }: {
   x: number;
   y: number;
@@ -102,11 +103,19 @@ function ZakladniZnak({
   bezLemu?: boolean;
   vychoziVypln: string;
   lem: string;
+  /**
+   * Šířka lemu v jednotkách kresby. <b>Nestálá schválně:</b> tři
+   * jednotky, které velkému náhledu sluší, ukrojí z malé siluety
+   * čtvrtinu poloměru a vylezou za okraj pole. U plameňáka to narazilo
+   * první a vyřešilo se to tam natvrdo (1,2); tohle je totéž pravidlo
+   * pro zbytek tvarů.
+   */
+  silaLemu?: number;
 }) {
   const vypln = vyplnPrepis ?? (barva ? BARVY[barva] : vychoziVypln);
   const spolecne = bezLemu
     ? ({ fill: vypln } as const)
-    : ({ fill: vypln, stroke: lem, strokeWidth: 3 } as const);
+    : ({ fill: vypln, stroke: lem, strokeWidth: silaLemu } as const);
 
   // Plavidlo: lodička. Hýbe se a není to bóje, takže nesmí vypadat jako
   // něco zakotveného.
@@ -216,6 +225,7 @@ export function ZnakBoje({
   plasticita = 'zadna',
   vychoziVypln,
   lem,
+  silaLemu,
 }: {
   x: number;
   y: number;
@@ -226,6 +236,8 @@ export function ZnakBoje({
   plasticita?: Plasticita;
   vychoziVypln: string;
   lem: string;
+  /** Šířka lemu; viz `ZakladniZnak`. Bez ní platí tři jednotky. */
+  silaLemu?: number;
 }) {
   const zaklad = (
     <ZakladniZnak
@@ -237,6 +249,7 @@ export function ZnakBoje({
       znaceni={znaceni}
       vychoziVypln={vychoziVypln}
       lem={lem}
+      silaLemu={silaLemu}
     />
   );
 
@@ -281,8 +294,16 @@ export function ZnakBoje({
  *
  * <b>Proč ne menší</b> (rozhodnutí 2 druhého konzilia): při sedmnácti
  * bodech jsou od sebe tvary dva až tři body, při šestatřiceti je kužel
- * proti válci třináct. Poloměr nad 13 ne — plovatka je `2,8 r`
- * a řádku by přerostla.
+ * proti válci třináct.
+ *
+ * <b>Poloměr 13 s lemem 3 se do pole nevešel</b> (24. 11. 2026). Mez
+ * „nad 13 ne" počítala s tvarem, ne s jeho obrysem, a lem leží půlkou
+ * šířky vně cesty: plovatka je `2,8 r`, tedy 36,4 — sama o čtyři
+ * desetiny přes pole a s lemem o **1,7 nahoře i dole**; plameňák sahá
+ * do `-1,46 r` a přetékal o **1,6**. Ořezaný obrys je přesně to, kvůli
+ * čemu ty ikonky vypadaly hrubě. Proto `12` a lem `1,6`: plovatka
+ * končí na 0,4 od kraje, kulová má na šířku 24 z 28 a kuželi se vejde
+ * i špice i s jejím sražením.
  *
  * Není to terč: klepe se na celý řádek, takže mez 44 sem neplatí —
  * platí jen čitelnost.
@@ -318,13 +339,14 @@ export function SiluetaZnacky({
       <ZnakBoje
         x={14}
         y={18}
-        r={13}
+        r={12}
         barva={barva}
         tvar={tvar}
         znaceni={znaceni}
         plasticita="objem"
         vychoziVypln={vychoziVypln}
         lem={lem}
+        silaLemu={1.6}
       />
     </Svg>
   );

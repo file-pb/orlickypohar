@@ -9266,7 +9266,7 @@
   "smiPrijmout": false,
   "smiZkratit": false,
   "stav": "Rozestaveno",
-  "zalozenaV": "2026-11-21T06:45:28.732898+00:00",
+  "zalozenaV": "2026-11-24T22:10:32.053935+00:00",
   "zkracenoUPrvkuId": null,
   "zkracenoV": null,
   "zkratil": null
@@ -9305,15 +9305,15 @@
   },
   {
    "a": {
-    "barva": null,
+    "barva": "Oranzova",
     "delka": 14.1711,
     "fotek": 0,
     "id": 3,
     "nazev": "bóje 1",
     "sirka": 49.5208,
-    "tvar": null,
+    "tvar": "Kuzelova",
     "zdroj": "Telefon",
-    "znaceni": null
+    "znaceni": "NaseBoje"
    },
    "b": null,
    "druhStartu": null,
@@ -9357,15 +9357,15 @@
   },
   {
    "a": {
-    "barva": null,
+    "barva": "Oranzova",
     "delka": 14.1711,
     "fotek": 0,
     "id": 3,
     "nazev": "bóje 1",
     "sirka": 49.5208,
-    "tvar": null,
+    "tvar": "Kuzelova",
     "zdroj": "Telefon",
-    "znaceni": null
+    "znaceni": "NaseBoje"
    },
    "b": null,
    "druhStartu": null,
