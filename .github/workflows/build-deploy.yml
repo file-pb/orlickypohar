@@ -1011,20 +1011,141 @@ jobs:
           # Jen první řádek: `--message` je popisek, ne celý commit.
           zprava="${ZPRAVA_COMMITU%%$'\n'*}"
 
+          # Jeden export, dva kanály: `preview` vozí novinky do APK z webu,
+          # `production` do appky z Play. Bez druhého kanálu by se appka
+          # z obchodu dočkala novinek teprve s novým balíčkem, protože
+          # produkční build jede na kanálu `production` a ten dosud nikdo
+          # neplnil.
+          #
+          # Exportuje se jednou schválně — oba profily mají v `eas.json`
+          # tytéž `EXPO_PUBLIC_*`, takže druhý běh vyrobí identický bundle.
+          # Kdyby se to rozešlo, musí se exportovat pro každý kanál zvlášť:
+          # Metro ty proměnné **zapéká do bundle** a v hotovém balíku je
+          # nepoznáš. Prázdná adresa poskytovatele identity už jednou
+          # vypnula přihlašování (28. 10. 2026), proto to tahle kontrola
+          # zastaví, místo aby se na to spolehlo.
+          python3 -c 'import json, sys; b = json.load(open("eas.json"))["build"]; sys.exit(0 if b["preview"].get("env") == b["production"].get("env") else "Profily preview a production už nemají tytéž EXPO_PUBLIC_*; exportuj pro kazdy kanal zvlast.")'
+
           chyba=0
           for p in android ios; do
             rm -rf dist
             npx expo export --clear --platform "$p" --output-dir dist || { chyba=1; continue; }
-            npx eas-cli@latest update --channel preview --platform "$p" \
-              --input-dir dist --skip-bundler --non-interactive \
-              --environment preview \
-              --message "$zprava" \
-              || chyba=1
+            for kanal in preview production; do
+              npx eas-cli@latest update --channel "$kanal" --platform "$p" \
+                --input-dir dist --skip-bundler --non-interactive \
+                --environment preview \
+                --message "$zprava" \
+                || chyba=1
+            done
           done
 
           if [ "$chyba" = "0" ]; then
-            echo "Aktualizace appky publikována do kanálu \`preview\`." >> "$GITHUB_STEP_SUMMARY"
+            echo "Aktualizace appky publikována do kanálů \`preview\` a \`production\`." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::warning::Publikace aktualizace appky selhala; novinky zůstaly jen v gitu."
           fi
           exit "$chyba"
+
+  # <b>Nativní změna si řekne o nový balíček sama.</b> Aktualizace po síti
+  # nese jen JavaScript a doručí se jedině do appky se **stejným nativním
+  # otiskem** (`runtimeVersion: fingerprint`). Když se otisk posune — nové
+  # oprávnění, nová nativní závislost, jiné SDK — appka v telefonu se
+  # tiše přestane aktualizovat.
+  #
+  # Dosud to byl jen varovný řádek v souhrnu (úloha `appka`, krok *Žádá
+  # appka ruční instalaci?*) a čekalo se, že si toho někdo všimne a balíček
+  # postaví rukou. Dvakrát se nevšiml. Tohle je ta samá informace, ale
+  # provedená: `app/scripts/stav-play.sh` porovná otisk dnešního stromu
+  # s otiskem posledního **dokončeného** buildu profilu `production` a při
+  # rozdílu se postaví a nahraje nový balíček.
+  #
+  # <b>Stav se drží na EAS, ne v souboru.</b> Soubor v repozitáři by
+  # znamenal zápis z CI zpátky do mainu a tím riziko smyčky; EAS navíc ví,
+  # co se doopravdy postavilo, kdežto soubor jen to, co si někdo zapamatoval
+  # zapsat. Právě na tom rozchodu stál sedm týdnů starý odkaz na `/appka`.
+  #
+  # <b>Selhání je červené.</b> Úloha nic neblokuje (nikdo na ni nečeká),
+  # ale tiché selhání by vrátilo přesně ten stav, který tahle úloha ruší —
+  # telefon bez novinek a nikdo o tom neví.
+  balicek-do-play:
+    needs: [nasazeni]
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    # Čeká se na dokončení buildu na serverech Expa, aby bylo z logu vidět,
+    # že se balíček doopravdy nahrál. Na bezplatném tarifu se stojí ve
+    # frontě, proto strop — bez něj by zaseknutá fronta žrala minuty
+    # Actions, které jsou kvóta (platform/docs/KVOTY.md).
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    # Obchod je sdílený stav jako produkce: dvě souběžná nahrání by si
+    # přebila verzi. `cancel-in-progress: false` — rozdělané nahrávání se
+    # neruší, dokončí se a další počká.
+    concurrency:
+      group: balicek-do-play
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Závislosti appky
+        run: npm ci
+        working-directory: app
+
+      - name: Je potřeba nový balíček?
+        id: stav
+        working-directory: app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "${EXPO_TOKEN:-}" ]; then
+            echo "::warning::Chybí EXPO_TOKEN, stav balíčku pro Play se nedá zjistit."
+            echo "POTREBA=nevim" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Ne přes `| tee`, aby selhání skriptu neschoval návratový kód tee.
+          vystup=$(scripts/stav-play.sh production)
+          echo "$vystup"
+          echo "$vystup" >> "$GITHUB_OUTPUT"
+
+      - name: Postavit balíček a nahrát do Play
+        if: ${{ steps.stav.outputs.POTREBA == 'ano' }}
+        working-directory: app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          # `--auto-submit` nahraje hotový balíček do Play na track, který
+          # je v `submit.production` v `eas.json` (dnes `internal`). Klíč
+          # servisního účtu k tomu drží EAS, ne tento repozitář — v gitu
+          # ani v secrets GitHubu tedy žádné přihlašovací údaje ke Googlu
+          # nejsou.
+          npx eas-cli@latest build --platform android --profile production \
+            --non-interactive --auto-submit
+
+      - name: Co z toho vyšlo
+        if: ${{ always() }}
+        run: |
+          case "${{ steps.stav.outputs.POTREBA }}" in
+            ano)
+              echo "### Nativní část appky se změnila" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "Postavil se nový balíček a nahrál se do Play na track \`internal\`." >> "$GITHUB_STEP_SUMMARY"
+              echo "Testeři ho dostanou přes Play sami; ručně nikdo nic neinstaluje." >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "| | |" >> "$GITHUB_STEP_SUMMARY"
+              echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+              echo "| otisk teď | \`${{ steps.stav.outputs.OTISK }}\` |" >> "$GITHUB_STEP_SUMMARY"
+              echo "| otisk v obchodě | \`${{ steps.stav.outputs.POSLEDNI }}\` |" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            ne)
+              echo "Nativní otisk se nezměnil, balíček do Play se nestaví — novinky jdou po síti." >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            *)
+              echo "Stav balíčku pro Play se nedal zjistit." >> "$GITHUB_STEP_SUMMARY"
+              ;;
+          esac
