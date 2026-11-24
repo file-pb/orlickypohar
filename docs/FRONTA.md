@@ -156,19 +156,21 @@ a tři rozhodl Filip (uzavření dne, protestní lhůta, vypsání po regatách)
   a **Scalar** šel rovnou na 3.1.1 (`12f22c9f`), protože nabízená 3.0.0 byla
   o tři vydání pozadu a poznámky k vydání k ní nejsou nikde — major se tedy
   ověřil během, ne čtením. Živé hlášení už žádné není.
-- **Odsazení tabule na demo ročnících** — **zadání existuje, jen zatím není
-  v repozitáři.** Napsalo ho konzilium *Režie tabule*, dokončené 22. 11.
-  ve 22:12: `.tabule` má dnes padding 2,7 % výšky a 2,0 % šířky
-  (`globals.css:3658`), kdežto broadcast title-safe je 5 % a televize bez
-  vypnutého overscanu ořezává 2 až 5 %. Ořez tedy padne přesně do krajních
-  znaků, nejdřív vpravo v žebříčku, kde stojí body a čas. Rozhodnutí je
-  vodorovně `5 × --tv`, svisle `3 × --tv`, a cena je reálná: sloupec pořadí
-  se zúží, nebo mapa přijde o ~115 px. Patří to do **dávky 2** toho závěru,
-  spolu s `--linka-tv` a `--srafou` u dema — odtud i to „na demo ročnících".
-  **Tenhle řádek se maže až tou dávkou, ne dřív, a hlavně:** závěr leží
-  neverzovaný v `docs/konzilium/rezie-tabule/` na větvi
-  `konzilium/rezie-tabule` v hlavním checkoutu, která není nikde odeslaná.
-  Dokud se nezveřejní, je 160 kB rozhodnutí jen na jednom disku.
+- **Odsazení tabule na demo ročnících** — **zadání je napsané a verzované.**
+  Napsalo ho konzilium *Režie tabule* (22. 11.): `.tabule` má dnes padding
+  2,7 % výšky a 2,0 % šířky (`globals.css:3658`), kdežto broadcast
+  title-safe je 5 % a televize bez vypnutého overscanu ořezává 2 až 5 %.
+  Ořez tedy padne přesně do krajních znaků, nejdřív vpravo v žebříčku, kde
+  stojí body a čas. Rozhodnutí je vodorovně `5 × --tv`, svisle `3 × --tv`,
+  a cena je reálná: sloupec pořadí se zúží, nebo mapa přijde o ~115 px.
+  Patří to do **dávky 2** toho závěru, spolu s `--linka-tv` a `--srafou`
+  u dema — odtud i to „na demo ročnících".
+  **Tenhle řádek se maže až tou dávkou, ne dřív.** Závěr už v repozitáři
+  je: dvanáct souborů v `docs/konzilium/rezie-tabule/` na odeslané větvi
+  `konzilium/rezie-tabule` (`f81dc6a3`, 24. 11.). Kolo 2 v něm doběhlo
+  jen u jednoho oboru z osmi a kolo 3 neproběhlo — tři ze čtyř sporů
+  rozsekl moderátor, ne obor, který v nich má řemeslo. Tohle odsazení
+  mezi ně nepatří: je změřené proti `globals.css` a nikdo je nerozporoval.
 
 - **Zrušený krok `Deploy` ověření verze už neobejde** (22. 11.). Stálo tu,
   že záplata je volba mezi falešnou červenou a nezabitelným během; volba to
@@ -194,7 +196,7 @@ a body i lodím, které nic neudělaly; proto je úkon za zaškrtnutím.
 **Testy správy přes HTTP** (`582265e7`): fixtura umí podepsat testovací
 token, takže správa jde zkoušet přes HTTP, a čtyři testy hlídají, že se
 tím ověřování podpisu nezměkčilo. Zbylá *Drobnost* — odsazení tabule —
-zůstává, protože k ní nikde není zadání; viz skupinu F.
+zůstává, protože ji drží dávka 2 toho závěru; viz skupinu F.
 
 **Z oponentury rozhodčího** se zavřelo K1, K3, K5, K6, K7 (v appce), K8, R3,
 R4, R6, R9, R10, R12, R13 (cesta komise), R17, R19, R33, R34, R35, R36, R37,
