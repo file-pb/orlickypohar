@@ -169,3 +169,7 @@ echo "== Potvrzení zahození =="
 echo
 echo "== Outbox =="
 TEST_DB=":memory:" "${NODE[@]}" ./outbox.test.ts
+
+echo
+echo "== Houpání na vodě =="
+"${NODE[@]}" ./houpani.test.ts

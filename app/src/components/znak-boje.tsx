@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { Animated } from 'react-native';
 
 import Svg, {
   Circle,
@@ -11,6 +12,7 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 
+import { useHoupani } from '@/hooks/use-houpani';
 import type { components } from '@/lib/schema';
 
 type S = components['schemas'];
@@ -472,6 +474,10 @@ export function SiluetaZnacky({
   /** Lem dopočítaný z podkladu karty. */
   lem: string;
 }) {
+  // Hook musí běžet pokaždé, i když se nakonec nekreslí nic — pravidlo
+  // pořadí hooků nezná výjimku pro prázdnou značku.
+  const houpani = useHoupani();
+
   // <b>Bez barvy, tvaru i značení se nekreslí nic</b> (srovnání s webem,
   // 22. 11. 2026). Dosud tu vyšla tlumená silueta, tedy kolečko tvrdící,
   // že značka je kulová — a kulatá je ve skutečnosti ta neznalost.
@@ -484,19 +490,21 @@ export function SiluetaZnacky({
       .join(', ') || 'značka';
 
   return (
-    <Svg width={28} height={36} viewBox="0 0 28 36" accessibilityLabel={popis}>
-      <ZnakBoje
-        x={14}
-        y={18}
-        r={12}
-        barva={barva}
-        tvar={tvar}
-        znaceni={znaceni}
-        plasticita="objem"
-        vychoziVypln={vychoziVypln}
-        lem={lem}
-        silaLemu={1.6}
-      />
-    </Svg>
+    <Animated.View style={{ transform: houpani }} accessibilityLabel={popis}>
+      <Svg width={28} height={36} viewBox="0 0 28 36">
+        <ZnakBoje
+          x={14}
+          y={18}
+          r={12}
+          barva={barva}
+          tvar={tvar}
+          znaceni={znaceni}
+          plasticita="objem"
+          vychoziVypln={vychoziVypln}
+          lem={lem}
+          silaLemu={1.6}
+        />
+      </Svg>
+    </Animated.View>
   );
 }
