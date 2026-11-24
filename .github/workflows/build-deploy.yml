@@ -1133,26 +1133,20 @@ jobs:
           # Dva commity stačí ke zjištění, jestli se appka změnila.
           fetch-depth: 2
 
-      # <b>Bez změny v appce se nestaví.</b> Úloha jinak při každém pushi
-      # dělá `npm ci` a dvě stažení přes `npx`, i když se `app/` nedotkl.
-      # Otisk se bez změny v `app/` posunout nemůže, takže se tím nic
-      # nepřeskočí.
-      - name: Změnila se appka?
-        id: zmena
-        run: |
-          pred='${{ github.event.before }}'
-          case "$pred" in
-            ''|0000000000000000000000000000000000000000) pred="${{ github.sha }}^" ;;
-          esac
-          if [ "${{ github.event.inputs.nahrat_znovu }}" = "true" ]; then
-            echo "resit=ano" >> "$GITHUB_OUTPUT"
-            echo "Výslovné znovunahrání do Play." >> "$GITHUB_STEP_SUMMARY"
-          elif git diff --quiet "$pred" '${{ github.sha }}' -- app/ 2>/dev/null; then
-            echo "resit=ne" >> "$GITHUB_OUTPUT"
-            echo "Appka se nezměnila, balíček do Play se neřeší." >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "resit=ano" >> "$GITHUB_OUTPUT"
-          fi
+      # <b>Na otisk se ptáme vždycky, i když se `app/` v tomhle pushi
+      # nezměnilo.</b> První podoba tady měla filtr na diff, aby úloha
+      # nedělala `npm ci` po každém pushi — a hned si ho vyzkoušela:
+      # commit, který `app/` změnil, dostal zrušený běh (novější push
+      # přišel o necelou minutu později) a ten novější sáhl jen na
+      # workflow, takže filtr úlohu zastavil. Posunutý otisk tedy nikdo
+      # neviděl a balíček se nepostavil. Je to táž tichá mezera, jakou
+      # tahle úloha ruší, jen postavená o úroveň výš.
+      #
+      # Dotaz na otisk je proti tomu imunní, protože porovnává **dnešní
+      # strom s obchodem**, ne dva commity: ať se běhy ruší, jak chtějí,
+      # první, který doběhne, rozdíl uvidí. Stojí to `npm ci` a dvě
+      # stažení přes `npx` na každý push do mainu — levnější než jedno
+      # přeskočené vydání, které se pozná až z telefonu.
 
       # <b>Nahrávat smí jen špice větve.</b> Bez tohohle se do obchodu
       # dostane starší commit: souběžné běhy se na `main` neruší, starší
@@ -1163,7 +1157,6 @@ jobs:
       # způsobená jí samotnou.
       - name: Je tohle špice mainu?
         id: spice
-        if: ${{ steps.zmena.outputs.resit == 'ano' }}
         run: |
           git fetch --depth=1 origin main
           spice=$(git rev-parse FETCH_HEAD)
