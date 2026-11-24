@@ -212,67 +212,137 @@ function ZakladniZnak({
       />
     );
 
+  const h = y + 0.85 * r;
+
   switch (tvar) {
     case "Kuzelova":
-      // Kužel vrcholem vzhůru, jak ho popisuje vyhláška.
+      // <b>Kužel sedí na hladině a má viditelné dno</b> (24. 11. 2026).
+      // Rovnostranný trojúhelník vypadal jako značka z pravítka; špička
+      // má zaoblení 0,08 r, víc z kužele dělalo nafukovací patník.
       return (
-        <polygon points={`${x},${y - r * 1.2} ${x - r},${y + r * 0.8} ${x + r},${y + r * 0.8}`} {...spolecne} />
+        <path
+          d={
+            `M ${x - 0.87 * r} ${h} L ${x - 0.08 * r} ${y - 1.1 * r}` +
+            ` Q ${x} ${y - 1.2 * r} ${x + 0.08 * r} ${y - 1.1 * r} L ${x + 0.87 * r} ${h}` +
+            ` A ${0.87 * r} ${0.3 * r} 0 0 1 ${x - 0.87 * r} ${h} Z`
+          }
+          strokeLinejoin="round"
+          {...spolecne}
+        />
       );
     case "Valcova":
-      return <rect x={x - r * 0.85} y={y - r} width={r * 1.7} height={r * 2} {...spolecne} />;
+      return (
+        <path
+          d={
+            `M ${x - 0.75 * r} ${h} V ${y - 0.5 * r}` +
+            ` A ${0.75 * r} ${0.3 * r} 0 0 1 ${x + 0.75 * r} ${y - 0.5 * r} V ${h}` +
+            ` A ${0.75 * r} ${0.3 * r} 0 0 1 ${x - 0.75 * r} ${h} Z`
+          }
+          strokeLinejoin="round"
+          {...spolecne}
+        />
+      );
     case "Plovatka":
-      // Tyč nad hladinou, ne těleso — proto úzká a vysoká.
-      return <rect x={x - r * 0.35} y={y - r * 1.4} width={r * 0.7} height={r * 2.8} {...spolecne} />;
+      // Tyč s plovákem u hladiny, ne úzký obdélník.
+      return (
+        <path
+          d={
+            `M ${x - 0.18 * r} ${y + 0.45 * r} V ${y - 0.95 * r}` +
+            ` Q ${x} ${y - 1.2 * r} ${x + 0.18 * r} ${y - 0.95 * r} V ${y + 0.45 * r} Z` +
+            ` M ${x - 0.5 * r} ${y + 0.42 * r}` +
+            ` A ${0.5 * r} ${0.42 * r} 0 1 0 ${x + 0.5 * r} ${y + 0.42 * r}` +
+            ` A ${0.5 * r} ${0.42 * r} 0 1 0 ${x - 0.5 * r} ${y + 0.42 * r} Z`
+          }
+          strokeLinejoin="round"
+          {...spolecne}
+        />
+      );
     case "SferickyVrsek":
-      // Poklop, ne válec s koulí nahoře (Filip, 11. 10. 2026: *„u té bójky
-      // sport to vypadá spíš jako polokoule poklop a uprostřed je nápis
-      // sport"*). Tohle je ta, které se u Orlíku říká Mimoň.
+      // Poklop <b>na sukni</b>, ne samotná půlelipsa (Filip, 11. 10. 2026:
+      // *„u té bójky sport to vypadá spíš jako polokoule poklop a uprostřed
+      // je nápis sport"*). Tohle je ta, které se u Orlíku říká Mimoň.
       //
       // Nápis se nekreslí: při osmnácti pixelech by z něj byla šmouha,
       // a tvar sám stačí k tomu, aby se nepletl s kulovou bójí.
       return (
         <path
-          d={`M ${x - r} ${y + r * 0.5} A ${r} ${r * 0.95} 0 0 1 ${x + r} ${y + r * 0.5} Z`}
+          d={
+            `M ${x - 0.78 * r} ${h} V ${y}` +
+            ` A ${0.78 * r} ${0.85 * r} 0 0 1 ${x + 0.78 * r} ${y} V ${h}` +
+            ` A ${0.78 * r} ${0.3 * r} 0 0 1 ${x - 0.78 * r} ${h} Z`
+          }
+          strokeLinejoin="round"
           {...spolecne}
         />
       );
-    case "Plamenak":
-      // Nafukovací plameňák (Filip, 11. 10. 2026). Při osmnácti pixelech
-      // z ptáka nezbyde ornitologie, ale <b>nesmí splynout s kolečkem</b>
-      // — to je celý důvod, proč má vlastní tvar.
+    case "Plamenak": {
+      // <b>Je to nafukovací kruh s krkem, ne stojící pták</b> (Filip
+      // poslal fotku, 24. 11. 2026). Předtím to byla silueta ptáka od
+      // země — jiná věc než to, co na Izolepě plave.
       //
-      // <b>Jedna silueta, ne poskládané díly.</b> Z těla, krku a hlavy
-      // zvlášť vyšla kachna: bílý lem obkroužil každý kus a krk zmizel.
-      // Takhle lem obchází celý obrys a krk zůstane krkem.
+      // Kreslí se v poli 28 × 36, kde tvar vznikl, a sem se dostane
+      // transformací: přepočítat ho bod po bodu by znamenalo rozejít se
+      // s appkou při první úpravě.
       //
-      // <b>Tenčí lem než u ostatních tvarů</b>, a taky kvůli krku: při
-      // třech jednotkách na dvaadvacetijednotkové ploše je rám širší než
-      // on sám. Plameňák je zato velký a růžový, takže se na mapě ztratí
-      // nejmíň ze všech.
+      // <b>Tenčí lem</b>, protože krk je užší než rám: při třech
+      // jednotkách by rám byl širší než on sám.
+      const k = r / 12;
+      const lemK = 1.6 / k;
+      return (
+        <g transform={`translate(${x - 14 * k} ${y - 18 * k}) scale(${k})`}>
+          <path
+            d={
+              "M 15.6 21.2 C 13.4 17.6, 12.2 12.6, 13 9.6" +
+              " C 13.6 7.2, 12.2 5.4, 10 5.6 C 7.6 5.8, 6.4 7.6, 6.6 9.4" +
+              " L 6.9 12.3 C 7.3 14.1, 9.4 14.6, 10.2 16.2" +
+              " C 11 17.8, 11.4 19.6, 11.6 21.4 Z"
+            }
+            fill={vypln}
+            stroke={lem}
+            strokeWidth={lemK}
+            strokeLinejoin="round"
+          />
+          <path d="M 2.5 12.9 L 6.8 9.3 L 6.9 12.3 Z" fill="#1b1b1b" stroke={lem} strokeWidth={lemK * 0.6} strokeLinejoin="round" />
+          <path
+            d={
+              "M 3.4 23.6 A 10.8 7.2 0 1 0 25 23.6 A 10.8 7.2 0 1 0 3.4 23.6 Z" +
+              " M 10.8 23.9 A 5 3.2 0 1 0 20.8 23.9 A 5 3.2 0 1 0 10.8 23.9 Z"
+            }
+            fill={vypln}
+            fillRule="evenodd"
+            stroke={lem}
+            strokeWidth={lemK}
+            strokeLinejoin="round"
+          />
+          {r >= 11 && (
+            <>
+              <circle cx={9.3} cy={8.4} r={1.35} fill="#ffffff" />
+              <circle cx={9.1} cy={8.5} r={0.62} fill="#1b1b1b" />
+            </>
+          )}
+        </g>
+      );
+    }
+    case "Jiny":
+      // <b>Zaoblený hranol, ne kolečko.</b> Do 24. 11. 2026 kreslil
+      // „jiný tvar" totéž co kulová, takže obrazovka tvrdila kouli
+      // o značce, u které nikdo tvar neurčil.
       return (
         <path
           d={
-            `M ${x - r} ${y + r * 0.35}` +
-            ` C ${x - r} ${y - r * 0.2}, ${x - r * 0.5} ${y - r * 0.45}, ${x + r * 0.02} ${y - r * 0.4}` +
-            ` C ${x + r * 0.34} ${y - r * 0.7}, ${x + r * 0.14} ${y - r}, ${x + r * 0.3} ${y - r * 1.22}` +
-            ` C ${x + r * 0.36} ${y - r * 1.42}, ${x + r * 0.64} ${y - r * 1.46}, ${x + r * 0.72} ${y - r * 1.28}` +
-            ` L ${x + r * 1.02} ${y - r * 0.9}` +
-            ` L ${x + r * 0.68} ${y - r * 0.98}` +
-            ` C ${x + r * 0.64} ${y - r * 1.1}, ${x + r * 0.56} ${y - r * 1.12}, ${x + r * 0.52} ${y - r * 1.18}` +
-            ` C ${x + r * 0.42} ${y - r * 0.94}, ${x + r * 0.66} ${y - r * 0.68}, ${x + r * 0.32} ${y - r * 0.26}` +
-            ` C ${x + r * 0.64} ${y + r * 0.1}, ${x + r * 0.56} ${y + r * 0.95}, ${x - r * 0.12} ${y + r}` +
-            ` C ${x - r * 0.72} ${y + r * 1.04}, ${x - r} ${y + r * 0.8}, ${x - r} ${y + r * 0.35} Z`
+            `M ${x - 0.72 * r} ${y - 0.3 * r} A ${0.45 * r} ${0.45 * r} 0 0 1 ${x - 0.27 * r} ${y - 0.75 * r}` +
+            ` H ${x + 0.27 * r} A ${0.45 * r} ${0.45 * r} 0 0 1 ${x + 0.72 * r} ${y - 0.3 * r}` +
+            ` V ${h - 0.45 * r} A ${0.45 * r} ${0.45 * r} 0 0 1 ${x + 0.27 * r} ${h}` +
+            ` H ${x - 0.27 * r} A ${0.45 * r} ${0.45 * r} 0 0 1 ${x - 0.72 * r} ${h - 0.45 * r} Z`
           }
-          fill={vypln}
-          stroke={lem}
-          strokeWidth={1.2}
           strokeLinejoin="round"
+          {...spolecne}
         />
       );
     default:
-      // Kulová, „jiný" i neuvedený tvar: kolečko. Barva nese nejvíc
-      // a tvar je nepovinný schválně — na vodě se pípá jednou rukou.
-      return <circle cx={x} cy={y} r={r} {...spolecne} />;
+      // Kulová i neuvedený tvar: koule sedící na hladině. Barva nese
+      // nejvíc a tvar je nepovinný schválně — na vodě se pípá jednou rukou.
+      return <circle cx={x} cy={h - 0.85 * r} r={0.85 * r} {...spolecne} />;
   }
 }
 

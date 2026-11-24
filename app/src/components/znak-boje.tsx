@@ -1,4 +1,15 @@
-import Svg, { Circle, Ellipse, G, Path, Polygon, Rect } from 'react-native-svg';
+import { useId } from 'react';
+
+import Svg, {
+  Circle,
+  ClipPath,
+  Defs,
+  Ellipse,
+  G,
+  LinearGradient,
+  Path,
+  Stop,
+} from 'react-native-svg';
 
 import type { components } from '@/lib/schema';
 
@@ -71,14 +82,156 @@ export const NAZVY_TVARU: Record<NonNullable<TvarBoje>, string> = {
 };
 
 /**
- * Kolik plastičnosti značka unese; na kartě stačí `objem`.
+ * Kolik plastičnosti značka unese.
  *
- * <b>`odlesk` do 22. 11. 2026 nic nedělal.</b> Typ ho nabízel, komponenta
- * ho neobsluhovala, takže kdo ho předal, dostal tiše `objem` — a to je
- * horší než hodnotu nemít: vypadá to jako volba, která se neprosadila.
- * Doplněno při srovnávání ikonek s webem, odkud je geometrie opsaná.
+ * <b>Od 24. 11. 2026 ji nedělá druhá kopie tvaru, ale přechod barvy.</b>
+ * Kopie uměla objem jen u koule; u válce a kužele z ní byl bílý flek,
+ * který se tvaru nedržel. Těleso teď má světlou a tmavou stranu z téže
+ * barvy, šev nebo obrubu v místě, kde se láme, a stín na hladině —
+ * a `plasticita` rozhoduje už jen o odlesku, který na řádce o osmnácti
+ * bodech nemá kde být.
  */
 export type Plasticita = 'zadna' | 'objem' | 'odlesk';
+
+/**
+ * Smíchá barvu s bílou nebo černou. Světlo a stín musí vyjít z barvy
+ * samotné: pevný bílý nádech by na žluté nebyl vidět a na modré by
+ * barvu přebil.
+ */
+function mix(barva: string, cil: string, podil: number): string {
+  if (barva.length !== 7 || barva[0] !== '#') return barva;
+  const slozky = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const a = slozky(barva);
+  const b = slozky(cil);
+  return `#${a
+    .map((v, i) =>
+      Math.round(v + (b[i] - v) * podil)
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`;
+}
+
+/**
+ * Plameňák v souřadnicích návrhu (28 × 36); kreslí se přes transformaci.
+ *
+ * <b>Je to nafukovací kruh s krkem, ne stojící pták</b> (Filip poslal
+ * fotku, 24. 11. 2026). Do té doby to byla silueta ptáka od země, což
+ * je jiná věc než to, co na Izolepě plave: tlustý kruh na hladině,
+ * z jeho levé strany vybíhá krk, hlava se dívá doleva a zobák je černý.
+ *
+ * Tři kusy, protože každý má jinou výplň: krk s hlavou nese přechod
+ * těla, kruh taky, ale kreslí se **po** krku, aby ho zakryl, a zobák
+ * je černý.
+ */
+const PLAMENAK_KRK =
+  'M 15.6 21.2 C 13.4 17.6, 12.2 12.6, 13 9.6' +
+  ' C 13.6 7.2, 12.2 5.4, 10 5.6 C 7.6 5.8, 6.4 7.6, 6.6 9.4' +
+  ' L 6.9 12.3 C 7.3 14.1, 9.4 14.6, 10.2 16.2' +
+  ' C 11 17.8, 11.4 19.6, 11.6 21.4 Z';
+
+/** Kruh: vnější ovál s dírou, aby byl vidět jako duše, ne jako placka. */
+const PLAMENAK_KRUH =
+  'M 3.4 23.6 A 10.8 7.2 0 1 0 25 23.6 A 10.8 7.2 0 1 0 3.4 23.6 Z' +
+  ' M 10.8 23.9 A 5 3.2 0 1 0 20.8 23.9 A 5 3.2 0 1 0 10.8 23.9 Z';
+
+const PLAMENAK_ZOBAK = 'M 2.5 12.9 L 6.8 9.3 L 6.9 12.3 Z';
+
+/**
+ * Obrys tělesa. <b>Všechno sedí dolním okrajem na hladině</b>
+ * (`y + 0,85 r`), ne na středu pole: řádka pod sebou tím drží vodorysku
+ * a značky vypadají jako věci ve vodě, ne jako ikony na stejné ose.
+ *
+ * Dno je viditelný oblouk, ne rovná čára — válec ani kužel bez něj
+ * nevypadají kulatě, i když kulaté jsou.
+ */
+function cesta(tvar: TvarBoje | undefined, x: number, y: number, r: number): string {
+  const h = y + 0.85 * r;
+  switch (tvar) {
+    case 'Kuzelova':
+      // <b>Špička skoro ostrá</b> (Filip, 24. 11. 2026): zaoblení 0,08 r.
+      // Kužel je kužel; větší rádius z něj dělal nafukovací patník.
+      return (
+        `M ${x - 0.87 * r} ${h} L ${x - 0.08 * r} ${y - 1.1 * r}` +
+        ` Q ${x} ${y - 1.2 * r} ${x + 0.08 * r} ${y - 1.1 * r} L ${x + 0.87 * r} ${h}` +
+        ` A ${0.87 * r} ${0.3 * r} 0 0 1 ${x - 0.87 * r} ${h} Z`
+      );
+    case 'Valcova':
+      return (
+        `M ${x - 0.75 * r} ${h} V ${y - 0.5 * r}` +
+        ` A ${0.75 * r} ${0.3 * r} 0 0 1 ${x + 0.75 * r} ${y - 0.5 * r} V ${h}` +
+        ` A ${0.75 * r} ${0.3 * r} 0 0 1 ${x - 0.75 * r} ${h} Z`
+      );
+    case 'SferickyVrsek':
+      // Poklop na sukni, ne samotná půlelipsa (Filip, 11. 10. 2026:
+      // *„vypadá spíš jako polokoule poklop a uprostřed je nápis sport"*).
+      // U Orlíku se jí říká Mimoň. Nápis se nekreslí: při osmnácti
+      // bodech by z něj byla šmouha.
+      return (
+        `M ${x - 0.78 * r} ${h} V ${y}` +
+        ` A ${0.78 * r} ${0.85 * r} 0 0 1 ${x + 0.78 * r} ${y} V ${h}` +
+        ` A ${0.78 * r} ${0.3 * r} 0 0 1 ${x - 0.78 * r} ${h} Z`
+      );
+    case 'Plovatka':
+      // Tyč s plovákem u hladiny, ne úzký obdélník.
+      return (
+        `M ${x - 0.18 * r} ${y + 0.45 * r} V ${y - 0.95 * r}` +
+        ` Q ${x} ${y - 1.2 * r} ${x + 0.18 * r} ${y - 0.95 * r} V ${y + 0.45 * r} Z` +
+        ` M ${x - 0.5 * r} ${y + 0.42 * r}` +
+        ` A ${0.5 * r} ${0.42 * r} 0 1 0 ${x + 0.5 * r} ${y + 0.42 * r}` +
+        ` A ${0.5 * r} ${0.42 * r} 0 1 0 ${x - 0.5 * r} ${y + 0.42 * r} Z`
+      );
+    case 'Jiny':
+      // <b>Zaoblený hranol, ne kolečko.</b> Do 24. 11. 2026 kreslil
+      // „jiný tvar" totéž co kulová, takže obrazovka tvrdila kouli
+      // o značce, u které nikdo tvar neurčil.
+      return (
+        `M ${x - 0.72 * r} ${y - 0.3 * r} A ${0.45 * r} ${0.45 * r} 0 0 1 ${x - 0.27 * r} ${y - 0.75 * r}` +
+        ` H ${x + 0.27 * r} A ${0.45 * r} ${0.45 * r} 0 0 1 ${x + 0.72 * r} ${y - 0.3 * r}` +
+        ` V ${h - 0.45 * r} A ${0.45 * r} ${0.45 * r} 0 0 1 ${x + 0.27 * r} ${h}` +
+        ` H ${x - 0.27 * r} A ${0.45 * r} ${0.45 * r} 0 0 1 ${x - 0.72 * r} ${h - 0.45 * r} Z`
+      );
+    default:
+      // Kulová i neuvedený tvar: koule sedící na hladině.
+      return (
+        `M ${x - 0.85 * r} ${h - 0.85 * r}` +
+        ` A ${0.85 * r} ${0.85 * r} 0 1 1 ${x + 0.85 * r} ${h - 0.85 * r}` +
+        ` A ${0.85 * r} ${0.85 * r} 0 1 1 ${x - 0.85 * r} ${h - 0.85 * r} Z`
+      );
+  }
+}
+
+/** Čím se těleso láme: obruba válce, šev poklopu, hrana hranolu. */
+function hrany(tvar: TvarBoje | undefined, x: number, y: number, r: number) {
+  const tenky = { fill: 'none', stroke: 'rgba(0,0,0,0.3)', strokeWidth: Math.max(0.8, r * 0.085) } as const;
+  switch (tvar) {
+    case 'Valcova':
+      return (
+        <Ellipse
+          cx={x}
+          cy={y - 0.5 * r}
+          rx={0.75 * r}
+          ry={0.3 * r}
+          fill="rgba(255,255,255,0.22)"
+          stroke="rgba(0,0,0,0.25)"
+          strokeWidth={Math.max(0.7, r * 0.07)}
+        />
+      );
+    case 'SferickyVrsek':
+      return <Path d={`M ${x - 0.78 * r} ${y} A ${0.78 * r} ${0.22 * r} 0 0 0 ${x + 0.78 * r} ${y}`} {...tenky} />;
+    case 'Kuzelova':
+      return (
+        <Path
+          d={`M ${x - 0.55 * r} ${y + 0.1 * r} Q ${x} ${y + 0.34 * r} ${x + 0.55 * r} ${y + 0.1 * r}`}
+          {...tenky}
+        />
+      );
+    case 'Jiny':
+      return <Path d={`M ${x - 0.72 * r} ${y + 0.5 * r} H ${x + 0.72 * r}`} {...tenky} />;
+    default:
+      return null;
+  }
+}
 
 function ZakladniZnak({
   x,
@@ -87,11 +240,10 @@ function ZakladniZnak({
   barva,
   tvar,
   znaceni,
-  vyplnPrepis,
-  bezLemu = false,
   vychoziVypln,
   lem,
   silaLemu = 3,
+  plasticita = 'objem',
 }: {
   x: number;
   y: number;
@@ -99,23 +251,22 @@ function ZakladniZnak({
   barva?: BarvaBoje;
   tvar?: TvarBoje;
   znaceni?: DruhZnaceni;
-  vyplnPrepis?: string;
-  bezLemu?: boolean;
   vychoziVypln: string;
   lem: string;
   /**
    * Šířka lemu v jednotkách kresby. <b>Nestálá schválně:</b> tři
    * jednotky, které velkému náhledu sluší, ukrojí z malé siluety
-   * čtvrtinu poloměru a vylezou za okraj pole. U plameňáka to narazilo
-   * první a vyřešilo se to tam natvrdo (1,2); tohle je totéž pravidlo
-   * pro zbytek tvarů.
+   * čtvrtinu poloměru a vylezou za okraj pole.
    */
   silaLemu?: number;
+  plasticita?: Plasticita;
 }) {
-  const vypln = vyplnPrepis ?? (barva ? BARVY[barva] : vychoziVypln);
-  const spolecne = bezLemu
-    ? ({ fill: vypln } as const)
-    : ({ fill: vypln, stroke: lem, strokeWidth: silaLemu } as const);
+  // <b>Id přechodu musí být jedinečné na instanci.</b> Mapka kreslí
+  // desítky značek do jednoho SVG a dva stejné `id` v jednom dokumentu
+  // jsou nevalidní — odkaz by se svezl na ten první. Dvojtečky, které
+  // `useId` vrací, se v `url(#…)` nedají použít.
+  const id = `zn${useId().replace(/:/g, '')}`;
+  const vypln = barva ? BARVY[barva] : vychoziVypln;
 
   // Plavidlo: lodička. Hýbe se a není to bóje, takže nesmí vypadat jako
   // něco zakotveného.
@@ -155,65 +306,97 @@ function ZakladniZnak({
       />
     );
 
-  switch (tvar) {
-    case 'Kuzelova':
-      // Kužel vrcholem vzhůru, jak ho popisuje vyhláška.
-      return (
-        <Polygon
-          points={`${x},${y - r * 1.2} ${x - r},${y + r * 0.8} ${x + r},${y + r * 0.8}`}
-          {...spolecne}
-        />
-      );
-    case 'Valcova':
-      return <Rect x={x - r * 0.85} y={y - r} width={r * 1.7} height={r * 2} {...spolecne} />;
-    case 'Plovatka':
-      // Tyč nad hladinou, ne těleso — proto úzká a vysoká.
-      return <Rect x={x - r * 0.35} y={y - r * 1.4} width={r * 0.7} height={r * 2.8} {...spolecne} />;
-    case 'SferickyVrsek':
-      // Poklop, ne válec s koulí nahoře. Tohle je ta, které se u Orlíku
-      // říká Mimoň. Nápis se nekreslí: při osmnácti bodech by z něj byla
-      // šmouha a tvar sám stačí, aby se nepletl s kulovou.
-      return (
-        <Path d={`M ${x - r} ${y + r * 0.5} A ${r} ${r * 0.95} 0 0 1 ${x + r} ${y + r * 0.5} Z`} {...spolecne} />
-      );
-    case 'Plamenak':
-      // Jedna silueta, ne poskládané díly: z těla, krku a hlavy zvlášť
-      // vyšla kachna, protože lem obkroužil každý kus a krk zmizel.
-      // Tenčí lem než jinde — při třech jednotkách je rám širší než krk.
-      return (
-        <Path
-          d={
-            `M ${x - r} ${y + r * 0.35}` +
-            ` C ${x - r} ${y - r * 0.2}, ${x - r * 0.5} ${y - r * 0.45}, ${x + r * 0.02} ${y - r * 0.4}` +
-            ` C ${x + r * 0.34} ${y - r * 0.7}, ${x + r * 0.14} ${y - r}, ${x + r * 0.3} ${y - r * 1.22}` +
-            ` C ${x + r * 0.36} ${y - r * 1.42}, ${x + r * 0.64} ${y - r * 1.46}, ${x + r * 0.72} ${y - r * 1.28}` +
-            ` L ${x + r * 1.02} ${y - r * 0.9}` +
-            ` L ${x + r * 0.68} ${y - r * 0.98}` +
-            ` C ${x + r * 0.64} ${y - r * 1.1}, ${x + r * 0.56} ${y - r * 1.12}, ${x + r * 0.52} ${y - r * 1.18}` +
-            ` C ${x + r * 0.42} ${y - r * 0.94}, ${x + r * 0.66} ${y - r * 0.68}, ${x + r * 0.32} ${y - r * 0.26}` +
-            ` C ${x + r * 0.64} ${y + r * 0.1}, ${x + r * 0.56} ${y + r * 0.95}, ${x - r * 0.12} ${y + r}` +
-            ` C ${x - r * 0.72} ${y + r * 1.04}, ${x - r} ${y + r * 0.8}, ${x - r} ${y + r * 0.35} Z`
-          }
-          fill={vypln}
-          stroke={lem}
-          strokeWidth={1.2}
-          strokeLinejoin="round"
-        />
-      );
-    default:
-      // Kulová, „jiný" i neuvedený tvar: kolečko. Barva nese nejvíc
-      // a tvar je nepovinný schválně — na vodě se pípá jednou rukou.
-      return <Circle cx={x} cy={y} r={r} {...spolecne} />;
+  const d = cesta(tvar, x, y, r);
+  const h = y + 0.85 * r;
+
+  // <b>Na mapce zůstává značka plochá</b> (Filip, 15. 10. 2026: *„na mapce
+  // tam to musí být přehledné a jasné: jednoduchou, plochou"*). Osm pixelů
+  // nad fotomapou neunese ani přechod, ani stín na hladině.
+  if (plasticita === 'zadna')
+    return <Path d={d} fill={vypln} stroke={lem} strokeWidth={silaLemu} strokeLinejoin="round" />;
+
+  const lesk =
+    plasticita !== 'odlesk' ? null : (
+      <Ellipse
+        cx={x - 0.32 * r}
+        cy={y - 0.3 * r}
+        rx={0.14 * r}
+        ry={0.33 * r}
+        fill="#ffffff"
+        opacity={0.7}
+        transform={`rotate(-16 ${x - 0.32 * r} ${y - 0.3 * r})`}
+      />
+    );
+
+  const telo = (
+    <>
+      <Defs>
+        <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor={mix(vypln, '#ffffff', 0.42)} />
+          <Stop offset="0.45" stopColor={vypln} />
+          <Stop offset="1" stopColor={mix(vypln, '#000000', 0.38)} />
+        </LinearGradient>
+        <ClipPath id={`c${id}`}>
+          <Path d={d} />
+        </ClipPath>
+      </Defs>
+      <Ellipse cx={x} cy={h} rx={0.9 * r} ry={0.17 * r} fill="rgba(0,0,0,0.45)" />
+    </>
+  );
+
+  if (tvar === 'Plamenak') {
+    // Plameňák je kreslený v poli 28 × 36, kde vznikl; sem se dostane
+    // transformací, aby se tvar nemusel přepočítávat bod po bodu
+    // a rozejít se přitom s webem.
+    const k = r / 12;
+    return (
+      <G>
+        {telo}
+        <G transform={`translate(${x - 14 * k} ${y - 18 * k}) scale(${k})`}>
+          <Path
+            d={PLAMENAK_KRK}
+            fill={`url(#${id})`}
+            stroke={lem}
+            strokeWidth={silaLemu / k}
+            strokeLinejoin="round"
+          />
+          <Path d={PLAMENAK_ZOBAK} fill="#1b1b1b" stroke={lem} strokeWidth={(silaLemu * 0.6) / k} strokeLinejoin="round" />
+          <Path
+            d={PLAMENAK_KRUH}
+            fill={`url(#${id})`}
+            fillRule="evenodd"
+            stroke={lem}
+            strokeWidth={silaLemu / k}
+            strokeLinejoin="round"
+          />
+          {/* Oko se kreslí, jen když má kam: při dvanácti bodech poloměru
+              je z bělma a zornice jedna tečka a vypadá to jako vada. */}
+          {r >= 11 && (
+            <>
+              <Circle cx={9.3} cy={8.4} r={1.35} fill="#ffffff" />
+              <Circle cx={9.1} cy={8.5} r={0.62} fill="#1b1b1b" />
+            </>
+          )}
+        </G>
+      </G>
+    );
   }
+
+  return (
+    <G>
+      {telo}
+      <Path d={d} fill={`url(#${id})`} stroke={lem} strokeWidth={silaLemu} strokeLinejoin="round" />
+      <G clipPath={`url(#c${id})`}>
+        {hrany(tvar, x, y, r)}
+        {lesk}
+      </G>
+    </G>
+  );
 }
 
 /**
- * Značka bóje. Plastičnost se skládá z téhož tvaru nakresleného podruhé:
- * menší, posunutý k levému hornímu okraji a bílý s nízkým krytím — proto
- * drží tvar i u kužele a válce, kde by plošné světlo přeteklo ven.
- *
- * <b>Plavidlo, objekt na břehu a plameňák zůstávají ploché</b>: do jejich
- * obrysu se zmenšená kopie netrefí a vznikla by šmouha.
+ * Značka bóje. Objem nese přechod barvy po tělese, ne druhá kopie tvaru
+ * — ta uměla kouli a u válce z ní byl flek.
  */
 export function ZnakBoje({
   x,
@@ -239,7 +422,7 @@ export function ZnakBoje({
   /** Šířka lemu; viz `ZakladniZnak`. Bez ní platí tři jednotky. */
   silaLemu?: number;
 }) {
-  const zaklad = (
+  return (
     <ZakladniZnak
       x={x}
       y={y}
@@ -250,42 +433,8 @@ export function ZnakBoje({
       vychoziVypln={vychoziVypln}
       lem={lem}
       silaLemu={silaLemu}
+      plasticita={plasticita}
     />
-  );
-
-  const slozity = znaceni === 'Plavidlo' || znaceni === 'ObjektNaBrehu' || tvar === 'Plamenak';
-  if (plasticita === 'zadna' || slozity) return zaklad;
-
-  return (
-    <G>
-      {zaklad}
-      <G opacity={0.3}>
-        <ZakladniZnak
-          x={x - r * 0.26}
-          y={y - r * 0.26}
-          r={r * 0.55}
-          barva={barva}
-          tvar={tvar}
-          znaceni={znaceni}
-          vychoziVypln={vychoziVypln}
-          lem={lem}
-          vyplnPrepis="#ffffff"
-          bezLemu
-        />
-      </G>
-      {plasticita === 'odlesk' && (
-        /* Ostrý odlesk až u velkého náhledu: při osmnácti bodech je z něj
-           bílá tečka, která vypadá jako chyba vykreslení. */
-        <Ellipse
-          cx={x - r * 0.3}
-          cy={y - r * 0.38}
-          rx={r * 0.26}
-          ry={r * 0.17}
-          fill="#ffffff"
-          opacity={0.55}
-        />
-      )}
-    </G>
   );
 }
 
