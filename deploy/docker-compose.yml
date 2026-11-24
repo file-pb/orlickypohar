@@ -192,14 +192,14 @@ services:
       PLAY_URL: ""
       # Poslední build appky. Každý build má jinou adresu, takže se to mění
       # tady, ne v kódu — `npm run apk` v app/ vypíše novou.
-      APK_URL: "https://expo.dev/artifacts/eas/8YcMeZUaKB_P_NPdjaz7SR8rGayJBMZSVRuOUb1bT-E.apk"
+      APK_URL: "https://expo.dev/artifacts/eas/ciYV4qOX9Wpv6MKV7lPPhsFmwfOYv2nEllVo3v4MFfI.apk"
       # Co ta adresa rozdává. Stránka `/appka` to napíše, aby se dalo
       # poznat, že je ke stažení novější build než ten v telefonu — do
       # 18. 11. 2026 mlčela a druhé stahování vypadalo jako první.
       # Oboje se mění spolu s `APK_URL` a rozchod s `app/vydane-apk.json`
       # hlásí úloha *Žádá appka ruční instalaci?*.
-      APK_VERZE: "11"
-      APK_VYDANO: "2026-11-12"
+      APK_VERZE: "14"
+      APK_VYDANO: "2026-11-24"
       # Přihlašování. Tytéž dvě hodnoty jako u API a k tomu veřejná adresa
       # webu, ze které se skládá návratová cesta — ta musí přesně souhlasit
       # s tím, co je zapsané u aplikace v Zitadelu, jinak poskytovatel kód

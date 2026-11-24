@@ -1,9 +1,20 @@
 # Příručka: jak si Miloš přeinstaluje appku
 
-**Platí pro APK vydané 12. 11. 2026** (build `dcff9cef`, versionCode 11,
-otisk `0759d5bd…`, zapsané v `app/vydane-apk.json`; produkce na `/appka`
-ho rozdává od 12. 11.). Až vyjde další, projdi text znovu — a zkontroluj
-hlavně to, co appce slibuje.
+**Platí pro APK vydané 24. 11. 2026** (build `d2f2ac4d`, versionCode 14,
+otisk `af0083f4…`, zapsané v `app/vydane-apk.json`). Až vyjde další, projdi
+text znovu — a zkontroluj hlavně to, co appce slibuje.
+
+**Tenhle návod se chystá zestárnout, a to je dobře.** Od 24. 11. 2026 vede
+cesta do telefonu přes Google Play: appka se nainstaluje jednou a dál se
+aktualizuje sama — JavaScript po síti jako dosud, **a nativní část přes
+obchod**, což je právě to, co instalace ze souboru neumí a proč tenhle
+návod vůbec existuje. Balíček do obchodu staví a nahrává CI samo, jak se
+posune nativní otisk (úloha `balicek-do-play`).
+
+Příručka tedy od té chvíle platí jen pro **instalaci ze souboru** — pro
+telefon bez služeb Googlu a pro dobu, než bude aplikace v obchodě ve stavu
+*Published* a objeví se odkaz pro testery. Kdo má appku z Play, nic z toho
+dělat nemusí.
 
 **Build 11 do tabulky níž nepatří**, a to je na něm to podstatné: má
 **tentýž otisk** jako build 10 (ověřeno 13. 11. 2026 spočítáním otisku
