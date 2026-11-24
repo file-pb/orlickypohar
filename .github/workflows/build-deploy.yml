@@ -1226,7 +1226,7 @@ jobs:
           echo "$vystup" >> "$GITHUB_OUTPUT"
 
       - name: Postavit balíček a nahrát do Play
-        if: ${{ steps.stav.outputs.POTREBA == 'ano' || (steps.spice.outputs.aktualni == 'ano' && github.event.inputs.nahrat_znovu == 'true') }}
+        if: ${{ steps.stav.outputs.POTREBA == 'ano' && github.event.inputs.nahrat_znovu != 'true' }}
         working-directory: app
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -1257,6 +1257,29 @@ jobs:
               echo ""
               echo "Samo se to podruhé nezkusí, protože otisk už sedí. Cesta ven je"
               echo "ruční spuštění workflow s volbou **nahrat_znovu**."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      # <b>Cesta ven pro spadlé nahrání.</b> Když se build povedl a spadlo
+      # až nahrání, samo se to podruhé nezkusí — otisk už sedí. Tahle
+      # volba proto **nestaví nic nového**, jen nahraje poslední hotový
+      # balíček: stavět znovu by byla dvacetiminutová práce pro nic
+      # a vyrobilo by to v obchodě zbytečně další `versionCode`.
+      - name: Nahrát poslední balíček znovu
+        if: ${{ steps.spice.outputs.aktualni == 'ano' && github.event.inputs.nahrat_znovu == 'true' }}
+        working-directory: app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if ! npx -y eas-cli@27.11.0 submit --platform android --profile production \
+            --latest --non-interactive; then
+            {
+              echo "### Nahrání posledního balíčku do Play se nepovedlo"
+              echo ""
+              echo "Příčina je v logu kroku. Nejčastěji chybí na EAS **klíč servisního"
+              echo "účtu Google** — vyrobí se v Play Console (*API access*) a nahraje"
+              echo "se do credentials projektu na expo.dev."
             } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
