@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
+import { slozOdbery } from './odbery';
 import { sit } from './sit';
 
 /**
@@ -114,6 +115,21 @@ export async function prihlasKOdberu(odbery: string[]): Promise<StavUpozorneni> 
  */
 export async function odhlasOdbery(): Promise<StavUpozorneni> {
   return prihlasKOdberu([]);
+}
+
+/**
+ * Zapne odběr jednoho ročníku a **ostatní nechá být**.
+ *
+ * <b>Skládá, nenahrazuje.</b> Dřív se posílal seznam s jediným ročníkem,
+ * takže zapnutí druhého potichu vyplo první — podrobně v `odbery.ts`.
+ */
+export async function zapniOdber(odber: string): Promise<StavUpozorneni> {
+  return prihlasKOdberu(slozOdbery(await naposledyPrihlaseno(), odber, true));
+}
+
+/** Vypne odběr jednoho ročníku a ostatní nechá být. */
+export async function vypniOdber(odber: string): Promise<StavUpozorneni> {
+  return prihlasKOdberu(slozOdbery(await naposledyPrihlaseno(), odber, false));
 }
 
 /** Co appka naposledy serveru nahlásila. Pro obrazovku, aby neptala systém. */

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
-import { naposledyPrihlaseno, odhlasOdbery, prihlasKOdberu } from '@/lib/upozorneni';
+import { naposledyPrihlaseno, vypniOdber, zapniOdber } from '@/lib/upozorneni';
 
 /**
  * Přepínač upozornění na ročník.
@@ -37,7 +37,7 @@ export function OdberUpozorneni({ slug }: { slug: string }) {
     setPracuje(true);
     setChyba(null);
     try {
-      const vysledek = zapnuto ? await odhlasOdbery() : await prihlasKOdberu([odber]);
+      const vysledek = zapnuto ? await vypniOdber(odber) : await zapniOdber(odber);
       if (vysledek.stav === 'prihlaseno') setZapnuto(vysledek.odbery.includes(odber));
       else if (vysledek.stav === 'odmitnuto')
         setChyba('Upozornění máš v systému vypnutá. Zapni je appce v nastavení telefonu.');

@@ -50,6 +50,10 @@ echo "== Nabídka pod kebabem =="
 "${NODE[@]}" ./nabidka.test.ts
 
 echo
+echo "== Odběry upozornění =="
+"${NODE[@]}" ./odbery.test.ts
+
+echo
 echo "== Hlášení a troubení =="
 "${NODE[@]}" ./hlaseni.test.ts
 
