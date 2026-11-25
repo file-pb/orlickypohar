@@ -183,13 +183,18 @@ services:
       # Ročníky s vymyšlenými výsledky. Web u nich ukáže pruh, že data nejsou
       # skutečná. Až se ukazovat přestanou, stačí smazat tenhle řádek.
       UKAZKOVE_SERIE: "2026-nanecisto"
-      # Odkaz do Google Play. Dokud je prázdný, stránka `/appka` rozdává
-      # soubor jako dřív; jak se vyplní, stane se Play hlavní cestou
-      # a soubor zůstane jako náhradní. Vzniká teprve v konzoli Play —
-      # odkaz pro testery se objeví až u aplikace ve stavu *Published* —
-      # proto se sem vkládá rukou a je to jediná ruční věc, která
-      # v cestě appky do telefonu zbyla.
-      PLAY_URL: ""
+      # Odkaz do Google Play pro interní testery. Dokud je prázdný, stránka
+      # `/appka` rozdává soubor jako dřív; jak se vyplní, stane se Play
+      # hlavní cestou a soubor zůstane jako náhradní.
+      #
+      # Vzniká v konzoli Play a vkládá se sem rukou — poslední ruční krok
+      # v celé cestě appky do telefonu. Objeví se, **jakmile je testovací
+      # kanál aktivní**, ne až po dokončení nastavení aplikace: nápověda
+      # k tomu říká jen „až aplikaci publikujete", ale ve skutečnosti
+      # stačí nahraný balíček (ověřeno 25. 11. 2026). Testeři do té doby
+      # uvidí při stahování dočasný název `cz.klihovka.orlickypohar
+      # (unreviewed)` místo *Orlické série*.
+      PLAY_URL: "https://play.google.com/apps/internaltest/4700993618944197578"
       # Poslední build appky. Každý build má jinou adresu, takže se to mění
       # tady, ne v kódu — `npm run apk` v app/ vypíše novou.
       APK_URL: "https://expo.dev/artifacts/eas/ciYV4qOX9Wpv6MKV7lPPhsFmwfOYv2nEllVo3v4MFfI.apk"
