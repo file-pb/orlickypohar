@@ -40,6 +40,16 @@ class Web(BaseHTTPRequestHandler):
             f"vykresleni={cislo} replika={REPLIKA} cesta={self.path} "
             f"rezim={rezim} prihlaseny={int(prihlaseny)}\n"
         )
+        if self.path.startswith("/dlazdice/"):
+            # Dlaždice jako skutečný web: obrázek, dlouhá veřejná paměť
+            # a pomalost studené dlaždice, která čeká ve frontě na zdroj.
+            # Bez té pomalosti by souběžné dlaždice doběhly dřív, než se
+            # stihnou potkat na limitu souběhu, a test by nic neměřil.
+            time.sleep(1.0)
+            return self._posli(
+                200, telo.encode(), typ="image/png",
+                pamet="public, max-age=604800, immutable",
+            )
         if self.path.startswith("/chyba"):
             return self._posli(500, telo.encode())
         if self.path.startswith("/neni"):
@@ -49,14 +59,17 @@ class Web(BaseHTTPRequestHandler):
             dalsi["Set-Cookie"] = "op_rezim=tmavy; Path=/"
         self._posli(200, telo.encode(), dalsi)
 
-    def _posli(self, stav, telo, dalsi=None):
+    def _posli(
+        self, stav, telo, dalsi=None, typ="text/html; charset=utf-8",
+        pamet="private, no-cache, no-store, max-age=0, must-revalidate",
+    ):
         self.send_response(stav)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Type", typ)
         # Kdo odpověděl. V hlavičce, ne jen v těle, aby se dala ověřit
         # i cesta bez těla ke čtení (`/health`).
         self.send_header("X-Replika", REPLIKA)
         # Stejně jako Next u dynamické stránky.
-        self.send_header("Cache-Control", "private, no-cache, no-store, max-age=0, must-revalidate")
+        self.send_header("Cache-Control", pamet)
         self.send_header("Vary", "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Accept-Encoding")
         for k, v in (dalsi or {}).items():
             self.send_header(k, v)

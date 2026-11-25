@@ -338,6 +338,40 @@ ma "20 zápisů správy za sebou projde bez 429" test "$(grep -c 429 <<<"$stavy"
 get /cache-zdravi -H "Cf-Connecting-Ip: $utocnik"
 ma "zdraví se nelimituje ani útočníkovi" test "$stav" = 200
 
+echo "Dlaždice mapy: celý výřez naráz, pak z paměti"
+# Tohle je situace z 25. 11. 2026: mapka trati si řekne o celý výřez
+# naráz, studené dlaždice čekají na zdroj a drží spojení. Pod společným
+# `limit_conn souben 8` dostala devátá a další 429 a na iPhonu z nich
+# zbyla ikona rozbitého obrázku. Teď mají dlaždice vlastní zónu souběhu.
+mapar="203.0.113.31"
+: > "$ADRESAR/.dlazdice"
+seq 1 20 | xargs -P 20 -I{} sh -c \
+  "curl -s -o /dev/null -w '%{http_code}\n' -H 'Cf-Connecting-Ip: $mapar' \
+     '$URL/dlazdice/15/{}/1'" >> "$ADRESAR/.dlazdice" &
+# Stránka a loga téhož klienta BĚHEM toho, ne po něm — o tohle šlo.
+sleep 0.3
+get /a -H "Cf-Connecting-Ip: $mapar"
+ma "stránka projde, i když se načítá 20 dlaždic" test "$stav" = 200
+wait
+stavy=$(cat "$ADRESAR/.dlazdice"); rm -f "$ADRESAR/.dlazdice"
+ma "20 dlaždic naráz bez 429" test "$(grep -c 429 <<<"$stavy")" -eq 0
+ma "…a všech 20 je 200" test "$(grep -c '^200$' <<<"$stavy")" -eq 20
+
+get /dlazdice/15/1/1
+ma "dlaždice podruhé z paměti" test "$cache" = HIT
+get /dlazdice/15/1/1 -H "Cookie: op_token=x"
+ma "…i pro přihlášeného (dlaždice je pro všechny stejná)" test "$cache" = HIT
+get /dlazdice/15/1/1?podklad=satelit
+ma "satelit je jiná položka" test "$cache" = MISS
+get /dlazdice/15/99/1 -H "Cookie: op_token=x" -H "Cookie: op_rezim=tmavy"
+ma "cookie k webu nedojde" grep -q "prihlaseny=0" <<<"$telo"
+ma "…a jde na anonymní repliku" test "$replika" = anonym
+# Po deseti vteřinách stránkové paměti musí dlaždice pořád ležet — jinak
+# by se jen přejmenovala stará mikrocache.
+sleep 11
+get /dlazdice/15/2/1
+ma "dlaždice drží déle než stránka" test "$cache" = HIT
+
 # ---------------------------------------------------------------------------
 # <b>Výměna replik: dvě adresy pod jedním jménem.</b> Tohle je ta situace,
 # kvůli které v konfiguraci stojí `proxy_next_upstream` — při nasazení

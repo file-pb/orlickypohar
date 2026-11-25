@@ -105,6 +105,11 @@ export async function GET(
       try {
         const r = await fetch(ZDROJE[podklad](cz, cx, cy), {
           headers: { "user-agent": KDO, accept: "image/png,image/jpeg" },
+          // Strop na jeden pokus. Bez něj by zavěšené spojení ke zdroji
+          // drželo slot fronty donekonečna a ostatní dlaždice by čekaly
+          // na nic; dva pokusy i s čekáním ve frontě se tak vejdou pod
+          // `proxy_read_timeout` 30 s v deploy/cache/default.conf.
+          signal: AbortSignal.timeout(5_000),
           // Dlaždice se nemění; den je u OSM běžná doba, kterou drží i prohlížeč.
           next: { revalidate: 86_400 },
         });
@@ -128,7 +133,10 @@ export async function GET(
       // Satelit chodí jako JPEG, mapa jako PNG — typ se bere z odpovědi,
       // ne z přání.
       "content-type": odpoved.headers.get("content-type") ?? "image/png",
-      "cache-control": "public, max-age=86400, immutable",
+      // Týden. Podle toho drží dlaždici mikrocache před webem
+      // (deploy/cache/default.conf, `location /dlazdice/`), takže trať,
+      // která se nemění, po prvním otevření ke zdroji vůbec nechodí.
+      "cache-control": "public, max-age=604800, immutable",
     },
   });
 }
