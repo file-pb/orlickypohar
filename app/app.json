@@ -16,6 +16,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"],
+      "googleServicesFile": "./google-services.json",
       "package": "cz.klihovka.orlickypohar"
     },
     "web": {

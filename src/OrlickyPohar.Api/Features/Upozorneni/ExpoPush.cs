@@ -17,9 +17,19 @@ public record VysledekTokenu(string Token, string? Chyba, bool Neregistrovane);
 ///
 /// <para>
 /// <b>Proč Expo a ne APNs/FCM přímo</b> (plán, <i>Jak to bude postavené</i>):
-/// Expo je obálka nad obojím, takže odpadá certifikát od Applu i klíč do
-/// Firebase. Lock-in je v Googlu a Applu, ne v Expu — tenhle soubor je to
-/// jediné místo, které by se při výměně přepisovalo.
+/// Expo je obálka nad obojím, takže se odesílání píše jednou a tenhle soubor
+/// je to jediné místo, které by se při výměně přepisovalo. Lock-in je
+/// v Googlu a Applu, ne v Expu.
+/// </para>
+/// <para>
+/// <b>Klíč do Firebase tím ale neodpadá.</b> Dřív tu stálo, že Expo
+/// nahrazuje certifikát od Applu i klíč do Firebase — a ta věta byla důvod,
+/// proč se Firebase nikdy nezaložila. Expo je obálka, ne náhrada: posílá
+/// dál do FCM a potřebuje k tomu náš klíč, appka navíc bez
+/// `google-services.json` nedostane ani registrační token. Doloženo
+/// 25. 11. 2026 v kódu `expo-notifications`, který registraci odmítne
+/// hláškou „Did you configure `googleServicesFile` path in app config?",
+/// a tím, že na Androidu upozornění do té doby nechodila vůbec.
 /// </para>
 /// <para>
 /// <b>Bez přístupového tokenu.</b> Expo přijímá push i nepřihlášeně; token

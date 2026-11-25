@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "291929212786",
+    "project_id": "orlickypohar",
+    "storage_bucket": "orlickypohar.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:291929212786:android:016e77d2da20c2d4503feb",
+        "android_client_info": {
+          "package_name": "cz.klihovka.orlickypohar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdJstMmkc6iBeP4-Aqx2aiUvEPMlsEfNo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
