@@ -367,11 +367,11 @@ export function DetailZnacky({
                     je to pro toho, kdo bóji zadává a chce si ověřit, že
                     vybral správně. Když vyhláška kombinaci nezná, nestojí
                     tu nic — domýšlet význam je horší než mlčet. */}
-                {znakPodleVyhlasky(znacka.boje.barva, znacka.boje.tvar) ? (
+                {znakPodleVyhlasky(znacka.boje.barva, znacka.boje.tvar, znacka.boje.znaceni) ? (
                   <Text style={[s.radek, { color: t.tlumeny }]}>
                     Podle vyhlášky:{' '}
                     <Text style={{ color: t.text }}>
-                      {znakPodleVyhlasky(znacka.boje.barva, znacka.boje.tvar)}
+                      {znakPodleVyhlasky(znacka.boje.barva, znacka.boje.tvar, znacka.boje.znaceni)}
                     </Text>
                   </Text>
                 ) : null}

@@ -421,7 +421,7 @@ function DetailPrvku({ prvek }: { prvek: VerejnaTrat["prvky"][number] }) {
         .map(
           (k) =>
             (k.znaceni ? NAZVY_ZNACENI[k.znaceni] : "") ||
-            znakPodleVyhlasky(k.barva ?? undefined, k.tvar ?? undefined),
+            znakPodleVyhlasky(k.barva ?? undefined, k.tvar ?? undefined, k.znaceni ?? undefined),
         )
         .filter((v): v is string => !!v),
     ),

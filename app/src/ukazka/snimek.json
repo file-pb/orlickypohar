@@ -9266,7 +9266,7 @@
   "smiPrijmout": false,
   "smiZkratit": false,
   "stav": "Rozestaveno",
-  "zalozenaV": "2026-11-26T15:25:00.732069+00:00",
+  "zalozenaV": "2026-11-26T15:31:23.028732+00:00",
   "zkracenoUPrvkuId": null,
   "zkracenoV": null,
   "zkratil": null
@@ -9311,7 +9311,7 @@
     "id": 3,
     "nazev": "bóje 1",
     "sirka": 49.5208,
-    "tvar": "Kuzelova",
+    "tvar": "SferickyVrsek",
     "zdroj": "Telefon",
     "znaceni": "NaseBoje"
    },
@@ -9363,7 +9363,7 @@
     "id": 3,
     "nazev": "bóje 1",
     "sirka": 49.5208,
-    "tvar": "Kuzelova",
+    "tvar": "SferickyVrsek",
     "zdroj": "Telefon",
     "znaceni": "NaseBoje"
    },

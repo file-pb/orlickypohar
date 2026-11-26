@@ -86,15 +86,29 @@ export const NAZVY_TVARU: Record<NonNullable<TvarBoje>, string> = {
  * k bóji jako vysvětlivka — kdo na Vltavě jezdí, pozná to i bez ní, ale
  * pořadatel, který bóji zadává, si tím ověří, že vybral správně.
  */
-export function znakPodleVyhlasky(barva?: BarvaBoje, tvar?: TvarBoje): string | null {
-  if (barva === "Cervena" && tvar === "Valcova") return "pravá strana plavební dráhy";
-  if (barva === "Zelena" && tvar === "Kuzelova") return "levá strana plavební dráhy";
-  if (barva === "Zluta" && tvar === "SferickyVrsek") return "sportovní bóje";
-  // Plameňák stojí před žlutou schválně: vyhláška ho nezná, takže se za
-  // její znak nesmí vydávat ani tehdy, když je zrovna žlutý. Jinak by
-  // nafukovací pták hlásil zakázanou vodní plochu.
+export function znakPodleVyhlasky(
+  barva?: BarvaBoje,
+  tvar?: TvarBoje,
+  znaceni?: DruhZnaceni,
+): string | null {
+  // Slovník od Filipa, 26. 11. 2026; příbuzná kopie i s odůvodněním je
+  // v appce, `app/src/lib/znak-vyhlaska.ts`.
+  //
+  // Sport se pozná nápisem SPORT, ne tvarem: týž „mimoň" bez nápisu je
+  // obyčejná otočná bójka a bývá i červená nebo zelená.
+  if (znaceni === "DrahaSport") return "sportovní bóje";
+  // Co není bóje, nemá výklad.
+  if (znaceni === "Plavidlo" || znaceni === "ObjektNaBrehu") return null;
+  // Plameňák stojí před barvami schválně: vyhláška ho nezná, takže se za
+  // její znak nesmí vydávat ani tehdy, když je zrovna žlutý.
   if (tvar === "Plamenak") return null;
-  if (barva === "Zluta") return "zakázaná nebo vyhrazená vodní plocha";
+  // Plovatka je rovnocenná varianta znaku dráhy, ne výjimka.
+  if (barva === "Cervena" && (tvar === "Valcova" || tvar === "Plovatka"))
+    return "pravá strana plavební dráhy";
+  if (barva === "Zelena" && (tvar === "Kuzelova" || tvar === "Plovatka"))
+    return "levá strana plavební dráhy";
+  // Zákaz vplutí je žlutá *kuželová*, ne každá žlutá.
+  if (barva === "Zluta" && tvar === "Kuzelova") return "zakázaná nebo vyhrazená vodní plocha";
   return null;
 }
 

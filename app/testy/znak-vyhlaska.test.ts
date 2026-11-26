@@ -29,21 +29,53 @@ zkus('zelená kuželová je levá strana dráhy', () => {
   assert.equal(znakPodleVyhlasky('Zelena', 'Kuzelova'), 'levá strana plavební dráhy');
 });
 
-zkus('žlutá s poklopem je sportovní bóje', () => {
-  assert.equal(znakPodleVyhlasky('Zluta', 'SferickyVrsek'), 'sportovní bóje');
+zkus('plovatka je rovnocenná varianta znaku dráhy', () => {
+  // Filip, 26. 11. 2026: „obě můžou mít varianty jako plovatka, akorát
+  // má tu barvu". Do té doby u nich výklad mlčel, přestože to pořadatel
+  // u bóje vybral.
+  assert.equal(znakPodleVyhlasky('Cervena', 'Plovatka'), 'pravá strana plavební dráhy');
+  assert.equal(znakPodleVyhlasky('Zelena', 'Plovatka'), 'levá strana plavební dráhy');
 });
 
-zkus('žlutá jinak značí zakázanou plochu', () => {
-  assert.equal(znakPodleVyhlasky('Zluta', 'Kulova'), 'zakázaná nebo vyhrazená vodní plocha');
-  assert.equal(znakPodleVyhlasky('Zluta', undefined), 'zakázaná nebo vyhrazená vodní plocha');
+zkus('zákaz vplutí je žlutá kuželová, a jen ta', () => {
+  // Filip, 26. 11. 2026: „žlutá kuželová bojka vypadá moc hezky, ale je
+  // to zákaz vplutí. Vždycky."
+  assert.equal(znakPodleVyhlasky('Zluta', 'Kuzelova'), 'zakázaná nebo vyhrazená vodní plocha');
+});
+
+zkus('žlutý mimoň není zákaz ani sport', () => {
+  // Válec se sférickým vrškem je otočná bójka a bývá i červená nebo
+  // zelená. Sportovní zóna má týž tvar a pozná se nápisem SPORT, který
+  // se z barvy a tvaru vyčíst nedá — dokud ho tedy někdo nevybere jako
+  // znak dráhy, vyhláška o té bóji neříká nic.
+  assert.equal(znakPodleVyhlasky('Zluta', 'SferickyVrsek'), null);
+  assert.equal(znakPodleVyhlasky('Cervena', 'SferickyVrsek'), null);
+  assert.equal(znakPodleVyhlasky('Zelena', 'SferickyVrsek'), null);
+  assert.equal(znakPodleVyhlasky('Zluta', 'SferickyVrsek', 'NaseBoje'), null);
+});
+
+zkus('sport se pozná podle nápisu, tedy podle značení', () => {
+  assert.equal(znakPodleVyhlasky('Zluta', 'SferickyVrsek', 'DrahaSport'), 'sportovní bóje');
+  // A platí i tehdy, když si pořadatel vybral jinou barvu.
+  assert.equal(znakPodleVyhlasky('Cervena', 'SferickyVrsek', 'DrahaSport'), 'sportovní bóje');
+});
+
+zkus('žlutá jinam než do kuželu nic nehlásí', () => {
+  // Dřív odsud vycházel zákaz pro cokoliv žlutého — i pro naši otočnou.
+  assert.equal(znakPodleVyhlasky('Zluta', 'Kulova'), null);
+  assert.equal(znakPodleVyhlasky('Zluta', undefined), null);
 });
 
 zkus('žlutý plameňák nehlásí nic', () => {
-  // Kdyby se podmínka na plameňáka dostala za žlutou, vyjde odsud
-  // „zakázaná nebo vyhrazená vodní plocha" — a to je tvrzení o vodě,
-  // které tam nikdo nevyhlásil.
+  // Kdyby se podmínka na plameňáka dostala za barvy, vyjde odsud
+  // tvrzení o vodě, které tam nikdo nevyhlásil.
   assert.equal(znakPodleVyhlasky('Zluta', 'Plamenak'), null);
   assert.equal(znakPodleVyhlasky('Ruzova', 'Plamenak'), null);
+});
+
+zkus('co není bóje, nemá výklad', () => {
+  assert.equal(znakPodleVyhlasky('Cervena', 'Valcova', 'Plavidlo'), null);
+  assert.equal(znakPodleVyhlasky('Zelena', 'Kuzelova', 'ObjektNaBrehu'), null);
 });
 
 zkus('co vyhláška nezná, mlčí', () => {
