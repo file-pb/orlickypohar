@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Linking, Platform, Text, View } from 'react-native';
 import { useUpdates } from 'expo-updates';
 
 import { Akce, Karta, Sekce } from '@/components/ui';
+import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import {
-  aktualizaceJdou, kratkyOtisk, popisHledani, popisPuvodu, pouzijHned, puvod,
-  zkusAktualizaci,
+  aktualizaceJdou, kratkyOtisk, OBCHOD, OBCHOD_WEB, popisBalicku, popisHledani, popisPuvodu,
+  pouzijHned, puvod, zjistiStavBalicku, zkusAktualizaci,
 } from '@/lib/verze';
 
 /**
@@ -40,9 +41,48 @@ export function VerzeAppky() {
           </Text>
         ) : null}
       </Karta>
+      {/* Obchod jen na Androidu: balíčky do něj staví a zapisuje CI pouze
+          tam, takže na iPhonu by karta vždycky mlčela. */}
+      {Platform.OS === 'android' ? <ZObchodu /> : null}
       {aktualizaceJdou ? <Hledani /> : <BezAktualizaci />}
     </>
   );
+}
+
+/**
+ * Je v obchodě novější balíček, než má telefon?
+ *
+ * <b>Stojí nad hledáním po síti schválně.</b> Když je venku nový balíček,
+ * hledání po síti řekne „appka je aktuální" — pro starý otisk nic nového
+ * neexistuje. Kdo čte odshora, musí narazit nejdřív na tu pravdivou větu.
+ */
+export function ZObchodu() {
+  const t = useTheme();
+  const { data: stav, nacita } = useData(zjistiStavBalicku);
+
+  if (nacita) return null;
+  if (!stav) {
+    return (
+      <Karta>
+        <Text style={{ color: t.tlumeny }}>Co je v Obchodě Play, se teď nedá zjistit.</Text>
+      </Karta>
+    );
+  }
+
+  const veta = popisBalicku(stav);
+  if (!veta) return null;
+
+  return (
+    <Karta>
+      <Text style={{ color: t.text }}>{veta}</Text>
+      {stav.druh === 'novejsi' ? <Akce text="Otevřít Obchod Play" onPress={otevriObchod} /> : null}
+    </Karta>
+  );
+}
+
+/** Aplikace obchodu, a když na telefonu není, stránka v prohlížeči. */
+export function otevriObchod() {
+  void Linking.openURL(OBCHOD).catch(() => Linking.openURL(OBCHOD_WEB));
 }
 
 /** Stav hledání novinek a dvě tlačítka k němu. */

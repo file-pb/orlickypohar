@@ -433,6 +433,11 @@ export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: st
   // Odpovídá se jako bez klíče, ne chybou — appka ten stav umí.
   if (c.startsWith('/klice/') || c === '/zarizeni') return Promise.resolve(odpoved(401));
 
+  // <b>Vydané balíčky ukázka nezná</b> — jede z přibalených dat, ne
+  // z obchodu. Prázdný seznam je tatáž odpověď, jakou dá server před prvním
+  // zápisem z CI; čtyřistačtyřka by v Účtu napsala, že se to „nedá zjistit".
+  if (c.startsWith('/appka/vydani/')) return Promise.resolve(odpoved(200, []));
+
   // <b>Dojezdy z trasování ukázka nemá</b> a je to pravda, ne mezera: ve
   // snímku nevysílá polohu žádná loď. Vrací se proto tatáž věta, jakou by
   // poslal server (`CilZTrasovaniDto.procNe`) — prázdný stav cílové

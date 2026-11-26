@@ -75,7 +75,7 @@ export default function KliceLodi() {
     try {
       const p = await pozviKlicem(lodId, null);
       if (p === null) {
-        setChyba('Nikdo není přihlášený — přihlas se na obrazovce Účet.');
+        setChyba('Nikdo není přihlášený — klepni nahoře na Přihlásit a zadej kód z webu.');
         return;
       }
       setPozvanka(p);

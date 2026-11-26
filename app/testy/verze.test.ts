@@ -12,8 +12,8 @@ import { zapomenVse } from 'expo-file-system';
 import { nastav } from 'expo-updates';
 
 import {
-  jePrvniNabeh, kdy, kratkyOtisk, popisHledani, popisPuvodu, puvod,
-  videnaVerze, zapamatuj,
+  jePrvniNabeh, kdy, kratkyOtisk, popisBalicku, popisHledani, popisPuvodu, puvod,
+  stavBalicku, verzeKratce, videnaVerze, zapamatuj, type Vydani,
 } from '../src/lib/verze.ts';
 
 let prosly = 0;
@@ -91,6 +91,86 @@ await zkus('připravená verze přebije „je tu novinka"', () => {
     popisHledani({ hleda: false, stahuje: false, cekaRestart: false, jeNovinka: false }),
     'Appka je aktuální.',
   );
+});
+
+
+/* ---------------------------------------------------------------------------
+ * Balíček v obchodě
+ *
+ * Aktualizace po síti hledají jen pro otisk, na kterém appka běží. Po
+ * nativní změně proto hlásí „aktuální", zatímco v Play leží nová verze —
+ * tyhle testy hlídají, že seznam vydaných balíčků řekne pravdu, a hlavně
+ * že neřekne „aktualizuj" tam, kde by to byla lež.
+ * ------------------------------------------------------------------------ */
+
+const A = 'af0083f42f028367c6244d3b0f83a6202a725c23';
+const B = '84146e78d94b4ab28d7e36a9c22d3bae60b8ee6b';
+const v = (cisloBalicku: number, otisk: string): Vydani =>
+  ({ cisloBalicku, otisk, vydanoV: '2026-11-26T23:02:38Z' });
+
+await zkus('poslední otisk v obchodě je můj: aktuální', () => {
+  const s = stavBalicku([v(18, B), v(17, A)], B, 'production');
+  assert.equal(s.druh, 'aktualni');
+});
+
+await zkus('můj otisk je starší balíček: v obchodě je novější', () => {
+  const s = stavBalicku([v(18, B), v(17, A)], A, 'production');
+  assert.equal(s.druh, 'novejsi');
+  if (s.druh !== 'novejsi') return;
+  assert.equal(s.posledni.cisloBalicku, 18);
+  assert.equal(s.muj.cisloBalicku, 17);
+});
+
+await zkus('neznámý otisk není „novější venku"', () => {
+  // Vývojový build, nebo balíček, jehož zápis se nepovedl. Rada
+  // „aktualizuj" by poslala člověka hledat verzi, kterou už má.
+  assert.equal(stavBalicku([v(18, B)], 'ffffffff', 'production').druh, 'neznamy');
+});
+
+await zkus('APK z webu a vývojový build se neptají obchodu', () => {
+  assert.equal(stavBalicku([v(18, B), v(17, A)], A, 'preview').druh, 'neznamy');
+  assert.equal(stavBalicku([v(18, B), v(17, A)], A, null).druh, 'neznamy');
+});
+
+await zkus('prázdný seznam ani chybějící otisk nic netvrdí', () => {
+  assert.equal(stavBalicku([], A, 'production').druh, 'neznamy');
+  assert.equal(stavBalicku([v(18, B)], null, 'production').druh, 'neznamy');
+});
+
+await zkus('na pořadí z API se nespoléhá', () => {
+  // Vzestupně: kdyby se bral první prvek, vyšel by starý balíček jako
+  // poslední a telefon s ním by dostal „aktuální".
+  const s = stavBalicku([v(17, A), v(18, B)], A, 'production');
+  assert.equal(s.druh, 'novejsi');
+});
+
+await zkus('tentýž otisk pod dvěma čísly: počítá se vyšší', () => {
+  // Ruční „nahrát znovu" dá stejnému otisku nové číslo.
+  const s = stavBalicku([v(19, B), v(18, A), v(17, A)], A, 'production');
+  assert.equal(s.druh, 'novejsi');
+  if (s.druh === 'novejsi') assert.equal(s.muj.cisloBalicku, 18);
+});
+
+await zkus('věta o novější verzi řekne obě čísla a proč se to nestáhne samo', () => {
+  const veta = popisBalicku(stavBalicku([v(18, B), v(17, A)], A, 'production'));
+  assert.ok(veta);
+  assert.match(veta, /č\. 18/);
+  assert.match(veta, /máš č\. 17/);
+  assert.match(veta, /sama se nestáhne/);
+  assert.equal(popisBalicku({ druh: 'neznamy' }), null);
+});
+
+await zkus('patička nabídky: číslo, když je známé, jinak otisk', () => {
+  assert.equal(
+    verzeKratce(stavBalicku([v(18, B)], B, 'production'), B),
+    'Nejnovější verze · balíček č. 18',
+  );
+  assert.equal(
+    verzeKratce(stavBalicku([v(18, B), v(17, A)], A, 'production'), A),
+    'Máš balíček č. 17 · v obchodě je č. 18',
+  );
+  assert.equal(verzeKratce({ druh: 'neznamy' }, A), 'Otisk af0083f4');
+  assert.equal(verzeKratce(null, null), null);
 });
 
 console.log(`  ${prosly} prošlo`);

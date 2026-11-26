@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, Text, useColorScheme, View } from 'react-
 
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
+import { useZmenaUctu } from '@/hooks/use-zmena-uctu';
 import { nactiDnesniRegatu } from '@/lib/api';
 import { jePrihlasen } from '@/lib/identita';
 import { mojeOpravneni } from '@/lib/opravneni';
@@ -37,9 +38,16 @@ export default function Domu() {
   const tmave = useColorScheme() === 'dark';
   const router = useRouter();
 
-  const { data: ja, chyba: chybaJa, nacita: nacitaJa } = useData(mojeOpravneni);
+  const { data: ja, chyba: chybaJa, nacita: nacitaJa, obnov: obnovJa } = useData(mojeOpravneni);
   // <b>Má ten telefon vůbec přihlášení?</b> Čte se z úložiště, bez sítě.
-  const { data: prihlasen, nacita: nacitaUcet } = useData(async () => await jePrihlasen());
+  const { data: prihlasen, nacita: nacitaUcet, obnov: obnovUcet } = useData(
+    async () => await jePrihlasen(),
+  );
+  // Po napojení se sem appka vrací navigací na kořen; rozcestník přitom
+  // zůstal v zásobníku, takže by se sám znovu nenačetl a ukázal by
+  // nabídku nepřihlášeného nad telefonem, který už za účet jedná.
+  useZmenaUctu(obnovUcet);
+  useZmenaUctu(obnovJa);
   const { data: dnes, chyba: chybaDnes, nacita: nacitaDnes } = useData(nactiDnesniRegatu);
 
   const nacita = nacitaJa || nacitaDnes || nacitaUcet;
@@ -124,7 +132,7 @@ export default function Domu() {
       {chybaJa || chybaDnes || spor ? (
         <Text style={{ color: t.vystraha, fontSize: 13, marginTop: 14 }}>
           {spor
-            ? 'Přihlášení neplatí. Otevři Účet a přihlas se znovu.'
+            ? 'Přihlášení neplatí. Vystav si na webu nový kód a zadej ho přes Přihlásit nahoře.'
             : 'Co smíš, se teď nedá zjistit — nabídka proto může být kratší.'}
         </Text>
       ) : null}

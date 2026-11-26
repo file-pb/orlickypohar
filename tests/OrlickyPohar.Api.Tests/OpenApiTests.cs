@@ -105,4 +105,25 @@ public class OpenApiTests(PostgresFixture fixture)
         // připojení: velí pořád ten, kdo se ptá?
         Assert.True(veleni.TryGetProperty("jsemTo", out _));
     }
+
+    /// <summary>
+    /// <b>Vydání appky je v dokumentu</b>, protože appka z něj bere typ, podle
+    /// kterého porovnává svůj otisk. Handler vrací typované <c>Results</c>
+    /// právě kvůli tomu — s holým <c>IResult</c> by tvar v dokumentu chyběl
+    /// a nespadlo by nic, jako u velení.
+    /// </summary>
+    [Fact]
+    public async Task Dokument_nese_vydani_appky()
+    {
+        var klient = fixture.CreateClient();
+
+        using var dokument = JsonDocument.Parse(
+            await (await klient.GetAsync("/openapi/v1.json")).Content.ReadAsStringAsync());
+        var vydani = dokument.RootElement.GetProperty("components")
+            .GetProperty("schemas").GetProperty("VydaniAppkyDto").GetProperty("properties");
+
+        Assert.True(vydani.TryGetProperty("cisloBalicku", out _));
+        Assert.True(vydani.TryGetProperty("otisk", out _));
+        Assert.True(vydani.TryGetProperty("vydanoV", out _));
+    }
 }

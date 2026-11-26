@@ -32,6 +32,7 @@ public sealed class PostgresFixture : WebApplicationFactory<Program>, IAsyncLife
 {
     public const string Token = "testovaci-token";
     public const string LandsatToken = "testovaci-landsat";
+    public const string VydaniToken = "testovaci-vydani";
 
     /// <summary>
     /// Obraz PostgreSQL. <b>V CI ze zrcadla v GHCR</b>, protože anonymní
@@ -81,6 +82,7 @@ public sealed class PostgresFixture : WebApplicationFactory<Program>, IAsyncLife
         builder.UseSetting("ConnectionStrings:Postgres", _db.GetConnectionString());
         builder.UseSetting("Import:Token", Token);
         builder.UseSetting("Landsat:Token", LandsatToken);
+        builder.UseSetting("Appka:Token", VydaniToken);
         // Identita se nastavuje schválně, i když je autorita vymyšlená
         // a nedostupná. Bez ní `Program.cs` chráněné řezy pod /sprava/
         // vůbec nezaregistruje (`if (identita)`) — a `OchranaCteniTests`,

@@ -101,6 +101,8 @@ src/OrlickyPohar.Api/
   Features/Clanky/            novinky a články, jejich psaní a správa
   Features/Poradatele/        pořadatel jako záznam s medailonkem
   Features/Fotky/             nahrané obrázky: přepočet do WebP, úložiště R2
+  Features/Appka/             vydané balíčky appky: CI je zapíše po nahrání
+                              do Play, appka podle otisku pozná novější
   Features/Vodocet/           sběr stavu Orlíku z Povodí Vltavy po 10 min,
                               přítok a odtok za 24 h
   Features/Identita/          uživatel, vazby (issuer, subject), role, Prava

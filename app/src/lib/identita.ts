@@ -1,6 +1,8 @@
 import * as AuthSession from "expo-auth-session";
 import * as SecureStore from "expo-secure-store";
 
+import { klicUctu, ohlasZmenuUctu } from "./klic-uctu";
+
 /**
  * Přihlášení v appce — Authorization Code s PKCE, stejný tok jako na webu.
  *
@@ -172,12 +174,24 @@ export async function token(): Promise<string | null> {
     // mezi čtenáře.
     await odhlas();
     await uloz(KLIC_VYPRSELA, "ano");
+    // `odhlas()` už změnu ohlásilo, jenže stopa o vypršení vznikla až
+    // teď. Bez druhého ohlášení by kebab četl, že nic nevypršelo.
+    ohlasZmenuUctu();
     return null;
   }
 }
 
-/** Je někdo přihlášený? Nevolá sítě, jen se ptá úložiště. */
+/**
+ * Jedná appka za nějaký účet? Nevolá síť, jen se ptá úložiště.
+ *
+ * <b>Napojený telefon je přihlášený taky</b> (26. 11. 2026). Dokud se tu
+ * ptalo jen na token z poskytovatele, telefon napojený kódem vypadal pro
+ * kebab, rozcestník i ročníky jako cizí: na headeru svítilo „Přihlásit"
+ * a rozcestník neukázal, co ten účet smí. Klíč má přednost i v `api.ts`,
+ * proto se na něj ptá jako první.
+ */
 export async function jePrihlasen() {
+  if ((await klicUctu()) !== null) return true;
   return (await SecureStore.getItemAsync(KLIC_TOKEN)) !== null;
 }
 
@@ -219,6 +233,7 @@ export async function odhlas() {
   // Kdo se odhlásil sám, nemá dostávat zprávu, že mu relace vypršela.
   // `token()` si tu stopu nastaví až po tomhle volání.
   await uloz(KLIC_VYPRSELA, null);
+  ohlasZmenuUctu();
 }
 
 /**

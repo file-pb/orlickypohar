@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
@@ -5,12 +6,21 @@ import { Akce, Karta, Nacitani, Nadpis, Radek, Sekce } from '@/components/ui';
 import { VerzeAppky } from '@/components/verze-appky';
 import { ZvukNastaveni } from '@/components/zvuk-nastaveni';
 import { useTheme } from '@/hooks/use-theme';
+import { useZmenaUctu } from '@/hooks/use-zmena-uctu';
 import { nactiJa, type Ja } from '@/lib/api';
-import { navratovaAdresa, odhlas, prihlas, prihlasovaniJde } from '@/lib/identita';
+import { odhlas } from '@/lib/identita';
+import { zapomenKlic } from '@/lib/klic-uctu';
 import { zapomenOpravneni } from '@/lib/opravneni';
 
 /**
  * Účet: přihlášení a co z něj plyne.
+ *
+ * <b>Přihlašuje se kódem z webu, ne heslem</b> (26. 11. 2026,
+ * `docs/ROZCESTNIK.md`, *Přihlášení bez cesty na Zitadel*, bod 4). Do té
+ * doby tu stálo tlačítko, které otevřelo stránku poskytovatele s heslem —
+ * a to pořadatel, který appku zapne dvakrát za sezónu, nemá. Kdo je
+ * přihlášený tokenem z dřívějška, o nic nepřichází: `api.ts` token dál
+ * posílá, jen se nový nikde nezakládá.
  *
  * <b>Proč je tu seznam oprávnění:</b> přihlášení samo o sobě nic neříká —
  * nový účet u poskytovatele nemá v poháru jediné právo a role se udělují
@@ -27,7 +37,7 @@ export default function Ucet() {
   const [ja, setJa] = useState<Ja | null>(null);
   const [nacita, setNacita] = useState(true);
   const [chyba, setChyba] = useState<string | null>(null);
-  const [delam, setDelam] = useState(false);
+  const router = useRouter();
 
   const nacti = useCallback(async () => {
     setNacita(true);
@@ -44,24 +54,19 @@ export default function Ucet() {
   useEffect(() => {
     void nacti();
   }, [nacti]);
+  // Z *Mám kód* se člověk vrací sem gestem zpět, a tahle obrazovka
+  // v zásobníku zůstala — bez ohlášení by dál psala „nikdo".
+  useZmenaUctu(nacti);
 
-  const naPrihlaseni = async () => {
-    setDelam(true);
-    try {
-      const potiz = await prihlas();
-      setChyba(potiz);
-      // Drženou odpověď `/ja` zahodit, jinak by nabídka v kebabu ještě
-      // minutu tvrdila, že přihlášený není nic.
-      zapomenOpravneni();
-      if (!potiz) await nacti();
-    } finally {
-      setDelam(false);
-    }
-  };
-
+  /**
+   * Odhlášení zapomene <b>klíč i token</b>. Telefon mohl mít obojí — token
+   * z doby, kdy se appka přihlašovala heslem — a kdyby zůstal jeden,
+   * `api.ts` by za účet jednal dál a tlačítko by lhalo.
+   */
   const naOdhlaseni = async () => {
-    await odhlas();
     zapomenOpravneni();
+    await zapomenKlic();
+    await odhlas();
     setJa(null);
   };
 
@@ -73,38 +78,19 @@ export default function Ucet() {
 
       {nacita ? <Nacitani /> : null}
 
-      {!nacita && !prihlasovaniJde ? (
+      {/* <b>Bez hesla a bez poskytovatele.</b> Cesta vede přes web, kde se
+          role stejně udělují: u počítače se člověk přihlásí, v *Můj účet*
+          mu svítí QR a kód, a telefon ho přečte. Neplatí na to
+          `prihlasovaniJde` — kód na adrese poskytovatele nezávisí. */}
+      {!nacita && !ja ? (
         <Karta>
-          <Text style={{ color: t.text }}>
-            Přihlašování není v téhle verzi appky nastavené.
+          <Text style={{ color: t.text }}>Nikdo není přihlášený.</Text>
+          <Text style={{ color: t.tlumeny, marginTop: 6 }}>
+            Na webu se přihlas a v Můj účet ti svítí QR a kód. Telefon ho
+            naskenuje, vezme ze snímku obrazovky, nebo ho opíšeš.
           </Text>
-          <Text style={{ color: t.tlumeny, marginTop: 8 }}>
-            Chybí adresa poskytovatele nebo identifikátor klienta. U poskytovatele
-            se zakládá aplikace typu Native s touhle návratovou adresou:
-          </Text>
-          <Text selectable style={{ color: t.voda, marginTop: 8 }}>
-            {navratovaAdresa}
-          </Text>
+          <Akce text="Přihlásit se kódem z webu" onPress={() => router.push('/mam-kod')} />
         </Karta>
-      ) : null}
-
-      {!nacita && prihlasovaniJde && !ja ? (
-        <>
-          <Karta>
-            <Text style={{ color: t.text }}>Nikdo není přihlášený.</Text>
-            <Akce
-              text={delam ? 'Přihlašuji…' : 'Přihlásit se'}
-              onPress={naPrihlaseni}
-              pracuje={delam}
-            />
-          </Karta>
-
-          {/* Adresa je vidět i tady: v Expo Go ji poskytovatel nezná, protože
-              obsahuje adresu notebooku v síti — viz `identita.ts`. */}
-          <Text style={{ color: t.tlumeny, marginTop: 16, fontSize: 12 }}>
-            Návratová adresa: {navratovaAdresa}
-          </Text>
-        </>
       ) : null}
 
       {ja ? (
@@ -136,6 +122,12 @@ export default function Ucet() {
 
           <View style={{ marginTop: 12 }}>
             <Akce text="Odhlásit se" onPress={naOdhlaseni} />
+            {/* Klíč se zapomene jen tady. Ztracený telefon se odpojuje na
+                webu — tahle věta je pro toho, kdo hledá, kde to udělat. */}
+            <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 6 }}>
+              Telefon tím zapomene, za koho jedná. Ztracený telefon odpojíš
+              na webu v Můj účet.
+            </Text>
           </View>
         </>
       ) : null}

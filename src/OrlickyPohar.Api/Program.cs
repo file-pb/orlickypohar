@@ -3,6 +3,7 @@ using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Serilog;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Appka;
 using OrlickyPohar.Api.Features.Bodovani;
 using OrlickyPohar.Api.Features.Boje;
 using OrlickyPohar.Api.Features.Clanky;
@@ -236,6 +237,7 @@ try
     app.MapVodocet();
     app.MapPrevzate();
     app.MapTeplotaHladiny();
+    app.MapVydaniAppky();
     app.MapNapovedu();
     app.MapVerejnePrihlasky();
     if (identita)

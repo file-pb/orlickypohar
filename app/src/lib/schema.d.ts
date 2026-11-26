@@ -438,6 +438,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/appka/vydani/{platforma}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Nativní balíčky appky, které došly do obchodu
+         * @description Nejvýš 20 posledních, od nejvyššího čísla balíčku. Prázdný seznam, dokud CI nic nezapsalo. Appka podle otisku pozná, jestli ten její je poslední — aktualizace po síti to nepoznají, protože hledají jen pro otisk, na kterém appka běží.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    platforma: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VydaniAppkyDto"][];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appka/vydani": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Zápis vydaného balíčku z CI
+         * @description Chráněno tokenem v hlavičce X-Vydani-Token. Idempotentní podle platformy a čísla balíčku: ruční „nahrát znovu“ téhož čísla nic nezdvojí.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZapisVydaniAppky"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/lode/napoveda": {
         parameters: {
             query?: never;
@@ -1354,6 +1443,167 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/klice/kod": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vystaví jednorázový kód pro napojení telefonu
+         * @description Kód platí minuty a uplatnit ho jde jednou. Vystavením se ruší starý nevyužitý kód téhož účtu.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NapojeniKodDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/klice/napojit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vymění kód za klíč k účtu
+         * @description Vrací klíč jedinkrát. Vymyšlený, propadlý i už uplatněný kód dopadnou stejně, aby se z odpovědi nedalo nic vyčíst.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["NapojVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NapojeniDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/klice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Telefony napojené na přihlášený účet */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KlicUctuDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/klice/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Odebere napojený telefon */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -7779,6 +8029,15 @@ export interface components {
             cisloPlachty: null | string;
             klice: components["schemas"]["KlicDto"][];
         };
+        KlicUctuDto: {
+            /** Format: int32 */
+            id: number;
+            zarizeni: null | string;
+            /** Format: date-time */
+            vydanV: string;
+            /** Format: date-time */
+            ozvalSeV: null | string;
+        };
         KlonTratiVstup: {
             /** Format: int32 */
             rozjizdka: null | number;
@@ -7948,6 +8207,19 @@ export interface components {
             prace: null | components["schemas"]["PraceDto"];
             historie: components["schemas"]["DenNakladu"][];
             zatim: null | components["schemas"]["ZatimDto"];
+        };
+        NapojeniDto: {
+            klic: string;
+            zobrazovane: string;
+        };
+        NapojeniKodDto: {
+            kod: string;
+            /** Format: date-time */
+            platiDo: string;
+        };
+        NapojVstup: {
+            kod: string;
+            zarizeni: null | string;
         };
         NapovedaLodiDto: {
             lod: string;
@@ -9076,6 +9348,13 @@ export interface components {
         VraceniTratiVstup: {
             duvod: null | string;
         };
+        VydaniAppkyDto: {
+            /** Format: int32 */
+            cisloBalicku: number;
+            otisk: string;
+            /** Format: date-time */
+            vydanoV: string;
+        };
         /** @enum {unknown} */
         Vyhodnoceni: "CelePole" | "PoKategoriich" | "Oboje";
         VykonanVstup: {
@@ -9234,6 +9513,13 @@ export interface components {
             /** Format: int32 */
             revize?: null | number;
             okolnosti?: null | components["schemas"]["OkolnostiVstup"];
+        };
+        ZapisVydaniAppky: {
+            platforma: string;
+            /** Format: int32 */
+            cisloBalicku: number;
+            otisk: string;
+            commit: null | string;
         };
         ZarizeniVstup: {
             token: null | string;

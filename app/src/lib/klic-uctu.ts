@@ -38,6 +38,30 @@ export const jmenoUctu = () => SecureStore.getItemAsync(KLIC_JMENO);
 export const HLAVICKA = 'X-Klic-Uctu';
 
 /**
+ * Kdo chce vědět, že se telefon napojil, odpojil nebo odhlásil.
+ *
+ * <b>Proč to je potřeba:</b> kebab visí v kořenovém rozvržení a stav účtu
+ * načte jednou za běh appky; rozcestník zůstává v zásobníku pod obrazovkou
+ * *Mám kód*. Napojení se ale děje jinde, takže bez ohlášení by na headeru
+ * dál svítilo „Přihlásit" nad telefonem, který už za účet jedná — a
+ * klepnutí by člověka poslalo kód zadávat podruhé.
+ */
+const posluchaci = new Set<() => void>();
+
+/** Přihlásí posluchače; vrací funkci, která ho zase odhlásí. */
+export function naZmenuUctu(f: () => void): () => void {
+  posluchaci.add(f);
+  return () => {
+    posluchaci.delete(f);
+  };
+}
+
+/** Ohlásí změnu všem. Volá se po napojení, odpojení i odhlášení. */
+export function ohlasZmenuUctu() {
+  for (const f of posluchaci) f();
+}
+
+/**
  * Vymění kód za klíč a uloží ho. Vrací jméno účtu, nebo `null`.
  *
  * <b>Vymyšlený, propadlý i už uplatněný kód dopadnou stejně</b> — tak to
@@ -56,6 +80,7 @@ export async function napoj(kod: string, zarizeni: string): Promise<string | nul
   const data = (await odpoved.json()) as { klic: string; zobrazovane: string };
   await uloz(KLIC, data.klic);
   await uloz(KLIC_JMENO, data.zobrazovane);
+  ohlasZmenuUctu();
   return data.zobrazovane;
 }
 
@@ -67,6 +92,7 @@ export async function napoj(kod: string, zarizeni: string): Promise<string | nul
 export async function zapomenKlic() {
   await uloz(KLIC, null);
   await uloz(KLIC_JMENO, null);
+  ohlasZmenuUctu();
 }
 
 /**

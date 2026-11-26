@@ -26,6 +26,8 @@ import { File, Paths } from 'expo-file-system';
 import * as Updates from 'expo-updates';
 
 import { datum } from './datum';
+import type { components } from './schema';
+import { sit } from './sit';
 
 /** Jméno souboru, ve kterém si appka drží poslední ohlášenou aktualizaci. */
 const PAMET = 'videna-verze.txt';
@@ -109,6 +111,95 @@ export function popisHledani(s: {
   return 'Appka je aktuální.';
 }
 
+/* ---------- balíček v obchodě: čistá část ---------- */
+
+/** Jeden vydaný balíček, jak ho vrací `GET /appka/vydani/android`. */
+export type Vydani = components['schemas']['VydaniAppkyDto'];
+
+/** Má telefon poslední balíček z obchodu? */
+export type StavBalicku =
+  | { druh: 'aktualni'; posledni: Vydani }
+  | { druh: 'novejsi'; posledni: Vydani; muj: Vydani }
+  | { druh: 'neznamy' };
+
+/**
+ * Má telefon poslední balíček z obchodu?
+ *
+ * <b>Proč to nestačí nechat na aktualizacích po síti</b> (Filip, 26. 11.
+ * 2026: *„aby se to nemuselo odhadovat"*). Ty hledají jen pro otisk, na
+ * kterém appka běží. Po nativní změně pro starý balíček žádná není, takže
+ * by appka hlásila „jsi aktuální" ve chvíli, kdy v Play leží nová verze.
+ *
+ * <b>Rozhoduje otisk, ne čas.</b> Telefon zná svůj `runtimeVersion` a
+ * seznam řekne, kterému balíčku patří. Pořadí dává číslo balíčku — seznam
+ * se tu řadí znovu, na pořadí z API se nespoléhá.
+ *
+ * <b>Neznámý otisk není „novější venku".</b> Telefon může mít balíček,
+ * jehož zápis se nepovedl, vývojový build nebo něco novějšího, než API zná.
+ * Rada „aktualizuj v Play" by tam byla lež, a falešná rada je horší než
+ * žádná — člověk by v obchodě hledal verzi, kterou už má.
+ *
+ * <b>Jen kanál `production`.</b> To je balíček z Play. APK ze stránky
+ * `/appka` jede na `preview` a z Play se aktualizovat nedá; vývojový build
+ * a Expo Go kanál nemají vůbec.
+ */
+export function stavBalicku(
+  vydani: readonly Vydani[],
+  otisk: string | null,
+  kanal: string | null,
+): StavBalicku {
+  if (kanal !== 'production' || !otisk || vydani.length === 0) return { druh: 'neznamy' };
+
+  const podleCisla = [...vydani].sort((a, b) => b.cisloBalicku - a.cisloBalicku);
+  const posledni = podleCisla[0];
+  if (posledni.otisk === otisk) return { druh: 'aktualni', posledni };
+
+  // Nejvyšší balíček s mým otiskem: ruční „nahrát znovu" mohl tentýž
+  // otisk dát víc číslům.
+  const muj = podleCisla.find((v) => v.otisk === otisk);
+  if (!muj) return { druh: 'neznamy' };
+  return { druh: 'novejsi', posledni, muj };
+}
+
+/** Jedna věta o balíčku z obchodu, nebo `null`, když není co říct. */
+export function popisBalicku(s: StavBalicku): string | null {
+  switch (s.druh) {
+    case 'aktualni':
+      return `Máš nejnovější balíček z Obchodu Play — č. ${s.posledni.cisloBalicku}, vydaný ${kdy(new Date(s.posledni.vydanoV))}.`;
+    case 'novejsi':
+      return (
+        `V Obchodě Play je novější verze — balíček č. ${s.posledni.cisloBalicku}, ` +
+        `vydaný ${kdy(new Date(s.posledni.vydanoV))}. Ty máš č. ${s.muj.cisloBalicku}. ` +
+        'Aktualizuj ji v obchodě: sama se nestáhne, protože mění nativní část appky.'
+      );
+    case 'neznamy':
+      return null;
+  }
+}
+
+/**
+ * Na čem appka jede, na jeden řádek — pro patičku nabídky pod tečkami.
+ *
+ * <b>Proč i tam</b> (Filip, 26. 11. 2026: *„není možné tam někde pod
+ * tečkami udělat info o verzi"*). Celá sekce je v *Účet a nastavení*, ale
+ * kdo ověřuje, jestli mu dorazila oprava, nemá ji hledat o dvě obrazovky
+ * hloub. Bez balíčku z obchodu zbude otisk: je to aspoň něco, co jde
+ * přečíst do telefonu a porovnat.
+ */
+export function verzeKratce(stav: StavBalicku | null, otisk: string | null): string | null {
+  if (stav?.druh === 'aktualni') return `Nejnovější verze · balíček č. ${stav.posledni.cisloBalicku}`;
+  if (stav?.druh === 'novejsi') {
+    return `Máš balíček č. ${stav.muj.cisloBalicku} · v obchodě je č. ${stav.posledni.cisloBalicku}`;
+  }
+  const k = kratkyOtisk(otisk);
+  return k ? `Otisk ${k}` : null;
+}
+
+/** Obchod Play na stránce appky. `market:` otevře aplikaci obchodu. */
+export const OBCHOD = 'market://details?id=cz.klihovka.orlickypohar';
+/** Totéž v prohlížeči — pro telefon, na kterém aplikace obchodu není. */
+export const OBCHOD_WEB = 'https://play.google.com/store/apps/details?id=cz.klihovka.orlickypohar';
+
 /* ---------- část, která mluví s telefonem ---------- */
 
 /** Jsou aktualizace po síti vůbec v téhle verzi appky zapnuté? */
@@ -177,4 +268,22 @@ export async function zkusAktualizaci(): Promise<string | null> {
 /** Použije připravenou verzi hned. Appka se při tom překreslí od začátku. */
 export async function pouzijHned(): Promise<void> {
   await Updates.reloadAsync();
+}
+
+/**
+ * Má tenhle telefon poslední balíček z obchodu? `null`, když se to nedá
+ * zjistit — bez signálu, nebo když API neodpoví.
+ *
+ * <b>Chyba není „aktuální".</b> Mlčet by vypadalo stejně jako shoda, a právě
+ * tenhle rozdíl je důvod, proč to celé vzniklo.
+ */
+export async function zjistiStavBalicku(): Promise<StavBalicku | null> {
+  try {
+    const odpoved = await sit('/appka/vydani/android', { headers: { accept: 'application/json' } });
+    if (!odpoved.ok) return null;
+    const vydani = (await odpoved.json()) as Vydani[];
+    return stavBalicku(vydani, Updates.runtimeVersion ?? null, Updates.channel ?? null);
+  } catch {
+    return null;
+  }
 }

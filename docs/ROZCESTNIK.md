@@ -257,6 +257,60 @@ a iPhone přes kabel zůstávají ruční.
 balíčku** — a to je samo o sobě důvod ji nechat, ne jen záloha pro případ,
 že foťák selže.
 
+### Z appky zmizelo heslo (bod 4)
+
+**Hotovo 26. 11. 2026**, ještě týž večer, kdy Filip na Ulefonu klepl
+na modré *Přihlásit* a skončil na `ucty.klihovka.cz` s heslem: *„kdy to
+tam uvidím, že je možné se přihlásit pomocí toho QR nebo kódu?"*
+
+Tlačítko *Přihlásit* na headeru i karta na *Účtu* vedou na *Mám kód*.
+Slovo zůstalo, protože ho lidé hledají; obrazovka za ním řekne, že se
+to dělá kódem z webu.
+
+**Přitom se našla chyba, která by se projevila hned po napojení.**
+`jePrihlasen()` se ptala jen na token od poskytovatele, takže telefon
+napojený kódem vypadal pro kebab, rozcestník i ročníky jako cizí — na
+headeru by dál svítilo *Přihlásit*. Teď se ptá nejdřív na klíč, stejně
+jako `api.ts`. A protože kebab visí v kořenovém rozvržení a načte stav
+jednou za běh, napojení se **ohlašuje** (`naZmenuUctu` v `klic-uctu.ts`)
+a kebab, rozcestník, ročníky i *Účet* se po něm obnoví samy.
+
+**Co nezmizelo, schválně:** `expo-auth-session` zůstává nainstalovaný
+a `api.ts` dál posílá token, kdo ho má. Vytržení knihovny by posunulo
+otisk a vyžádalo další balíček do obchodu; takhle celá změna dojde
+aktualizací po síti. A kdo je přihlášený heslem z dřívějška, nepřijde
+o přístup uprostřed sezóny. Odhlášení zapomene klíč i token naráz.
+
+### Appka pozná, že je venku novější balíček
+
+Filip týž večer: *„není možné tam někde pod tečkami udělat info o verzi
+a případně check for updates, aby se to nemuselo odhadovat?"* Sekce
+*Verze appky* s tlačítkem na hledání existovala od 28. 10. — jenže po
+nativní změně by **lhala**: aktualizace po síti hledá jen pro otisk, na
+kterém appka běží, a pro starý balíček žádná není. Řekla by „appka je
+aktuální" přesně ve chvíli, kdy v Play leží nová verze.
+
+Proto `Features/Appka`: CI hned po nahrání do Play zapíše číslo balíčku
+a otisk (`POST /appka/vydani`, krok *Zapsat vydání pro appku*, skript
+`app/scripts/zapis-vydani.sh`), appka si je přečte a podle **otisku**
+pozná, jestli ten její je poslední. Pod tečkami je pak nahoře *Nová
+verze v Obchodě Play*, když je, a dole drobně, na čem appka jede.
+
+Tři rozhodnutí, která jdou proti první myšlence:
+
+- **Porovnává se otisk, ne číslo balíčku.** Telefon své číslo bez
+  `expo-application` nezná a přidat nativní modul by posunulo otisk. Otisk
+  zná vždycky.
+- **Neznámý otisk není „novější venku".** Vývojový build nebo balíček,
+  jehož zápis se nepovedl, by jinak dostal radu hledat v obchodě verzi,
+  kterou už má. Hlásí se jen tam, kde je otisk v seznamu a není poslední.
+- **Zapisuje se po nahrání, ne při nasazení.** Image se nasazuje o půl
+  hodiny dřív, než balíček projde frontou Expa.
+
+Zápis chrání vlastní tajemství (`Appka__Token` na serveru, `APPKA_TOKEN`
+v GitHubu), zvlášť od importního i satelitního — kdo ukradne jedno,
+nemá dostat právo na zbytek.
+
 ### Co to stojí a kde je mez
 
 Kód jde přeposlat, takže je to slabší doklad než přihlášení s heslem

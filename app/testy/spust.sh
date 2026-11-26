@@ -64,6 +64,11 @@ echo
 echo "== Klíč k účtu =="
 "${NODE[@]}" ./klic-uctu.test.ts
 
+# Napojený telefon je přihlášený a změnu se dozví kebab i rozcestník.
+echo
+echo "== Přihlášení kódem =="
+"${NODE[@]}" ./prihlaseni-kodem.test.ts
+
 echo
 echo "== Odběry upozornění =="
 "${NODE[@]}" ./odbery.test.ts

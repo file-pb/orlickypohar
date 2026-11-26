@@ -1,16 +1,19 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Radek } from '@/components/ui';
+import { otevriObchod } from '@/components/verze-appky';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
-import { jePrihlasen, prihlas, prihlasovaniJde, relaceVyprsela } from '@/lib/identita';
+import { useZmenaUctu } from '@/hooks/use-zmena-uctu';
+import { jePrihlasen, relaceVyprsela } from '@/lib/identita';
 import { pismoNaVyplni } from '@/lib/kontrast';
 import { nabidka } from '@/lib/nabidka';
 import { mojeOpravneni, zapomenOpravneni } from '@/lib/opravneni';
 import { kamVUkazce, ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
+import { puvod, verzeKratce, zjistiStavBalicku } from '@/lib/verze';
 
 /**
  * Kebab: všechno, co není „co teď".
@@ -37,42 +40,26 @@ export function Kebab() {
   // Oprávnění se drží minutu (`lib/opravneni.ts`); nabídka je na každé
   // obrazovce a dotaz za přechod by na vodě stál čekání u každého klepnutí.
   const { data: ja, obnov: obnovOpravneni } = useData(mojeOpravneni);
-  const [prihlasuje, setPrihlasuje] = useState(false);
-  const [potizPrihlaseni, setPotizPrihlaseni] = useState<string | null>(null);
   const { data: ucet, obnov: obnovUcet } = useData(async () => ({
     prihlasen: ukazkaBezi() || (await jePrihlasen()),
     vyprselo: !ukazkaBezi() && (await relaceVyprsela()),
   }));
 
   /**
-   * <b>Přihlásit se dá rovnou odsud</b> (Filip, 26. 11. 2026: *„to
-   * přihlášení chce dlaždici rovnou v menu vedle tří teček"*). Dokud bylo
-   * schované pod řádkou *Účet a nastavení*, hledal ho Filip v hospodě
-   * marně — a appka mezitím mlčky ukazovala jen sledování.
-   *
-   * <b>A neúspěch se řekne tady, ne až dole na jiné obrazovce.</b> Na účtu
-   * se chyba vypisuje obyčejným písmem pod kartami, takže klepnutí bez
-   * signálu vypadá, že se nestalo nic.
+   * <b>Napojí-li se telefon jinde, header to musí vědět hned.</b> Kebab se
+   * připojí jednou za běh appky, takže bez tohohle by „Přihlásit" svítilo
+   * dál nad telefonem, který už za účet jedná — až do prvního otevření
+   * nabídky. Oprávnění jdou s ním: co účet smí, je důvod se napojovat.
    */
-  const naPrihlaseni = async () => {
-    setPrihlasuje(true);
-    setPotizPrihlaseni(null);
-    try {
-      const potiz = await prihlas();
-      setPotizPrihlaseni(potiz);
-      // <b>Tlačítko na headeru větu neunese</b>, a mlčet nesmí: klepnutí
-      // bez signálu by vypadalo, že se nestalo nic. Proto upozornění.
-      if (potiz) Alert.alert('Přihlášení se nepovedlo', potiz);
-      if (!potiz) {
-        zapomenOpravneni();
-        await obnovOpravneni();
-        await obnovUcet();
-        setOtevreno(false);
-      }
-    } finally {
-      setPrihlasuje(false);
-    }
-  };
+  useZmenaUctu(obnovUcet);
+  useZmenaUctu(obnovOpravneni);
+
+  // Balíček v obchodě jen na Androidu — jinde ho CI nezapisuje a dotaz by
+  // byl zbytečný. Obnovuje se při otevření nabídky, stejně jako oprávnění.
+  const { data: balicek, obnov: obnovBalicek } = useData(async () =>
+    Platform.OS === 'android' ? await zjistiStavBalicku() : null,
+  );
+  const verze = verzeKratce(balicek ?? null, puvod().otisk);
 
   // Zavřít dřív, než se někam jde: jinak by nabídka zůstala viset nad
   // obrazovkou, na kterou se právě přešlo.
@@ -90,21 +77,28 @@ export function Kebab() {
       {/* <b>Přihlášení patří na header, vedle teček</b> (Filip, 26. 11.
           2026). Ne do nabídky pod nimi: tam ho v hospodě marně hledal,
           zatímco appka mlčky ukazovala jen sledování. Je vidět na každé
-          obrazovce a zmizí, jakmile se někdo přihlásí — pak už místo
-          nahoře nezabírá nic. */}
-      {prihlasovaniJde && ucet && !ucet.prihlasen ? (
+          obrazovce a zmizí, jakmile telefon za někoho jedná — pak už
+          místo nahoře nezabírá nic.
+
+          <b>Vede na *Mám kód*, ne na poskytovatele</b> (rozhodnuto
+          26. 11. 2026, `docs/ROZCESTNIK.md`, *Přihlášení bez cesty na
+          Zitadel*, bod 4). Do té doby otevíralo stránku `ucty.klihovka.cz`
+          s heslem, které pořadatel nemá. Slovo „Přihlásit" zůstává, protože
+          ho lidé hledají; obrazovka za ním řekne, že se to dělá kódem
+          z webu. Neplatí na něj `prihlasovaniJde`: kód na poskytovateli
+          nezávisí, a appka bez jeho adresy by se jinak nenapojila vůbec. */}
+      {ucet && !ucet.prihlasen ? (
         <Pressable
-          onPress={naPrihlaseni}
-          disabled={prihlasuje}
+          onPress={() => jdi('/mam-kod')}
           accessibilityRole="button"
-          accessibilityLabel={potizPrihlaseni ?? 'Přihlásit se'}
+          accessibilityLabel="Přihlásit se kódem z webu"
           style={({ pressed }) => [
             s.prihlasit,
             { backgroundColor: t.voda, borderColor: t.voda },
             pressed && { opacity: 0.6 },
           ]}>
           <Text style={[s.prihlasitText, { color: pismoNaVyplni(t, t.voda) }]}>
-            {prihlasuje ? 'Přihlašuji…' : ucet.vyprselo ? 'Přihlásit znovu' : 'Přihlásit'}
+            {ucet.vyprselo ? 'Přihlásit znovu' : 'Přihlásit'}
           </Text>
         </Pressable>
       ) : null}
@@ -122,7 +116,7 @@ export function Kebab() {
           // Opakované otevření nestojí dotaz — drží ho `mojeOpravneni`.
           void obnovOpravneni();
           void obnovUcet();
-          setPotizPrihlaseni(null);
+          void obnovBalicek();
         }}
         accessibilityRole="button"
         accessibilityLabel="Nabídka"
@@ -151,6 +145,22 @@ export function Kebab() {
             s.panel,
             { backgroundColor: t.papir, borderColor: t.linka, paddingTop: okraje.top + 8 },
           ]}>
+          {/* <b>Nová verze nahoře, ne v patičce.</b> Po nativní změně se
+              appka sama neaktualizuje, a kdo tu řádku nevidí, jede dál na
+              starém balíčku — přesně ten stav, kvůli kterému to vzniklo
+              (Filip, 26. 11. 2026: *„aby se to nemuselo odhadovat"*). */}
+          {balicek?.druh === 'novejsi' ? (
+            <Radek
+              text="Nová verze v Obchodě Play"
+              popis={`balíček č. ${balicek.posledni.cisloBalicku} — sama se nestáhne`}
+              hodnota="aktualizovat"
+              barvaHodnoty={t.voda}
+              onPress={() => {
+                setOtevreno(false);
+                otevriObchod();
+              }}
+            />
+          ) : null}
           {nabidka(ja ?? null).map((k) => (
             <Radek key={k.cil} text={k.text} popis={k.popis} onPress={() => jdi(k.cil)} />
           ))}
@@ -239,6 +249,16 @@ export function Kebab() {
               void Linking.openURL(WEB);
             }}
           />
+          {/* Na čem appka jede, bez hledání o dvě obrazovky hloub. Klepnutí
+              vede na *Účet a nastavení*, kde je celá sekce i hledání novinek. */}
+          {verze ? (
+            <Pressable
+              onPress={() => jdi('/ucet')}
+              accessibilityRole="button"
+              style={({ pressed }) => [s.verze, pressed && { opacity: 0.5 }]}>
+              <Text style={[s.verzeText, { color: t.tlumeny }]}>{verze}</Text>
+            </Pressable>
+          ) : null}
           <Pressable
             onPress={() => setOtevreno(false)}
             style={({ pressed }) => [s.zavrit, pressed && { opacity: 0.5 }]}>
@@ -293,6 +313,9 @@ const s = StyleSheet.create({
   },
   prihlasitText: { fontSize: 14, fontWeight: '700' },
 
+  // Řádek s verzí je klepací, takže 44 pt i přes drobné písmo.
+  verze: { minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  verzeText: { fontSize: 12 },
   zavrit: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   zavritText: { fontSize: 16, fontWeight: '700' },
 });

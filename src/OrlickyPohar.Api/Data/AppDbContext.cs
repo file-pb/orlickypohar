@@ -55,6 +55,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
     public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
+    public DbSet<Features.Appka.VydaniAppky> VydaniAppky => Set<Features.Appka.VydaniAppky>();
     public DbSet<Uzivatel> Uzivatele => Set<Uzivatel>();
     public DbSet<UcetVazba> Vazby => Set<UcetVazba>();
     public DbSet<Opravneni> Opravneni => Set<Opravneni>();
@@ -318,6 +319,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         satelit.HasIndex(x => new { x.Snimek, x.Misto }).IsUnique();
         // Widget čte okno od nejnovějšího snímku.
         satelit.HasIndex(x => x.Cas);
+
+        var vydani = b.Entity<Features.Appka.VydaniAppky>();
+        vydani.ToTable("VydaniAppky");
+        vydani.Property(x => x.Platforma).HasMaxLength(Features.Appka.VydaniAppky.PlatformaNejvic);
+        vydani.Property(x => x.Otisk).HasMaxLength(Features.Appka.VydaniAppky.OtiskNejvic);
+        vydani.Property(x => x.Commit).HasMaxLength(Features.Appka.VydaniAppky.CommitNejvic);
+        // Přirozený klíč: ruční „nahrát znovu" pošle totéž číslo podruhé.
+        // Index zároveň slouží čtení od nejvyššího čísla v rámci platformy.
+        vydani.HasIndex(x => new { x.Platforma, x.CisloBalicku }).IsUnique();
 
         var fotka = b.Entity<Fotka>();
         fotka.Property(x => x.Id).ValueGeneratedNever();

@@ -6,6 +6,7 @@ export let isEmbeddedLaunch = true;
 export let createdAt = null;
 export let runtimeVersion = null;
 export let updateId = null;
+export let channel = null;
 
 export function nastav(s) {
   if ('isEnabled' in s) isEnabled = s.isEnabled;
@@ -13,6 +14,7 @@ export function nastav(s) {
   if ('createdAt' in s) createdAt = s.createdAt;
   if ('runtimeVersion' in s) runtimeVersion = s.runtimeVersion;
   if ('updateId' in s) updateId = s.updateId;
+  if ('channel' in s) channel = s.channel;
 }
 
 export async function checkForUpdateAsync() { return { isAvailable: false }; }

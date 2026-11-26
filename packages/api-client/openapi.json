@@ -6,7 +6,7 @@
     },
     "servers": [
         {
-            "url": "http://127.0.0.1:55081/"
+            "url": "http://localhost/"
         }
     ],
     "paths": {
@@ -332,6 +332,67 @@
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/ZapisTeplotyVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/appka/vydani/{platforma}": {
+            "get": {
+                "tags": [
+                    "Appka"
+                ],
+                "summary": "Nativn\u00ed bal\u00ed\u010dky appky, kter\u00e9 do\u0161ly do obchodu",
+                "description": "Nejv\u00fd\u0161 20 posledn\u00edch, od nejvy\u0161\u0161\u00edho \u010d\u00edsla bal\u00ed\u010dku. Pr\u00e1zdn\u00fd seznam, dokud CI nic nezapsalo. Appka podle otisku pozn\u00e1, jestli ten jej\u00ed je posledn\u00ed \u2014 aktualizace po s\u00edti to nepoznaj\u00ed, proto\u017ee hledaj\u00ed jen pro otisk, na kter\u00e9m appka b\u011b\u017e\u00ed.",
+                "parameters": [
+                    {
+                        "name": "platforma",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/VydaniAppkyDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/appka/vydani": {
+            "post": {
+                "tags": [
+                    "Appka"
+                ],
+                "summary": "Z\u00e1pis vydan\u00e9ho bal\u00ed\u010dku z CI",
+                "description": "Chr\u00e1n\u011bno tokenem v hlavi\u010dce X-Vydani-Token. Idempotentn\u00ed podle platformy a \u010d\u00edsla bal\u00ed\u010dku: ru\u010dn\u00ed \u201enahr\u00e1t znovu\u201c t\u00e9ho\u017e \u010d\u00edsla nic nezdvoj\u00ed.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZapisVydaniAppky"
                             }
                         }
                     },
@@ -1110,6 +1171,109 @@
                     },
                     "401": {
                         "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/ja/klice/kod": {
+            "post": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Vystav\u00ed jednor\u00e1zov\u00fd k\u00f3d pro napojen\u00ed telefonu",
+                "description": "K\u00f3d plat\u00ed minuty a uplatnit ho jde jednou. Vystaven\u00edm se ru\u0161\u00ed star\u00fd nevyu\u017eit\u00fd k\u00f3d t\u00e9ho\u017e \u00fa\u010dtu.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NapojeniKodDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/klice/napojit": {
+            "post": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Vym\u011bn\u00ed k\u00f3d za kl\u00ed\u010d k \u00fa\u010dtu",
+                "description": "Vrac\u00ed kl\u00ed\u010d jedinkr\u00e1t. Vymy\u0161len\u00fd, propadl\u00fd i u\u017e uplatn\u011bn\u00fd k\u00f3d dopadnou stejn\u011b, aby se z odpov\u011bdi nedalo nic vy\u010d\u00edst.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NapojVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NapojeniDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ja/klice": {
+            "get": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Telefony napojen\u00e9 na p\u0159ihl\u00e1\u0161en\u00fd \u00fa\u010det",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/KlicUctuDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ja/klice/{id}": {
+            "delete": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Odebere napojen\u00fd telefon",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found"
                     }
                 }
             }
@@ -9107,6 +9271,38 @@
                     }
                 }
             },
+            "KlicUctuDto": {
+                "required": [
+                    "id",
+                    "zarizeni",
+                    "vydanV",
+                    "ozvalSeV"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "zarizeni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "vydanV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "ozvalSeV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    }
+                }
+            },
             "KlonTratiVstup": {
                 "required": [
                     "rozjizdka",
@@ -9787,6 +9983,55 @@
                             {
                                 "$ref": "#/components/schemas/ZatimDto"
                             }
+                        ]
+                    }
+                }
+            },
+            "NapojeniDto": {
+                "required": [
+                    "klic",
+                    "zobrazovane"
+                ],
+                "type": "object",
+                "properties": {
+                    "klic": {
+                        "type": "string"
+                    },
+                    "zobrazovane": {
+                        "type": "string"
+                    }
+                }
+            },
+            "NapojeniKodDto": {
+                "required": [
+                    "kod",
+                    "platiDo"
+                ],
+                "type": "object",
+                "properties": {
+                    "kod": {
+                        "type": "string"
+                    },
+                    "platiDo": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "NapojVstup": {
+                "required": [
+                    "kod",
+                    "zarizeni"
+                ],
+                "type": "object",
+                "properties": {
+                    "kod": {
+                        "type": "string"
+                    },
+                    "zarizeni": {
+                        "type": [
+                            "null",
+                            "string"
                         ]
                     }
                 }
@@ -14263,6 +14508,27 @@
                     }
                 }
             },
+            "VydaniAppkyDto": {
+                "required": [
+                    "cisloBalicku",
+                    "otisk",
+                    "vydanoV"
+                ],
+                "type": "object",
+                "properties": {
+                    "cisloBalicku": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "otisk": {
+                        "type": "string"
+                    },
+                    "vydanoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
             "Vyhodnoceni": {
                 "enum": [
                     "CelePole",
@@ -14838,6 +15104,33 @@
                             {
                                 "$ref": "#/components/schemas/OkolnostiVstup"
                             }
+                        ]
+                    }
+                }
+            },
+            "ZapisVydaniAppky": {
+                "required": [
+                    "platforma",
+                    "cisloBalicku",
+                    "otisk",
+                    "commit"
+                ],
+                "type": "object",
+                "properties": {
+                    "platforma": {
+                        "type": "string"
+                    },
+                    "cisloBalicku": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "otisk": {
+                        "type": "string"
+                    },
+                    "commit": {
+                        "type": [
+                            "null",
+                            "string"
                         ]
                     }
                 }
@@ -16160,6 +16453,9 @@
         },
         {
             "name": "\u010cl\u00e1nky"
+        },
+        {
+            "name": "Appka"
         },
         {
             "name": "Lod\u011b"

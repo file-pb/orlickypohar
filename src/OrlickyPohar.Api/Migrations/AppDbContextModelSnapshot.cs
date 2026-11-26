@@ -23,6 +23,42 @@ namespace OrlickyPohar.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Appka.VydaniAppky", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CisloBalicku")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Commit")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Otisk")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Platforma")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset>("VydanoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Platforma", "CisloBalicku")
+                        .IsUnique();
+
+                    b.ToTable("VydaniAppky", (string)null);
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.Boje", b =>
                 {
                     b.Property<int>("Id")

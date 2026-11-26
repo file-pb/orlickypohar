@@ -97,7 +97,7 @@ export async function odesliFrontu(
       // `null` znamená, že nikdo není přihlášený (401). Není to odmítnutí
       // prvku — po přihlášení projde —, ale zkoušet dál nemá smysl.
       if (prvek === null) {
-        zapisPotiz(prvni.id, 'Nikdo není přihlášený. Přihlas se a zkus to znovu.', false);
+        zapisPotiz(prvni.id, 'Nikdo není přihlášený. Přihlas se kódem z webu (Přihlásit nahoře) a zkus to znovu.', false);
         return { odeslano, stoji: prvni, proc: 'Nikdo není přihlášený.' };
       }
 

@@ -1283,6 +1283,29 @@ jobs:
             exit 1
           fi
 
+      # <b>Appka se musí dozvědět, že je venku nový balíček</b> (Filip,
+      # 26. 11. 2026: *„aby se to nemuselo odhadovat"*). Aktualizace po síti
+      # hledá jen pro otisk, na kterém sama běží — po nativní změně by tedy
+      # hlásila „jsi aktuální", zatímco v Play leží nová verze. Tenhle zápis
+      # jí dá s čím porovnat (`GET /appka/vydani/android`).
+      #
+      # <b>Až po nahrání, ne po buildu image.</b> Image se nasazuje o půl
+      # hodiny dřív, než balíček projde frontou Expa; zápis z nasazení by
+      # posílal lidi do obchodu, kde ještě nic není. Proto tady, za oběma
+      # cestami do Play, a jen když jedna z nich doopravdy proběhla —
+      # spadlé nahrání ukončí úlohu dřív a zápis se nestane.
+      #
+      # <b>Selhání je chyba, ne varování.</b> Balíček je v Play tak jako
+      # tak; červená úloha jen řekne, že o něm appka neví. Nic dalšího na ní
+      # nevisí — `aktualizace-appky` čeká na `nasazeni`, ne na tuhle úlohu.
+      - name: Zapsat vydání pro appku
+        if: ${{ steps.spice.outputs.aktualni == 'ano' && (steps.stav.outputs.POTREBA == 'ano' || github.event.inputs.nahrat_znovu == 'true') }}
+        working-directory: app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          APPKA_TOKEN: ${{ secrets.APPKA_TOKEN }}
+        run: scripts/zapis-vydani.sh production
+
       - name: Co z toho vyšlo
         if: ${{ always() && steps.spice.outputs.aktualni == 'ano' }}
         run: |

@@ -110,6 +110,7 @@ services:
       - ConnectionStrings__Postgres
       - Import__Token
       - Landsat__Token
+      - Appka__Token
       - Fotky__KlicId
       - Fotky__Klic
     labels:
@@ -347,6 +348,13 @@ secrets:
   # zapsat teploty, ne přepsat ročník. Sdílí ho API a úloha `landsat`.
   Landsat__Token:
     file: ./secrets/Landsat__Token
+  # Zápis vydaného balíčku appky z CI (`POST /appka/vydani`). Zvlášť od
+  # obou předchozích: CI ho drží jako `APPKA_TOKEN` a kdo by ho ukradl,
+  # nemá dostat právo přepsat ročník ani teploty — jen poslat appky lidí
+  # do obchodu pro novou verzi. Soubor musí na serveru existovat dřív,
+  # než se tenhle compose nasadí, jinak kontejner API nenaběhne.
+  Appka__Token:
+    file: ./secrets/Appka__Token
   Fotky__KlicId:
     file: ./secrets/Fotky__KlicId
   Fotky__Klic:

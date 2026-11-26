@@ -7,9 +7,10 @@ import { OdberUpozorneni } from '@/components/odber-upozorneni';
 import { Chyba, Karta, Nacitani, Nadpis, Prazdno, Sekce, Stav } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
+import { useZmenaUctu } from '@/hooks/use-zmena-uctu';
 import { nactiSerie, nactiSerii } from '@/lib/api';
 import { rozsah } from '@/lib/datum';
-import { jePrihlasen, prihlasovaniJde } from '@/lib/identita';
+import { jePrihlasen } from '@/lib/identita';
 import { ukazkaBezi } from '@/lib/ukazka';
 import { kteraRegata, kterySledovat, vetaNaRade } from '@/lib/sledovani';
 
@@ -44,12 +45,14 @@ export default function Sledovani() {
   const { data: serie, chyba, nacita, obnov } = useData(nactiSerie, [signal]);
   // <b>Je tahle obrazovka konečná, nebo jen to, co zbylo?</b> Čte se
   // z úložiště, bez sítě, takže to funguje i u vody bez signálu.
-  const { data: ucet } = useData(
+  const { data: ucet, obnov: obnovUcet } = useData(
     // V ukázce hraje appka přihlášeného Miloše. Jediné, k čemu je to
     // tady potřeba, je rezerva vpravo nahoře na tlačítko *Přihlásit*.
     async () => ({ prihlasen: ukazkaBezi() || (await jePrihlasen()) }),
     [signal],
   );
+  // Tlačítko po napojení zmizí; rezerva pro ně musí zmizet s ním.
+  useZmenaUctu(obnovUcet);
   const vybrany = serie ? kterySledovat(serie, new Date()) : null;
   const { data: rocnik, nacita: nacitaRocnik } = useData(
     () => (vybrany ? nactiSerii(vybrany.slug) : Promise.resolve(null)),
@@ -74,7 +77,7 @@ export default function Sledovani() {
           tlačítko <i>Přihlásit</i>. Bez té rezervy se o ně dlouhé jméno
           ročníku uřízne. */}
       <Nadpis
-        odsazeniVpravo={prihlasovaniJde && ucet && !ucet.prihlasen ? 150 : undefined}
+        odsazeniVpravo={ucet && !ucet.prihlasen ? 150 : undefined}
         tlumene={
           rocnik
             ? `${rocnik.zavody.length} regat · ${odjete} odjetých · ${rocnik.prihlasky.length} lodí`
