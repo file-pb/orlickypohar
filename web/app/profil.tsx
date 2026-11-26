@@ -104,6 +104,13 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
         <OdkazJinam obycejny href="/moje-lode">
           Moje lodě
         </OdkazJinam>
+        {/* <b>Můj účet je tu kvůli jediné věci: QR pro appku</b> (Filip,
+            26. 11. 2026). Appka se od té doby nepřihlašuje u poskytovatele,
+            napojí se kódem odsud — takže tahle položka je jediná cesta,
+            jak si telefon s účtem spárovat. */}
+        <OdkazJinam obycejny href="/muj-ucet">
+          Můj účet
+        </OdkazJinam>
         {/* <b>Věci mimo ročníky tu už nejsou</b> (Filip, 13. 11. 2026, nad
             snímkem s otevřenou nabídkou vedle pruhu Správy, kde stály tytéž
             tři položky dvakrát: *„ještě tady to také zjednodušíme"*). Obecné

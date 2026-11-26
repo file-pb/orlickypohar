@@ -1225,6 +1225,11 @@ def proc_pipnuti_nejde(vstup):
 KLICE = {}
 POZVANKY = {}
 
+# Napojení telefonu na účet (Moje identifikace na webu). Kódy i klíče drží
+# mock čitelné a jen v paměti: je to mock, ne trezor.
+NAPOJENI_KODY = {}
+KLICE_UCTU = {}
+
 # Trasy nahrané z appky. Klíč je (klíč lodi, lokální id z telefonu) — mock
 # drží tutéž jedinečnost jako databáze, jinak by idempotenci nešlo vyzkoušet
 # a mock by lhal zrovna v té vlastnosti, na které nahrávání stojí.
@@ -4818,6 +4823,36 @@ class H(BaseHTTPRequestHandler):
             k["sleduje"] = telo["sleduje"]
             return self.odpoved({"sleduje": k["sleduje"]})
 
+        if cesta == "/ja/klice/kod":
+            # Vystavení kódu pro napojení telefonu na účet. Mock nic
+            # nešifruje ani neotiskuje — jde o to, aby se dala prohlédnout
+            # stránka *Moje identifikace*, ne aby se zkoušela bezpečnost.
+            import random
+            from datetime import datetime, timedelta, timezone
+            kod = "".join(random.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
+                          for _ in range(8))
+            NAPOJENI_KODY.clear()
+            NAPOJENI_KODY[kod] = True
+            platido = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
+            return self.odpoved({"kod": kod, "platiDo": platido})
+
+        if cesta == "/klice/napojit":
+            # Jediná cesta bez přihlášení, stejně jako uplatnění pozvánky
+            # k lodi: kód sám je to oprávnění.
+            telo = self.telo_zadosti() or {}
+            kod = (telo.get("kod") or "").strip().upper()
+            if not NAPOJENI_KODY.pop(kod, None):
+                return self.send_error(401)
+            from datetime import datetime, timezone
+            cislo = (max(KLICE_UCTU) if KLICE_UCTU else 0) + 1
+            KLICE_UCTU[cislo] = {
+                "id": cislo,
+                "zarizeni": telo.get("zarizeni"),
+                "vydanV": datetime.now(timezone.utc).isoformat(),
+                "ozvalSeV": None,
+            }
+            return self.odpoved({"klic": f"mock-klic-{cislo}", "zobrazovane": "Miloš Zvonař"})
+
         if cesta == "/klice/uplatnit":
             # Jediný endpoint bez přihlášení, a musí být: kdyby ho
             # vyžadoval, posádka by potřebovala účet a smysl QR by padl.
@@ -5959,6 +5994,14 @@ class H(BaseHTTPRequestHandler):
     def do_DELETE(self):
         if self.token_nesedi() or self.prava_nesedi():
             return None
+        if (m := re.match(r'^/ja/klice/(\d+)$', urlparse(self.path).path)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            if KLICE_UCTU.pop(int(m.group(1)), None) is None:
+                return self.send_error(404)
+            self.send_response(204)
+            self.end_headers()
+            return None
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/oponentura/([a-z0-9-]+)'
                 r'/nahravky/([0-9a-f]+)$', urlparse(self.path).path)):
@@ -6249,6 +6292,12 @@ class H(BaseHTTPRequestHandler):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
             return self.moje_naroky()
+        elif cesta == "/ja/klice":
+            # Telefony napojené na účet (Moje identifikace na profilu).
+            # Drží se v paměti procesu jako zbytek mocku.
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.odpoved(list(KLICE_UCTU.values()))
         elif cesta == "/klice/sledovani":
             k = klic_pro_sebe(self)
             if not k:
