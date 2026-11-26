@@ -68,3 +68,9 @@ node --experimental-strip-types ./workflow.test.ts
 echo
 echo "== Čtení papírového zápisu =="
 node --experimental-strip-types ./papir.test.ts
+
+# Kód k napojení appky, jak ho stránka Můj účet ukáže k opsání. Hlídá
+# nezlomitelnou mezeru: s obyčejnou se kód na mobilu zlomí na dva řádky.
+echo
+echo "== Kód k opsání =="
+node --experimental-strip-types ./kod-k-opsani.test.ts

@@ -167,6 +167,45 @@ public class KliceUctuTests(PostgresFixture fixture)
         Assert.NotNull(await klice.OverAsync(napojeni.Klic, default));
     }
 
+    /// <summary>
+    /// <b>Vystavený kód musí být opsatelný.</b> Do 26. 11. 2026 to bylo
+    /// base64url ze 32 bajtů, tedy 43 znaků s malými i velkými písmeny —
+    /// na papír ani na opsání z obrazovky to nebylo a appka to navíc
+    /// převodem na velká písmena zničila. Měří se tedy tvar, ne jen to,
+    /// že kód někam projde.
+    /// </summary>
+    [Fact]
+    public async Task Vystaveny_kod_se_da_opsat()
+    {
+        var (db, klice, _) = Sluzby();
+        var ucet = await UcetAsync(db);
+
+        var kod = await klice.VystavKodAsync(ucet.Id, default);
+
+        Assert.Equal(KliceUctuSprava.KodDelka, kod.Kod.Length);
+        Assert.All(kod.Kod, z => Assert.True(KliceUctuSprava.Abeceda.Contains(z), $"Znak „{z}“ není v abecedě kódu."));
+    }
+
+    /// <summary>
+    /// Kód se opisuje z obrazovky a lidé si do něj přidávají mezery
+    /// a pomlčky a nehlídají velikost písmen. Srovnat to má server, ne
+    /// klient — zadává se ze webu i z appky.
+    /// </summary>
+    [Fact]
+    public async Task Kod_opsany_z_ruky_projde()
+    {
+        var (db, klice, _) = Sluzby();
+        var ucet = await UcetAsync(db);
+
+        var kod = await klice.VystavKodAsync(ucet.Id, default);
+        var opsany = string.Join('-', kod.Kod.ToLowerInvariant().Chunk(2).Select(c => new string(c)));
+
+        var napojeni = await klice.NapojAsync($"  {opsany} ", null, default);
+
+        Assert.NotNull(napojeni);
+        Assert.Equal(ucet.Zobrazovane, napojeni.Zobrazovane);
+    }
+
     [Fact]
     public async Task Overeni_zapise_ze_se_telefon_ozval()
     {

@@ -4,6 +4,7 @@ import { Boky } from "@/app/boky";
 import { Drobecky } from "@/app/drobecky";
 import { datumClanku, okamzik } from "@/app/datum";
 import { adresaNapojeni, mojeKlice } from "@/lib/klice-uctu";
+import { kodKOpsani } from "@/lib/kod-k-opsani";
 import { vystavKodAkce, odeberKlicAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -71,7 +72,7 @@ export default async function MujUcet({ searchParams }: Parametry) {
       {qr && kod ? (
         <>
           <p>Namiř na to appku, nebo kód opiš.</p>
-          <p className="kod-velky">{kod}</p>
+          <p className="kod-velky">{kodKOpsani(kod)}</p>
           {/* SVG z knihovny, ne obrázek z internetu — vykresluje se na
               serveru a nikam se neposílá. */}
           <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />

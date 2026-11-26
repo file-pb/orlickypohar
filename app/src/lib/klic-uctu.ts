@@ -70,15 +70,70 @@ export async function zapomenKlic() {
 }
 
 /**
- * Kód z toho, co přišlo z QR nebo z ruky.
+ * Abeceda kódu a jeho délka. <b>Opsané ze serveru</b>
+ * (`KliceUctuSprava.Abeceda`, `KodDelka`): nuly, jedničky, I ani O v ní
+ * nejsou, protože se kód opisuje z obrazovky počítače.
+ *
+ * Appka je zná proto, aby poznala **svůj** kód mezi několika QR na jedné
+ * fotce a aby políčko nepřijímalo znaky, které v kódu nikdy nebudou.
+ * Rozhodovat podle nich nesmí: platnost kódu posoudí server.
+ */
+export const ABECEDA = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+export const DELKA = 8;
+
+/**
+ * Kód z toho, co přišlo z QR, z galerie nebo z ruky.
  *
  * <b>QR nese adresu webu, ne holý kód</b> (`/napojeni?kod=…`), protože
  * telefon bez appky má skončit na stránce, která mu poradí. Appka tedy
- * musí umět obojí — a při opisování z ruky i malá písmena a mezery.
+ * musí umět obojí — a při opisování z ruky i malá písmena, mezery
+ * a pomlčky, které si do opisu každý přidává po svém.
+ *
+ * <b>Zahazuje znaky mimo abecedu, nepřekládá je.</b> Nula se tedy
+ * nezmění na „O"; obojí prostě zmizí, přesně jako na serveru
+ * (`KliceUctuSprava.Uprav`). Hádat, co měl člověk na mysli, by u
+ * přístupového údaje znamenalo tiše měnit, co zadal.
  */
 export function kodZeVstupu(vstup: string): string {
   const text = vstup.trim();
   const zAdresy = /[?&]kod=([^&\s]+)/i.exec(text);
   const kod = zAdresy ? decodeURIComponent(zAdresy[1]) : text;
-  return kod.replace(/\s+/g, '').toUpperCase();
+  return [...kod.toUpperCase()].filter((z) => ABECEDA.includes(z)).join('');
+}
+
+/**
+ * Náš kód z toho, co našel sken — foťákem nebo v obrázku z galerie.
+ *
+ * <b>Na jedné fotce bývá víc QR.</b> Snímek obrazovky zachytí i QR
+ * z vedlejší stránky a foťák namířený na monitor klidně dva. Brát slepě
+ * první nalezený by znamenalo poslat serveru cizí řetězec a ukázat
+ * „Kód neplatí" nad fotkou, na které ten správný kód je.
+ *
+ * Vybírá se tedy ten, který po srovnání vypadá jako kód k účtu — osm
+ * znaků z naší abecedy. Když takový není, vrací `null` a volající to
+ * řekne; `null` znamená „tady náš kód nebyl", ne „kód je neplatný".
+ */
+export function kodZeSkenu(nalezy: readonly { data: string }[]): string | null {
+  for (const nalez of nalezy) {
+    const text = (nalez.data ?? '').trim();
+
+    // Náš QR nese adresu s parametrem; podle něj se pozná bezpečně.
+    if (/[?&]kod=/i.test(text)) {
+      const kod = kodZeVstupu(text);
+      if (kod.length === DELKA) return kod;
+      continue;
+    }
+
+    // <b>Holý kód se přijme jen tehdy, když je v něm doopravdy jen kód.</b>
+    // Samotná délka po očištění nestačí: `https://a.cz` dá `HTTPSACZ`, tedy
+    // osm znaků z abecedy — appka by serveru poslala cizí adresu místo kódu
+    // a hlásila „kód neplatí" nad fotkou, na které ten platný je. Projdou
+    // tedy jen znaky, které se v opsaném kódu vyskytují: písmena, číslice
+    // a oddělovače, které si lidé do opisu přidávají.
+    if (!/^[0-9A-Za-z \t-]+$/.test(text)) continue;
+
+    const kod = kodZeVstupu(text);
+    if (kod.length === DELKA) return kod;
+  }
+  return null;
 }

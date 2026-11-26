@@ -43,7 +43,7 @@ public class KliceUctuSprava(AppDbContext db, TimeProvider cas)
             .Where(n => n.UzivatelId == uzivatelId && n.UplatnenV == null && n.PlatiDo > ted)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.PlatiDo, ted), ct);
 
-        var kod = Tajemstvi();
+        var kod = Kod();
         db.NapojeniUctu.Add(new NapojeniUctu
         {
             UzivatelId = uzivatelId,
@@ -63,7 +63,7 @@ public class KliceUctuSprava(AppDbContext db, TimeProvider cas)
     /// </summary>
     public async Task<NapojeniDto?> NapojAsync(string kod, string? zarizeni, CancellationToken ct)
     {
-        var otisk = Otisk(kod);
+        var otisk = Otisk(Uprav(kod));
         var ted = cas.GetUtcNow();
 
         // <b>Kód se zabere jedním příkazem, ne přečtením a zápisem.</b>
@@ -152,6 +152,47 @@ public class KliceUctuSprava(AppDbContext db, TimeProvider cas)
     /// </summary>
     public static Guid? UzivatelZNaroku(ClaimsPrincipal? kdo) =>
         Guid.TryParse(kdo?.FindFirst(NarokUzivatel)?.Value, out var id) ? id : null;
+
+    /// <summary>
+    /// Abeceda kódu: bez nul, jedniček, I a O, protože se kód opisuje
+    /// z obrazovky počítače a „0" s „O" se plete každému.
+    /// <para>
+    /// <b>Je to druhá kopie</b> téže abecedy — první má <c>Lode.Kody</c>
+    /// u pozvánky k lodi. Sdílet ji je podle konvencí repozitáře
+    /// předčasné: hranice odvozená ze dvou vzorků trefí skoro vždy
+    /// špatně. Až vznikne třetí, patří všechny tři do jednoho místa.
+    /// </para>
+    /// </summary>
+    public const string Abeceda = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+
+    /// <summary>
+    /// Osm znaků, o dva víc než pozvánka k lodi: na druhé straně je celý
+    /// účet i s rolemi, ne jedna loď. 32⁸ je 1,1 · 10¹² možností, takže
+    /// i tisíc pokusů za sekundu po celou pětiminutovou platnost dává
+    /// pravděpodobnost uhádnutí 3 · 10⁻⁷. Omezení počtu pokusů je tedy
+    /// obrana proti zahlcení, ne proti uhádnutí.
+    /// </summary>
+    public const int KodDelka = 8;
+
+    /// <summary>
+    /// Náhodný kód k opsání nebo do QR. Kryptografický generátor, ne
+    /// <c>Random</c> — je to přístupový údaj.
+    /// </summary>
+    public static string Kod() => RandomNumberGenerator.GetString(Abeceda, KodDelka);
+
+    /// <summary>
+    /// Srovná zadaný kód do podoby, ve které se hledá: velká písmena
+    /// a pryč s každým znakem mimo abecedu, tedy i s mezerami a pomlčkami,
+    /// které si lidé do opisu přidávají.
+    /// <para>
+    /// <b>Srovnává server, ne klient.</b> Do 26. 11. 2026 to dělala appka
+    /// sama a kód byl přitom base64url ze 32 bajtů — převod na velká
+    /// písmena ho tedy pokaždé zničil a napojení nemohlo projít. Jak se
+    /// kód čte, patří k tomu, kdo ho vystavil; klientů je víc.
+    /// </para>
+    /// </summary>
+    public static string Uprav(string? kod) =>
+        new([.. (kod ?? "").ToUpperInvariant().Where(Abeceda.Contains)]);
 
     private static string Tajemstvi() =>
         Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))

@@ -256,6 +256,22 @@ appka s prázdnou adresou poskytovatele identity a vypnutým přihlašováním
 (stalo se 28. 10. 2026). CI to dělá přes `--input-dir` s hodnotami
 z `eas.json`.
 
+**`pod install` na tomhle stroji chce UTF-8 locale.** `npx expo prebuild`
+projde, ale instalace podů za ním spadne na
+`Unicode Normalization not appropriate for ASCII-8BIT`
+(`Encoding::CompatibilityError`) — v shellu tady není `LANG` ani `LC_ALL`
+nastavené a CocoaPods to v hlášce sám říká. Vypadá to jako vada projektu,
+přitom to je prostředí:
+
+```bash
+cd app && LANG=en_US.UTF-8 npx expo run:ios --configuration Release
+```
+
+Pozor, `expo prebuild` **smaže a znovu vytvoří `ios/`** ještě než na pody
+dojde, takže po spadnutí zůstane nativní projekt bez `Pods` i bez
+`Podfile.lock` a další build musí začít odtamtud. Ověřeno 26. 11. 2026 při
+přidání `expo-camera` a `expo-image-picker`.
+
 **Jméno DTO musí být unikátní v celém API.** Schémata OpenAPI žijí
 v jediném jmenném prostoru, takže druhý `ZastavkaDto` nevznikne — `$ref`
 se sveze na ten existující a vygenerovaný klient dostane tvar, který ta

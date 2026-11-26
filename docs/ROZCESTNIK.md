@@ -197,6 +197,66 @@ se stejně uděluje na webu a ten člověk se k webu dostane.
 4. **Teprve pak** z appky zmizí přihlašování. Dřív ne — jinak by se
    dovnitř nedostal nikdo.
 
+### Tvar kódu: osm znaků, ne 43
+
+Napoprvé (26. 11. 2026) vydával server jako kód totéž tajemství jako klíč:
+base64url ze 32 bajtů, tedy **43 znaků s malými i velkými písmeny**.
+Appka ho přitom před odesláním převáděla na velká písmena, takže
+**napojení kódem nemohlo projít vůbec** — a nebylo to vidět, protože mock
+`tools/fake-api.py` vydával osmiznakový kód z abecedy bez záměn. Ověřovalo
+se tedy proti mocku, který dodržoval pravidlo, jaké produkce neměla.
+
+Kód je od té doby **osm znaků z `23456789ABCDEFGHJKLMNPQRSTUVWXYZ`** —
+tatáž abeceda jako u pozvánky k lodi, bez nul, jedniček, I a O. Dvě věci
+k tomu patří a nesmějí se rozvázat:
+
+- **Srovnává server, ne klient** (`KliceUctuSprava.Uprav`): velká písmena
+  a pryč s každým znakem mimo abecedu, tedy i s mezerami a pomlčkami
+  z opisu. Nula se **nepřeloží** na „O“, prostě zmizí — u přístupového
+  údaje by hádání znamenalo tiše měnit, co člověk zadal.
+- **Klíč zůstává dlouhý.** Opisuje se kód, ne klíč; klíč jde do úložiště
+  telefonu a 32 bajtů z kryptografického generátoru je u něj na místě.
+
+32⁸ je 1,1 · 10¹² možností. I tisíc pokusů za sekundu po celou
+pětiminutovou platnost dává pravděpodobnost uhádnutí 3 · 10⁻⁷, takže
+**omezení počtu pokusů je obrana proti zahlcení, ne proti uhádnutí** —
+a na endpointu `POST /klice/napojit` žádné není, vědomě.
+
+### Tři cesty dovnitř, jeden konec
+
+Filip, 26. 11. 2026: *„no tak to chce ještě možnost zadani qr kodu a nevo
+vyber z galerie.“* Obrazovka *Mám kód* tedy nabízí foťák, obrázek
+z galerie i opsání z ruky — v tomhle pořadí, protože tak klesá četnost:
+u počítače je nejblíž namířit foťák, snímek obrazovky ve zprávě je druhý
+nejčastější, opsání funguje i tam, kde appka k foťáku přístup nemá.
+
+Všechny tři vedou do jedné funkce (`napojKodem`), takže se chybové stavy
+ani uložení klíče nevětví podle toho, odkud kód přišel.
+
+**Který QR je náš, rozhoduje `kodZeSkenu`.** Na jedné fotce bývá víc QR:
+snímek obrazovky zachytí i ten z vedlejší stránky, foťák namířený na
+monitor klidně dva. Brát slepě první nalezený by znamenalo poslat serveru
+cizí řetězec a ukázat „kód neplatí“ nad obrázkem, na kterém ten platný je.
+Samotná délka po očištění přitom nestačí — `https://a.cz` dá `HTTPSACZ`,
+tedy osm znaků z naší abecedy —, takže holý kód se přijme jen tehdy, když
+v něm doopravdy není nic než kód a oddělovače. V hledáčku se cizí QR
+**mlčky přeskočí** a skenuje se dál; zavřít kvůli němu hledáček s chybou
+by znamenalo hlásit neplatnost nad obrazovkou, na které platný kód svítí.
+
+### Čtečka stála nové nativní vydání
+
+`expo-camera` i `expo-image-picker` mají nativní část, takže se posunul
+**otisk běhového prostředí** (`runtimeVersion: fingerprint`). Aktualizace
+kanálem veze jen JavaScript — kdo má v telefonu starší balíček, přestane
+novinky dostávat a nic přitom neselže. V CI to hlásí krok *Žádá appka
+ruční instalaci?* a úloha `balicek-do-play` nový balíček postaví a nahraje
+sama, takže testeři z obchodu ho dostanou bez cizí pomoci; APK na webu
+a iPhone přes kabel zůstávají ruční.
+
+**Opisování z ruky je proto jediná cesta, která funguje i na starém
+balíčku** — a to je samo o sobě důvod ji nechat, ne jen záloha pro případ,
+že foťák selže.
+
 ### Co to stojí a kde je mez
 
 Kód jde přeposlat, takže je to slabší doklad než přihlášení s heslem

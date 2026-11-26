@@ -795,6 +795,10 @@ def _nasad_vazby():
 # pravda o nich leží tam a hlídají ji testy API.
 
 KOD_DELKA = 6
+
+# Kód k účtu je o dva znaky delší: na druhé straně je celý účet i s rolemi,
+# ne jedna loď. Opsané z `KliceUctuSprava.KodDelka`.
+KOD_UCTU_DELKA = 8
 KOD_PLATNOST_MINUT = 15
 # Propadlý i vymyšlený kód dávají tutéž odpověď: ať z ní nejde vyčíst, že loď
 # s takovým kódem existuje.
@@ -4829,8 +4833,12 @@ class H(BaseHTTPRequestHandler):
             # stránka *Moje identifikace*, ne aby se zkoušela bezpečnost.
             import random
             from datetime import datetime, timedelta, timezone
-            kod = "".join(random.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
-                          for _ in range(8))
+            # Táž abeceda a tatáž délka jako na serveru
+            # (`KliceUctuSprava.Abeceda`, `KodDelka`). Do 26. 11. 2026 tu
+            # stál vlastní osmiznakový kód, zatímco server vydával
+            # base64url ze 32 bajtů — mock tedy dodržoval pravidlo, které
+            # produkce neměla, a napojení se zkoušelo jen proti němu.
+            kod = "".join(random.choice(KOD_ABECEDA) for _ in range(KOD_UCTU_DELKA))
             NAPOJENI_KODY.clear()
             NAPOJENI_KODY[kod] = True
             platido = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
@@ -4840,7 +4848,10 @@ class H(BaseHTTPRequestHandler):
             # Jediná cesta bez přihlášení, stejně jako uplatnění pozvánky
             # k lodi: kód sám je to oprávnění.
             telo = self.telo_zadosti() or {}
-            kod = (telo.get("kod") or "").strip().upper()
+            # Srovnává server, ne klient — `uprav_kod` je totéž, co dělá
+            # `KliceUctuSprava.Uprav`: velká písmena a pryč s každým
+            # znakem mimo abecedu, tedy i s mezerami a pomlčkami z opisu.
+            kod = uprav_kod(telo.get("kod"))
             if not NAPOJENI_KODY.pop(kod, None):
                 return self.send_error(401)
             from datetime import datetime, timezone

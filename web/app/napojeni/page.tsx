@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { kodKOpsani } from "@/lib/kod-k-opsani";
 import { Boky } from "@/app/boky";
 import { Drobecky } from "@/app/drobecky";
 
@@ -32,7 +33,7 @@ export default async function Napojeni({ searchParams }: Parametry) {
       {kod ? (
         <>
           <p>Otevři appku Orlický pohár, dej <b>Mám kód</b> a zadej tohle:</p>
-          <p className="kod-velky">{kod}</p>
+          <p className="kod-velky">{kodKOpsani(kod)}</p>
           <p className="poznamka">
             Kód platí pár minut a uplatnit ho jde jednou. Když propadne, vystav si
             na <Link href="/muj-ucet">svém účtu</Link> nový.
