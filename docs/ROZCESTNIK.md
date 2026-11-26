@@ -163,14 +163,37 @@ oprávnění visí na `UserId`. Účet ale zakládá web, ne první přihlášen
 je přesně to, co Filip chtěl už v zadání rozcestníku a co dnes blokuje
 `UcetNeni` v `OpravneniSprava.UdelAsync`.
 
+### Kdo komu QR ukazuje: vlastní profil, jako WhatsApp
+
+**Upřesnil Filip 26. 11.:** *„když se člověk dostane do uživatelského
+profilu v rámci webu, tak tam může být informace moje identifikace s QR
+kódem, což si člověk naskenuje… WhatsApp v podstatě takhle funguje taky.
+Co nejjednodušší řešení."*
+
+To celou věc zmenšuje. **QR vidí jen majitel účtu, na svém profilu, po
+přihlášení.** Odpadá tím otázka „komu ten kód vydat" i obrazovka pro
+správce — a je to přesně tvar, který lidé znají: na počítači svítí QR,
+telefon ho naskenuje a je spárováno.
+
+Zitadel tím nemizí, **mizí z telefonu**: do webu se rozhodčí přihlásí
+jednou, u počítače, kde to nikomu nevadí. K vodě si pak veze appku, která
+poskytovatele nikdy neukáže.
+
+Kódy vydávané někým druhým zůstávají tam, kde už dnes jsou — u lodí
+(`PripojovaciKod`, `KlicLodi`). Pro role je nepotřebujeme, protože role
+se stejně uděluje na webu a ten člověk se k webu dostane.
+
 ### Co se postaví
 
-1. **API** — klíč k roli: vystavení kódu, uplatnění za klíč, autentizační
-   handler. Otisk v databázi, nikdy tajemství. Kód jednorázový a krátce
-   platný, klíč odvolatelný.
-2. **Web** — v administraci u člověka tlačítko *Vydat kód do appky*,
-   výsledek jako kód i QR, a seznam vydaných klíčů s možností odebrat.
-3. **Appka** — obrazovka *Mám kód*: jedna pro loď, roli i pomocníka.
+1. **API** — klíč k účtu: `POST /ja/klice/kod` vystaví krátce platný
+   jednorázový kód přihlášenému; `POST /klice/napojit` ho vymění za klíč
+   (bez přihlášení — kód sám je to oprávnění, stejně jako u lodí);
+   autentizační handler z klíče udělá identitu. Otisk v databázi, nikdy
+   tajemství. `GET`/`DELETE` na seznam napojených telefonů a jejich
+   odebrání.
+2. **Web** — v profilu oddíl *Moje identifikace*: QR a pod ním kód
+   k opsání. Obnovuje se, dokud je stránka otevřená.
+3. **Appka** — obrazovka *Mám kód*: namířit foťák, nebo kód opsat.
 4. **Teprve pak** z appky zmizí přihlašování. Dřív ne — jinak by se
    dovnitř nedostal nikdo.
 

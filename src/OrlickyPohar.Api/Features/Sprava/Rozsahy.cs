@@ -48,20 +48,38 @@ public class Rozsahy(AppDbContext db, Uzivatele uzivatele)
     /// </summary>
     public async Task<bool> SmiAsync(ClaimsPrincipal kdo, Pozadavek co, CancellationToken ct)
     {
-        if (kdo.Ucet() is not { } ucet) return false;
+        if (await KdoJeAsync(kdo, ct) is not { } uzivatelId) return false;
 
-        var uzivatel = await uzivatele.PodleUctuAsync(ucet.Issuer, ucet.Subject, ct);
-        if (uzivatel is null) return false;
-
-        return Prava.Smi(await uzivatele.PravaAsync(uzivatel.Id, ct), co);
+        return Prava.Smi(await uzivatele.PravaAsync(uzivatelId, ct), co);
     }
 
     /// <summary>
     /// Interní účet přihlášeného, nebo <c>null</c>. Stejně jako u práv se
     /// účet nezakládá — kdo se nikdy nepřihlásil, stejně nic nesmí.
     /// </summary>
-    public async Task<Guid?> UzivatelIdAsync(ClaimsPrincipal kdo, CancellationToken ct)
+    public Task<Guid?> UzivatelIdAsync(ClaimsPrincipal kdo, CancellationToken ct) =>
+        KdoJeAsync(kdo, ct);
+
+    /// <summary>
+    /// Interní účet z principálu — <b>jediné místo, kde se to rozhoduje</b>.
+    ///
+    /// <para>
+    /// <b>Klíč k účtu má přednost a nese identifikátor rovnou.</b> Ověřil
+    /// ho handler proti otisku v databázi (<see cref="Klice.KlicUctuHandler"/>),
+    /// takže tu není co dohledávat; a předstírat u něj dvojici
+    /// vydavatel+subjekt by byla lež v tabulce, jejímž jediným úkolem je
+    /// říct, který cizí subjekt patří kterému našemu účtu.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Účet se nezakládá.</b> Kdo se nikdy nepřihlásil, nic nesmí —
+    /// a kontrola práv nemá být důvod, proč mu účet vznikne.
+    /// </para>
+    /// </summary>
+    private async Task<Guid?> KdoJeAsync(ClaimsPrincipal kdo, CancellationToken ct)
     {
+        if (Klice.KliceUctuSprava.UzivatelZNaroku(kdo) is { } zKlice) return zKlice;
+
         if (kdo.Ucet() is not { } ucet) return null;
         return (await uzivatele.PodleUctuAsync(ucet.Issuer, ucet.Subject, ct))?.Id;
     }
@@ -80,12 +98,9 @@ public class Rozsahy(AppDbContext db, Uzivatele uzivatele)
     public async Task<(bool CelyRocnik, IReadOnlyList<int> Zavody)> KdeSmiAsync(
         ClaimsPrincipal kdo, Role role, int serieId, CancellationToken ct)
     {
-        if (kdo.Ucet() is not { } ucet) return (false, []);
+        if (await KdoJeAsync(kdo, ct) is not { } uzivatelId) return (false, []);
 
-        var uzivatel = await uzivatele.PodleUctuAsync(ucet.Issuer, ucet.Subject, ct);
-        if (uzivatel is null) return (false, []);
-
-        var udelena = await uzivatele.PravaAsync(uzivatel.Id, ct);
+        var udelena = await uzivatele.PravaAsync(uzivatelId, ct);
 
         // Ptá se přes `Prava`, ne porovnáním rolí: pokrývání je pravidlo
         // (organizátor obsahuje editora, správce obsahuje oboje) a existovat

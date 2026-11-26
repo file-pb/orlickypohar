@@ -268,6 +268,7 @@ try
         app.MapNastaveniTrackeru();
         app.MapKlice();
         app.MapKliceRegaty();
+        app.MapKliceUctu();
         app.MapTrat();
         app.MapSpravaPoradatelu();
         app.MapNaklady();

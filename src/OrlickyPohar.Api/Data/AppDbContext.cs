@@ -73,6 +73,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         Set<Features.Tracker.ZmenaNastaveniTrackeru>();
     public DbSet<Features.Klice.PozvankaKlice> Pozvanky => Set<Features.Klice.PozvankaKlice>();
 
+    /// <summary>Telefony napojené na účet — klíč místo přihlášení v appce.</summary>
+    public DbSet<Features.Klice.KlicUctu> KliceUctu => Set<Features.Klice.KlicUctu>();
+
+    /// <summary>Jednorázové kódy, kterými se telefon na účet napojí.</summary>
+    public DbSet<Features.Klice.NapojeniUctu> NapojeniUctu => Set<Features.Klice.NapojeniUctu>();
+
     /// <summary>Sady otázek pro oponenturu s rozhodčím a odpovědi na ně.</summary>
     public DbSet<Features.Spolecne.OkolnostRozhodnuti> OkolnostiRozhodnuti =>
         Set<Features.Spolecne.OkolnostRozhodnuti>();
@@ -584,6 +590,25 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         pozvanka.Property(x => x.Otisk).HasMaxLength(64).IsRequired();
         pozvanka.Property(x => x.Jmeno).HasMaxLength(120);
         pozvanka.HasIndex(x => x.Otisk).IsUnique();
+
+        var klicUctu = b.Entity<Features.Klice.KlicUctu>();
+        klicUctu.Property(x => x.Otisk).HasMaxLength(64).IsRequired();
+        klicUctu.Property(x => x.Zarizeni).HasMaxLength(120);
+        klicUctu.HasOne(x => x.Uzivatel).WithMany().HasForeignKey(x => x.UzivatelId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Otisk se hledá u každého požadavku z appky, takže index není
+        // pohodlí. Unikátní proto, že tentýž otisk znamená totéž tajemství.
+        klicUctu.HasIndex(x => x.Otisk).IsUnique();
+        klicUctu.HasIndex(x => x.UzivatelId);
+
+        var napojeni = b.Entity<Features.Klice.NapojeniUctu>();
+        napojeni.Property(x => x.Otisk).HasMaxLength(64).IsRequired();
+        napojeni.HasOne(x => x.Uzivatel).WithMany().HasForeignKey(x => x.UzivatelId)
+            .OnDelete(DeleteBehavior.Cascade);
+        napojeni.HasIndex(x => x.Otisk).IsUnique();
+        // Vystavení nového kódu ruší staré nevyužité — hledají se podle
+        // účtu a platnosti.
+        napojeni.HasIndex(x => new { x.UzivatelId, x.PlatiDo });
 
         var sada = b.Entity<Features.Oponentura.SadaOtazek>();
         sada.Property(x => x.Slug).HasMaxLength(Features.Oponentura.Dotazovani.SlugNejvic)

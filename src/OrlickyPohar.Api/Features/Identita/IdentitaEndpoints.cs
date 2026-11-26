@@ -104,6 +104,19 @@ public static class IdentitaEndpoints
         ILogger<JaDto> log,
         CancellationToken ct)
     {
+        // <b>Telefon napojený klíčem účet zná rovnou</b> a žádnou dvojici
+        // (vydavatel, subjekt) nemá — klíč není od poskytovatele identity
+        // (`Klice/KlicUctuOvereni.cs`). Nezakládá se tu tedy nic a profil
+        // se od poskytovatele netahá; účet už existuje, jinak by klíč
+        // neprošel ověřením.
+        if (Klice.KliceUctuSprava.UzivatelZNaroku(kdo) is { } zKlice)
+        {
+            if (await uzivatele.PodleIdAsync(zKlice, ct) is not { } majitel)
+                return TypedResults.Unauthorized();
+
+            return TypedResults.Ok(await SlozAsync(majitel, uzivatele, pomocnici, ct));
+        }
+
         // Sem se dostane jen ověřený token, ale bez dvojice (vydavatel,
         // subjekt) není co uložit. Chybějící `sub` je vadný token, ne
         // uživatel bez práv — proto 401, ne prázdná odpověď.
@@ -144,15 +157,29 @@ public static class IdentitaEndpoints
             log.LogWarning(e, "Párování účtu {Uzivatel} s loděmi se nepovedlo", uzivatel.Id);
         }
 
+        return TypedResults.Ok(await SlozAsync(uzivatel, uzivatele, pomocnici, ct));
+    }
+
+    /// <summary>
+    /// Odpověď <c>/ja</c> z hotového účtu. Je to na jednom místě, protože
+    /// se sem dojde dvěma cestami — přihlášením a klíčem — a dvě skládání
+    /// téhož DTO by se rozešla v první přidané položce.
+    /// </summary>
+    private static async Task<JaDto> SlozAsync(
+        Uzivatel uzivatel,
+        Uzivatele uzivatele,
+        Zavody.PomocniciSprava pomocnici,
+        CancellationToken ct)
+    {
         var rozsahy = await uzivatele.RozsahyAsync(uzivatel.Id, ct);
 
-        return TypedResults.Ok(new JaDto(
+        return new JaDto(
             uzivatel.Id,
             uzivatel.Zobrazovane,
             uzivatel.Email,
             [.. rozsahy.Select(r => new OpravneniDto(r.Role, r.Serie, r.Zavod))],
             await uzivatele.WebRoleAsync(uzivatel.Id, ct),
             [.. (await pomocnici.KdePomahaSlugyAsync(uzivatel.Id, ct))
-                .Select(z => new KdePomahaDto(z.Serie, z.Zavod))]));
+                .Select(z => new KdePomahaDto(z.Serie, z.Zavod))]);
     }
 }

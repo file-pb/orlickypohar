@@ -1,5 +1,7 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json;
@@ -122,7 +124,24 @@ public static class Poskytovatel
                 };
             });
 
-        sluzby.AddAuthorization();
+        // <b>Klíč k účtu je druhé schéma, ne druhá kontrola.</b> Appka se
+        // od 26. 11. 2026 nepřihlašuje přes poskytovatele — telefon se
+        // napojí kódem z webu a pak posílá klíč v hlavičce. Aby kvůli tomu
+        // nebylo potřeba sáhnout na šedesát endpointů, vyrobí z klíče
+        // handler obyčejný přihlášený principál a výchozí politika zkouší
+        // obě schémata. Pořadí je dané: kdo pošle token, je přihlášený
+        // tokenem; klíč se zkouší, až když token není.
+        sluzby.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddScheme<AuthenticationSchemeOptions, Klice.KlicUctuHandler>(
+                Klice.KlicUctuHandler.Schema, null);
+
+        sluzby.AddAuthorization(o =>
+            o.DefaultPolicy = new AuthorizationPolicyBuilder(
+                    JwtBearerDefaults.AuthenticationScheme, Klice.KlicUctuHandler.Schema)
+                .RequireAuthenticatedUser()
+                .Build());
+
+        sluzby.AddScoped<Klice.KliceUctuSprava>();
         sluzby.AddHttpClient<Profily>();
         return true;
     }
@@ -222,6 +241,14 @@ public class Uzivatele(AppDbContext db)
     /// a čtení nemá měnit databázi.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// Uživatel podle interního identifikátoru. Potřebuje to telefon
+    /// napojený klíčem: ten žádnou dvojici vydavatel+subjekt nemá
+    /// (<see cref="Klice.KlicUctuHandler"/>), zato účet zná rovnou.
+    /// </summary>
+    public Task<Uzivatel?> PodleIdAsync(Guid id, CancellationToken ct) =>
+        db.Uzivatele.FirstOrDefaultAsync(u => u.Id == id, ct);
+
     public Task<Uzivatel?> PodleUctuAsync(string issuer, string subject, CancellationToken ct) =>
         db.Vazby
             .Where(v => v.Issuer == issuer && v.Subject == subject)
