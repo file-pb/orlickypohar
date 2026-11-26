@@ -56,8 +56,22 @@ zkus('žlutý mimoň není zákaz ani sport', () => {
 
 zkus('sport se pozná podle nápisu, tedy podle značení', () => {
   assert.equal(znakPodleVyhlasky('Zluta', 'SferickyVrsek', 'DrahaSport'), 'sportovní bóje');
-  // A platí i tehdy, když si pořadatel vybral jinou barvu.
-  assert.equal(znakPodleVyhlasky('Cervena', 'SferickyVrsek', 'DrahaSport'), 'sportovní bóje');
+});
+
+zkus('sportovní zóna je vždycky žlutá', () => {
+  // Filip, 26. 11. 2026. Otočné bójky jsou mimoni v barvách, jaké kdo
+  // koupil; sportovní zóna tuhle volnost nemá, takže zapsaná jiná barva
+  // znamená, že něco nesedí — a mlčet je lepší než to přetvrdit.
+  assert.equal(znakPodleVyhlasky('Cervena', 'SferickyVrsek', 'DrahaSport'), null);
+  assert.equal(znakPodleVyhlasky('Modra', 'SferickyVrsek', 'DrahaSport'), null);
+});
+
+zkus('otočná bójka může být jakákoliv a nehlásí nic', () => {
+  // Milošovy jsou dnes žluté, jinde se jezdí přes červené, modré, zelené
+  // i bílé — vyhláška o žádné z nich neříká nic.
+  for (const b of ['Zluta', 'Cervena', 'Modra', 'Zelena', 'Bila'] as const) {
+    assert.equal(znakPodleVyhlasky(b, 'SferickyVrsek', 'NaseBoje'), null, b);
+  }
 });
 
 zkus('žlutá jinam než do kuželu nic nehlásí', () => {

@@ -53,7 +53,13 @@ export function znakPodleVyhlasky(
 ): string | null {
   // <b>Sport se pozná nápisem, ne tvarem.</b> Proto rozhoduje značení:
   // bez něj je týž mimoň obyčejná otočná bójka.
-  if (znaceni === 'DrahaSport') return 'sportovní bóje';
+  //
+  // <b>A je vždycky žlutá</b> (Filip, 26. 11. 2026). Otočné bójky jsou
+  // mimoni v barvách, jaké kdo koupil — Milošovy jsou dnes žluté, jinde
+  // se jezdí přes červené, modré, zelené i bílé. Sportovní zóna tuhle
+  // volnost nemá, takže zapsaná jiná barva znamená, že něco nesedí:
+  // a to se nepřekřičí tvrzením o vodě.
+  if (znaceni === 'DrahaSport') return barva && barva !== 'Zluta' ? null : 'sportovní bóje';
 
   // <b>Co není bóje, nemá výklad.</b> Startovací plavidlo ani molo
   // vyhláška jako znak nezná.

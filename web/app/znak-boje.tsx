@@ -96,7 +96,9 @@ export function znakPodleVyhlasky(
   //
   // Sport se pozná nápisem SPORT, ne tvarem: týž „mimoň" bez nápisu je
   // obyčejná otočná bójka a bývá i červená nebo zelená.
-  if (znaceni === "DrahaSport") return "sportovní bóje";
+  // Sportovní zóna je vždycky žlutá; otočné bójky jsou mimoni v barvách,
+  // jaké kdo koupil (Filip, 26. 11. 2026).
+  if (znaceni === "DrahaSport") return barva && barva !== "Zluta" ? null : "sportovní bóje";
   // Co není bóje, nemá výklad.
   if (znaceni === "Plavidlo" || znaceni === "ObjektNaBrehu") return null;
   // Plameňák stojí před barvami schválně: vyhláška ho nezná, takže se za
