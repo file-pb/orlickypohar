@@ -30,7 +30,6 @@ import { posliUkony } from '@/lib/stavba/ukony';
 import { cekajici as cekajiciUkony } from '@/lib/outbox';
 import { jePouzePomocnik } from '@/lib/role';
 import {
-  opakovaniUJmena,
   predpisRadky,
   stavRadky,
   znackyZTrati,
@@ -624,7 +623,6 @@ export default function StavbaTrati() {
                 key={z.boje.id}
                 jmeno={z.boje.nazev}
                 predpis={predpisRadky(z.predpisy)}
-                opakovani={opakovaniUJmena(z.prujezdu)}
                 barva={z.boje.barva ?? undefined}
                 tvar={z.boje.tvar ?? undefined}
                 znaceni={z.boje.znaceni ?? undefined}

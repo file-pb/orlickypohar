@@ -56,23 +56,6 @@ export function stavRadky(v: VstupRadky): StavRadky {
 }
 
 /**
- * Značka, po které se jede víckrát, nese <b>`2×` u jména</b>, nikdy ve
- * sloupci stavu: opakování je vlastnost prvků, ne bóje, a sloupec stavu
- * mluví o bóji.
- *
- * <para>
- * <b>Maraton nemá číslo.</b> Jede velké kolo a uvnitř opakovaně menší
- * okruh až do konce závodu (plán, 11. 10. 2026), takže kolikrát se kolem
- * té značky pojede, se dopředu neví. Vyjmenovat jde jen konečné
- * opakování; pro to druhé je tu `pořád`.
- * </para>
- */
-export function opakovaniUJmena(kolikrat: number | 'porad'): string | null {
-  if (kolikrat === 'porad') return 'pořád';
-  return kolikrat > 1 ? `${kolikrat}×` : null;
-}
-
-/**
  * <b>Osa ukazuje značky, ne průjezdy</b> (rozhodnutí 3, došly k němu tři
  * obory nezávisle).
  *
@@ -110,7 +93,7 @@ export type PrvekProRadku = {
 
 export type ZnackaNaOse = {
   boje: KonecProRadku;
-  /** Kolikrát se po té značce jede. Jedna je běžná, víc dělá `2×`. */
+  /** Kolikrát se po té značce jede. Promítá se do předpisu řádky. */
   prujezdu: number;
   /** Předpisy v pořadí jetí. Víc různých znamená, že se liší bok. */
   predpisy: string[];
@@ -137,21 +120,33 @@ export function dvoukonec(typ: string): boolean {
   return typ !== 'OtocnaBoje' && typ !== 'PrujezdniBoje';
 }
 
-/** Jak se ten průjezd jede, slovy. Jména podle nálezů J7 a J8. */
+/**
+ * Jak se kolem té značky jede, slovy — <b>z pohledu lodi</b>.
+ *
+ * <b>Sloveso musí říct, jestli se značka obeplouvá, nebo jen míjí</b>
+ * (Filip, 26. 11. 2026: *„piš to z pohledu, jak to jede loď, tedy i jak
+ * se objíždí nebo obeplouvá"*). Do té doby tu stálo *„ponechat po
+ * levoboku"* u otočné a *„nechat po levoboku"* u průjezdní — rozdíl
+ * jediného písmene mezi značkou, kolem které se točí, a značkou, kterou
+ * se projede. Na vodě to nerozezná nikdo.
+ *
+ * <b>Bok zůstává, směr otáčení ne.</b> Nálezy J7 a J8 z konzilia: ponechat
+ * znak po levoboku znamená točit doprava, a rozhodčí ani směrnice
+ * neříkají, kam se točí. *„Obeplout po levoboku"* mluví o straně, ne
+ * o směru, takže to pravidlo neporušuje.
+ */
 export function predpisPrvku(typ: string, strana?: string | null): string {
   const bok = strana === 'PoLeve' ? 'levoboku' : strana === 'PoPrave' ? 'pravoboku' : null;
   switch (typ) {
     case 'OtocnaBoje':
     case 'Odskok':
-      // Ne „otočit levobokem": ponechat znak po levoboku znamená točit
-      // doprava, a rozhodčí ani směrnice neříkají, kam se točí.
-      return bok ? `ponechat po ${bok}` : 'otočná';
+      return bok ? `obeplout po ${bok}` : 'obeplout';
     case 'PrujezdniBoje':
-      return bok ? `nechat po ${bok}` : 'průjezdní';
+      return bok ? `minout po ${bok}` : 'minout';
     case 'Brana':
-      return 'projet mezi nimi';
+      return 'projet bránou';
     case 'OtocnaBrana':
-      return 'projet a otočit se';
+      return 'projet bránou a obeplout';
     case 'OtocnaZona':
       // Dotek z trasy nikdo neposoudí; ze směrnice je „otočit se za linií".
       return 'otočit se za linií';
@@ -197,7 +192,14 @@ export function znackyZTrati(prvky: PrvekProRadku[]): ZnackaNaOse[] {
 }
 
 /**
- * Druhá řádka: <b>ne předpis, ale rozdíl mezi průjezdy</b>.
+ * Druhá řádka: <b>celá cesta kolem té značky, v pořadí, jak se jede</b>.
+ *
+ * <para>
+ * <b>Opakování se píše větou, ne značkou `2×`</b> (Filip, 26. 11. 2026:
+ * *„nepoužívej to 2×, to je matoucí"*). `2×` stávalo u jména a mohlo
+ * znamenat dvě bóje stejně dobře jako dva průjezdy; *„podruhé po
+ * pravoboku"* říká totéž tak, jak to loď jede.
+ * </para>
  *
  * <para>
  * Předpis patří k <b>průjezdu</b>, kdežto řádka je po rozhodnutí 3 jedna
@@ -209,30 +211,43 @@ export function znackyZTrati(prvky: PrvekProRadku[]): ZnackaNaOse[] {
  * </para>
  *
  * <para>
- * Shodné průjezdy se slévají do jednoho předpisu, různé se spojí slovem
- * <i>pak</i>. Jednotlivé průjezdy i s předpisy patří do detailu.
+ * <b>Maraton nemá číslo</b>: jede velké kolo a uvnitř opakovaně menší
+ * okruh až do konce závodu (plán, 11. 10. 2026), takže kolikrát se kolem
+ * značky pojede, se dopředu neví. Proto `porad` — vyjmenovat jde jen
+ * konečné opakování.
  * </para>
  */
-export function predpisRadky(predpisy: string[]): string | null {
-  const ruzne = predpisy.filter((p, i) => i === 0 || p !== predpisy[i - 1]);
-  if (ruzne.length === 0) return null;
-  if (ruzne.length === 1) return ruzne[0];
+const RADY = ['', 'podruhé', 'potřetí', 'počtvrté', 'popáté', 'pošesté'];
 
-  // <b>Druhý průjezd se píše jen tím, čím se liší.</b> Celé
-  // „ponechat po levoboku, pak ponechat po pravoboku" má 44 znaků
-  // a na řádce se useklo (ověřeno v simulátoru 21. 11. 2026) — přitom
-  // opakovat „ponechat" nic nepřidává.
+export function predpisRadky(predpisy: string[], porad = false): string | null {
+  if (predpisy.length === 0) return null;
+  const ruzne = predpisy.filter((p, i) => i === 0 || p !== predpisy[i - 1]);
+
+  // Pokaždé stejně. Mlčet o opakování nejde — na řádce je značka jedna
+  // a kolikrát se po ní jede, z ní jinak nepoznáš.
+  if (ruzne.length === 1) {
+    if (porad) return `${ruzne[0]}, a tak pokaždé`;
+    if (predpisy.length === 2) return `${ruzne[0]}, podruhé stejně`;
+    if (predpisy.length > 2) return `${ruzne[0]}, a tak pokaždé`;
+    return ruzne[0];
+  }
+
+  // <b>Další průjezd se píše jen tím, čím se liší.</b> Celé
+  // „obeplout po levoboku, podruhé obeplout po pravoboku" se na řádce
+  // usekne (měřeno 21. 11. 2026 na starším znění) — a opakovat sloveso
+  // nic nepřidává, platí pro oba průjezdy stejně.
   //
   // Ořezává se <b>po celých slovech</b> (jinak by z „pravoboku" zbylo
-  // „oku") a <b>aspoň dvě slova zůstanou</b>: samotné „pak pravoboku"
+  // „oku") a <b>aspoň dvě slova zůstanou</b>: samotné „podruhé pravoboku"
   // je bez předložky skřípavé a ušetří jediné písmeno.
   const slova = ruzne.map((p) => p.split(' '));
   let spolecnych = 0;
   while (slova.every((x) => x.length > spolecnych + 2 && x[spolecnych] === slova[0][spolecnych]))
     spolecnych += 1;
 
-  return [
-    ruzne[0],
-    ...slova.slice(1).map((x) => x.slice(spolecnych).join(' ')),
-  ].join(', pak ');
+  const dalsi = slova
+    .slice(1)
+    .map((x, i) => `${RADY[i + 1] ?? 'pak'} ${x.slice(spolecnych).join(' ')}`);
+
+  return [ruzne[0], ...dalsi].join(', ');
 }

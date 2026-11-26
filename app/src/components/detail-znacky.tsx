@@ -15,7 +15,7 @@ import {
 } from '@/lib/stavba/ukony';
 import { akceDetailu } from '@/lib/detail-prvku';
 import { barvaNaVyplni, pismoNaVyplni } from '@/lib/kontrast';
-import { opakovaniUJmena, type ZnackaNaOse } from '@/lib/radka-trati';
+import type { ZnackaNaOse } from '@/lib/radka-trati';
 import { BARVY, NAZVY_BAREV, NAZVY_TVARU, SiluetaZnacky } from '@/components/znak-boje';
 import { znakPodleVyhlasky } from '@/lib/znak-vyhlaska';
 import { azimut, vzdalenostM } from '@/lib/stavba-prvku';
@@ -200,12 +200,10 @@ export function DetailZnacky({
             <Text style={[s.zpetText, { color: t.voda }]}>‹ Trať</Text>
           </Pressable>
 
-          <Text style={[s.jmeno, { color: t.text }]}>
-            {znacka.boje.nazev}
-            {znacka.prujezdu > 1 ? (
-              <Text style={{ color: t.tlumeny }}> {opakovaniUJmena(znacka.prujezdu)}</Text>
-            ) : null}
-          </Text>
+          {/* <b>Bez `2×` u jména</b> (Filip, 26. 11. 2026). Kolikrát se
+              po té značce jede, je vidět ze seznamu průjezdů hned pod
+              tím — a ten to navíc říká i s tím, čím se který liší. */}
+          <Text style={[s.jmeno, { color: t.text }]}>{znacka.boje.nazev}</Text>
 
           {/* Průjezdy po jednom a celé: tahle řádka se porovnává
               s textem plachetní směrnice. */}

@@ -2078,11 +2078,15 @@ def _nasad_boje():
         # místo — slovník tvarů (kuželová, válcová, plovatka, sférický
         # vršek) se na obrazovku nedostal a nedalo se posoudit.
         # Přenastavená bóje má tvar týž: je to ta samá bóje jinde.
+        # <b>Otočná je žlutá, ne oranžová.</b> Plachetní směrnice ročníku:
+        # „otočné znaky jsou žluté nafukovací". Oranžová tu stála omylem
+        # a mock má o ročníku mluvit pravdu — podle něj se posuzuje, jak
+        # obrazovka vypadá.
         boje("bóje 1", 2, 49.5201, 14.1702, 6.0, "2026-10-08T07:20:00+00:00",
              nahrazena="2026-10-08T08:05:00+00:00",
-             barva="Oranzova", tvar="Kuzelova", znaceni="NaseBoje"),
+             barva="Zluta", tvar="Kuzelova", znaceni="NaseBoje"),
         boje("bóje 1", 2, 49.5208, 14.1711, 3.0, "2026-10-08T08:05:00+00:00",
-             barva="Oranzova", tvar="Kuzelova", znaceni="NaseBoje"),
+             barva="Zluta", tvar="Kuzelova", znaceni="NaseBoje"),
         # Jedna odečtená z mapy, ať je na čem vidět, že se měřená od
         # opsané pozná — a že u ní přesnost schválně chybí.
         boje("cíl", 3, 49.4957254, 14.1841419, None, "2026-10-08T08:40:00+00:00",

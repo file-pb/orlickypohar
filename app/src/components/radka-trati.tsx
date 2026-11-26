@@ -19,7 +19,7 @@ type DruhZnaceni = S['DruhZnaceni'];
  * | | co | míra |
  * |---|---|---|
  * | vlevo | silueta značky | 28 × 36 ve žlábku 40 |
- * | uprostřed | jméno 16/600 · předpis 13/400 `tlumeny` | 66 · 134 z 292 |
+ * | uprostřed | jméno 16/600 · předpis 13/400 `tlumeny`, až dvě řádky | 66 · 134 z 292 |
  * | vpravo | stav jedním slovem 13/600 | sloupec 114 |
  *
  * <b>Celý řádek je terč</b> a vstup do detailu. Dnes jím nebyl ani
@@ -30,14 +30,23 @@ type DruhZnaceni = S['DruhZnaceni'];
  * <b>Žlábek 40 dp není výplň, je to osa.</b> Silueta v něm sedí na
  * vlákně, které kreslí <see cref="OsaTrati"/>.
  */
-export const VYSKA = 56;
+/**
+ * <b>64, ne 56</b> (26. 11. 2026). Předpis se od téhož dne čte z pohledu
+ * lodi a nese i další průjezdy — *„obeplout po levoboku, podruhé po
+ * pravoboku"* je 42 znaků a na jednu řádku se v 13 pt nevejde ani zdaleka
+ * (sloupec má kolem 222 dp, tedy asi 35 znaků). Předtím se to neprojevilo
+ * jen proto, že se předpis usekl potichu; změřeno v simulátoru týž den.
+ * <b>Výška je pro všechny řádky stejná</b>, i pro ty jednořádkové: vlákno
+ * osy počítá s polovinou výšky prvního a posledního řádku, a to platí jen
+ * tehdy, když jsou všechny stejné.
+ */
+export const VYSKA = 64;
 export const MEZERA = 8;
 export const ZLABEK = 40;
 
 export function RadkaTrati({
   jmeno,
   predpis,
-  opakovani,
   barva,
   tvar,
   znaceni,
@@ -45,10 +54,12 @@ export function RadkaTrati({
   onPress,
 }: {
   jmeno: string;
-  /** Čím se prvek jede. Čte se na břehu proti směrnici, ne za jízdy. */
+  /**
+   * Jak se kolem té značky jede, z pohledu lodi — i s dalšími průjezdy
+   * („obeplout po levoboku, podruhé po pravoboku"). Čte se na břehu proti
+   * směrnici, ne za jízdy.
+   */
   predpis?: string | null;
-  /** `2×` nebo `pořád` u značky, po které se jede víckrát. */
-  opakovani?: string | null;
   barva?: BarvaBoje;
   tvar?: TvarBoje;
   znaceni?: DruhZnaceni;
@@ -63,7 +74,7 @@ export function RadkaTrati({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${jmeno}${opakovani ? `, ${opakovani}` : ''}${stav ? `, ${stav}` : ''}`}
+      accessibilityLabel={`${jmeno}${predpis ? `, ${predpis}` : ''}${stav ? `, ${stav}` : ''}`}
       style={({ pressed }) => [s.radek, { opacity: pressed ? 0.7 : 1 }]}>
       <View style={s.zlabek}>
         <SiluetaZnacky
@@ -83,10 +94,9 @@ export function RadkaTrati({
         <View style={s.stred}>
           <Text style={s.jmeno} numberOfLines={1}>
             {jmeno}
-            {opakovani ? <Text style={s.opakovani}> {opakovani}</Text> : null}
           </Text>
           {predpis ? (
-            <Text style={s.predpis} numberOfLines={1}>
+            <Text style={s.predpis} numberOfLines={2}>
               {predpis}
             </Text>
           ) : null}
@@ -157,9 +167,6 @@ const styly = (t: Barvy) =>
     },
     stred: { flex: 1, paddingRight: 10 },
     jmeno: { fontSize: 16, fontWeight: '600', color: t.text },
-    // `2×` patří ke jménu, nikdy do sloupce stavu: je to vlastnost
-    // prvků, ne bóje.
-    opakovani: { fontSize: 16, fontWeight: '600', color: t.tlumeny },
     predpis: { fontSize: 13, fontWeight: '400', color: t.tlumeny },
     stav: { fontSize: 13, fontWeight: '600', color: t.tlumeny, textAlign: 'right' },
   });

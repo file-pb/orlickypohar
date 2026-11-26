@@ -9,7 +9,6 @@ import assert from 'node:assert/strict';
 
 import {
   dvoukonec,
-  opakovaniUJmena,
   predpisPrvku,
   predpisRadky,
   stavRadky,
@@ -65,18 +64,6 @@ zkus('chybějící fotka zůstane, když nic jiného nepřekáží', () => {
   assert.equal(stavRadky({ ...nic, bezFotky: true }), 'chybí fotka');
 });
 
-zkus('jeden průjezd se u jména nepíše', () => {
-  assert.equal(opakovaniUJmena(1), null);
-});
-
-zkus('dva průjezdy se u jména píšou', () => {
-  assert.equal(opakovaniUJmena(2), '2×');
-});
-
-zkus('maraton nemá číslo, krouží pořád', () => {
-  assert.equal(opakovaniUJmena('porad'), 'pořád');
-});
-
 const boje = (id: number, nazev: string): KonecProRadku => ({
   id,
   nazev,
@@ -125,33 +112,84 @@ zkus('dvoukonec je opsaný ze serveru jako pravidlo negativní', () => {
   assert.equal(dvoukonec('NecoNoveho'), true);
 });
 
-zkus('otočná se ponechává, netočí se levobokem', () => {
-  assert.equal(predpisPrvku('OtocnaBoje', 'PoLeve'), 'ponechat po levoboku');
+zkus('sloveso řekne, jestli se obeplouvá, nebo jen míjí', () => {
+  // Do 26. 11. 2026 tu stálo „ponechat" u otočné a „nechat" u průjezdní —
+  // rozdíl jediného písmene mezi točením a projetím.
+  assert.equal(predpisPrvku('OtocnaBoje', 'PoLeve'), 'obeplout po levoboku');
+  assert.equal(predpisPrvku('PrujezdniBoje', 'PoLeve'), 'minout po levoboku');
+  assert.notEqual(
+    predpisPrvku('OtocnaBoje', 'PoLeve').split(' ')[0],
+    predpisPrvku('PrujezdniBoje', 'PoLeve').split(' ')[0],
+  );
+});
+
+zkus('bok ano, směr otáčení ne', () => {
+  // Nálezy J7 a J8: ponechat znak po levoboku znamená točit doprava,
+  // a to směrnice neříká. Předpis proto o směru mlčet musí.
+  for (const bok of ['PoLeve', 'PoPrave']) {
+    const p = predpisPrvku('OtocnaBoje', bok);
+    assert.ok(!/doprava|doleva|vlevo|vpravo/.test(p), p);
+  }
   assert.equal(predpisPrvku('OtocnaZona'), 'otočit se za linií');
 });
 
-zkus('shodné průjezdy dají jeden předpis', () => {
+zkus('bez zapsané strany se bok nevymýšlí', () => {
+  assert.equal(predpisPrvku('OtocnaBoje'), 'obeplout');
+  assert.equal(predpisPrvku('PrujezdniBoje'), 'minout');
+});
+
+zkus('jeden průjezd je holý předpis', () => {
+  assert.equal(predpisRadky(['obeplout po levoboku']), 'obeplout po levoboku');
+  assert.equal(predpisRadky([]), null);
+});
+
+zkus('shodné průjezdy řeknou, že se jede dvakrát', () => {
+  // `2×` u jména skončilo 26. 11. 2026, ale mlčet o opakování nejde:
+  // na řádce je značka jedna a jinak to z ní nepoznáš.
   assert.equal(
-    predpisRadky(['ponechat po levoboku', 'ponechat po levoboku']),
-    'ponechat po levoboku',
+    predpisRadky(['obeplout po levoboku', 'obeplout po levoboku']),
+    'obeplout po levoboku, podruhé stejně',
+  );
+});
+
+zkus('tři a víc shodných průjezdů se nevyjmenovává', () => {
+  assert.equal(
+    predpisRadky(['obeplout po levoboku', 'obeplout po levoboku', 'obeplout po levoboku']),
+    'obeplout po levoboku, a tak pokaždé',
+  );
+});
+
+zkus('maraton nemá číslo, krouží pořád', () => {
+  assert.equal(
+    predpisRadky(['obeplout po levoboku', 'obeplout po levoboku'], true),
+    'obeplout po levoboku, a tak pokaždé',
   );
 });
 
 zkus('po obrátce opačnou stranou řekne řádka jen ten rozdíl', () => {
   assert.equal(
-    predpisRadky(['ponechat po levoboku', 'ponechat po pravoboku']),
-    'ponechat po levoboku, pak po pravoboku',
+    predpisRadky(['obeplout po levoboku', 'obeplout po pravoboku']),
+    'obeplout po levoboku, podruhé po pravoboku',
+  );
+});
+
+zkus('třetí průjezd dostane vlastní řadovou číslovku', () => {
+  assert.equal(
+    predpisRadky(['obeplout po levoboku', 'obeplout po pravoboku', 'obeplout po levoboku']),
+    'obeplout po levoboku, podruhé po pravoboku, potřetí po levoboku',
   );
 });
 
 zkus('bez společného začátku se nic neořezává', () => {
-  assert.equal(predpisRadky(['start', 'cíl']), 'start, pak cíl');
+  assert.equal(predpisRadky(['start', 'cíl']), 'start, podruhé cíl');
 });
 
 zkus('ořezává se po celých slovech, ne uprostřed', () => {
   // „pravoboku" a „pravobok" mají společný kus písmen, ne slovo.
-  assert.equal(predpisRadky(['nechat po levoboku', 'projet mezi nimi']),
-    'nechat po levoboku, pak projet mezi nimi');
+  assert.equal(
+    predpisRadky(['minout po levoboku', 'projet bránou']),
+    'minout po levoboku, podruhé projet bránou',
+  );
 });
 
 console.log(`\n  ${prosly} v pořádku`);
