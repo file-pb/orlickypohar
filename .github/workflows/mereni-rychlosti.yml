@@ -1,0 +1,31 @@
+# Jednorázové měření rychlosti produkce zvenku. Větev se po měření smaže.
+name: mereni-rychlosti
+on:
+  push:
+    branches: [mereni-rychlosti]
+permissions:
+  contents: read
+jobs:
+  mereni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Měření
+        run: |
+          W=https://orlickypohar.klihovka.cz
+          A=https://orlickypohar-api.klihovka.cz
+          m() { curl -s -o /tmp/telo -D /tmp/h -w "%{http_code} ttfb=%{time_starttransfer}s total=%{time_total}s $(printf '%6s' %{size_download})B" "$1"; echo " cache=$(grep -i '^x-cache:' /tmp/h | awk '{print $2}' | tr -d '\r') cf=$(grep -i '^cf-cache-status:' /tmp/h | awk '{print $2}' | tr -d '\r') $1"; }
+          echo "== verze"; curl -s $W/verze; echo; curl -s $A/verze; echo
+          echo "== stránky webu (3x)"
+          stranky="/ /serie /appka /novinky"
+          # odkazy z úvodní stránky, ať se měří skutečné cesty
+          curl -s $W/ | grep -o 'href="/[^"#?]*"' | sed 's/href="//;s/"$//' | sort -u | grep -v '^/_next' | head -15 > /tmp/odkazy
+          cat /tmp/odkazy
+          for p in $stranky $(cat /tmp/odkazy); do for i in 1 2 3; do m "$W$p"; done; done
+          echo "== API"
+          for p in /health /health/ready /serie; do for i in 1 2; do m "$A$p"; done; done
+          echo "== statika"
+          curl -s $W/ | grep -o '/_next/static/[^"]*\.\(js\|css\)' | sort -u | head -5 | while read s; do m "$W$s"; done
+          echo "== obejití cache (?x=N), skutečné vykreslení"
+          for i in 1 2 3 4 5; do m "$W/?mereni=$RANDOM"; done
+          for p in $(head -5 /tmp/odkazy); do m "$W$p?mereni=$RANDOM"; done
