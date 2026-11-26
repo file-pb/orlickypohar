@@ -31,6 +31,15 @@ Nic nového se nevymýšlí; všechno už v odpovědi `/ja` je
 | **Sledování** | vždycky, i nepřihlášený | ročníky a kalendář |
 | **Záznam trasy** | má klíč nebo loď | trasa |
 
+**Sledování je podlaha, ne jedna z dlaždic.** Rozhodnuto Filipem 26. 11.
+2026: *„sledování na tom rozcestníku je skvělý, protože to vlastně se dá
+použít i pro toho, kdo nejede závod a ani nemá žádný login. Takže vždycky
+aspoň to sledování zůstane."* Appka tedy **nikdy nekončí u přihlašovací
+obrazovky** — i člověk bez účtu má kam jít a co si přečíst. Pro stavbu
+z toho plyne, že se rozcestník počítá odspodu: sledování je tam vždycky
+a role nad ním jen přidávají. Prázdný rozcestník neexistuje, takže se
+nemusí kreslit prázdný stav.
+
 Pravidla jsou **už napsaná a otestovaná** v `app/src/lib/role.ts`
 (`veliNekde`, `smiStavet`, `jePouzePomocnik`, `kdeStavi`, `postava`)
 a `app/testy/role.test.ts`. Rozcestník je nebude počítat znovu — jen
@@ -145,8 +154,12 @@ První dva kroky jsou v appce a nikam nesahají. Třetí mění API i web.
 
 ## Co rozhodnutí potřebuje a já ho nemám
 
-- **Vidí nepřihlášený rozcestník, nebo rovnou ročníky?** Jedna dlaždice
-  a jedno tlačítko *Přihlásit se* je hubený rozcestník.
+- **Vidí nepřihlášený rozcestník, nebo rovnou ročníky?** Teď, když je
+  sledování podlaha, se to zúžilo na jednu věc: dvě položky
+  (*Sledování*, *Přihlásit se*) jsou hubený rozcestník, a pravidlo jediné
+  možnosti by ho stejně přeskočilo. **Doporučuju otevřít rovnou ročníky**
+  a *Přihlásit se* nechat v tečkách — kdo si appku stáhl kvůli výsledkům,
+  nemá být nejdřív vyzván k přihlášení.
 - **Co je na dlaždici napsané.** *„Velím regatě"* je role, *„Izolepa,
   dnes"* je kontext. Obojí se nevejde dvakrát.
 - **Pořadí dlaždic.** Dnes `postava()` říká, že velení přebíjí loď.
