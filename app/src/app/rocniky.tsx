@@ -9,6 +9,8 @@ import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiSerie, nactiSerii } from '@/lib/api';
 import { rozsah } from '@/lib/datum';
+import { jePrihlasen, prihlasovaniJde, relaceVyprsela } from '@/lib/identita';
+import { ukazkaBezi } from '@/lib/ukazka';
 import { kteraRegata, kterySledovat, vetaNaRade } from '@/lib/sledovani';
 
 /**
@@ -40,6 +42,16 @@ export default function Sledovani() {
   const [signal, setSignal] = useState(0);
 
   const { data: serie, chyba, nacita, obnov } = useData(nactiSerie, [signal]);
+  // <b>Je tahle obrazovka konečná, nebo jen to, co zbylo?</b> Čte se
+  // z úložiště, bez sítě, takže to funguje i u vody bez signálu.
+  const { data: ucet } = useData(
+    // V ukázce hraje appka přihlášeného Miloše, takže by řádka lhala.
+    async () => ({
+      prihlasen: ukazkaBezi() || (await jePrihlasen()),
+      vyprselo: !ukazkaBezi() && (await relaceVyprsela()),
+    }),
+    [signal],
+  );
   const vybrany = serie ? kterySledovat(serie, new Date()) : null;
   const { data: rocnik, nacita: nacitaRocnik } = useData(
     () => (vybrany ? nactiSerii(vybrany.slug) : Promise.resolve(null)),
@@ -79,6 +91,30 @@ export default function Sledovani() {
           regata, jinak nejbližší, jinak poslední odjetá — a vždycky i to,
           která z těch tří možností to je, protože „Izolepa, 7. června" bez
           té věty neřekne, jestli už bylo, nebo teprve bude. */}
+      {/* <b>Cesta dovnitř patří sem, ne jen pod tři tečky.</b> Od 26. 11.
+          appka nepřihlášeného pouští rovnou na sledování a rozcestník mu
+          nekreslí — a tím se přihlášení schovalo do nabídky, kde ho Filip
+          nenašel: *„nejde mi do hlavy, jakým způsobem se teďko přepnu do
+          režimu stavitele."* Jedna řádka to vrací zpátky na oči, aniž by
+          se kvůli tomu musel kreslit rozcestník o dvou položkách.
+
+          <b>Vypršelá relace se jmenuje jinak než nepřihlášení.</b> Člověk,
+          kterému skončilo přihlášení, vidí tutéž obrazovku jako cizí
+          návštěvník, a bez téhle věty to vypadá, že mu appka sebrala
+          práva. */}
+      {prihlasovaniJde && ucet && !ucet.prihlasen ? (
+        <Karta onPress={() => router.push('/ucet')}>
+          <Text style={{ color: t.voda, fontWeight: '600' }}>
+            {ucet.vyprselo ? 'Přihlásit se znovu →' : 'Přihlásit se →'}
+          </Text>
+          <Text style={{ color: t.tlumeny, marginTop: 2 }}>
+            {ucet.vyprselo
+              ? 'Přihlášení vypršelo. Rozhodčí, stavitel i moje loď se vrátí.'
+              : 'rozhodčí, stavitel trati, moje loď'}
+          </Text>
+        </Karta>
+      ) : null}
+
       {rocnik && naRade ? (
         <Pressable
           onPress={() =>

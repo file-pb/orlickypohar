@@ -52,6 +52,15 @@ const ROZSAHY = ["openid", "profile", "email", "offline_access"];
 const KLIC_TOKEN = "op_token";
 const KLIC_OBNOVA = "op_obnova";
 const KLIC_PLATNOST = "op_platnost";
+/**
+ * <b>Relace skončila u poskytovatele, ne u nás.</b> Bez téhle stopy se
+ * vypršené přihlášení nedá odlišit od člověka, který se nikdy nepřihlásil
+ * — a appka se pak chová, jako by o něm nikdy neslyšela. 26. 11. 2026 to
+ * stálo půl hodiny: Filip byl přesvědčený, že je přihlášený, appka ho
+ * mlčky poslala mezi čtenáře a na serveru po ní nezbyl jediný dotaz na
+ * `/ja`, protože bez tokenu se ani neodesílá.
+ */
+const KLIC_VYPRSELA = "op_vyprsela";
 
 /**
  * Tajemství do `SecureStore`, ne do `AsyncStorage`.
@@ -120,6 +129,7 @@ export async function prihlas(): Promise<string | null> {
 }
 
 async function zapisOdpoved(o: AuthSession.TokenResponse) {
+  await uloz(KLIC_VYPRSELA, null);
   await uloz(KLIC_TOKEN, o.accessToken);
   await uloz(KLIC_OBNOVA, o.refreshToken ?? null);
   // Vteřina rezervy navíc: token, který vyprší cestou, vypadá jako
@@ -156,7 +166,12 @@ export async function token(): Promise<string | null> {
     return o.accessToken;
   } catch {
     // Neplatná obnova znamená, že relace skončila na straně poskytovatele.
+    // Tokeny jdou pryč, ale <b>ne potichu</b>: zůstane stopa, podle které
+    // obrazovka pozná rozdíl mezi „nikdy se nepřihlásil" a „přihlášení
+    // vypršelo", a může to říct místo toho, aby ho tiše přeřadila
+    // mezi čtenáře.
     await odhlas();
+    await uloz(KLIC_VYPRSELA, "ano");
     return null;
   }
 }
@@ -201,4 +216,18 @@ export async function odhlas() {
   await uloz(KLIC_TOKEN, null);
   await uloz(KLIC_OBNOVA, null);
   await uloz(KLIC_PLATNOST, null);
+  // Kdo se odhlásil sám, nemá dostávat zprávu, že mu relace vypršela.
+  // `token()` si tu stopu nastaví až po tomhle volání.
+  await uloz(KLIC_VYPRSELA, null);
+}
+
+/**
+ * Skončila relace sama od sebe? Nevolá síť, jen se ptá úložiště.
+ *
+ * Stopa zmizí při přihlášení i při vědomém odhlášení, takže je to zpráva
+ * na jedno použití — pro obrazovku, která by jinak mlčky ukázala míň, než
+ * ten člověk měl.
+ */
+export async function relaceVyprsela() {
+  return (await SecureStore.getItemAsync(KLIC_VYPRSELA)) === "ano";
 }

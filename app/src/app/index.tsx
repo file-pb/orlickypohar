@@ -4,6 +4,7 @@ import { Image, Pressable, ScrollView, Text, useColorScheme, View } from 'react-
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiDnesniRegatu } from '@/lib/api';
+import { jePrihlasen } from '@/lib/identita';
 import { mojeOpravneni } from '@/lib/opravneni';
 import { dlazdice, kamRovnou, type Dlazdice } from '@/lib/rozcestnik';
 
@@ -37,12 +38,20 @@ export default function Domu() {
   const router = useRouter();
 
   const { data: ja, chyba: chybaJa, nacita: nacitaJa } = useData(mojeOpravneni);
+  // <b>Má ten telefon vůbec přihlášení?</b> Čte se z úložiště, bez sítě.
+  const { data: prihlasen, nacita: nacitaUcet } = useData(async () => await jePrihlasen());
   const { data: dnes, chyba: chybaDnes, nacita: nacitaDnes } = useData(nactiDnesniRegatu);
 
-  const nacita = nacitaJa || nacitaDnes;
+  const nacita = nacitaJa || nacitaDnes || nacitaUcet;
   // „Jisté" neznamená „něco přišlo". Nepřihlášený dostane `null` bez chyby
   // a to je plnohodnotná odpověď; chyba je naopak neznalost.
-  const jiste = !nacita && !chybaJa && !chybaDnes;
+  // <b>Spor se nepřeskakuje.</b> Token v telefonu je, ale `/ja` nic
+  // nevrátilo (vypršelá relace, odmítnutý token) — pak o tom člověku
+  // nevíme, a přeskočit rozcestník by znamenalo poslat ho mezi čtenáře
+  // bez jediného slova. Přesně to se stalo 26. 11. 2026 a hledalo se to
+  // v serverových logech, protože bez tokenu se `/ja` ani neodesílá.
+  const spor = prihlasen === true && ja === null;
+  const jiste = !nacita && !chybaJa && !chybaDnes && !spor;
 
   const d = dlazdice({
     ja: ja ?? null,
@@ -112,9 +121,11 @@ export default function Domu() {
       {/* <b>Chyba nezhasne rozcestník.</b> Role se nepřečetly, takže nabídka
           je kratší, než by měla být — a to se musí říct, jinak to vypadá,
           že se appka zmenšila. Sledování funguje tak jako tak. */}
-      {chybaJa || chybaDnes ? (
+      {chybaJa || chybaDnes || spor ? (
         <Text style={{ color: t.vystraha, fontSize: 13, marginTop: 14 }}>
-          Co smíš, se teď nedá zjistit — nabídka proto může být kratší.
+          {spor
+            ? 'Přihlášení neplatí. Otevři Účet a přihlas se znovu.'
+            : 'Co smíš, se teď nedá zjistit — nabídka proto může být kratší.'}
         </Text>
       ) : null}
 
