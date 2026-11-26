@@ -5,11 +5,33 @@
 import type { components } from "./schema";
 import { token } from './identita';
 import { tajemstvi } from './klic';
+import { HLAVICKA, klicUctu } from './klic-uctu';
 import { API, sit } from './sit';
 import { ukazkaBezi } from './ukazka';
 
-/** V ukázce se nikdo nepřihlašuje, a přesto musí projít i cesty za sebe. */
-const klicNeboUkazka = async () => (ukazkaBezi() ? 'ukazka' : await token());
+/**
+ * Čím se telefon prokáže „za sebe", nebo `null`, když nemá čím.
+ *
+ * <b>Dvě cesty, jedna odpověď.</b> Od 26. 11. 2026 se appka nemusí
+ * přihlašovat u poskytovatele: telefon se napojí kódem z webu a pak
+ * posílá klíč v hlavičce `X-Klic-Uctu`. Server z něj vyrobí tutéž
+ * identitu, jakou by dal token (`Features/Klice/KlicUctuOvereni.cs`),
+ * takže volající rozdíl nepoznají.
+ *
+ * <b>Klíč má přednost před tokenem.</b> Kdo se napojil, udělal to
+ * vědomě; token mu mohl zůstat ležet z doby, kdy se appka ještě
+ * přihlašovala, a dva doklady naráz znamenají dvě odpovědi na otázku,
+ * kdo volá.
+ */
+async function hlavickySebe(): Promise<Record<string, string> | null> {
+  if (ukazkaBezi()) return { authorization: 'Bearer ukazka' };
+
+  const klic = await klicUctu();
+  if (klic) return { [HLAVICKA]: klic };
+
+  const t = await token();
+  return t ? { authorization: `Bearer ${t}` } : null;
+}
 
 // Typy nejsou psané rukou — generuje je `packages/api-client/generuj.sh`
 // z OpenAPI dokumentu API do `schema.d.ts`. Tady se jen pojmenují, aby se
@@ -75,11 +97,11 @@ export const nactiZavod = (serie: string, zavod: string) =>
  * vědět, kdy vyprší.
  */
 export async function nactiZaSebe<T>(cesta: string): Promise<T | null> {
-  const t = await klicNeboUkazka();
-  if (!t) return null;
+  const doklad = await hlavickySebe();
+  if (!doklad) return null;
 
   const odpoved = await sit(cesta, {
-    headers: { accept: 'application/json', authorization: `Bearer ${t}` },
+    headers: { accept: 'application/json', ...doklad },
   });
 
   if (odpoved.status === 401 || odpoved.status === 404) return null;
@@ -136,18 +158,18 @@ export async function posliZaSebe<T>(
    */
   metoda: 'POST' | 'PUT' | 'DELETE' = 'POST',
 ): Promise<T | null> {
-  const t = await klicNeboUkazka();
-  if (!t) return null;
+  const doklad = await hlavickySebe();
+  if (!doklad) return null;
 
   const odpoved = await sit(cesta, {
     method: metoda,
     headers:
       metoda === 'DELETE'
-        ? { accept: 'application/json', authorization: `Bearer ${t}` }
+        ? { accept: 'application/json', ...doklad }
         : {
             accept: 'application/json',
             'content-type': 'application/json',
-            authorization: `Bearer ${t}`,
+            ...doklad,
           },
     body: metoda === 'DELETE' ? undefined : JSON.stringify(telo),
   });
@@ -877,14 +899,14 @@ async function posliBezOdpovedi(
   metoda: 'POST' | 'DELETE',
   telo?: unknown,
 ): Promise<boolean> {
-  const t = await klicNeboUkazka();
-  if (!t) return false;
+  const doklad = await hlavickySebe();
+  if (!doklad) return false;
 
   const odpoved = await sit(cesta, {
     method: metoda,
     headers: {
       accept: 'application/json',
-      authorization: `Bearer ${t}`,
+      ...doklad,
       ...(telo === undefined ? {} : { 'content-type': 'application/json' }),
     },
     ...(telo === undefined ? {} : { body: JSON.stringify(telo) }),

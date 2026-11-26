@@ -59,6 +59,11 @@ echo
 echo "== Sledování =="
 "${NODE[@]}" ./sledovani.test.ts
 
+# Kód z QR i opsaný z ruky — napojení telefonu na účet.
+echo
+echo "== Klíč k účtu =="
+"${NODE[@]}" ./klic-uctu.test.ts
+
 echo
 echo "== Odběry upozornění =="
 "${NODE[@]}" ./odbery.test.ts

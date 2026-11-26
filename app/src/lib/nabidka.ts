@@ -35,6 +35,11 @@ export const KAM: PolozkaNabidky[] = [
   // rozcestník přeskočený, nemá odsud jinou cestu k výsledkům.
   { text: 'Sledování', cil: '/rocniky', popis: 'kalendář, výsledky, pořadí seriálu' },
   { text: 'Moje lodě a posádka', cil: '/lode' },
+  // <b>Mám kód je cesta dovnitř</b> (Filip, 26. 11. 2026): appka se
+  // nepřihlašuje u poskytovatele, telefon se napojí kódem z webu.
+  // Stojí nad klíčem k lodi, protože bez účtu se nedostaneš nikam,
+  // kdežto klíč k lodi řeší jednu věc.
+  { text: 'Mám kód', cil: '/mam-kod', popis: 'napojit telefon na účet z webu' },
   { text: 'Klíč k lodi', cil: '/klic' },
   { text: 'Záznam trasy', cil: '/tracker' },
   { text: 'Účet a nastavení', cil: '/ucet', popis: 'oprávnění, zvuk na startu, verze appky' },
