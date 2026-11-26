@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rozcestník — návrh</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --pozadi: #14171a;
+    --papir: #1b1f23;
+    --text: #edeae5;
+    --tlumeny: #9aa3ac;
+    --linka: #2c3238;
+    --voda: #6bb3cc;
+    --zvyrazneni: #232830;
+    --vypsany: #58c98c;
+    --vystraha: #c9922f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 28px 16px 64px;
+    background: #0d0f11; color: var(--text);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  .uvod { color: var(--tlumeny); max-width: 68ch; margin: 0 0 28px; }
+  .uvod code { background: var(--zvyrazneni); padding: 1px 5px; border-radius: 5px; font-size: 14px; }
+
+  .rada { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+
+  figure { margin: 0; width: 300px; }
+  figcaption { margin-top: 10px; color: var(--tlumeny); font-size: 14px; }
+  figcaption b { color: var(--text); display: block; font-size: 15px; margin-bottom: 2px; }
+
+  .telefon {
+    width: 300px; height: 620px; border-radius: 34px; padding: 10px;
+    background: #000; box-shadow: 0 0 0 1px #30363d, 0 18px 40px rgba(0,0,0,.55);
+  }
+  .displej {
+    width: 100%; height: 100%; border-radius: 26px; overflow: hidden;
+    background: var(--pozadi); display: flex; flex-direction: column;
+  }
+
+  .stav { display: flex; justify-content: space-between; padding: 10px 18px 2px; font-size: 12px; color: var(--tlumeny); }
+
+  .hlava { display: flex; align-items: center; gap: 10px; padding: 10px 14px 12px; }
+  .logo { width: 34px; height: 34px; border-radius: 8px; background: #1d2a33; display: grid; place-items: center; }
+  .hlava .jmeno { font-weight: 800; font-size: 16px; letter-spacing: -.3px; }
+  .hlava .pod { font-size: 11px; color: var(--tlumeny); }
+  .tecky { margin-left: auto; width: 32px; height: 32px; border-radius: 16px; border: 1px solid var(--linka); display: grid; place-items: center; color: var(--tlumeny); font-size: 17px; letter-spacing: 1px; }
+
+  .dnes {
+    margin: 0 14px 12px; padding: 9px 12px; border-radius: 12px;
+    background: var(--zvyrazneni); border-left: 3px solid var(--voda);
+    font-size: 12.5px; line-height: 1.35;
+  }
+  .dnes b { color: var(--text); }
+  .dnes span { color: var(--tlumeny); }
+
+  .mrizka { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 14px; }
+  .dlazdice {
+    background: var(--papir); border: 1px solid var(--linka); border-radius: 14px;
+    padding: 12px 12px 13px; min-height: 104px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .dlazdice.hlavni { border-color: var(--voda); background: #18262c; }
+  .dlazdice.siroka { grid-column: 1 / -1; min-height: 72px; flex-direction: row; align-items: center; gap: 12px; }
+  .dlazdice .ikona { width: 30px; height: 30px; }
+  .dlazdice .nazev { font-size: 16px; font-weight: 700; letter-spacing: -.2px; }
+  .dlazdice .kontext { font-size: 12px; color: var(--tlumeny); line-height: 1.25; }
+  .dlazdice.siroka .texty { display: flex; flex-direction: column; gap: 1px; }
+
+  .sekce { padding: 16px 14px 6px; font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--tlumeny); }
+
+  /* list (nabídka pod třemi tečkami) */
+  .plachta { margin-top: auto; background: #202429; border-radius: 18px 18px 26px 26px; padding: 6px 0 10px; }
+  .polozka { padding: 9px 18px; border-bottom: 1px solid #272c32; }
+  .polozka:last-of-type { border-bottom: 0; }
+  .polozka .n { font-size: 15px; }
+  .polozka .p { font-size: 11.5px; color: var(--tlumeny); }
+  .zavrit { text-align: center; color: var(--voda); font-weight: 700; padding: 10px 0 2px; }
+
+  /* obrazovka závodníka */
+  .pruh { background: var(--voda); color: #0d1b22; text-align: center; font-weight: 800; font-size: 11px; letter-spacing: .06em; padding: 5px; }
+  .karta { margin: 10px 14px 0; background: var(--papir); border: 1px solid var(--linka); border-radius: 14px; padding: 12px; }
+  .karta.start { background: var(--voda); color: #0d1b22; border: 0; }
+  .karta.start .mala { font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+  .karta.start .velka { font-size: 30px; font-weight: 800; letter-spacing: -1px; margin: 2px 0; }
+  .karta .radek { display: flex; justify-content: space-between; font-size: 13px; }
+  .karta .nazev { font-weight: 700; font-size: 15px; }
+  .karta .pod { font-size: 12px; color: var(--tlumeny); }
+
+  .pozn { margin: 10px 0 0; font-size: 13px; color: var(--tlumeny); }
+  .pozn b { color: var(--vystraha); }
+  hr { border: 0; border-top: 1px solid #22262b; margin: 36px 0 26px; }
+</style>
+</head>
+<body>
+
+<h1>Rozcestník podle role</h1>
+<p class="uvod">
+  Pět případů, jak je appka pozná z <code>/ja</code>. Pravidla se nevymýšlejí —
+  jsou v <code>app/src/lib/role.ts</code> a mají testy. Rozvaha je vedle
+  v <code>docs/ROZCESTNIK.md</code>; tady jde o to, jestli se to dá jedním palcem
+  obsloužit na vodě.
+</p>
+
+<div class="rada">
+
+  <!-- 1. ROZHODČÍ -->
+  <figure>
+    <div class="telefon"><div class="displej">
+      <div class="stav"><span>9:41</span><span>▮▮▮</span></div>
+      <div class="hlava">
+        <div class="logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6bb3cc" stroke-width="1.6"><path d="M12 3 L18 16 H6 Z"/><path d="M4 19 h16"/></svg>
+        </div>
+        <div><div class="jmeno">Orlický pohár</div><div class="pod">Miloš Novák</div></div>
+        <div class="tecky">⋮</div>
+      </div>
+
+      <div class="dnes"><b>Dnes se jede Izolepa</b><br><span>Colins yacht club · start 14:00 · 3 lodě</span></div>
+
+      <div class="mrizka">
+        <div class="dlazdice hlavni">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#6bb3cc" stroke-width="2"><circle cx="16" cy="16" r="11"/><path d="M16 9 v7 l5 3"/></svg>
+          <div class="nazev">Velím regatě</div>
+          <div class="kontext">start, cíl, rozjížďky<br>Izolepa</div>
+        </div>
+        <div class="dlazdice">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#e8b400" stroke-width="2"><path d="M8 24 h16"/><path d="M16 24 V10"/><path d="M16 10 a5 4 0 0 1 0 8"/><circle cx="8" cy="24" r="2" fill="#e8b400"/><circle cx="24" cy="24" r="2" fill="#e8b400"/></svg>
+          <div class="nazev">Stavím trať</div>
+          <div class="kontext">pípni značky z lodi<br>5 prvků stojí</div>
+        </div>
+        <div class="dlazdice">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#58c98c" stroke-width="2"><path d="M6 22 h20 l-3 5 H9 Z"/><path d="M16 22 V5"/><path d="M16 7 l8 12 h-8"/></svg>
+          <div class="nazev">Jedu závod</div>
+          <div class="kontext">Far Star III<br>CZE 142</div>
+        </div>
+        <div class="dlazdice">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#9aa3ac" stroke-width="2"><rect x="5" y="7" width="22" height="20" rx="3"/><path d="M5 13 h22M11 5 v4M21 5 v4"/></svg>
+          <div class="nazev">Sledování</div>
+          <div class="kontext">kalendář, výsledky,<br>pořadí seriálu</div>
+        </div>
+      </div>
+    </div></div>
+    <figcaption><b>Rozhodčí ročníku</b>Velí, staví i závodí — vidí všechno. Dlaždice <i>Velím regatě</i> je zvýrazněná, protože dnes se jede.</figcaption>
+  </figure>
+
+  <!-- 2. ORGANIZÁTOR + ZÁVODNÍK -->
+  <figure>
+    <div class="telefon"><div class="displej">
+      <div class="stav"><span>9:41</span><span>▮▮▮</span></div>
+      <div class="hlava">
+        <div class="logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6bb3cc" stroke-width="1.6"><path d="M12 3 L18 16 H6 Z"/><path d="M4 19 h16"/></svg>
+        </div>
+        <div><div class="jmeno">Orlický pohár</div><div class="pod">Jana Dvořáková</div></div>
+        <div class="tecky">⋮</div>
+      </div>
+
+      <div class="dnes"><b>Dnes se jede Izolepa</b><br><span>pořádáš ji · start 14:00</span></div>
+
+      <div class="mrizka">
+        <div class="dlazdice hlavni siroka">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#e8b400" stroke-width="2"><path d="M8 24 h16"/><path d="M16 24 V10"/><path d="M16 10 a5 4 0 0 1 0 8"/><circle cx="8" cy="24" r="2" fill="#e8b400"/><circle cx="24" cy="24" r="2" fill="#e8b400"/></svg>
+          <div class="texty"><div class="nazev">Stavím trať</div><div class="kontext">Izolepa · 5 prvků stojí, dvěma chybí fotka</div></div>
+        </div>
+        <div class="dlazdice siroka">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#58c98c" stroke-width="2"><path d="M6 22 h20 l-3 5 H9 Z"/><path d="M16 22 V5"/><path d="M16 7 l8 12 h-8"/></svg>
+          <div class="texty"><div class="nazev">Jedu závod</div><div class="kontext">Hakuna Matata · CZE 88</div></div>
+        </div>
+        <div class="dlazdice siroka">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#9aa3ac" stroke-width="2"><rect x="5" y="7" width="22" height="20" rx="3"/><path d="M5 13 h22M11 5 v4M21 5 v4"/></svg>
+          <div class="texty"><div class="nazev">Sledování</div><div class="kontext">kalendář, výsledky, pořadí seriálu</div></div>
+        </div>
+      </div>
+    </div></div>
+    <figcaption><b>Pořadatelka, co zároveň závodí</b>Dva světy vedle sebe — tenhle případ je důvod, proč rozcestník vzniká. Široké dlaždice, když jsou tři.</figcaption>
+  </figure>
+
+  <!-- 3. ZÁVODNÍK — BEZ ROZCESTNÍKU -->
+  <figure>
+    <div class="telefon"><div class="displej">
+      <div class="stav"><span>9:41</span><span>▮▮▮</span></div>
+      <div class="pruh">MOJE REGATA</div>
+      <div class="karta start">
+        <div class="mala">ROZJÍŽĎKA 4 · IZOLEPA</div>
+        <div class="velka">Startuje se</div>
+        <div class="mala">START V 14:04 · 13:59:20</div>
+      </div>
+      <div class="karta">
+        <div class="radek"><span class="nazev">FAR STAR III</span><span class="pod">Race</span></div>
+        <div class="pod">CZE 142 · 3 z 3 telefonů vysílá</div>
+      </div>
+      <div class="karta">
+        <div class="nazev" style="font-size:13px;color:#c9922f">POKYN ZÁVODNÍ KOMISE</div>
+        <div class="pod" style="color:var(--text);font-size:14px">Změna následujícího úseku dráhy</div>
+        <div class="pod">vyhlášeno 13:30 · vlajka C</div>
+      </div>
+      <div style="margin-top:auto;padding:12px 14px 16px">
+        <div class="hlava" style="padding:0;border-top:1px solid var(--linka);padding-top:10px">
+          <div class="pod" style="font-size:12px">Příště se otevře rovnou sem.</div>
+          <div class="tecky">⋮</div>
+        </div>
+      </div>
+    </div></div>
+    <figcaption><b>Závodník — rozcestník nikdy neuvidí</b>Jediná role s jediným vstupem, tak se přeskočí. Tři tečky zůstávají, a je v nich <i>Domů</i>.</figcaption>
+  </figure>
+
+  <!-- 4. POMOCNÍK -->
+  <figure>
+    <div class="telefon"><div class="displej">
+      <div class="stav"><span>9:41</span><span>▮▮▮</span></div>
+      <div class="hlava">
+        <div class="logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6bb3cc" stroke-width="1.6"><path d="M12 3 L18 16 H6 Z"/><path d="M4 19 h16"/></svg>
+        </div>
+        <div><div class="jmeno">Orlický pohár</div><div class="pod">Petr Kalous</div></div>
+        <div class="tecky">⋮</div>
+      </div>
+
+      <div class="dnes"><b>Dnes pomáháš na Izolepě</b><br><span>zaškrtnul tě pořadatel · platí jen dnes</span></div>
+
+      <div class="mrizka">
+        <div class="dlazdice hlavni siroka">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#e8b400" stroke-width="2"><path d="M8 24 h16"/><path d="M16 24 V10"/><path d="M16 10 a5 4 0 0 1 0 8"/><circle cx="8" cy="24" r="2" fill="#e8b400"/><circle cx="24" cy="24" r="2" fill="#e8b400"/></svg>
+          <div class="texty"><div class="nazev">Stavím trať</div><div class="kontext">Izolepa · pípat smíš, mazat ne</div></div>
+        </div>
+        <div class="dlazdice siroka">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#58c98c" stroke-width="2"><path d="M6 22 h20 l-3 5 H9 Z"/><path d="M16 22 V5"/><path d="M16 7 l8 12 h-8"/></svg>
+          <div class="texty"><div class="nazev">Jedu závod</div><div class="kontext">Kahoun · CZE 7</div></div>
+        </div>
+        <div class="dlazdice siroka">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#9aa3ac" stroke-width="2"><rect x="5" y="7" width="22" height="20" rx="3"/><path d="M5 13 h22M11 5 v4M21 5 v4"/></svg>
+          <div class="texty"><div class="nazev">Sledování</div><div class="kontext">kalendář, výsledky, pořadí seriálu</div></div>
+        </div>
+      </div>
+      <p class="pozn" style="padding:0 16px"><b>Pomocník není role</b>, je to příznak na jeden den a jednu zastávku. Rozcestník ho bere jako plnohodnotný vstup — ten člověk přijel stavět.</p>
+    </div></div>
+    <figcaption><b>Pomocník na dnešní regatě</b>Totéž co pořadatel, ale jen dnes a jen tady. Co smí a co ne, hlídá <code>jePouzePomocnik</code>.</figcaption>
+  </figure>
+
+  <!-- 5. NEPŘIHLÁŠENÝ -->
+  <figure>
+    <div class="telefon"><div class="displej">
+      <div class="stav"><span>9:41</span><span>▮▮▮</span></div>
+      <div class="hlava">
+        <div class="logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6bb3cc" stroke-width="1.6"><path d="M12 3 L18 16 H6 Z"/><path d="M4 19 h16"/></svg>
+        </div>
+        <div><div class="jmeno">Orlický pohár</div><div class="pod">Plachetnice na Orlické přehradě</div></div>
+        <div class="tecky">⋮</div>
+      </div>
+
+      <div class="dnes"><b>Dnes se jede Izolepa</b><br><span>Colins yacht club · start 14:00</span></div>
+
+      <div class="mrizka">
+        <div class="dlazdice hlavni siroka">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#9aa3ac" stroke-width="2"><rect x="5" y="7" width="22" height="20" rx="3"/><path d="M5 13 h22M11 5 v4M21 5 v4"/></svg>
+          <div class="texty"><div class="nazev">Sledování</div><div class="kontext">kalendář, výsledky, pořadí seriálu</div></div>
+        </div>
+        <div class="dlazdice siroka">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#6bb3cc" stroke-width="2"><path d="M11 14 V10 a5 5 0 0 1 10 0 v4"/><rect x="7" y="14" width="18" height="12" rx="3"/></svg>
+          <div class="texty"><div class="nazev">Přihlásit se</div><div class="kontext">jednou — pak už appka nebude otravovat</div></div>
+        </div>
+        <div class="dlazdice siroka">
+          <svg class="ikona" viewBox="0 0 32 32" fill="none" stroke="#9aa3ac" stroke-width="2"><rect x="6" y="6" width="8" height="8"/><rect x="18" y="6" width="8" height="8"/><rect x="6" y="18" width="8" height="8"/><path d="M18 18 h4v4h-4z M26 22 v4 h-4"/></svg>
+          <div class="texty"><div class="nazev">Mám kód</div><div class="kontext">pozvánka k lodi nebo k roli</div></div>
+        </div>
+      </div>
+      <p class="pozn" style="padding:0 16px">Otevřená otázka: je tohle ještě rozcestník, nebo má jít nepřihlášený rovnou na ročníky?</p>
+    </div></div>
+    <figcaption><b>Nepřihlášený</b>Čtenář. <i>Mám kód</i> je ta jedna obrazovka pro loď, roli i pomocníka — jeden mechanismus, tři případy.</figcaption>
+  </figure>
+
+  <!-- 6. TŘI TEČKY -->
+  <figure>
+    <div class="telefon"><div class="displej">
+      <div class="stav"><span>9:41</span><span>▮▮▮</span></div>
+      <div style="opacity:.25;pointer-events:none">
+        <div class="hlava">
+          <div class="logo"></div>
+          <div><div class="jmeno">Orlický pohár</div><div class="pod">Miloš Novák</div></div>
+          <div class="tecky">⋮</div>
+        </div>
+        <div class="mrizka">
+          <div class="dlazdice"></div><div class="dlazdice"></div>
+        </div>
+      </div>
+      <div class="plachta">
+        <div class="polozka"><div class="n">Domů</div><div class="p">rozcestník</div></div>
+        <div class="polozka"><div class="n">Účet a oprávnění</div><div class="p">přihlášení, role, co komu patří</div></div>
+        <div class="polozka"><div class="n">Mám kód</div><div class="p">pozvánka k lodi nebo k roli</div></div>
+        <div class="polozka"><div class="n">Klíč k lodi</div><div class="p">vydat posádce</div></div>
+        <div class="polozka"><div class="n">Ukázkový režim</div><div class="p">appka bez serveru, z přibalených dat</div></div>
+        <div class="polozka"><div class="n">Ukázka pro závodníka</div><div class="p">jak appku vidí posádka na vodě</div></div>
+        <div class="polozka"><div class="n">Zkouška startu</div><div class="p">procedura nanečisto, ven nejde nic</div></div>
+        <div class="polozka"><div class="n">orlickypohar.klihovka.cz</div><div class="p">web</div></div>
+        <div class="zavrit">Zavřít</div>
+      </div>
+    </div></div>
+    <figcaption><b>Tři tečky — už ne navigace, ale režie</b>Moje regata, Stavba trati, Ročníky a Trasa se stěhují na rozcestník. Tady zůstává účet, kódy a ukázky.</figcaption>
+  </figure>
+
+</div>
+
+<hr>
+
+<h1 style="font-size:19px">Co z obrázku vyplývá a v textu to není vidět</h1>
+<ul class="uvod" style="max-width:72ch">
+  <li><b>Dvě dlaždice ve sloupci, tři a víc na šířku.</b> Čtvercová dlaždice unese dva
+      řádky kontextu; širší řádková unese jeden, zato delší. U rozhodčího jsou čtyři věci,
+      u pořadatelky tři — a tři čtverce vypadají jako čtyři s dírou.</li>
+  <li><b>Pruh „Dnes se jede" je tenký schválně.</b> Je to kontext, ne akce. Jakmile dostane
+      tlačítko, začne soupeřit s dlaždicemi o palec.</li>
+  <li><b>Zvýrazněná je vždycky jen jedna.</b> Ta, kvůli které člověk dnes appku zapnul.
+      Když se dnes nic nejede, není zvýrazněná žádná.</li>
+  <li><b>Kontext na dlaždici je stav, ne popis.</b> „5 prvků stojí, dvěma chybí fotka"
+      říká, jestli tam vůbec musím jít. „Pípni značky z lodi" to neřekne.</li>
+</ul>
+
+</body>
+</html>
