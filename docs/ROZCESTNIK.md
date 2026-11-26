@@ -145,22 +145,41 @@ a obrazovka, kde správce vidí, komu pozvánka visí a komu už dosedla.
 
 ## V jakém pořadí stavět
 
-0. **Ročníky přestanou být cesta pro zkoušení.** Dnešní obrazovka to
-   o sobě říká sama (`app/src/app/rocniky.tsx`, komentář ze 7. 11.:
-   *„cesta k regatě pro zkoušení — veřejnost čte web"*). Jako podlaha
-   appky to ale musí být obrazovka, kterou má cizí člověk důvod otevřít:
-   dnešní regata, kalendář, průběžné pořadí. **Obsah pod ní hotový je**
+**Krok 1 je hotový** (26. 11. 2026). Pořadí určil Filip: nejdřív rozcestník,
+teprve pak obrazovka sledování.
+
+1. ~~**Rozcestník se čtyřmi dlaždicemi z `role.ts`.**~~ Hotovo:
+   `app/src/lib/rozcestnik.ts` (pravidla, 13 testů), `app/src/app/index.tsx`
+   (obrazovka), nabídka pod kebabem se o to, co se přestěhovalo, zmenšila.
+   **Pravidlo jediné možnosti** je v tom rovnou, i *Domů* v tečkách.
+2. **Ročníky přestanou být cesta pro zkoušení.** Dnešní obrazovka to o sobě
+   říká sama (`app/src/app/rocniky.tsx`, komentář ze 7. 11.: *„cesta
+   k regatě pro zkoušení — veřejnost čte web"*). Jako podlaha appky to ale
+   musí být obrazovka, kterou má cizí člověk důvod otevřít: dnešní regata,
+   kalendář, průběžné pořadí. **Obsah pod ní hotový je**
    (`serie/[slug]/index.tsx`, `poradi.tsx`, detail závodu) — chybí jen to
-   rozcestí nahoře. Je to první krok, protože bez něj je u nepřihlášeného
-   appka seznam let.
-1. **Rozcestník se čtyřmi dlaždicemi z `role.ts`.** Nic nového
-   neotevírá, jen ukazuje, co už appka umí. Dá se vyzkoušet v ukázce.
-2. **Pravidlo jediné možnosti** a *Domů* v tečkách.
-3. **Čekající udělení** v API + obrazovka *Mám kód* v appce.
-4. **Zakládání organizačních účtů na webu** — až po tom, protože bez
+   rozcestí nahoře.
+3. **Stav na dlaždicích místo popisů.** Dnes tam stojí, co se za tou
+   dlaždicí dělá („pípni značky z lodi"); má tam stát, jestli tam vůbec
+   musím jít („5 prvků stojí, dvěma chybí fotka"). Chce to kalendář a stav
+   stavby, tedy dotaz navíc na první obrazovce — proto ne hned.
+4. **Čekající udělení** v API + obrazovka *Mám kód* v appce.
+5. **Zakládání organizačních účtů na webu** — až po tom, protože bez
    čekajícího udělení nemá kam zapsat.
 
-První dva kroky jsou v appce a nikam nesahají. Třetí mění API i web.
+Kroky 1–3 jsou v appce a nikam nesahají. Čtvrtý mění API i web.
+
+## Co z prvního kroku zbylo nedořešené
+
+- **Zvýrazněná dlaždice je ta první, ne ta dnešní.** „Když se dnes nic
+  nejede, není zvýrazněná žádná" je v návrhu, ale rozcestník neví, co se
+  dnes jede — kromě vlastní lodi. Spraví to krok 3.
+- **Jména regat chybí.** Dlaždice *Velím regatě* nemá jak zjistit, že ta
+  regata je Izolepa; ze slugu se jméno dělat nedá. Taky krok 3.
+- **Záznam trasy zůstal v tečkách**, ačkoliv návrh v popisku slibuje, že se
+  přestěhuje. V nakreslených telefonech dlaždici nemá ani jeden a pátá
+  dlaždice by mřížku rozbila — spustí se stejně jen na vodě a z *Moje
+  regata*. Rozhodnout, až bude příležitost to vidět vedle sebe.
 
 ## Co rozhodnutí potřebuje a já ho nemám
 

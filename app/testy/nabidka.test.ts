@@ -1,9 +1,11 @@
 /**
  * Co je v nabídce pod kebabem.
  *
- * Měří se pravidlo, ne vykreslení: že stavba trati přibude jen tomu, kdo
- * ji má kde dělat, že stojí hned za *Moje regata*, a že bez zastávky vede
- * na ročník — vybrat za člověka tu první regatu by znamenalo pípat do cizí.
+ * <b>Od 26. 11. 2026 je nabídka režie, ne navigace.</b> Co se měnilo podle
+ * rolí — *Moje regata* a *Stavba trati* — se přestěhovalo na rozcestník
+ * a měří se v `rozcestnik.test.ts`. Tady zbývá to, co se tím rozbít dá:
+ * že nabídka na oprávněních opravdu nezávisí, a že z ní nevypadla cesta
+ * k výsledkům.
  */
 import assert from 'node:assert/strict';
 
@@ -38,53 +40,42 @@ const ja = (
 
 const texty = (p: { text: string }[]) => p.map((k) => k.text);
 
-zkus('bez oprávnění je nabídka beze změny', () => {
+zkus('nabídka je pro všechny stejná', () => {
+  // Rozhodčí, pořadatel, pomocník i správce webu: nic z toho ji nemění.
+  // Dokud ji měnila stavba trati, musel kebab při každém otevření sahat
+  // pro `/ja` — na vodě dotaz navíc u každého klepnutí.
   assert.deepEqual(nabidka(null), KAM);
-  assert.deepEqual(nabidka(ja([{ role: 'Ctenar', serie: '2027' }])), KAM);
+  assert.deepEqual(nabidka(ja([{ role: 'Rozhodci', serie: '2027' }])), KAM);
+  assert.deepEqual(nabidka(ja([{ role: 'Organizator', serie: '2027', zavod: 'radava' }])), KAM);
+  assert.deepEqual(nabidka(ja([], [{ serie: '2027', zavod: 'radava' }])), KAM);
+  assert.deepEqual(nabidka(ja([], [], ['Spravce'])), KAM);
 });
 
-zkus('stavba trati stojí hned za Moje regata', () => {
-  const n = texty(nabidka(ja([{ role: 'Organizator', serie: '2027', zavod: 'radava' }])));
-  assert.equal(n[n.indexOf('Moje regata') + 1], 'Stavba trati');
-  // Nic se neztratilo ani nepřibylo dvakrát.
-  assert.equal(n.length, KAM.length + 1);
+zkus('sledování z nabídky nevypadlo', () => {
+  // Komu se rozcestník přeskakuje — závodníkovi, pomocníkovi bez lodi —
+  // je tohle jediná cesta k výsledkům. Kdyby zmizela, zavřel by se mu
+  // zbytek appky a poznalo by se to až od něj.
+  const s = KAM.find((k) => k.cil === '/rocniky');
+  assert.ok(s, 'sledování v nabídce není');
+  assert.equal(s?.text, 'Sledování');
 });
 
-zkus('se zastávkou vede rovnou na stavbu', () => {
-  const polozka = nabidka(ja([{ role: 'Organizator', serie: '2027', zavod: 'radava' }])).find(
-    (k) => k.text === 'Stavba trati',
-  );
-  assert.equal(polozka?.cil, '/serie/2027/zavody/radava/stavba');
+zkus('domů je první', () => {
+  // Hlavička se nekreslí, takže bez tohohle vede cesta zpátky jen gestem.
+  assert.equal(texty(KAM)[0], 'Domů');
+  assert.equal(KAM[0].cil, '/');
 });
 
-zkus('bez zastávky vede na ročník, ne na cizí regatu', () => {
-  const polozka = nabidka(ja([{ role: 'Rozhodci', serie: '2027' }])).find(
-    (k) => k.text === 'Stavba trati',
-  );
-  assert.equal(polozka?.cil, '/serie/2027/stavba');
-  assert.match(polozka?.popis ?? '', /vyber/);
+zkus('co se přestěhovalo na rozcestník, tu už není', () => {
+  const t = texty(KAM);
+  assert.ok(!t.includes('Moje regata'), 'Moje regata zůstala v nabídce');
+  assert.ok(!t.includes('Stavba trati'), 'Stavba trati zůstala v nabídce');
+  assert.ok(!t.includes('Ročníky'), 'Ročníky se měly přejmenovat na Sledování');
 });
 
-zkus('zaškrtnutý pomocník ji dostane taky', () => {
-  const kdo = ja([{ role: 'Ctenar', serie: '2027' }], [{ serie: '2027', zavod: 'radava' }]);
-  const polozka = nabidka(kdo).find((k) => k.text === 'Stavba trati');
-  assert.equal(polozka?.cil, '/serie/2027/zavody/radava/stavba');
-});
-
-zkus('správce celého webu ji dostane taky, jen bez ročníku', () => {
-  // Server ho pustí kamkoliv (`Prava.Pokryva`: Spravce pokrývá
-  // Organizator), jenže role na celý web jdou klientovi zvlášť, ne jako
-  // oprávnění s prázdnou sérií — a dokud se to nehlídalo, zmizel mu řádek
-  // z nabídky úplně (18. 11. 2026, Filipův účet).
-  const kdo = ja([], [], ['Spravce']);
-  const polozka = nabidka(kdo).find((k) => k.text === 'Stavba trati');
-  assert.equal(polozka?.cil, '/rocniky');
-  assert.match(polozka?.popis ?? '', /ro\u010dn\u00edk/);
-});
-
-zkus('editor webu ji nedostane', () => {
-  // Editor píše o závodech, nezasahuje do nich.
-  assert.deepEqual(nabidka(ja([], [], ['Editor'])), KAM);
+zkus('žádná položka nevede dvakrát na totéž', () => {
+  const cile = KAM.map((k) => k.cil);
+  assert.equal(new Set(cile).size, cile.length);
 });
 
 console.log(`  ${prosly} prošlo`);

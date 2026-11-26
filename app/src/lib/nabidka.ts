@@ -1,12 +1,20 @@
 /**
- * Co je v nabídce pod kebabem — a kdy tam přibude stavba trati.
+ * Co je v nabídce pod kebabem.
+ *
+ * <b>Od 26. 11. 2026 je to režie, ne navigace.</b> *Moje regata*, *Stavba
+ * trati* a dřívější *Ročníky* se přestěhovaly na rozcestník
+ * (`lib/rozcestnik.ts`), protože to jsou odpovědi na „co teď budeš dělat".
+ * Tady zůstává to, co se vyřizuje jednou za sezónu — účet, lodě, klíč —
+ * a ukázky, dokud se bez nich nedá zkoušet.
+ *
+ * <b>Sledování zůstává na obou místech schválně.</b> Komu se rozcestník
+ * přeskakuje, pro toho je nabídka jediná cesta k výsledkům.
  *
  * <b>Pravidlo zvlášť od vykreslování</b>, stejně jako u rolí a u startu:
  * tohle se dá ověřit bez telefonu (`app/testy/nabidka.test.ts`).
  * Komponenta v `components/kebab.tsx` z toho jen dělá řádky.
  */
 import type { Ja } from './api';
-import { kdeStavi } from './role';
 
 export type PolozkaNabidky = { text: string; cil: string; popis?: string };
 
@@ -16,12 +24,16 @@ export const KAM: PolozkaNabidky[] = [
   // budu dostávat zpět na landing?"*). Hlavička se nekreslí, takže
   // jediná cesta zpátky bylo gesto — a z cíle rozjížďky je to gest
   // několik. Nabídka je na každé obrazovce, tak ať vede i domů.
+  //
+  // <b>Komu se rozcestník přeskakuje, tomu Domů vede na jeho obrazovku</b>,
+  // ne na rozcestí — kořen se přesměruje podle týchž pravidel. Je to tak
+  // správně: pro závodníka *je* domov jeho regata.
   { text: 'Domů', cil: '/', popis: 'úvodní obrazovka' },
-  // <b>Moje regata je nad ročníky.</b> Posádka na vodě se neptá „jaké
-  // byly výsledky v červnu", ptá se „co se děje teď" — a ročníky jsou
-  // cesta dovnitř pro zkoušení, ne obrazovka produktu.
-  { text: 'Moje regata', cil: '/zavodnik', popis: 'co se dnes jede a jak tě vidí rozhodčí' },
-  { text: 'Ročníky', cil: '/rocniky', popis: 'kalendář, výsledky, pořadí' },
+  // <b>Sledování, ne „Ročníky".</b> Na rozcestníku se ta věc jmenuje
+  // takhle, a jedno jméno pro jednu věc je levnější než dvě pro tutéž.
+  // <b>V nabídce zůstat musí</b>, i když je to zároveň dlaždice: kdo má
+  // rozcestník přeskočený, nemá odsud jinou cestu k výsledkům.
+  { text: 'Sledování', cil: '/rocniky', popis: 'kalendář, výsledky, pořadí seriálu' },
   { text: 'Moje lodě a posádka', cil: '/lode' },
   { text: 'Klíč k lodi', cil: '/klic' },
   { text: 'Záznam trasy', cil: '/tracker' },
@@ -29,45 +41,13 @@ export const KAM: PolozkaNabidky[] = [
 ];
 
 /**
- * Nabídka i se stavbou trati, má-li ji ten člověk kde dělat.
+ * Nabídka. <b>Na oprávněních už nezávisí</b> — všechno, co se podle rolí
+ * měnilo, je na rozcestníku.
  *
- * <b>Proč je v nabídce, a ne jen na stránce regaty</b> (Filip,
- * 17. 11. 2026: *„udělej to spustitelné samostatně z menu"*, a pak
- * *„nemá to co dělat v rozhraní pro startování regaty"*). Stavitel ráno
- * appku zapne kvůli jediné věci a musel se k ní proklikat přes ročník
- * a regatu — přitom ta obrazovka obsluhuje rozjížďku, která se jede,
- * zatímco trať se staví dřív, než se startuje cokoliv.
- *
- * <b>Bez zastávky vede na ročník, ne na stavbu.</b> Kdo má právo na celý
- * ročník, může stavět na kterékoliv jeho zastávce — a které to jsou, ví
- * kalendář, ne nabídka. Vybrat za něj tu první by znamenalo pípat do
- * cizí regaty.
+ * Parametr tu zůstává schválně: `components/kebab.tsx` si `/ja` načítá tak
+ * jako tak kvůli jménu, a až sem přibude něco, co role rozlišují (zakládání
+ * účtů, pozvánky), bude kam sáhnout bez přepisování volajících.
  */
-export function nabidka(ja: Ja | null): PolozkaNabidky[] {
-  const stavi = kdeStavi(ja);
-  if (!stavi) return KAM;
-
-  const stavba: PolozkaNabidky =
-    stavi.serie && stavi.zavod
-      ? {
-          text: 'Stavba trati',
-          cil: `/serie/${stavi.serie}/zavody/${stavi.zavod}/stavba`,
-          popis: 'pípni značky z lodi',
-        }
-      : stavi.serie
-        ? {
-            text: 'Stavba trati',
-            cil: `/serie/${stavi.serie}/stavba`,
-            popis: 'vyber regatu, kde stavíš',
-          }
-        : {
-            // Správce webu: ročník ani zastávku mu nemá co vybrat.
-            text: 'Stavba trati',
-            cil: '/rocniky',
-            popis: 'vyber ročník a regatu',
-          };
-
-  // Za „Moje regata": stavba je taky věc dnešního dne, ne archiv.
-  const kde = KAM.findIndex((k) => k.cil === '/zavodnik');
-  return [...KAM.slice(0, kde + 1), stavba, ...KAM.slice(kde + 1)];
+export function nabidka(_ja: Ja | null): PolozkaNabidky[] {
+  return KAM;
 }

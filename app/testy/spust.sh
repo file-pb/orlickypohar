@@ -49,6 +49,11 @@ echo
 echo "== Nabídka pod kebabem =="
 "${NODE[@]}" ./nabidka.test.ts
 
+# Co appka nabídne tomu, kdo ji zapnul — a komu rozcestník neukáže vůbec.
+echo
+echo "== Rozcestník =="
+"${NODE[@]}" ./rozcestnik.test.ts
+
 echo
 echo "== Odběry upozornění =="
 "${NODE[@]}" ./odbery.test.ts
