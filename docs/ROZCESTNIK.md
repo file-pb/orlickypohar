@@ -121,39 +121,65 @@ kdy je potřeba — cachovat ji je levné a nemá to odklad.
 
 ## Přihlášení bez cesty na Zitadel
 
-**Zadání, 26. 11. 2026:** *„na zitadel uživatele tahat nechci. Tohle musí
-být lepší."* Dnešní přihlášení otevře prohlížeč s přihlašovací stránkou
-poskytovatele — pro pořadatele, který appku zapíná dvakrát za sezónu,
-je to cizí obrazovka s heslem, které nemá.
+**Rozhodnuto Filipem 26. 11. 2026.** Appka se přestane přihlašovat přes
+poskytovatele identity. Místo toho se telefon **napojí kódem nebo QR**,
+který vygeneruje web — tam, kde se role stejně definují.
 
-**Odpověď už v appce existuje, jen pro lodě.** Klíč k lodi
-(`app/src/lib/klic.ts`) je jednorázová pozvánka na 48 h: kapitán vyrobí
-kód nebo QR, posádka ho naskenuje a telefon je spárovaný — **bez účtu,
-bez hesla, bez poskytovatele**. Přesně to Filip chce i pro role.
+Filipova věta, která to zdůvodňuje: *„rozhodčí se jasně zapisuje v rolích
+na webu. Veškeré role se definují na webu, a závodníci se taky musí
+registrovat při prezenci u člověka, který sedí v klubovně u počítače."*
+Kdo roli uděluje, sedí u webu — takže kód vyrobí tam a není důvod posílat
+někoho do prohlížeče na účty.
 
-**Návrh: týž tvar pro role.**
+**Jednorázovost je v pořádku** (jeho slova), což je silnější záruka, než
+má dnešní klíč k lodi.
 
-1. Správce v administraci vyrobí **kód nebo QR pro roli** (rozhodčí
-   ročníku, pořadatel zastávky, pomocník na den).
-2. Ten člověk ho v appce jednou naskenuje — obrazovka *Mám kód*, jedna
-   pro loď, roli i pomocníka.
-3. Telefon dostane **klíč vázaný na osobu a rozsah**, ne na účet
-   u poskytovatele. Server u každé cesty ověřuje klíč stejně, jako dnes
-   ověřuje klíč k lodi.
+### Na čem to stojí: appka už to umí, jen pro lodě
 
-**Co se tím kupuje:** pořadatel nikdy neuvidí Zitadel, nezakládá heslo
-a zvládne to u vody na jedno klepnutí. **Co se tím platí:** kód jde
-přeposlat, takže je to slabší doklad než přihlášení. Pro loď jsme to
-jako cenu přijali už v říjnu; pro roli je sázka vyšší, protože rozhodčí
-zapisuje výsledky.
+`KlicLodi` (`Features/Klice/KlicLodi.cs`) je přesně tahle věc: telefon
+pošle tajemství v hlavičce `X-Klic-Lodi`, server zná jen jeho **otisk**,
+a komentář u té třídy říká, oč jde — *„Není to přihlášení, je to
+oprávnění. Identitu posádce potvrzuje kapitán tím, že jí dá QR; systém
+nemusí ověřovat, kdo ten člověk je. Je to delegovaná důvěra, stejná jako
+když někdo dá klíč od loděnice."*
 
-**Doporučení:** přijmout tutéž cenu, ale ohraničit ji — kód na jedno
-použití, krátká platnost, viditelný seznam „komu kód visí a komu dosedl",
-a **odebrání jedním klepnutím**. Zitadel zůstane pro web a pro toho, kdo
-kódy vydává; na telefon se nedostane nikdo, kdo nechce.
+Pro roli platí totéž slovo od slova, jen ručí správce místo kapitána.
 
-**Neznamená to zahodit OIDC.** Zůstává jako druhá cesta pro ty, kterým
-vyhovuje, a jako jediná cesta do administrace na webu.
+### Tvar, který nic nepřepisuje
+
+Dnes jsou na serveru dvě oddělené cesty: klíč k lodi se ověřuje **ručně
+v každém endpointu** (`ZHlavickyAsync`), kdežto administrace jede přes
+`RequireAuthorization()`, `Rozsahy` a `Prava`. Kopírovat kontrolu role do
+desítek endpointů by bylo druhé místo, kde se dá udělat bezpečnostní
+chyba — a přesně před tím varuje komentář u `KlicLodi`.
+
+Proto: **klíč k roli se ověří jako přihlášení.** Autentizační handler
+přijme klíč a vyrobí z něj `ClaimsPrincipal` s toutéž identitou, jakou by
+dalo přihlášení. Pak `RequireAuthorization()`, `Rozsahy.UzivatelIdAsync`
+i `Prava.Pokryva` fungují beze změny a **žádný endpoint se nemění**.
+
+Z toho plyne, že klíč musí být vázaný na **účet**, ne na roli samotnou —
+oprávnění visí na `UserId`. Účet ale zakládá web, ne první přihlášení, což
+je přesně to, co Filip chtěl už v zadání rozcestníku a co dnes blokuje
+`UcetNeni` v `OpravneniSprava.UdelAsync`.
+
+### Co se postaví
+
+1. **API** — klíč k roli: vystavení kódu, uplatnění za klíč, autentizační
+   handler. Otisk v databázi, nikdy tajemství. Kód jednorázový a krátce
+   platný, klíč odvolatelný.
+2. **Web** — v administraci u člověka tlačítko *Vydat kód do appky*,
+   výsledek jako kód i QR, a seznam vydaných klíčů s možností odebrat.
+3. **Appka** — obrazovka *Mám kód*: jedna pro loď, roli i pomocníka.
+4. **Teprve pak** z appky zmizí přihlašování. Dřív ne — jinak by se
+   dovnitř nedostal nikdo.
+
+### Co to stojí a kde je mez
+
+Kód jde přeposlat, takže je to slabší doklad než přihlášení s heslem
+a druhým faktorem. Proti tomu stojí jednorázovost, krátká platnost
+a to, že klíč jde odebrat. **Web zůstává na OIDC** — kdo kódy vydává, se
+přihlašuje pořádně; slabší cesta vede jen tam, kde se zapisuje u vody.
 
 ## Účty a role: kde to dnes drhne
 
