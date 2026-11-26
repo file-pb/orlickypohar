@@ -279,13 +279,15 @@ const s = StyleSheet.create({
   // Tečky a tlačítko v jedné řadě, zarovnané doprava od kotvy
   // v `app/_layout.tsx`.
   rada: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  // Terč je 44 pt na výšku jako tečky — stejná mez
-  // (`tools/kontrola-dotyku.py`).
+  // <b>Terč je 44 pt na výšku jako tečky</b> — táž mez
+  // (`tools/kontrola-dotyku.py`). Napoprvé tu stálo 36 a kontrola to
+  // v CI zastavila; komentář přitom tvrdil 44. Měřená mez je k tomu, aby
+  // se takhle nedalo lhát ani sobě.
   prihlasit: {
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 18,
+    borderRadius: 22,
     borderWidth: 1,
     justifyContent: 'center',
   },
