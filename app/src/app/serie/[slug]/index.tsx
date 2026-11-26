@@ -1,12 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text } from 'react-native';
 
+import { Kalendar } from '@/components/kalendar';
 import { OdberUpozorneni } from '@/components/odber-upozorneni';
-import { Chyba, Karta, Nacitani, Nadpis, Prazdno, Sekce, Stav } from '@/components/ui';
+import { Chyba, Karta, Nacitani, Nadpis, Prazdno, Sekce } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiSerii } from '@/lib/api';
-import { rozsah } from '@/lib/datum';
 import { mojeOpravneni } from '@/lib/opravneni';
 import { smiStavetNekde } from '@/lib/role';
 
@@ -52,31 +52,7 @@ export default function Rocnik() {
           <OdberUpozorneni slug={slug} />
 
           <Sekce>Kalendář</Sekce>
-          {data.zavody.map((z) => (
-            <Karta key={z.slug} onPress={() => router.push(`/serie/${slug}/zavody/${z.slug}`)}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
-                <Text
-                  style={{
-                    color: t.text,
-                    fontWeight: '600',
-                    fontSize: 16,
-                    textDecorationLine: z.stav === 'Zruseny' ? 'line-through' : 'none',
-                  }}>
-                  {z.nazev}
-                </Text>
-                <Stav stav={z.stav} />
-              </View>
-              <Text style={{ color: t.tlumeny, marginTop: 3 }}>
-                {rozsah(z.datum, z.datumKonce)}
-                {z.poradatel ? ` · ${z.poradatel}` : ''}
-              </Text>
-              {z.puvodniDatum ? (
-                <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 2 }}>
-                  přesunuto z {rozsah(z.puvodniDatum)}
-                </Text>
-              ) : null}
-            </Karta>
-          ))}
+          <Kalendar slug={slug} zavody={data.zavody} />
         </>
       ) : null}
     </ScrollView>

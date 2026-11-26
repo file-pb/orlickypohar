@@ -88,7 +88,13 @@ export function Nadpis({
   );
 
   return (
-    <View style={{ marginBottom: 16 }}>
+    // <b>Vpravo se nechává místo na tři tečky.</b> Nabídka leží nad celým
+    // zásobníkem (`app/_layout.tsx`) v pravém horním rohu, takže dlouhý
+    // nadpis jí vleze pod kolečko. Do 26. 11. 2026 to nikdo neviděl,
+    // protože nadpisy byly krátké — „Ročníky", „Stavba trati". Obrazovka
+    // sledování ukazuje jméno ročníku a „Orlický pohár 2026 (nanečisto)"
+    // se o tečky uřízlo hned v simulátoru.
+    <View style={{ marginBottom: 16, paddingRight: 44 }}>
       {naZpet ? (
         <Pressable
           onPress={naZpet}

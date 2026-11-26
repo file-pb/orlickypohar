@@ -54,6 +54,11 @@ echo
 echo "== Rozcestník =="
 "${NODE[@]}" ./rozcestnik.test.ts
 
+# Který ročník a která regata z něj se ukážou tomu, kdo přišel koukat.
+echo
+echo "== Sledování =="
+"${NODE[@]}" ./sledovani.test.ts
+
 echo
 echo "== Odběry upozornění =="
 "${NODE[@]}" ./odbery.test.ts

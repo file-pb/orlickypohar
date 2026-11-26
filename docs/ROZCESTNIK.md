@@ -152,13 +152,13 @@ teprve pak obrazovka sledování.
    `app/src/lib/rozcestnik.ts` (pravidla, 13 testů), `app/src/app/index.tsx`
    (obrazovka), nabídka pod kebabem se o to, co se přestěhovalo, zmenšila.
    **Pravidlo jediné možnosti** je v tom rovnou, i *Domů* v tečkách.
-2. **Ročníky přestanou být cesta pro zkoušení.** Dnešní obrazovka to o sobě
-   říká sama (`app/src/app/rocniky.tsx`, komentář ze 7. 11.: *„cesta
-   k regatě pro zkoušení — veřejnost čte web"*). Jako podlaha appky to ale
-   musí být obrazovka, kterou má cizí člověk důvod otevřít: dnešní regata,
-   kalendář, průběžné pořadí. **Obsah pod ní hotový je**
-   (`serie/[slug]/index.tsx`, `poradi.tsx`, detail závodu) — chybí jen to
-   rozcestí nahoře.
+2. ~~**Ročníky přestanou být cesta pro zkoušení.**~~ Hotovo 26. 11.:
+   `app/src/lib/sledovani.ts` (který ročník a která regata z něj, 11 testů)
+   a přepsaná `app/src/app/rocniky.tsx`. Nahoře stojí dnešní regata, jinak
+   nejbližší, jinak poslední odjetá — a vždycky i to, která z těch tří
+   možností to je. Pod tím průběžné pořadí, upozornění, kalendář a ostatní
+   ročníky. Kalendář je teď jeden kus kódu pro tuhle obrazovku i pro detail
+   ročníku (`components/kalendar.tsx`).
 3. **Stav na dlaždicích místo popisů.** Dnes tam stojí, co se za tou
    dlaždicí dělá („pípni značky z lodi"); má tam stát, jestli tam vůbec
    musím jít („5 prvků stojí, dvěma chybí fotka"). Chce to kalendář a stav
