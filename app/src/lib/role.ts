@@ -17,13 +17,36 @@ import type { Ja } from './api';
 export type Postava = 'rozhodci' | 'kapitan' | 'ctenar';
 
 /**
- * Role, které vedou závod. Rozhodčí i organizátor mají u vody co dělat;
- * editor a správce spravují obsah od stolu, takže rozcestník nemění.
+ * Role, které vedou závod.
+ *
+ * <b>Správce patří mezi ně</b> (26. 11. 2026). Rozhodčí i organizátor mají
+ * u vody co dělat a editor ne; správce tu dřív nestál, protože „spravuje
+ * obsah od stolu". Jenže server říká opak: <c>Prava.Pokryva</c> dává
+ * správci rozhodčího i organizátora (`Prava.cs:82` a `:88`), takže správce
+ * ročníku regatu skutečně vést <b>smí</b>.
+ *
+ * <b>Co to způsobilo.</b> Filip je na ročníku 2026-nanecisto správce
+ * a nic jiného (ověřeno 26. 11. v produkční databázi). Rozcestník mu proto
+ * nenabídl *Velím regatě*, zbyla jediná dlaždice nad podlahou — a pravidlo
+ * jediné možnosti ho poslalo pryč dřív, než stihl něco vybrat. Vypadalo
+ * to, že appka přihlášeného nepozná.
+ *
+ * Obrazovka smí být přísnější než server. <b>Tohle ale nebyla
+ * přísnost, byla to chyba</b>: cestu, kterou server pustí, nabídka
+ * zatajila a jinudy k ní nevedla.
  */
-const VELI: ReadonlySet<string> = new Set(['Rozhodci', 'Organizator']);
+const VELI: ReadonlySet<string> = new Set(['Rozhodci', 'Organizator', 'Spravce']);
 
-/** Velí ten člověk někde? Stačí jedno oprávnění na jedné regatě. */
+/**
+ * Velí ten člověk někde? Stačí jedno oprávnění na jedné regatě.
+ *
+ * <b>Správce celého webu velí taky</b>, i když nemá ani jeden ročník:
+ * `Prava.Pokryva` ho pustí kamkoliv. Role na celý web chodí klientovi
+ * zvlášť (`JaDto.Web`), ne jako oprávnění s prázdnou sérií — stejná past,
+ * na kterou šlápla `kdeStavi` 18. 11.
+ */
 export function veliNekde(ja: Ja | null): boolean {
+  if ((ja?.web ?? []).includes('Spravce')) return true;
   return (ja?.opravneni ?? []).some((o) => VELI.has(o.role));
 }
 
@@ -35,13 +58,20 @@ export function veliNekde(ja: Ja | null): boolean {
  * Kdo dostal roli na jednu regatu, přijel kvůli ní; kdo ji má na celý
  * ročník, může velet kdekoli a musí si vybrat sám.
  */
-export function kdeVeli(ja: Ja | null): { serie: string; zavod: string | null } | null {
+export function kdeVeli(ja: Ja | null): { serie: string | null; zavod: string | null } | null {
   const velici = (ja?.opravneni ?? []).filter((o) => VELI.has(o.role));
-  if (velici.length === 0) return null;
+  if (velici.length > 0) {
+    const naZavod = velici.find((o) => o.zavod);
+    const vybrane = naZavod ?? velici[0];
+    return { serie: vybrane.serie, zavod: vybrane.zavod ?? null };
+  }
 
-  const naZavod = velici.find((o) => o.zavod);
-  const vybrane = naZavod ?? velici[0];
-  return { serie: vybrane.serie, zavod: vybrane.zavod ?? null };
+  // Správce celého webu žádný ročník nemá, a přesto velí kdekoliv.
+  // Nasměrovat ho není podle čeho, tak ať si vybere — totéž dělá
+  // `kdeStavi`.
+  if ((ja?.web ?? []).includes('Spravce')) return { serie: null, zavod: null };
+
+  return null;
 }
 
 /**

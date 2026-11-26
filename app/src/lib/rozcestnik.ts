@@ -70,8 +70,18 @@ export function dlazdice({ ja, dnes }: Stav): Dlazdice[] {
     d.push({
       klic: 'velim',
       nazev: 'Velím regatě',
-      kontext: kde.zavod ? 'start, cíl, rozjížďky' : 'vyber regatu, které velíš',
-      cil: kde.zavod ? `/serie/${kde.serie}/zavody/${kde.zavod}` : `/serie/${kde.serie}`,
+      kontext: kde.zavod
+        ? 'start, cíl, rozjížďky'
+        : kde.serie
+          ? 'vyber regatu, které velíš'
+          : 'vyber ročník a regatu',
+      // Správce celého webu nemá ani ročník, tak ať si vybere; stejně jako
+      // u stavby je vybrat za něj ten první horší než nechat ho rozhodnout.
+      cil: kde.zavod
+        ? `/serie/${kde.serie}/zavody/${kde.zavod}`
+        : kde.serie
+          ? `/serie/${kde.serie}`
+          : '/rocniky',
     });
   }
 

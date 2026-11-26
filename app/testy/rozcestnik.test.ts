@@ -146,4 +146,32 @@ zkus('jméno lodi a číslo plachty jdou na dlaždici závodu', () => {
   assert.equal(bez?.kontext, 'Mimoň');
 });
 
+zkus('správce ročníku velí a rozcestník dostane', () => {
+  // <b>Skutečný případ z produkce, 26. 11. 2026.</b> Filip má na ročníku
+  // 2026-nanecisto roli Spravce a nic jiného; server mu podle
+  // `Prava.Pokryva` dovolí rozhodčího i organizátora. Rozcestník mu ale
+  // *Velím regatě* nenabídl, zbyla jediná dlaždice nad podlahou a pravidlo
+  // jediné možnosti ho odvezlo do stavby. Vypadalo to, že appka
+  // přihlášeného nepozná.
+  const kdo = ja([{ role: 'Spravce', serie: '2026-nanecisto' }], [], ['Spravce']);
+  const d = dlazdice({ ja: kdo, dnes: null });
+  assert.deepEqual(d.map((x) => x.klic), ['velim', 'stavim', 'sledovani']);
+  assert.equal(kamRovnou(d), null);
+  assert.equal(d[0].cil, '/serie/2026-nanecisto');
+});
+
+zkus('správce celého webu bez ročníku si vybere sám', () => {
+  // Role na celý web chodí v `JaDto.Web`, ne jako oprávnění s prázdnou
+  // sérií — kdo se dívá jen do `opravneni`, toho správce mine.
+  const d = dlazdice({ ja: ja([], [], ['Spravce']), dnes: null });
+  assert.deepEqual(d.map((x) => x.klic), ['velim', 'stavim', 'sledovani']);
+  assert.equal(d.find((x) => x.klic === 'velim')?.cil, '/rocniky');
+});
+
+zkus('editor webu nevelí a nestaví', () => {
+  // Editor píše o závodech, nezasahuje do nich.
+  const d = dlazdice({ ja: ja([{ role: 'Editor', serie: '2027' }], [], ['Editor']), dnes: null });
+  assert.deepEqual(d.map((x) => x.klic), ['sledovani']);
+});
+
 console.log(`  ${prosly} prošlo`);

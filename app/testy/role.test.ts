@@ -37,11 +37,16 @@ zkus('nepřihlášený je čtenář, i když má v telefonu klíč', () => {
   assert.equal(postava(null, true), 'ctenar');
 });
 
-zkus('rozhodčí i organizátor velí, editor a správce ne', () => {
+zkus('rozhodčí, organizátor i správce velí, editor a čtenář ne', () => {
+  // <b>Správce mezi ně patří</b> (opraveno 26. 11. 2026). Server mu podle
+  // `Prava.Pokryva` dává rozhodčího i organizátora (`Prava.cs:82` a `:88`),
+  // takže správce ročníku regatu vést smí. Dokud ho tenhle výčet vynechával,
+  // nedostal Filip na rozcestníku *Velím regatě* vůbec — a protože mu nad
+  // podlahou zbyla jediná dlaždice, appka ho rovnou odvezla jinam.
   assert.equal(veliNekde(ja({ role: 'Rozhodci', serie: '2027' })), true);
   assert.equal(veliNekde(ja({ role: 'Organizator', serie: '2027' })), true);
+  assert.equal(veliNekde(ja({ role: 'Spravce', serie: '2027' })), true);
   assert.equal(veliNekde(ja({ role: 'Editor', serie: '2027' })), false);
-  assert.equal(veliNekde(ja({ role: 'Spravce', serie: '2027' })), false);
   assert.equal(veliNekde(ja({ role: 'Ctenar', serie: '2027' })), false);
 });
 
@@ -81,11 +86,20 @@ zkus('oprávnění na celý ročník nechá výběr na něm', () => {
 zkus('cizí role se do velení nepočítají ani v hromadě', () => {
   const kdo = ja(
     { role: 'Editor', serie: '2026' },
-    { role: 'Spravce', serie: '2027' },
     { role: 'Ctenar', serie: '2027', zavod: 'jarni-vitr' },
   );
   assert.equal(veliNekde(kdo), false);
   assert.equal(kdeVeli(kdo), null);
+});
+
+zkus('správce v hromadě cizích rolí velí tam, kde ho má', () => {
+  const kdo = ja(
+    { role: 'Editor', serie: '2026' },
+    { role: 'Spravce', serie: '2027' },
+    { role: 'Ctenar', serie: '2028' },
+  );
+  assert.equal(veliNekde(kdo), true);
+  assert.deepEqual(kdeVeli(kdo), { serie: '2027', zavod: null });
 });
 
 /** Přihlášený i se zastávkami, kde je dneska zaškrtnutý jako pomocník. */
