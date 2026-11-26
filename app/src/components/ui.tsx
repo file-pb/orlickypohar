@@ -73,11 +73,17 @@ export function Nadpis({
   naZpet,
   /** Co se o cestě zpátky řekne nahlas, bez toho se čte jen nadpis. */
   zpetKam,
+  /**
+   * Kolik místa nechat vpravo. Výchozích 44 je na tři tečky; víc je
+   * potřeba tam, kde vedle nich stojí ještě tlačítko <i>Přihlásit</i>.
+   */
+  odsazeniVpravo,
 }: {
   children: React.ReactNode;
   tlumene?: string;
   naZpet?: () => void;
   zpetKam?: string;
+  odsazeniVpravo?: number;
 }) {
   const t = useTheme();
   const text = (
@@ -94,7 +100,7 @@ export function Nadpis({
     // protože nadpisy byly krátké — „Ročníky", „Stavba trati". Obrazovka
     // sledování ukazuje jméno ročníku a „Orlický pohár 2026 (nanečisto)"
     // se o tečky uřízlo hned v simulátoru.
-    <View style={{ marginBottom: 16, paddingRight: 44 }}>
+    <View style={{ marginBottom: 16, paddingRight: odsazeniVpravo ?? 44 }}>
       {naZpet ? (
         <Pressable
           onPress={naZpet}

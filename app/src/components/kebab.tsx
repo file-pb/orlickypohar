@@ -1,11 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Radek } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
+import { jePrihlasen, prihlas, prihlasovaniJde, relaceVyprsela } from '@/lib/identita';
+import { pismoNaVyplni } from '@/lib/kontrast';
 import { nabidka } from '@/lib/nabidka';
 import { mojeOpravneni, zapomenOpravneni } from '@/lib/opravneni';
 import { kamVUkazce, ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
@@ -35,6 +37,42 @@ export function Kebab() {
   // Oprávnění se drží minutu (`lib/opravneni.ts`); nabídka je na každé
   // obrazovce a dotaz za přechod by na vodě stál čekání u každého klepnutí.
   const { data: ja, obnov: obnovOpravneni } = useData(mojeOpravneni);
+  const [prihlasuje, setPrihlasuje] = useState(false);
+  const [potizPrihlaseni, setPotizPrihlaseni] = useState<string | null>(null);
+  const { data: ucet, obnov: obnovUcet } = useData(async () => ({
+    prihlasen: ukazkaBezi() || (await jePrihlasen()),
+    vyprselo: !ukazkaBezi() && (await relaceVyprsela()),
+  }));
+
+  /**
+   * <b>Přihlásit se dá rovnou odsud</b> (Filip, 26. 11. 2026: *„to
+   * přihlášení chce dlaždici rovnou v menu vedle tří teček"*). Dokud bylo
+   * schované pod řádkou *Účet a nastavení*, hledal ho Filip v hospodě
+   * marně — a appka mezitím mlčky ukazovala jen sledování.
+   *
+   * <b>A neúspěch se řekne tady, ne až dole na jiné obrazovce.</b> Na účtu
+   * se chyba vypisuje obyčejným písmem pod kartami, takže klepnutí bez
+   * signálu vypadá, že se nestalo nic.
+   */
+  const naPrihlaseni = async () => {
+    setPrihlasuje(true);
+    setPotizPrihlaseni(null);
+    try {
+      const potiz = await prihlas();
+      setPotizPrihlaseni(potiz);
+      // <b>Tlačítko na headeru větu neunese</b>, a mlčet nesmí: klepnutí
+      // bez signálu by vypadalo, že se nestalo nic. Proto upozornění.
+      if (potiz) Alert.alert('Přihlášení se nepovedlo', potiz);
+      if (!potiz) {
+        zapomenOpravneni();
+        await obnovOpravneni();
+        await obnovUcet();
+        setOtevreno(false);
+      }
+    } finally {
+      setPrihlasuje(false);
+    }
+  };
 
   // Zavřít dřív, než se někam jde: jinak by nabídka zůstala viset nad
   // obrazovkou, na kterou se právě přešlo.
@@ -48,7 +86,29 @@ export function Kebab() {
   };
 
   return (
-    <>
+    <View style={s.rada}>
+      {/* <b>Přihlášení patří na header, vedle teček</b> (Filip, 26. 11.
+          2026). Ne do nabídky pod nimi: tam ho v hospodě marně hledal,
+          zatímco appka mlčky ukazovala jen sledování. Je vidět na každé
+          obrazovce a zmizí, jakmile se někdo přihlásí — pak už místo
+          nahoře nezabírá nic. */}
+      {prihlasovaniJde && ucet && !ucet.prihlasen ? (
+        <Pressable
+          onPress={naPrihlaseni}
+          disabled={prihlasuje}
+          accessibilityRole="button"
+          accessibilityLabel={potizPrihlaseni ?? 'Přihlásit se'}
+          style={({ pressed }) => [
+            s.prihlasit,
+            { backgroundColor: t.voda, borderColor: t.voda },
+            pressed && { opacity: 0.6 },
+          ]}>
+          <Text style={[s.prihlasitText, { color: pismoNaVyplni(t, t.voda) }]}>
+            {prihlasuje ? 'Přihlašuji…' : ucet.vyprselo ? 'Přihlásit znovu' : 'Přihlásit'}
+          </Text>
+        </Pressable>
+      ) : null}
+
       <Pressable
         onPress={() => {
           setOtevreno(true);
@@ -61,6 +121,8 @@ export function Kebab() {
           // s pořadatelem závodu řádek *Stavba trati* chyběl.
           // Opakované otevření nestojí dotaz — drží ho `mojeOpravneni`.
           void obnovOpravneni();
+          void obnovUcet();
+          setPotizPrihlaseni(null);
         }}
         accessibilityRole="button"
         accessibilityLabel="Nabídka"
@@ -184,7 +246,7 @@ export function Kebab() {
           </Pressable>
         </View>
       </Modal>
-    </>
+    </View>
   );
 }
 
@@ -214,6 +276,21 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
+  // Tečky a tlačítko v jedné řadě, zarovnané doprava od kotvy
+  // v `app/_layout.tsx`.
+  rada: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  // Terč je 44 pt na výšku jako tečky — stejná mez
+  // (`tools/kontrola-dotyku.py`).
+  prihlasit: {
+    minHeight: 36,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    borderWidth: 1,
+    justifyContent: 'center',
+  },
+  prihlasitText: { fontSize: 14, fontWeight: '700' },
+
   zavrit: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   zavritText: { fontSize: 16, fontWeight: '700' },
 });

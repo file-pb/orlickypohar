@@ -96,15 +96,64 @@ obnovovací token v SecureStore a tichá obnova před vypršením
 (`app/src/lib/identita.ts:124–160`). Příští spuštění tedy přihlášení
 nevyžaduje, dokud relace u poskytovatele platí.
 
-Co je potřeba doladit, až se bude stavět:
+Co se spravilo 26. 11. 2026, když to Filip zkusil v terénu:
 
-1. **Co se stane, když obnova selže** (relace skončila u poskytovatele).
-   Dnes se vymažou tokeny; rozcestník se tím pod rukama promění
-   z rozhodčího na čtenáře. Má se místo toho ukázat jeden řádek
-   *přihlásit znovu* a nabídka nechat, dokud ji člověk nepotvrdí?
-2. **Co vidí rozhodčí bez signálu.** `/ja` se nedovolá, role se neznají.
-   Poslední známou odpověď cachovat — jinak u vody bez signálu zmizí
-   půlka appky zrovna ve chvíli, kdy je potřeba.
+1. **Přihlášení je vidět.** Jakmile se nepřihlášenému přeskakuje
+   rozcestník, zbyla cesta dovnitř jen pod třemi tečkami — a tam ji Filip
+   nenašel. Nabídka proto začíná **dlaždicí** *Přihlásit se* (jeho slovy:
+   *„to přihlášení chce dlaždici rovnou v menu vedle tří teček"*) a táž
+   řádka je i na sledování.
+2. **Neúspěch se řekne tam, kde se kleplo.** Na účtu se chyba vypisovala
+   obyčejným písmem až pod kartami, takže klepnutí bez signálu vypadalo,
+   že se nestalo nic.
+3. **Vypršelá relace se jmenuje jinak než nepřihlášení.** `token()` při
+   selhání obnovy tiše odhlásí; nově po sobě nechá stopu
+   (`relaceVyprsela()`), takže obrazovka řekne *„přihlášení vypršelo"*
+   místo aby mlčky ukázala míň.
+4. **Rozcestník nepřeskakuje ve sporu.** Token v telefonu je, ale `/ja`
+   nic nevrátí — pak o tom člověku nevíme nic a přeskočit znamená poslat
+   ho mezi čtenáře bez jediného slova.
+
+Zbývá doladit: **co vidí rozhodčí bez signálu.** `/ja` se nedovolá, role
+se neznají, nabídka je kratší a appka to sice napíše, ale poslední známou
+odpověď nedrží. U vody bez signálu zmizí půlka appky zrovna ve chvíli,
+kdy je potřeba — cachovat ji je levné a nemá to odklad.
+
+## Přihlášení bez cesty na Zitadel
+
+**Zadání, 26. 11. 2026:** *„na zitadel uživatele tahat nechci. Tohle musí
+být lepší."* Dnešní přihlášení otevře prohlížeč s přihlašovací stránkou
+poskytovatele — pro pořadatele, který appku zapíná dvakrát za sezónu,
+je to cizí obrazovka s heslem, které nemá.
+
+**Odpověď už v appce existuje, jen pro lodě.** Klíč k lodi
+(`app/src/lib/klic.ts`) je jednorázová pozvánka na 48 h: kapitán vyrobí
+kód nebo QR, posádka ho naskenuje a telefon je spárovaný — **bez účtu,
+bez hesla, bez poskytovatele**. Přesně to Filip chce i pro role.
+
+**Návrh: týž tvar pro role.**
+
+1. Správce v administraci vyrobí **kód nebo QR pro roli** (rozhodčí
+   ročníku, pořadatel zastávky, pomocník na den).
+2. Ten člověk ho v appce jednou naskenuje — obrazovka *Mám kód*, jedna
+   pro loď, roli i pomocníka.
+3. Telefon dostane **klíč vázaný na osobu a rozsah**, ne na účet
+   u poskytovatele. Server u každé cesty ověřuje klíč stejně, jako dnes
+   ověřuje klíč k lodi.
+
+**Co se tím kupuje:** pořadatel nikdy neuvidí Zitadel, nezakládá heslo
+a zvládne to u vody na jedno klepnutí. **Co se tím platí:** kód jde
+přeposlat, takže je to slabší doklad než přihlášení. Pro loď jsme to
+jako cenu přijali už v říjnu; pro roli je sázka vyšší, protože rozhodčí
+zapisuje výsledky.
+
+**Doporučení:** přijmout tutéž cenu, ale ohraničit ji — kód na jedno
+použití, krátká platnost, viditelný seznam „komu kód visí a komu dosedl",
+a **odebrání jedním klepnutím**. Zitadel zůstane pro web a pro toho, kdo
+kódy vydává; na telefon se nedostane nikdo, kdo nechce.
+
+**Neznamená to zahodit OIDC.** Zůstává jako druhá cesta pro ty, kterým
+vyhovuje, a jako jediná cesta do administrace na webu.
 
 ## Účty a role: kde to dnes drhne
 
