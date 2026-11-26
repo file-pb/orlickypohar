@@ -13,19 +13,16 @@ jobs:
       - name: Měření
         run: |
           W=https://orlickypohar.klihovka.cz
-          A=https://orlickypohar-api.klihovka.cz
-          m() { curl -s -o /tmp/telo -D /tmp/h -w "%{http_code} ttfb=%{time_starttransfer}s total=%{time_total}s $(printf '%6s' %{size_download})B" "$1"; echo " cache=$(grep -i '^x-cache:' /tmp/h | awk '{print $2}' | tr -d '\r') cf=$(grep -i '^cf-cache-status:' /tmp/h | awk '{print $2}' | tr -d '\r') $1"; }
-          echo "== verze"; curl -s $W/verze; echo; curl -s $A/verze; echo
-          echo "== stránky webu (3x)"
-          stranky="/ /serie /appka /novinky"
-          # odkazy z úvodní stránky, ať se měří skutečné cesty
-          curl -s $W/ | grep -o 'href="/[^"#?]*"' | sed 's/href="//;s/"$//' | sort -u | grep -v '^/_next' | head -15 > /tmp/odkazy
-          cat /tmp/odkazy
-          for p in $stranky $(cat /tmp/odkazy); do for i in 1 2 3; do m "$W$p"; done; done
-          echo "== API"
-          for p in /health /health/ready /serie; do for i in 1 2; do m "$A$p"; done; done
-          echo "== statika"
-          curl -s $W/ | grep -o '/_next/static/[^"]*\.\(js\|css\)' | sort -u | head -5 | while read s; do m "$W$s"; done
-          echo "== obejití cache (?x=N), skutečné vykreslení"
-          for i in 1 2 3 4 5; do m "$W/?mereni=$RANDOM"; done
-          for p in $(head -5 /tmp/odkazy); do m "$W$p?mereni=$RANDOM"; done
+          m() { curl -s --compressed -o /dev/null -D /tmp/h -w "%{http_code} conn=%{time_connect} tls=%{time_appconnect} ttfb=%{time_starttransfer} total=%{time_total} prenos=%{size_download}B" "${@:2}" "$1"; echo " enc=$(grep -i '^content-encoding:' /tmp/h | awk '{print $2}' | tr -d '\r') cache=$(grep -i '^x-cache:' /tmp/h | awk '{print $2}' | tr -d '\r') cf=$(grep -i '^cf-cache-status:' /tmp/h | awk '{print $2}' | tr -d '\r') cc=$(grep -i '^cache-control:' /tmp/h | cut -d' ' -f2- | tr -d '\r') $1"; }
+          echo "== komprese HTML"; m $W/; m $W/serie/2027/zavody/24hodinovka
+          echo "== jedno spojení, 5 požadavků (bez TLS navíc)"
+          curl -s -o /dev/null -w "ttfb=%{time_starttransfer} conn=%{time_connect}\n" $W/ -o /dev/null $W/ -o /dev/null $W/ -o /dev/null $W/ -o /dev/null $W/
+          echo "== statika podruhé a potřetí (Cloudflare HIT?)"
+          curl -s $W/ | grep -o '/_next/static/[^"]*\.\(js\|css\)' | sort -u > /tmp/s; wc -l < /tmp/s
+          head -4 /tmp/s | while read s; do m "$W$s"; m "$W$s"; m "$W$s"; done
+          echo "== celková váha statiky úvodní stránky (gzip)"
+          t=0; while read s; do b=$(curl -s --compressed -o /dev/null -w '%{size_download}' "$W$s"); t=$((t+b)); done < /tmp/s; echo "$t B"
+          echo "== navigace v prohlížeči (RSC, mimo cache)"
+          for p in /serie/2027 /serie/2027/poradi /historie; do m "$W$p" -H 'RSC: 1'; done
+          echo "== co tvoří HTML"
+          curl -s $W/ > /tmp/u.html; echo "celkem $(wc -c < /tmp/u.html)"; echo "v <script>self.__next_f: $(grep -o 'self.__next_f.push[^<]*' /tmp/u.html | wc -c)"; echo "inline svg: $(grep -o '<svg[^>]*>.\{0,200000\}</svg>' /tmp/u.html | wc -c)"; echo "style atributy: $(grep -o 'style="[^"]*"' /tmp/u.html | wc -c)"
