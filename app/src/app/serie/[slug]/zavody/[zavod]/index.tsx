@@ -55,6 +55,7 @@ import {
 import { PROCEDURA_S, DUVODY_ZRUSENI, stavStartu } from '@/lib/start';
 import { rozsah } from '@/lib/datum';
 import { body } from '@/lib/body';
+import { useZamekRestartu } from '@/lib/restart';
 
 /**
  * Jak často se zkouší odeslat podržený úkon. Deset vteřin: na vodě signál
@@ -98,6 +99,9 @@ export default function Zastavka() {
   const [ceka, setCeka] = useState<CekajiciUkon | null>(() =>
     platnyUkon(nactiCekajici(), slug, zavod, Date.now()),
   );
+  // Neodeslaný úkon startu dosílá jen tahle obrazovka; restart by ho
+  // nechal ležet, dokud se sem velitel nevrátí.
+  useZamekRestartu('cekajici-ukon', ceka !== null);
 
   const delkaS = (data?.delkaProceduryMin ?? PROCEDURA_S / 60) * 60;
 

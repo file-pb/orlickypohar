@@ -8,6 +8,7 @@ import { nactiDnesniRegatu } from '@/lib/api';
 import { jePrihlasen } from '@/lib/identita';
 import { mojeOpravneni } from '@/lib/opravneni';
 import { dlazdice, kamRovnou, type Dlazdice } from '@/lib/rozcestnik';
+import { NovaVerze } from '@/components/verze-appky';
 
 /**
  * Domovská obrazovka: rozcestník podle toho, kdo appku zapnul.
@@ -125,6 +126,10 @@ export default function Domu() {
           </Text>
         </View>
       ) : null}
+
+      {/* Nový nativní balíček se sám nestáhne, dokud ho Play nedoručí —
+          proto tady, kde se nedá přehlédnout. Bez novinky karta není. */}
+      <NovaVerze />
 
       {/* <b>Chyba nezhasne rozcestník.</b> Role se nepřečetly, takže nabídka
           je kratší, než by měla být — a to se musí říct, jinak to vypadá,

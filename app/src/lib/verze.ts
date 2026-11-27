@@ -25,6 +25,7 @@
 import { File, Paths } from 'expo-file-system';
 import * as Updates from 'expo-updates';
 
+import { jsOverenoCerstve, stavJsKratce, type StavJs } from './aktualizace';
 import { datum } from './datum';
 import type { components } from './schema';
 import { sit } from './sit';
@@ -177,6 +178,112 @@ export function popisBalicku(s: StavBalicku): string | null {
   }
 }
 
+/* ---------- aktualizace přímo v appce: čistá část ---------- */
+
+/**
+ * Co o aktualizaci řekl Google Play přímo v telefonu.
+ *
+ * `nejde` znamená, že se Play zeptat nedá — iPhone, instalace mimo Play
+ * (APK z webu, vývojový build) nebo chyba rozhraní. Není to „nic nového":
+ * o tom, jestli je venku novější verze, pak rozhoduje náš seznam vydání.
+ */
+export type OdpovedPlay =
+  | { druh: 'nejde' }
+  | { druh: 'nic' }
+  | { druh: 'nabizi'; cisloBalicku: number | null; okamzita: boolean }
+  | { druh: 'probiha' };
+
+/** Syrová odpověď nativního modulu `PlayAktualizace` (`modules/play-aktualizace`). */
+export type OdpovedModulu = { druh: string; cisloBalicku: number | null; okamzita: boolean };
+
+/**
+ * Odpověď nativního modulu jako `OdpovedPlay`.
+ *
+ * <b>Cokoliv nečekaného je `nejde`, ne „nic nového".</b> Kontrakt mezi
+ * Kotlinem a TypeScriptem nehlídá žádný překladač; kdyby se jméno stavu
+ * rozešlo, „nic" by znamenalo „jsi aktuální" — přesně ta lež, kvůli které
+ * to celé vzniklo. `nejde` nechá rozhodnout náš seznam vydání.
+ */
+export function zOdpovediModulu(o: OdpovedModulu | null | undefined): OdpovedPlay {
+  if (!o) return { druh: 'nejde' };
+  switch (o.druh) {
+    case 'nabizi':
+      return {
+        druh: 'nabizi',
+        cisloBalicku: typeof o.cisloBalicku === 'number' ? o.cisloBalicku : null,
+        okamzita: o.okamzita === true,
+      };
+    case 'probiha':
+      return { druh: 'probiha' };
+    case 'nic':
+      return { druh: 'nic' };
+    default:
+      return { druh: 'nejde' };
+  }
+}
+
+/** Co appka nabídne v nabídce pod tečkami a v sekci Verze appky. */
+export type Nabidka =
+  | { druh: 'aktualizovat'; cisloBalicku: number | null }
+  | { druh: 'dokoncit' }
+  | { druh: 'obchod'; cisloBalicku: number | null; playNenabizi: boolean }
+  | { druh: 'nic' };
+
+/**
+ * Co nabídnout, když se sejde odpověď Play s naším seznamem vydání.
+ *
+ * <b>Play má přednost</b> (Filip, 26. 11. 2026: *„proč se to neaktualizuje
+ * samo?"*). Jen on umí aktualizaci spustit, a co nabízí, to telefon
+ * opravdu dostane. Náš seznam se ptá, jestli je venku něco novějšího —
+ * Play, jestli to tenhle telefon už smí stáhnout. Mezi tím bývá prodleva:
+ * 26. 11. 2026 byl balíček 18 v interním testu hodinu `completed`, a
+ * Filipův telefon ho přesto nenabízel.
+ *
+ * <b>Proto i ta prodleva dostane vlastní větu</b> (`playNenabizi`). Tvrdit
+ * „aktuální" by byla lež, posílat do obchodu bez vysvětlení zase zbytečné
+ * klepání na stránku, kde tlačítko *Aktualizovat* ještě není.
+ *
+ * <b>Spustit se smí jen okamžitá aktualizace</b> — celá obrazovka od Play,
+ * který appku sám restartuje. Když ji Play nepovolí, zbývá obchod. A nikdy
+ * sama od sebe: appka běží na vodě během startu a blokující obrazovka by
+ * tam byla horší než stará verze.
+ */
+export function coNabidnout(play: OdpovedPlay, nase: StavBalicku | null): Nabidka {
+  if (play.druh === 'probiha') return { druh: 'dokoncit' };
+  if (play.druh === 'nabizi' && play.okamzita) {
+    return { druh: 'aktualizovat', cisloBalicku: play.cisloBalicku };
+  }
+  if (play.druh === 'nabizi') {
+    return { druh: 'obchod', cisloBalicku: play.cisloBalicku, playNenabizi: false };
+  }
+  if (nase?.druh === 'novejsi') {
+    return {
+      druh: 'obchod',
+      cisloBalicku: nase.posledni.cisloBalicku,
+      // Play odpověděl a nic nenabízí, přestože balíček venku je.
+      playNenabizi: play.druh === 'nic',
+    };
+  }
+  return { druh: 'nic' };
+}
+
+/** Věta k nabídce, nebo `null`, když není co nabízet. */
+export function popisNabidky(n: Nabidka): string | null {
+  const cislo = (c: number | null) => (c ? ` č. ${c}` : '');
+  switch (n.druh) {
+    case 'aktualizovat':
+      return `Nová verze${cislo(n.cisloBalicku)} je připravená. Aktualizace proběhne přímo tady a appka se pak sama restartuje.`;
+    case 'dokoncit':
+      return 'Aktualizace se nedokončila. Dokonči ji, ať nejedeš napůl na staré verzi.';
+    case 'obchod':
+      return n.playNenabizi
+        ? `V Obchodě Play je novější verze${cislo(n.cisloBalicku)}, ale tomuhle telefonu ji Play ještě nenabídl. Bývá to otázka hodin; v obchodě se dá zkusit hned.`
+        : `V Obchodě Play je novější verze${cislo(n.cisloBalicku)}. Aktualizuj ji tam: sama se nestáhne, protože mění nativní část appky.`;
+    case 'nic':
+      return null;
+  }
+}
+
 /**
  * Na čem appka jede, na jeden řádek — pro patičku nabídky pod tečkami.
  *
@@ -186,13 +293,28 @@ export function popisBalicku(s: StavBalicku): string | null {
  * hloub. Bez balíčku z obchodu zbude otisk: je to aspoň něco, co jde
  * přečíst do telefonu a porovnat.
  */
-export function verzeKratce(stav: StavBalicku | null, otisk: string | null): string | null {
-  if (stav?.druh === 'aktualni') return `Nejnovější verze · balíček č. ${stav.posledni.cisloBalicku}`;
-  if (stav?.druh === 'novejsi') {
-    return `Máš balíček č. ${stav.muj.cisloBalicku} · v obchodě je č. ${stav.posledni.cisloBalicku}`;
-  }
+export function verzeKratce(
+  stav: StavBalicku | null,
+  otisk: string | null,
+  js: StavJs | null = null,
+  ted: number = Date.now(),
+): string | null {
   const k = kratkyOtisk(otisk);
-  return k ? `Otisk ${k}` : null;
+  const balicek =
+    stav?.druh === 'aktualni'
+      ? `balíček č. ${stav.posledni.cisloBalicku}`
+      : stav?.druh === 'novejsi'
+        ? `máš balíček č. ${stav.muj.cisloBalicku} · v obchodě je č. ${stav.posledni.cisloBalicku}`
+        : k
+          ? `otisk ${k}`
+          : null;
+  // „Nejnovější" jen když sedí obojí: balíček z obchodu i čerstvě ověřený
+  // JavaScript. Samotný balíček to neříká — JS mohl zamrznout (26. 11. 2026).
+  if (stav?.druh === 'aktualni' && js && jsOverenoCerstve(js, ted)) return `Nejnovější verze · ${balicek}`;
+  const casti = [balicek, js ? stavJsKratce(js, ted) : null].filter((x): x is string => Boolean(x));
+  if (casti.length === 0) return null;
+  const v = casti.join(' · ');
+  return v.charAt(0).toUpperCase() + v.slice(1);
 }
 
 /** Obchod Play na stránce appky. `market:` otevře aplikaci obchodu. */

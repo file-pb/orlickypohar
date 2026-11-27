@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Aktualizator } from '@/components/aktualizator';
 import { BannerAktualizace } from '@/components/banner-aktualizace';
 import { Kebab } from '@/components/kebab';
 import { ProuzekSpojeni, useProuzek } from '@/components/prouzek-spojeni';
@@ -88,6 +89,9 @@ function Obsah() {
       {/* Až za `Stack`, aby ležel nad obsahem; sám se stará o to, kdy a jak
           dlouho je vidět. */}
       <BannerAktualizace />
+      {/* Samoaktualizace: ptá se i za běhu a novou verzi použije sama,
+          když nic nedrží zámek (start, cíl, stavba, záznam). */}
+      <Aktualizator />
       {/* <b>Sdělení o poloze patří sem, do korzene.</b> Musí předejít
           systémovému dotazu, a ten se dá vyvolat z víc obrazovek než
           jedné. Dokud se nikdo nezeptá, nevykreslí se nic. */}

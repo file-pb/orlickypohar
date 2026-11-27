@@ -11,6 +11,7 @@
  */
 
 import { ukazkaBezi, ukazkaOdpovez, type OdpovedSite } from './ukazka';
+import { HLAVICKA_VERZE, hlavickaTed } from './verze-hlavicka';
 
 export const API = process.env.EXPO_PUBLIC_API_URL ?? 'https://orlickypohar-api.klihovka.cz';
 
@@ -32,6 +33,35 @@ export function stavSite(): { doletelo: boolean; kdy: number } | null {
   return posledni;
 }
 
+/**
+ * Kolik zápisů (cokoliv kromě GET) právě letí na server.
+ *
+ * <b>Kvůli samoaktualizaci</b> (`restart.ts`): restart uprostřed zápisu by
+ * nechal výsledek nejistý — zrušená rozjížďka, spotřebovaný jednorázový
+ * kód — a člověk by nevěděl, jestli to má zkusit znovu.
+ */
+let vLetu = 0;
+
+export function zapisuVLetu(): number {
+  return vLetu;
+}
+
+/**
+ * Přidá hlavičku a nechá tvar `headers` takový, jaký přišel. Volající
+ * i testy čtou hlavičky jako obyčejný objekt (`init.headers.authorization`),
+ * takže převod na `Headers` by jim je potichu schoval.
+ */
+function sHlavickou(init: RequestInit | undefined, jmeno: string, hodnota: string): RequestInit {
+  const h = init?.headers;
+  if (typeof Headers !== 'undefined' && h instanceof Headers) {
+    const kopie = new Headers(h);
+    kopie.set(jmeno, hodnota);
+    return { ...init, headers: kopie };
+  }
+  if (Array.isArray(h)) return { ...init, headers: [...h, [jmeno, hodnota]] };
+  return { ...init, headers: { ...(h as Record<string, string> | undefined), [jmeno]: hodnota } };
+}
+
 export function sit(cesta: string, init?: RequestInit): Promise<OdpovedSite | Response> {
   if (ukazkaBezi()) {
     return ukazkaOdpovez(cesta, {
@@ -40,15 +70,28 @@ export function sit(cesta: string, init?: RequestInit): Promise<OdpovedSite | Re
     });
   }
 
+  // Na čem appka jede, se veze s každým dotazem — server tak ví, kdo ve
+  // flotile zaostává, bez jediného požadavku navíc (`verze-hlavicka.ts`).
+  const verze = hlavickaTed();
+  const s = verze ? sHlavickou(init, HLAVICKA_VERZE, verze) : init;
+
+  const zapis = (init?.method ?? 'GET').toUpperCase() !== 'GET';
+  if (zapis) vLetu += 1;
+  const dopadl = () => {
+    if (zapis) vLetu = Math.max(0, vLetu - 1);
+  };
+
   // <b>Zapisuje se dolet, ne odpověď.</b> Chyba 500 znamená, že server
   // je na příjmu a něco se nepovedlo — to není věc spojení a proužek by
   // o ní lhal. Spojení chybí tehdy, když `fetch` vůbec nedojde.
-  return fetch(`${API}${cesta}`, init).then(
+  return fetch(`${API}${cesta}`, s).then(
     (odpoved) => {
+      dopadl();
       posledni = { doletelo: true, kdy: Date.now() };
       return odpoved;
     },
     (chyba) => {
+      dopadl();
       posledni = { doletelo: false, kdy: Date.now() };
       throw chyba;
     },

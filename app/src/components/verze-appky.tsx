@@ -1,13 +1,19 @@
 import { useState } from 'react';
-import { Linking, Platform, Text, View } from 'react-native';
+import { Alert, Linking, Platform, Text, useColorScheme, View } from 'react-native';
+import * as Updates from 'expo-updates';
 import { useUpdates } from 'expo-updates';
 
+import { prekazkyTed } from '@/components/aktualizator';
 import { Akce, Karta, Sekce } from '@/components/ui';
+import { Colors } from '@/constants/theme';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
+import { nactiPamet, popisStavuJs, pouzijVerzi, stavJs, zkontrolujTed } from '@/lib/aktualizace';
+import { spustAktualizaci, zeptejSePlay } from '@/lib/play';
+import { popisPrekazky } from '@/lib/restart';
 import {
-  aktualizaceJdou, kratkyOtisk, OBCHOD, OBCHOD_WEB, popisBalicku, popisHledani, popisPuvodu,
-  pouzijHned, puvod, zjistiStavBalicku, zkusAktualizaci,
+  aktualizaceJdou, coNabidnout, kratkyOtisk, OBCHOD, OBCHOD_WEB, popisBalicku, popisNabidky,
+  popisPuvodu, puvod, zjistiStavBalicku, type Nabidka, type StavBalicku,
 } from '@/lib/verze';
 
 /**
@@ -49,33 +55,107 @@ export function VerzeAppky() {
   );
 }
 
+/** Odpověď Play spojená s naším seznamem vydání. */
+async function nactiNabidku(): Promise<{ nabidka: Nabidka; nase: StavBalicku | null }> {
+  const [play, nase] = await Promise.all([zeptejSePlay(), zjistiStavBalicku()]);
+  return { nabidka: coNabidnout(play, nase), nase };
+}
+
+/** Totéž pro nabídku pod tečkami a pro domovskou obrazovku. Jen Android. */
+export function useNabidka() {
+  return useData(async () => (Platform.OS === 'android' ? await nactiNabidku() : null));
+}
+
+/** Text tlačítka k nabídce, nebo `null`, když není co nabízet. */
+export function tlacitkoNabidky(n: Nabidka): string | null {
+  switch (n.druh) {
+    case 'aktualizovat':
+      return 'Aktualizovat';
+    case 'dokoncit':
+      return 'Dokončit aktualizaci';
+    case 'obchod':
+      return 'Otevřít Obchod Play';
+    case 'nic':
+      return null;
+  }
+}
+
 /**
- * Je v obchodě novější balíček, než má telefon?
+ * Udělá, co nabídka slibuje. Aktualizace z Play appku restartuje, takže
+ * když zrovna něco drží zámek (start, cíl, stavba), nejdřív se zeptá.
+ * Nejde-li to přímo v appce, otevře obchod — nikdy neskončí mlčením.
+ */
+export function nabidniAktualizaci(n: Nabidka): void {
+  if (n.druh === 'nic') return;
+  if (n.druh === 'obchod') {
+    otevriObchod();
+    return;
+  }
+  const proved = async () => {
+    const v = await spustAktualizaci();
+    if (v === 'nejde' || v === 'selhalo' || v === 'nepovoleno') otevriObchod();
+  };
+  const vadi = prekazkyTed().filter((p) => p !== 'bez-site');
+  if (vadi.length === 0) {
+    void proved();
+    return;
+  }
+  Alert.alert(
+    'Aktualizovat teď?',
+    `Appka se po aktualizaci restartuje, a právě ${vadi.map(popisPrekazky).join(', ')}. Co je jen v paměti, se ztratí.`,
+    [
+      { text: 'Počkat', style: 'cancel' },
+      { text: 'Aktualizovat', style: 'destructive', onPress: () => void proved() },
+    ],
+  );
+}
+
+/**
+ * Je v obchodě novější balíček, než má telefon — a umí ho appka stáhnout?
  *
  * <b>Stojí nad hledáním po síti schválně.</b> Když je venku nový balíček,
- * hledání po síti řekne „appka je aktuální" — pro starý otisk nic nového
- * neexistuje. Kdo čte odshora, musí narazit nejdřív na tu pravdivou větu.
+ * hledání po síti pro starý otisk nic nenajde. Kdo čte odshora, musí
+ * narazit nejdřív na tu pravdivou větu.
  */
 export function ZObchodu() {
   const t = useTheme();
-  const { data: stav, nacita } = useData(zjistiStavBalicku);
+  const { data, nacita } = useData(nactiNabidku);
+  if (nacita || !data) return null;
 
-  if (nacita) return null;
-  if (!stav) {
-    return (
-      <Karta>
-        <Text style={{ color: t.tlumeny }}>Co je v Obchodě Play, se teď nedá zjistit.</Text>
-      </Karta>
-    );
-  }
-
-  const veta = popisBalicku(stav);
+  const { nabidka, nase } = data;
+  const veta =
+    popisNabidky(nabidka) ??
+    (nase ? popisBalicku(nase) : 'Co je v Obchodě Play, se teď nedá zjistit.');
   if (!veta) return null;
+  const tlacitko = tlacitkoNabidky(nabidka);
 
   return (
     <Karta>
       <Text style={{ color: t.text }}>{veta}</Text>
-      {stav.druh === 'novejsi' ? <Akce text="Otevřít Obchod Play" onPress={otevriObchod} /> : null}
+      {tlacitko ? <Akce text={tlacitko} onPress={() => nabidniAktualizaci(nabidka)} /> : null}
+    </Karta>
+  );
+}
+
+/**
+ * Karta na domovské obrazovce, když je venku nový balíček.
+ *
+ * <b>Proč i tady</b> (Filip, 27. 11. 2026: *„musí to být naprostá
+ * samozřejmost"*). Nativní balíček se sám nestáhne, dokud ho Play nedoručí,
+ * a řádek schovaný pod tečkami se dá týdny přehlížet. Jinak tu nic nového
+ * nepřibývá: když není co nabídnout, karta neexistuje.
+ */
+export function NovaVerze() {
+  const t = useTheme();
+  const { data } = useNabidka();
+  const n = data?.nabidka;
+  if (!n || n.druh === 'nic') return null;
+  const tlacitko = tlacitkoNabidky(n);
+  return (
+    <Karta>
+      <Text style={{ color: t.text, fontWeight: '600' }}>Nová verze appky</Text>
+      <Text style={{ color: t.tlumeny, marginTop: 4 }}>{popisNabidky(n)}</Text>
+      {tlacitko ? <Akce text={tlacitko} onPress={() => nabidniAktualizaci(n)} /> : null}
     </Karta>
   );
 }
@@ -85,53 +165,75 @@ export function otevriObchod() {
   void Linking.openURL(OBCHOD).catch(() => Linking.openURL(OBCHOD_WEB));
 }
 
-/** Stav hledání novinek a dvě tlačítka k němu. */
+/**
+ * Stav JavaScriptu a tlačítko k němu.
+ *
+ * <b>Nikde „aktuální" bez úspěšné kontroly</b> (26. 11. 2026). Dřív tu
+ * stálo „Appka je aktuální.", kdykoliv appka zrovna nic nehledala — i když
+ * kontrola spadla nebo proběhla před týdnem. Teď věta říká, kdy se
+ * naposledy úspěšně ověřilo, nebo že se ověřit nepodařilo.
+ */
 function Hledani() {
   const t = useTheme();
   const stav = useUpdates();
+  const tmave = useColorScheme() === 'dark';
   const [pracuje, setPracuje] = useState(false);
-  const [chyba, setChyba] = useState<string | null>(null);
+  const [pamet, setPamet] = useState(nactiPamet);
 
-  const popis = popisHledani({
-    hleda: stav.isChecking,
-    stahuje: stav.isDownloading,
-    cekaRestart: stav.isUpdatePending,
-    jeNovinka: stav.isUpdateAvailable,
+  const ted = Date.now();
+  const s = stavJs({
+    zapnute: true,
+    nouzove: Updates.isEmergencyLaunch,
+    pripravena: stav.isUpdatePending,
+    hleda: stav.isChecking || stav.isDownloading || pracuje,
+    odmitnuta: pamet.odmitnuta !== null,
+    chyba: stav.checkError?.message ?? stav.downloadError?.message ?? null,
+    kontrola: pamet.kontrola,
   });
-
-  // Chyba z hooku je z automatického hledání při startu; `chyba` je z toho,
-  // co si člověk vyžádal klepnutím. Obě jsou stejně platné, tak se ukáže ta
-  // novější — tedy vyžádaná, pokud nějaká je.
-  const problem = chyba ?? stav.checkError?.message ?? stav.downloadError?.message ?? null;
 
   const podivejSe = async () => {
     setPracuje(true);
-    setChyba(null);
     try {
-      setChyba(await zkusAktualizaci());
+      await zkontrolujTed();
     } finally {
+      setPamet(nactiPamet());
       setPracuje(false);
     }
   };
 
+  const pouzij = () => {
+    const id = stav.downloadedUpdate?.updateId;
+    if (!id) return;
+    const proved = () => void pouzijVerzi(id, (tmave ? Colors.dark : Colors.light).pozadi);
+    const vadi = prekazkyTed().filter((p) => p !== 'bez-site');
+    if (vadi.length === 0) return proved();
+    Alert.alert(
+      'Restartovat teď?',
+      `Appka se restartuje do nové verze, a právě ${vadi.map(popisPrekazky).join(', ')}. Co je jen v paměti, se ztratí. Sama by počkala.`,
+      [
+        { text: 'Počkat', style: 'cancel' },
+        { text: 'Restartovat', style: 'destructive', onPress: proved },
+      ],
+    );
+  };
+
   return (
     <Karta>
-      <Text style={{ color: t.text }}>{popis}</Text>
+      <Text style={{ color: t.text }}>{popisStavuJs(s, ted)}</Text>
+      {s.druh === 'neovereno' && s.chyba ? (
+        <Text style={{ color: t.tlumeny, fontSize: 13, marginTop: 6 }}>{s.chyba}</Text>
+      ) : null}
 
       {stav.isUpdatePending ? (
-        <Akce text="Použít novou verzi teď" onPress={() => void pouzijHned()} />
+        <Akce text="Použít novou verzi teď" onPress={pouzij} />
       ) : (
         <Akce
-          text={pracuje ? 'Koukám…' : 'Podívat se, jestli je něco nového'}
+          text={pracuje ? 'Koukám…' : 'Podívat se teď'}
           onPress={() => void podivejSe()}
           pracuje={pracuje}
           vypnuto={stav.isChecking || stav.isDownloading}
         />
       )}
-
-      {problem ? (
-        <Text style={{ color: t.tlumeny, fontSize: 13, marginTop: 8 }}>{problem}</Text>
-      ) : null}
     </Karta>
   );
 }

@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
+import * as Updates from 'expo-updates';
 import { Platform } from 'react-native';
 
 import { slozOdbery } from './odbery';
@@ -51,7 +52,7 @@ export type StavUpozorneni =
  * položit nesmí. Volá se proto z obrazovky, kde je u toho napsáno, co
  * bude chodit.
  */
-export async function prihlasKOdberu(odbery: string[]): Promise<StavUpozorneni> {
+export async function prihlasKOdberu(odbery: string[], vynutit = false): Promise<StavUpozorneni> {
   // Android potřebuje kanál, jinak upozornění nikde nevyskočí — jen tiše
   // přistane v liště.
   if (Platform.OS === 'android') {
@@ -86,7 +87,7 @@ export async function prihlasKOdberu(odbery: string[]): Promise<StavUpozorneni> 
   // Server zápis přijímá opakovaně, ale volat ho při každém startu je
   // zbytečné — posílá se, jen když se token nebo odběry změnily.
   const posledni = await SecureStore.getItemAsync(ULOZENY).catch(() => null);
-  if (posledni === telo) return { stav: 'prihlaseno', odbery };
+  if (!vynutit && posledni === telo) return { stav: 'prihlaseno', odbery };
 
   try {
     const odpoved = await sit('/zarizeni', {
@@ -130,6 +131,35 @@ export async function zapniOdber(odber: string): Promise<StavUpozorneni> {
 /** Vypne odběr jednoho ročníku a ostatní nechá být. */
 export async function vypniOdber(odber: string): Promise<StavUpozorneni> {
   return prihlasKOdberu(slozOdbery(await naposledyPrihlaseno(), odber, false));
+}
+
+/** Pod jakou verzí appky se registrace naposledy poslala. */
+const ULOZENA_VERZE = 'op_upozorneni_verze';
+
+/**
+ * Po nové verzi appky jednou zopakuje registraci, aby server u zařízení
+ * znal verzi, na které doopravdy jede — hlavička `X-Appka-Verze` jede
+ * s požadavkem (`sit.ts`). Bez toho by přehled flotily u zařízení ukazoval
+ * verzi z doby, kdy si člověk naposledy přepnul odběr (nález kontroly
+ * 27. 11. 2026).
+ *
+ * <b>Nikdy se neptá na oprávnění.</b> Jen telefon, který se k odběru už
+ * přihlásil a oprávnění dal; jinak nedělá nic. Chyba se polyká — je to
+ * telemetrie, ne funkce.
+ */
+export async function obnovRegistraci(): Promise<void> {
+  try {
+    const verze = Updates.updateId ?? null;
+    const ulozene = await SecureStore.getItemAsync(ULOZENY);
+    if (!verze || !ulozene) return;
+    if ((await SecureStore.getItemAsync(ULOZENA_VERZE)) === verze) return;
+    if (!(await Notifications.getPermissionsAsync()).granted) return;
+    const odbery = (JSON.parse(ulozene) as { odbery?: string[] }).odbery ?? [];
+    const vysledek = await prihlasKOdberu(odbery, true);
+    if (vysledek.stav === 'prihlaseno') await SecureStore.setItemAsync(ULOZENA_VERZE, verze);
+  } catch {
+    // Příště se to zkusí znovu.
+  }
 }
 
 /** Co appka naposledy serveru nahlásila. Pro obrazovku, aby neptala systém. */

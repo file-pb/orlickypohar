@@ -64,6 +64,12 @@ echo
 echo "== Klíč k účtu =="
 "${NODE[@]}" ./klic-uctu.test.ts
 
+# Kdy se appka sama restartuje do nové verze, co si pamatuje a co hlásí
+# serveru. `TZ` kvůli času poslední kontroly, který se skládá z místních složek.
+echo
+echo "== Samoaktualizace =="
+TZ="Europe/Prague" "${NODE[@]}" ./samoaktualizace.test.ts
+
 # Napojený telefon je přihlášený a změnu se dozví kebab i rozcestník.
 echo
 echo "== Přihlášení kódem =="

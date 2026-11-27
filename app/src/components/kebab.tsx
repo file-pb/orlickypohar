@@ -4,7 +4,7 @@ import { Linking, Modal, Platform, Pressable, StyleSheet, Text, View } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Radek } from '@/components/ui';
-import { otevriObchod } from '@/components/verze-appky';
+import { nabidniAktualizaci, useNabidka } from '@/components/verze-appky';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { useZmenaUctu } from '@/hooks/use-zmena-uctu';
@@ -13,7 +13,11 @@ import { pismoNaVyplni } from '@/lib/kontrast';
 import { nabidka } from '@/lib/nabidka';
 import { mojeOpravneni, zapomenOpravneni } from '@/lib/opravneni';
 import { kamVUkazce, ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
-import { puvod, verzeKratce, zjistiStavBalicku } from '@/lib/verze';
+import * as Updates from 'expo-updates';
+import { useUpdates } from 'expo-updates';
+
+import { nactiPamet, stavJs } from '@/lib/aktualizace';
+import { puvod, verzeKratce } from '@/lib/verze';
 
 /**
  * Kebab: všechno, co není „co teď".
@@ -56,10 +60,22 @@ export function Kebab() {
 
   // Balíček v obchodě jen na Androidu — jinde ho CI nezapisuje a dotaz by
   // byl zbytečný. Obnovuje se při otevření nabídky, stejně jako oprávnění.
-  const { data: balicek, obnov: obnovBalicek } = useData(async () =>
-    Platform.OS === 'android' ? await zjistiStavBalicku() : null,
-  );
-  const verze = verzeKratce(balicek ?? null, puvod().otisk);
+  const { data: nabidkaData, obnov: obnovBalicek } = useNabidka();
+  const novaVerze = nabidkaData?.nabidka ?? null;
+  const aktualizace = useUpdates();
+  const pamet = nactiPamet();
+  const js = Updates.isEnabled
+    ? stavJs({
+        zapnute: true,
+        nouzove: Updates.isEmergencyLaunch,
+        pripravena: aktualizace.isUpdatePending,
+        hleda: false,
+        odmitnuta: pamet.odmitnuta !== null,
+        chyba: aktualizace.checkError?.message ?? null,
+        kontrola: pamet.kontrola,
+      })
+    : null;
+  const verze = verzeKratce(nabidkaData?.nase ?? null, puvod().otisk, js);
 
   // Zavřít dřív, než se někam jde: jinak by nabídka zůstala viset nad
   // obrazovkou, na kterou se právě přešlo.
@@ -149,15 +165,23 @@ export function Kebab() {
               appka sama neaktualizuje, a kdo tu řádku nevidí, jede dál na
               starém balíčku — přesně ten stav, kvůli kterému to vzniklo
               (Filip, 26. 11. 2026: *„aby se to nemuselo odhadovat"*). */}
-          {balicek?.druh === 'novejsi' ? (
+          {novaVerze && novaVerze.druh !== 'nic' ? (
             <Radek
-              text="Nová verze v Obchodě Play"
-              popis={`balíček č. ${balicek.posledni.cisloBalicku} — sama se nestáhne`}
+              text="Nová verze appky"
+              popis={
+                novaVerze.druh === 'aktualizovat'
+                  ? `${novaVerze.cisloBalicku ? `balíček č. ${novaVerze.cisloBalicku} — ` : ''}stáhne se přímo tady`
+                  : novaVerze.druh === 'dokoncit'
+                    ? 'aktualizace se nedokončila'
+                    : novaVerze.playNenabizi
+                      ? 'Play ji tomuhle telefonu ještě nenabídl'
+                      : `${novaVerze.cisloBalicku ? `balíček č. ${novaVerze.cisloBalicku} ` : ''}v Obchodě Play`
+              }
               hodnota="aktualizovat"
               barvaHodnoty={t.voda}
               onPress={() => {
                 setOtevreno(false);
-                otevriObchod();
+                nabidniAktualizaci(novaVerze);
               }}
             />
           ) : null}

@@ -41,6 +41,7 @@ import {
   type UkonPanelu,
   type UkonStartu,
 } from '@/lib/start';
+import { startDrzi, useZamekRestartu } from '@/lib/restart';
 
 /**
  * Panel startu: co se zrovna děje a kolik zbývá.
@@ -186,6 +187,9 @@ export function Odpocet({
   // tady se jen pozná, kdo je u toho.
   const veli = Boolean(naSpusteni || naUkon);
   const dirigent = useDirigent(stav, ted, delkaS, veli);
+  // Restart v okně procedury by umlčel klakson i hlas a vypnul Nerušit —
+  // samoaktualizace proto počká (`restart.ts`).
+  useZamekRestartu('start', veli && startDrzi(stav, ted, delkaS));
 
   // <b>Zkratka jen pro ukázku</b> (Filip, 7. 11. 2026): dlouhé čekání se
   // dá přeskočit, aby se simulace dala ladit rychleji. Rozhodování i

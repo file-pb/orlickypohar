@@ -49,6 +49,7 @@ import {
 } from '@/lib/cil';
 import { pismoNaVyplni } from '@/lib/kontrast';
 import { odStartu, stavStartu, trvani, PROCEDURA_S } from '@/lib/start';
+import { useZamekRestartu } from '@/lib/restart';
 
 /**
  * Cílová obrazovka: klepání na lodě, jak projíždějí cílem.
@@ -168,6 +169,9 @@ function Zapisovani({
   obnov: () => void;
 }) {
   const router = useRouter();
+  // Lodě, které projedou během cesty zpátky na cílovku, by neměly čas —
+  // a ten se dodatečně zjistit nedá. Po celou dobu zápisu se nerestartuje.
+  useZamekRestartu('cil', true);
 
   // <b>Tlačítka mají lodě na regatě</b> — přihlášené a potvrzené. Když
   // přihlášky nikdo nevede, má je celý ročník, jinak by u cíle nebylo na

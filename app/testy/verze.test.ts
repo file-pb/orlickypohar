@@ -12,8 +12,9 @@ import { zapomenVse } from 'expo-file-system';
 import { nastav } from 'expo-updates';
 
 import {
-  jePrvniNabeh, kdy, kratkyOtisk, popisBalicku, popisHledani, popisPuvodu, puvod,
-  stavBalicku, verzeKratce, videnaVerze, zapamatuj, type Vydani,
+  coNabidnout, jePrvniNabeh, kdy, kratkyOtisk, popisBalicku, popisHledani, popisNabidky,
+  popisPuvodu, puvod, stavBalicku, verzeKratce, videnaVerze, zapamatuj, zOdpovediModulu,
+  type OdpovedModulu, type Vydani,
 } from '../src/lib/verze.ts';
 
 let prosly = 0;
@@ -160,17 +161,107 @@ await zkus('věta o novější verzi řekne obě čísla a proč se to nestáhne
   assert.equal(popisBalicku({ druh: 'neznamy' }), null);
 });
 
-await zkus('patička nabídky: číslo, když je známé, jinak otisk', () => {
+await zkus('patička nabídky: „nejnovější" jen s čerstvě ověřeným JS', () => {
+  const ted = Date.parse('2026-11-27T10:00:00+01:00');
+  const overeno = { druh: 'overeno' as const, kdy: ted - 5 * 60_000 };
+  const aktualniBalicek = stavBalicku([v(18, B)], B, 'production');
+  assert.equal(verzeKratce(aktualniBalicek, B, overeno, ted), 'Nejnovější verze · balíček č. 18');
+  // Bez ověřeného JS samotný balíček „nejnovější" neznamená.
+  assert.equal(verzeKratce(aktualniBalicek, B, null, ted), 'Balíček č. 18');
   assert.equal(
-    verzeKratce(stavBalicku([v(18, B)], B, 'production'), B),
-    'Nejnovější verze · balíček č. 18',
+    verzeKratce(aktualniBalicek, B, { druh: 'neovereno', chyba: null, naposledyOk: null }, ted),
+    'Balíček č. 18 · neověřeno',
   );
+  const stareOvereni = { druh: 'overeno' as const, kdy: ted - 3 * 24 * 3600_000 };
+  assert.doesNotMatch(verzeKratce(aktualniBalicek, B, stareOvereni, ted) ?? '', /Nejnovější/);
   assert.equal(
-    verzeKratce(stavBalicku([v(18, B), v(17, A)], A, 'production'), A),
+    verzeKratce(stavBalicku([v(18, B), v(17, A)], A, 'production'), A, null, ted),
     'Máš balíček č. 17 · v obchodě je č. 18',
   );
-  assert.equal(verzeKratce({ druh: 'neznamy' }, A), 'Otisk af0083f4');
-  assert.equal(verzeKratce(null, null), null);
+  assert.equal(verzeKratce({ druh: 'neznamy' }, A, null, ted), 'Otisk af0083f4');
+  assert.equal(verzeKratce(null, null, null, ted), null);
+});
+
+
+/* ---------------------------------------------------------------------------
+ * Aktualizace přímo v appce
+ *
+ * Play má přednost, protože jen on umí aktualizaci spustit. Náš seznam
+ * vydání ale ví o balíčku dřív, než ho Play konkrétnímu telefonu nabídne
+ * — a tu prodlevu musí appka pojmenovat, ne zamlčet.
+ * ------------------------------------------------------------------------ */
+
+const novejsi = stavBalicku([v(18, B), v(17, A)], A, 'production');
+const aktualni = stavBalicku([v(18, B)], B, 'production');
+
+await zkus('rozběhnutá aktualizace se nabídne k dokončení', () => {
+  assert.deepEqual(coNabidnout({ druh: 'probiha' }, aktualni), { druh: 'dokoncit' });
+});
+
+await zkus('Play nabízí okamžitou: aktualizuje se přímo v appce', () => {
+  assert.deepEqual(
+    coNabidnout({ druh: 'nabizi', cisloBalicku: 19, okamzita: true }, novejsi),
+    { druh: 'aktualizovat', cisloBalicku: 19 },
+  );
+});
+
+await zkus('Play má přednost i před zaostalým seznamem', () => {
+  // Zápis do API se nepovedl, seznam si myslí, že je telefon aktuální.
+  // Play ale novou verzi nabízí — a co nabízí, to telefon opravdu dostane.
+  assert.equal(coNabidnout({ druh: 'nabizi', cisloBalicku: 19, okamzita: true }, aktualni).druh, 'aktualizovat');
+});
+
+await zkus('okamžitou Play nepovolí: zbývá obchod', () => {
+  assert.deepEqual(
+    coNabidnout({ druh: 'nabizi', cisloBalicku: 19, okamzita: false }, novejsi),
+    { druh: 'obchod', cisloBalicku: 19, playNenabizi: false },
+  );
+});
+
+await zkus('venku je novější, Play ho telefonu ještě nenabídl (26. 11. 2026)', () => {
+  const n = coNabidnout({ druh: 'nic' }, novejsi);
+  assert.deepEqual(n, { druh: 'obchod', cisloBalicku: 18, playNenabizi: true });
+  assert.match(popisNabidky(n) ?? '', /ještě nenabídl/);
+});
+
+await zkus('Play se zeptat nejde: rozhoduje náš seznam, bez věty o prodlevě', () => {
+  const n = coNabidnout({ druh: 'nejde' }, novejsi);
+  assert.deepEqual(n, { druh: 'obchod', cisloBalicku: 18, playNenabizi: false });
+  assert.doesNotMatch(popisNabidky(n) ?? '', /nenabídl/);
+});
+
+await zkus('nic nového nikde: nic se nenabízí', () => {
+  assert.deepEqual(coNabidnout({ druh: 'nic' }, aktualni), { druh: 'nic' });
+  assert.deepEqual(coNabidnout({ druh: 'nejde' }, null), { druh: 'nic' });
+  assert.equal(popisNabidky({ druh: 'nic' }), null);
+});
+
+await zkus('odpověď nativního modulu: tři známé stavy', () => {
+  assert.deepEqual(
+    zOdpovediModulu({ druh: 'nabizi', cisloBalicku: 19, okamzita: true }),
+    { druh: 'nabizi', cisloBalicku: 19, okamzita: true },
+  );
+  assert.deepEqual(zOdpovediModulu({ druh: 'probiha', cisloBalicku: 19, okamzita: true }), { druh: 'probiha' });
+  assert.deepEqual(zOdpovediModulu({ druh: 'nic', cisloBalicku: null, okamzita: false }), { druh: 'nic' });
+});
+
+await zkus('neznámý stav z Kotlinu není „nic nového"', () => {
+  // Rozejde-li se jméno stavu mezi Kotlinem a TypeScriptem, „nic" by
+  // znamenalo „jsi aktuální" — tedy přesně ta lež, kvůli které to vzniklo.
+  assert.deepEqual(zOdpovediModulu({ druh: 'nabízí', cisloBalicku: 19, okamzita: true }), { druh: 'nejde' });
+  assert.deepEqual(zOdpovediModulu({ druh: 'UNKNOWN', cisloBalicku: null, okamzita: false }), { druh: 'nejde' });
+  assert.deepEqual(zOdpovediModulu(null), { druh: 'nejde' });
+  assert.deepEqual(zOdpovediModulu(undefined), { druh: 'nejde' });
+});
+
+await zkus('chybějící číslo ani okamžitost si převod nevymyslí', () => {
+  const o = { druh: 'nabizi', cisloBalicku: '19', okamzita: 'ano' } as unknown as OdpovedModulu;
+  assert.deepEqual(zOdpovediModulu(o), { druh: 'nabizi', cisloBalicku: null, okamzita: false });
+});
+
+await zkus('věta k aktualizaci řekne, že se appka sama restartuje', () => {
+  // Bez toho by restart po aktualizaci vypadal jako pád.
+  assert.match(popisNabidky({ druh: 'aktualizovat', cisloBalicku: 19 }) ?? '', /restartuje/);
 });
 
 console.log(`  ${prosly} prošlo`);

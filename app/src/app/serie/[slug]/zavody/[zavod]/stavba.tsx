@@ -60,6 +60,7 @@ import {
 } from '@/lib/stavba/fronta';
 import { odesliFrontu } from '@/lib/stavba/odesilani';
 import { popisPresnosti, posud, type Fix } from '@/lib/stavba/poloha';
+import { useZamekRestartu } from '@/lib/restart';
 
 /**
  * Stavitel trati: pípni, popojeď, pípni.
@@ -156,6 +157,9 @@ export default function StavbaTrati() {
   const [volba, setVolba] = useState<Volba | null>(null);
   const [znaceni, setZnaceni] = useState<Predvolba>(VYCHOZI_ZNACENI);
   const [body, setBody] = useState<Fix[]>([]);
+  // Rozpracovaný prvek je jen v paměti: restart by zahodil změřené body
+  // a stavitel by bóji objížděl znovu.
+  useZamekRestartu('stavba', typ !== null || body.length > 0 || posila);
   const [smer, setSmer] = useState<(typeof SMERY)[number] | null>(null);
 
   const odemkni = useCallback(async () => {
