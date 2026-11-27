@@ -126,4 +126,60 @@ public class OpenApiTests(PostgresFixture fixture)
         Assert.True(vydani.TryGetProperty("otisk", out _));
         Assert.True(vydani.TryGetProperty("vydanoV", out _));
     }
+
+    /// <summary>
+    /// <b>Flotila je v dokumentu</b>, protože z něj bere tvary web —
+    /// obrazovka správy i profil s balíčkem telefonu. A výčty v něm musí
+    /// nést <b>tatáž slova, jaká jdou po drátě</b> (<c>stary-balicek</c>,
+    /// ne <c>StaryBalicek</c>): vygenerovaný klient by jinak porovnával
+    /// s hodnotou, která nikdy nepřijde, a nespadlo by nic.
+    /// </summary>
+    [Fact]
+    public async Task Dokument_nese_flotilu_a_publikace()
+    {
+        var klient = fixture.CreateClient();
+
+        using var dokument = JsonDocument.Parse(
+            await (await klient.GetAsync("/openapi/v1.json")).Content.ReadAsStringAsync());
+        var schemata = dokument.RootElement.GetProperty("components").GetProperty("schemas");
+
+        // Výčet použitý i jako nepovinná vlastnost nese v seznamu navíc
+        // `null` — tak ho exportér popisuje a klient ho tak má i dostat.
+        // Porovnávají se slova, ne to, jestli smí chybět.
+        string[] Hodnoty(string vycet) =>
+        [
+            .. schemata.GetProperty(vycet).GetProperty("enum").EnumerateArray()
+                .Where(e => e.ValueKind != JsonValueKind.Null)
+                .Select(e => e.GetString()!),
+        ];
+
+        Assert.Equal(
+            ["aktualni", "stary-balicek", "stara-aktualizace", "nouzove", "bez-hlaseni"],
+            Hodnoty("StavVerzeAppky"));
+        Assert.Equal(["ucet", "lod", "zarizeni"], Hodnoty("DruhIdentityFlotily"));
+        Assert.Equal(["vestavena", "stazena", "nouzova"], Hodnoty("SpusteniAppky"));
+
+        var radek = schemata.GetProperty("FlotilaRadekDto").GetProperty("properties");
+        foreach (var pole in new[]
+                 {
+                     "druh", "popis", "platforma", "cisloBalicku", "kanal", "spusteni", "aktualizace",
+                     "ceka", "odV", "hlasenoV", "aktivniV", "stav", "posledniCisloBalicku",
+                     "posledniAktualizace",
+                 })
+            Assert.True(radek.TryGetProperty(pole, out _), $"FlotilaRadekDto nemá „{pole}“.");
+
+        Assert.True(schemata.GetProperty("FlotilaDto").GetProperty("properties").TryGetProperty("souhrn", out _));
+        Assert.True(schemata.GetProperty("FlotilaSouhrnDto").GetProperty("properties").TryGetProperty("aktualni", out _));
+        Assert.True(schemata.GetProperty("PublikaceAppkyDto").GetProperty("properties").TryGetProperty("aktualizace", out _));
+
+        // Vstup z CI: přesně tahle pole čte skript v CI.
+        var zapis = schemata.GetProperty("ZapisPublikaceAppky").GetProperty("properties");
+        foreach (var pole in new[] { "platforma", "kanal", "otisk", "aktualizace", "commit" })
+            Assert.True(zapis.TryGetProperty(pole, out _), $"ZapisPublikaceAppky nemá „{pole}“.");
+
+        // Profil: balíček a stav u napojeného telefonu.
+        var klic = schemata.GetProperty("KlicUctuDto").GetProperty("properties");
+        Assert.True(klic.TryGetProperty("cisloBalicku", out _));
+        Assert.True(klic.TryGetProperty("stavVerze", out _));
+    }
 }

@@ -1,5 +1,6 @@
 import { tokenZeSezeni } from "@/lib/oidc";
 import type { Stav } from "@/lib/sprava";
+import type { components } from "./schema";
 
 /**
  * Napojení telefonu na účet — QR na vlastním profilu, jako WhatsApp.
@@ -13,21 +14,39 @@ import type { Stav } from "@/lib/sprava";
  * dostane do uživatelského profilu v rámci webu, tak tam může být
  * informace moje identifikace s QR kódem."*
  *
- * <b>Tvary jsou psané ručně, ne ze schématu.</b> Snímek OpenAPI se
- * generuje z běžícího serveru a ten tyhle cesty dostane až po nasazení;
- * až se přegeneruje, zmizí to ve prospěch `components["schemas"][…]`.
- * Stejný postup jako u `ZavodnikDnes` v appce.
+ * <b>Tvary jsou ze schématu.</b> Do 27. 11. 2026 tu byly psané ručně, než
+ * se snímek OpenAPI přegeneroval; s balíčkem a stavem telefonu by ruční
+ * kopie musela hlídat i slova stavů, a ta se mají brát odtud.
  */
 
 const API = process.env.API_URL ?? "http://localhost:8080";
 
-export type NapojeniKod = { kod: string; platiDo: string };
-export type KlicUctu = {
-  id: number;
-  zarizeni: string | null;
-  vydanV: string;
-  ozvalSeV: string | null;
-};
+type S = components["schemas"];
+
+export type NapojeniKod = S["NapojeniKodDto"];
+export type KlicUctu = S["KlicUctuDto"];
+export type StavVerze = S["StavVerzeAppky"];
+
+/**
+ * Stav telefonu tak, jak ho čte jeho majitel — <b>jen když je známý</b>.
+ * Telefon, který se nehlásil, nemá nic: „neznámý" na profilu by vypadal
+ * jako porucha, přitom jen jede na appce, která verzi ještě nehlásí.
+ * Správa vidí podrobnosti ve flotile; tady stačí, jestli je co dělat.
+ */
+export function stavTelefonu(stav: StavVerze): { text: string; trida: string } | null {
+  switch (stav) {
+    case "aktualni":
+      return { text: "aktuální", trida: "stav-verze-aktualni" };
+    case "stara-aktualizace":
+      return { text: "zastaralý — novinky si stáhne sám při příštím spuštění", trida: "stav-verze-stara-aktualizace" };
+    case "stary-balicek":
+      return { text: "zastaralý — nová verze je v obchodě", trida: "stav-verze-stary-balicek" };
+    case "nouzove":
+      return { text: "zastaralý — poslední aktualizace se nespustila", trida: "stav-verze-nouzove" };
+    default:
+      return null;
+  }
+}
 
 /**
  * Adresa, která se zabalí do QR.

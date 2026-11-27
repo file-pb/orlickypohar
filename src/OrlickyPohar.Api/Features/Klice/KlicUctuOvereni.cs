@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
+using OrlickyPohar.Api.Features.Appka;
 
 namespace OrlickyPohar.Api.Features.Klice;
 
@@ -53,7 +54,9 @@ public class KlicUctuHandler(
         // poradí.
         if (string.IsNullOrWhiteSpace(hodnota)) return AuthenticateResult.NoResult();
 
-        if (await klice.OverAsync(hodnota, Context.RequestAborted) is not { } klic)
+        // Verze appky jde do téhož zápisu jako ozvání. Je to telemetrie:
+        // neplatná hlavička je `null` a na ověření klíče nemá vliv.
+        if (await klice.OverAsync(hodnota, Context.RequestAborted, VerzeAppky.Z(Context)) is not { } klic)
             return AuthenticateResult.Fail("Neznámý nebo odebraný klíč k účtu.");
 
         var totoznost = new ClaimsIdentity(

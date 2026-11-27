@@ -1,3 +1,4 @@
+using OrlickyPohar.Api.Features.Appka;
 using OrlickyPohar.Api.Features.Identita;
 
 namespace OrlickyPohar.Api.Features.Klice;
@@ -37,7 +38,7 @@ namespace OrlickyPohar.Api.Features.Klice;
 /// Takhle se role dál udělují na webu a mění se bez sahání na telefon.
 /// </para>
 /// </summary>
-public class KlicUctu
+public class KlicUctu : IHlasiVerzi
 {
     public int Id { get; set; }
 
@@ -76,6 +77,34 @@ public class KlicUctu
 
     /// <summary>Platí ten klíč teď?</summary>
     public bool Platny => OdebranV is null;
+
+    // --- Na čem telefon jede (X-Appka-Verze) -------------------------------
+    // Popis polí je u rozhraní. Předpona „Verze" je schválně: `Otisk`
+    // výš je otisk tajemství, ne otisk appky.
+
+    /// <inheritdoc/>
+    public string? VerzePlatforma { get; set; }
+
+    /// <inheritdoc/>
+    public string? VerzeOtisk { get; set; }
+
+    /// <inheritdoc/>
+    public Guid? VerzeAktualizace { get; set; }
+
+    /// <inheritdoc/>
+    public string? VerzeKanal { get; set; }
+
+    /// <inheritdoc/>
+    public SpusteniAppky? VerzeSpusteni { get; set; }
+
+    /// <inheritdoc/>
+    public Guid? VerzeCeka { get; set; }
+
+    /// <inheritdoc/>
+    public DateTimeOffset? VerzeOdV { get; set; }
+
+    /// <inheritdoc/>
+    public DateTimeOffset? VerzeHlasenaV { get; set; }
 }
 
 /// <summary>
@@ -126,8 +155,15 @@ public record NapojeniKodDto(string Kod, DateTimeOffset PlatiDo);
 public record NapojeniDto(string Klic, string Zobrazovane);
 
 /// <summary>Napojený telefon v seznamu na profilu.</summary>
+/// <param name="CisloBalicku">
+/// Balíček, na kterém telefon jede, dopočtený z otisku v hlášení. <c>null</c>,
+/// když se nehlásil nebo jeho otisk mezi vydanými není.
+/// </param>
+/// <param name="StavVerze">Stav proti tomu, co je venku. Stejný výpočet jako v přehledu flotily.</param>
 public record KlicUctuDto(
     int Id,
     string? Zarizeni,
     DateTimeOffset VydanV,
-    DateTimeOffset? OzvalSeV);
+    DateTimeOffset? OzvalSeV,
+    int? CisloBalicku,
+    StavVerzeAppky StavVerze);

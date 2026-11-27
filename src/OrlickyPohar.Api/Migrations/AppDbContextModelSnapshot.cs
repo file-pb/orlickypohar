@@ -23,6 +23,49 @@ namespace OrlickyPohar.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Appka.PublikaceAppky", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("Aktualizace")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Commit")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Kanal")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Otisk")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Platforma")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset>("PublikovanoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PublikovanoV");
+
+                    b.HasIndex("Platforma", "Kanal", "Otisk", "Aktualizace")
+                        .IsUnique();
+
+                    b.ToTable("PublikaceAppky", (string)null);
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Appka.VydaniAppky", b =>
                 {
                     b.Property<int>("Id")
@@ -513,6 +556,34 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<bool>("Sleduje")
                         .HasColumnType("boolean");
 
+                    b.Property<Guid?>("VerzeAktualizace")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("VerzeCeka")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("VerzeHlasenaV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerzeKanal")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("VerzeOdV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerzeOtisk")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("VerzePlatforma")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("VerzeSpusteni")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
                     b.Property<Guid?>("VydalId")
                         .HasColumnType("uuid");
 
@@ -555,6 +626,34 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.Property<Guid>("UzivatelId")
                         .HasColumnType("uuid");
+
+                    b.Property<Guid?>("VerzeAktualizace")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("VerzeCeka")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("VerzeHlasenaV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerzeKanal")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("VerzeOdV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerzeOtisk")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("VerzePlatforma")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("VerzeSpusteni")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
 
                     b.Property<DateTimeOffset>("VydanV")
                         .HasColumnType("timestamp with time zone");
@@ -1749,6 +1848,34 @@ namespace OrlickyPohar.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("VerzeAktualizace")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("VerzeCeka")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("VerzeHlasenaV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerzeKanal")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("VerzeOdV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerzeOtisk")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("VerzePlatforma")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("VerzeSpusteni")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
 
                     b.Property<DateTimeOffset>("ZapsanoV")
                         .HasColumnType("timestamp with time zone");

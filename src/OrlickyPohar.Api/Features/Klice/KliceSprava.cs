@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Appka;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Zavody;
 
@@ -133,20 +134,29 @@ public class KliceSprava(AppDbContext db, TimeProvider cas)
     public async Task<KlicLodi?> ZHlavickyAsync(HttpContext ctx, CancellationToken ct)
     {
         var hodnota = ctx.Request.Headers[Hlavicka].ToString();
-        return string.IsNullOrWhiteSpace(hodnota) ? null : await OverAsync(hodnota, ct);
+        return string.IsNullOrWhiteSpace(hodnota)
+            ? null
+            : await OverAsync(hodnota, ct, VerzeAppky.Z(ctx));
     }
 
     /// <summary>
     /// Najde klíč podle tajemství a zapíše, že se ozval. Vrací `null`
     /// u neznámého, odebraného i odepnutého — volající z toho nemá co číst.
+    /// <para>
+    /// S ozváním se zapíše i <paramref name="verze"/> appky — v tomtéž
+    /// uložení, k identitě, kterou klíč právě prokázal. Bez platné hlavičky
+    /// zůstane uložené hlášení, jak bylo.
+    /// </para>
     /// </summary>
-    public async Task<KlicLodi?> OverAsync(string klic, CancellationToken ct)
+    public async Task<KlicLodi?> OverAsync(string klic, CancellationToken ct, VerzeAppky? verze = null)
     {
         var otisk = Otisk(klic);
         var nalezeny = await db.Klice.FirstOrDefaultAsync(k => k.Otisk == otisk, ct);
         if (nalezeny is null || !nalezeny.Platny) return null;
 
-        nalezeny.PosledniPouzitiV = cas.GetUtcNow();
+        var ted = cas.GetUtcNow();
+        nalezeny.PosledniPouzitiV = ted;
+        if (verze is not null) VerzeAppky.Zapis(nalezeny, verze, ted);
         await db.SaveChangesAsync(ct);
         return nalezeny;
     }
@@ -216,10 +226,15 @@ public class KliceSprava(AppDbContext db, TimeProvider cas)
     /// ji neposílá, a bylo by horší zapomenout, co se vědělo.
     /// </para>
     /// </summary>
-    public async Task HlasSeAsync(KlicLodi klic, int? baterieProcent, CancellationToken ct)
+    public async Task HlasSeAsync(
+        KlicLodi klic, int? baterieProcent, CancellationToken ct, VerzeAppky? verze = null)
     {
-        klic.PosledniPouzitiV = cas.GetUtcNow();
+        var ted = cas.GetUtcNow();
+        klic.PosledniPouzitiV = ted;
         if (baterieProcent is { } procent) klic.BaterieProcent = procent;
+        // Hlásí se úloha na pozadí, takže tohle je cesta, kudy verze doteče
+        // i z telefonu, který appku zrovna nemá otevřenou.
+        if (verze is not null) VerzeAppky.Zapis(klic, verze, ted);
         await db.SaveChangesAsync(ct);
     }
 

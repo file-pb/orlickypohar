@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import { Boky } from "@/app/boky";
 import { Drobecky } from "@/app/drobecky";
 import { datumClanku, okamzik } from "@/app/datum";
-import { adresaNapojeni, mojeKlice } from "@/lib/klice-uctu";
+import { adresaNapojeni, mojeKlice, stavTelefonu, type KlicUctu } from "@/lib/klice-uctu";
 import { kodKOpsani } from "@/lib/kod-k-opsani";
 import { vystavKodAkce, odeberKlicAkce } from "./akce";
 
@@ -104,6 +104,7 @@ export default async function MujUcet({ searchParams }: Parametry) {
                     ? `, naposledy se ozval ${datumClanku(k.ozvalSeV)}`
                     : ", zatím se neozval"}
                 </span>
+                <VerzeTelefonu klic={k} />
               </div>
               {/* <b>Odebrat je celá cesta ven po ztrátě telefonu</b>, takže
                   je u každého řádku, ne schované pod nastavením. */}
@@ -116,5 +117,23 @@ export default async function MujUcet({ searchParams }: Parametry) {
         </ul>
       )}
     </Boky>
+  );
+}
+
+/**
+ * Na čem telefon jede — <b>jen když to víme</b>. Stav počítá API stejně
+ * jako v přehledu flotily, aby si profil a správa o jednom telefonu
+ * neprotiřečily; telefon bez hlášení tu nemá nic.
+ */
+function VerzeTelefonu({ klic }: { klic: KlicUctu }) {
+  const verze = stavTelefonu(klic.stavVerze);
+  if (!verze) return null;
+
+  return (
+    <span className="detail">
+      {" "}
+      {klic.cisloBalicku !== null && <>balíček {klic.cisloBalicku} </>}
+      <span className={`stitek stav ${verze.trida}`}>{verze.text}</span>
+    </span>
   );
 }

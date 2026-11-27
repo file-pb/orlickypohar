@@ -1,3 +1,4 @@
+using OrlickyPohar.Api.Features.Appka;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Lode;
 
@@ -25,7 +26,7 @@ namespace OrlickyPohar.Api.Features.Klice;
 /// společný tok přihlášení pro web i appku.
 /// </para>
 /// </summary>
-public class KlicLodi
+public class KlicLodi : IHlasiVerzi
 {
     public int Id { get; set; }
 
@@ -108,6 +109,34 @@ public class KlicLodi
 
     /// <summary>Klíč, kterým se smí posílat: existuje, není odebraný a sleduje.</summary>
     public bool Platny => OdebranV is null && Sleduje;
+
+    // --- Na čem telefon jede (X-Appka-Verze) -------------------------------
+    // Popis polí je u rozhraní. Předpona „Verze" je schválně: `Otisk`
+    // výš je otisk tajemství, ne otisk appky.
+
+    /// <inheritdoc/>
+    public string? VerzePlatforma { get; set; }
+
+    /// <inheritdoc/>
+    public string? VerzeOtisk { get; set; }
+
+    /// <inheritdoc/>
+    public Guid? VerzeAktualizace { get; set; }
+
+    /// <inheritdoc/>
+    public string? VerzeKanal { get; set; }
+
+    /// <inheritdoc/>
+    public SpusteniAppky? VerzeSpusteni { get; set; }
+
+    /// <inheritdoc/>
+    public Guid? VerzeCeka { get; set; }
+
+    /// <inheritdoc/>
+    public DateTimeOffset? VerzeOdV { get; set; }
+
+    /// <inheritdoc/>
+    public DateTimeOffset? VerzeHlasenaV { get; set; }
 }
 
 /// <summary>

@@ -605,6 +605,13 @@ export function polozkyWebu(udelena: Udelena[]): Polozka[] {
       role: "Spravce",
       pozadavek: { role: "Spravce", serie: null },
     },
+    {
+      nazev: "Flotila",
+      popis: "Na čem jede který telefon a jestli se aktualizuje.",
+      kam: "/sprava/flotila",
+      role: "Spravce",
+      pozadavek: { role: "Spravce", serie: null },
+    },
   ];
 
   return vse.filter((p) => smi(udelena, p.pozadavek)).map(({ pozadavek: _, ...p }) => p);

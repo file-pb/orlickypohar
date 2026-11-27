@@ -1,3 +1,5 @@
+using OrlickyPohar.Api.Features.Appka;
+
 namespace OrlickyPohar.Api.Features.Upozorneni;
 
 /// <summary>Co appka posílá při registraci k odběru.</summary>
@@ -26,10 +28,10 @@ public static class UpozorneniEndpoints
     }
 
     private static async Task<IResult> ZapisAsync(
-        ZarizeniVstup vstup, UpozorneniSprava sprava, CancellationToken ct)
+        ZarizeniVstup vstup, HttpContext ctx, UpozorneniSprava sprava, CancellationToken ct)
     {
         var chyba = await sprava.ZapisZarizeniAsync(
-            vstup.Token, vstup.Platforma, vstup.Odbery ?? [], ct);
+            vstup.Token, vstup.Platforma, vstup.Odbery ?? [], ct, VerzeAppky.Z(ctx));
 
         return chyba is null ? Results.NoContent() : Results.BadRequest(new { error = chyba });
     }

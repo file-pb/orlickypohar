@@ -527,6 +527,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/appka/publikace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Zápis publikované aktualizace appky z CI
+         * @description Chráněno tokenem v hlavičce X-Vydani-Token, stejným jako zápis vydání. Idempotentní podle platformy, kanálu, otisku a aktualizace: opakované odeslání téhož nic nezdvojí a čas prvního zápisu zůstane. Podle toho, co přišlo naposledy, pozná přehled flotily, jestli telefon jede na nejnovější aktualizaci.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZapisPublikaceAppky"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZapisPublikaceAppkyVysledek"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/lode/napoveda": {
         parameters: {
             query?: never;
@@ -1681,6 +1738,98 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["NakladyDto"];
                     };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/flotila": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Na čem jede flotila: řádek na identitu a souhrn po druzích
+         * @description Vyžaduje roli správce celého webu. Identita je klíč k účtu, klíč k lodi nebo zařízení k upozorněním; jeden telefon jich může mít víc, proto se souhrn nesčítá přes druhy. Stav se měří proti poslednímu vydanému balíčku platformy a poslední publikované aktualizaci kanálu a otisku. Odebrané klíče se nevypisují.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FlotilaDto"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/flotila/publikace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Poslední publikované aktualizace appky
+         * @description Vyžaduje roli správce celého webu. Nejvýš 50 posledních, od nejnovější. Zapisuje je CI přes POST /appka/publikace.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublikaceAppkyDto"][];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -7925,6 +8074,8 @@ export interface components {
             doSerie: boolean;
         };
         /** @enum {unknown} */
+        DruhIdentityFlotily: "ucet" | "lod" | "zarizeni";
+        /** @enum {unknown} */
         DruhProcedury: "Spustit" | "Odlozit" | "Odvolat" | "OpakovacDolu";
         /** @enum {unknown} */
         DruhStartu: "PevnaLinie" | "OtevirajiciSeBrana" | null;
@@ -7941,6 +8092,53 @@ export interface components {
         DruhZnaceni: "DrahaPrava" | "DrahaLeva" | "DrahaSport" | "DrahaZakaz" | "NaseBoje" | "Plavidlo" | "ObjektNaBrehu" | null;
         /** @enum {unknown} */
         DruhZpravy: "Informace" | "Program" | "Vystraha";
+        FlotilaDto: {
+            souhrn: components["schemas"]["FlotilaSouhrnDto"][];
+            radky: components["schemas"]["FlotilaRadekDto"][];
+            balicky: components["schemas"]["PosledniBalicekDto"][];
+        };
+        FlotilaRadekDto: {
+            druh: components["schemas"]["DruhIdentityFlotily"];
+            /** Format: int32 */
+            id: number;
+            popis: string;
+            platforma: null | string;
+            /** Format: int32 */
+            cisloBalicku: null | number;
+            otisk: null | string;
+            kanal: null | string;
+            spusteni: null | components["schemas"]["SpusteniAppky"];
+            /** Format: uuid */
+            aktualizace: null | string;
+            /** Format: uuid */
+            ceka: null | string;
+            /** Format: date-time */
+            odV: null | string;
+            /** Format: date-time */
+            hlasenoV: null | string;
+            /** Format: date-time */
+            aktivniV: null | string;
+            stav: components["schemas"]["StavVerzeAppky"];
+            /** Format: int32 */
+            posledniCisloBalicku: null | number;
+            /** Format: uuid */
+            posledniAktualizace: null | string;
+        };
+        FlotilaSouhrnDto: {
+            druh: components["schemas"]["DruhIdentityFlotily"];
+            /** Format: int32 */
+            celkem: number;
+            /** Format: int32 */
+            aktualni: number;
+            /** Format: int32 */
+            staryBalicek: number;
+            /** Format: int32 */
+            staraAktualizace: number;
+            /** Format: int32 */
+            nouzove: number;
+            /** Format: int32 */
+            bezHlaseni: number;
+        };
         /**
          * @default Text
          * @enum {unknown}
@@ -8037,6 +8235,9 @@ export interface components {
             vydanV: string;
             /** Format: date-time */
             ozvalSeV: null | string;
+            /** Format: int32 */
+            cisloBalicku: null | number;
+            stavVerze: components["schemas"]["StavVerzeAppky"];
         };
         KlonTratiVstup: {
             /** Format: int32 */
@@ -8544,6 +8745,14 @@ export interface components {
              */
             verzePravidel: number;
         };
+        PosledniBalicekDto: {
+            platforma: string;
+            /** Format: int32 */
+            cisloBalicku: number;
+            otisk: string;
+            /** Format: date-time */
+            vydanoV: string;
+        };
         PostavPrvekVstup: {
             /** Format: uuid */
             klic: string;
@@ -8749,6 +8958,18 @@ export interface components {
             smer?: null | components["schemas"]["SvetovaStrana"];
             druhStartu?: null | components["schemas"]["DruhStartu"];
             konecBZnaceni?: null | components["schemas"]["DruhZnaceni"];
+        };
+        PublikaceAppkyDto: {
+            platforma: string;
+            kanal: string;
+            otisk: string;
+            /** Format: uuid */
+            aktualizace: string;
+            commit: null | string;
+            /** Format: date-time */
+            publikovanoV: string;
+            /** Format: int32 */
+            cisloBalicku: null | number;
         };
         PublikaceSerieVstup: {
             publikovano: boolean;
@@ -8979,6 +9200,8 @@ export interface components {
             radky: components["schemas"]["ZapisRadekVstup"][];
             neprecteno: null | string[];
         };
+        /** @enum {unknown} */
+        SpusteniAppky: "vestavena" | "stazena" | "nouzova" | null;
         StartovneVstup: {
             zaplaceno: boolean;
             poznamka?: null | string;
@@ -9008,6 +9231,8 @@ export interface components {
             stav: components["schemas"]["StavUcasti"];
             duvod?: null | string;
         };
+        /** @enum {unknown} */
+        StavVerzeAppky: "aktualni" | "stary-balicek" | "stara-aktualizace" | "nouzove" | "bez-hlaseni";
         StavVstup: {
             stav: components["schemas"]["StavClanku"];
         };
@@ -9436,6 +9661,16 @@ export interface components {
             /** @default false */
             naRegate: boolean;
             poznavaciZnak?: null | string;
+        };
+        ZapisPublikaceAppky: {
+            platforma: string;
+            kanal: string;
+            otisk: string;
+            aktualizace: string;
+            commit: null | string;
+        };
+        ZapisPublikaceAppkyVysledek: {
+            nove: boolean;
         };
         ZapisRadekVstup: {
             /** Format: int32 */

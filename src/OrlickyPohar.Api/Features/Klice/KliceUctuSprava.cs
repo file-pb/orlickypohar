@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Appka;
 
 namespace OrlickyPohar.Api.Features.Klice;
 
@@ -106,8 +107,15 @@ public class KliceUctuSprava(AppDbContext db, TimeProvider cas)
     /// které se mění při každém požadavku, a projít kvůli němu celý
     /// <c>SaveChanges</c> by znamenalo zápis navíc u každého dotazu.
     /// </para>
+    /// <para>
+    /// <b>Verze appky jede v tomtéž příkazu</b> (<paramref name="verze"/>,
+    /// z hlavičky <see cref="VerzeAppky.Hlavicka"/>). Zápis ozvání se dělá
+    /// tak jako tak, takže hlášení nestojí jediný dotaz navíc — a ukládá se
+    /// jen k identitě, kterou klíč právě prokázal. Bez platné hlavičky se
+    /// uložené hlášení nechává, jak je.
+    /// </para>
     /// </summary>
-    public async Task<KlicUctu?> OverAsync(string klic, CancellationToken ct)
+    public async Task<KlicUctu?> OverAsync(string klic, CancellationToken ct, VerzeAppky? verze = null)
     {
         var otisk = Otisk(klic);
         var nalezeny = await db.KliceUctu
@@ -117,20 +125,59 @@ public class KliceUctuSprava(AppDbContext db, TimeProvider cas)
         if (nalezeny is null || !nalezeny.Platny) return null;
 
         var ted = cas.GetUtcNow();
+        if (verze is not null) VerzeAppky.Zapis(nalezeny, verze, ted);
+
         await db.KliceUctu
             .Where(k => k.Id == nalezeny.Id)
-            .ExecuteUpdateAsync(s => s.SetProperty(k => k.OzvalSeV, ted), ct);
+            .ExecuteUpdateAsync(s =>
+            {
+                s.SetProperty(k => k.OzvalSeV, ted);
+                if (verze is null) return;
 
+                s.SetProperty(k => k.VerzePlatforma, nalezeny.VerzePlatforma);
+                s.SetProperty(k => k.VerzeOtisk, nalezeny.VerzeOtisk);
+                s.SetProperty(k => k.VerzeAktualizace, nalezeny.VerzeAktualizace);
+                s.SetProperty(k => k.VerzeKanal, nalezeny.VerzeKanal);
+                s.SetProperty(k => k.VerzeSpusteni, nalezeny.VerzeSpusteni);
+                s.SetProperty(k => k.VerzeCeka, nalezeny.VerzeCeka);
+                s.SetProperty(k => k.VerzeOdV, nalezeny.VerzeOdV);
+                s.SetProperty(k => k.VerzeHlasenaV, nalezeny.VerzeHlasenaV);
+            }, ct);
+
+        nalezeny.OzvalSeV = ted;
         return nalezeny;
     }
 
-    /// <summary>Telefony napojené na tenhle účet. Odebrané se nevypisují.</summary>
-    public Task<List<KlicUctuDto>> MojeAsync(Guid uzivatelId, CancellationToken ct) =>
-        db.KliceUctu
+    /// <summary>
+    /// Telefony napojené na tenhle účet. Odebrané se nevypisují.
+    /// <para>
+    /// U každého i balíček a stav proti tomu, co je venku — tentýž výpočet
+    /// jako v přehledu flotily (<see cref="Vydano.Stav"/>), aby profil
+    /// a správa neříkaly o jednom telefonu dvě různé věci.
+    /// </para>
+    /// </summary>
+    public async Task<List<KlicUctuDto>> MojeAsync(Guid uzivatelId, CancellationToken ct)
+    {
+        var klice = await db.KliceUctu
+            .AsNoTracking()
             .Where(k => k.UzivatelId == uzivatelId && k.OdebranV == null)
             .OrderByDescending(k => k.VydanV)
-            .Select(k => new KlicUctuDto(k.Id, k.Zarizeni, k.VydanV, k.OzvalSeV))
             .ToListAsync(ct);
+
+        var vydano = await FlotilaEndpoints.NactiVydanoAsync(db, klice.Select(k => k.VerzeOtisk), ct);
+
+        return
+        [
+            .. klice.Select(k =>
+            {
+                var verze = VerzeAppky.Z(k);
+                return new KlicUctuDto(
+                    k.Id, k.Zarizeni, k.VydanV, k.OzvalSeV,
+                    verze is null ? null : vydano.CisloBalicku(verze.Platforma, verze.Otisk),
+                    vydano.Stav(verze));
+            }),
+        ];
+    }
 
     /// <summary>
     /// Odebere telefon. <b>Jen svůj</b> — cizí klíč není co odebírat cizí

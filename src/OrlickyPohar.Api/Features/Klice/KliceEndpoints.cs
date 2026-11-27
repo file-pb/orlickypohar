@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
+using OrlickyPohar.Api.Features.Appka;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Sprava;
 
@@ -253,7 +254,7 @@ public static class KliceEndpoints
     {
         if (await klice.ProSebeAsync(ctx, ct) is not { } klic) return TypedResults.Unauthorized();
 
-        await klice.HlasSeAsync(klic, Baterie(telo), ct);
+        await klice.HlasSeAsync(klic, Baterie(telo), ct, VerzeAppky.Z(ctx));
 
         var startV = klic.Platny
             ? (await zavodnik.DnesniAsync(klic.LodId, ct))?.Rozjizdka?.StartV

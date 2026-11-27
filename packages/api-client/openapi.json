@@ -405,6 +405,43 @@
                 }
             }
         },
+        "/appka/publikace": {
+            "post": {
+                "tags": [
+                    "Appka"
+                ],
+                "summary": "Z\u00e1pis publikovan\u00e9 aktualizace appky z CI",
+                "description": "Chr\u00e1n\u011bno tokenem v hlavi\u010dce X-Vydani-Token, stejn\u00fdm jako z\u00e1pis vyd\u00e1n\u00ed. Idempotentn\u00ed podle platformy, kan\u00e1lu, otisku a aktualizace: opakovan\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e nic nezdvoj\u00ed a \u010das prvn\u00edho z\u00e1pisu z\u016fstane. Podle toho, co p\u0159i\u0161lo naposledy, pozn\u00e1 p\u0159ehled flotily, jestli telefon jede na nejnov\u011bj\u0161\u00ed aktualizaci.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZapisPublikaceAppky"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZapisPublikaceAppkyVysledek"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/lode/napoveda": {
             "get": {
                 "tags": [
@@ -1342,6 +1379,57 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/sprava/flotila": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Na \u010dem jede flotila: \u0159\u00e1dek na identitu a souhrn po druz\u00edch",
+                "description": "Vy\u017eaduje roli spr\u00e1vce cel\u00e9ho webu. Identita je kl\u00ed\u010d k \u00fa\u010dtu, kl\u00ed\u010d k lodi nebo za\u0159\u00edzen\u00ed k upozorn\u011bn\u00edm; jeden telefon jich m\u016f\u017ee m\u00edt v\u00edc, proto se souhrn nes\u010d\u00edt\u00e1 p\u0159es druhy. Stav se m\u011b\u0159\u00ed proti posledn\u00edmu vydan\u00e9mu bal\u00ed\u010dku platformy a posledn\u00ed publikovan\u00e9 aktualizaci kan\u00e1lu a otisku. Odebran\u00e9 kl\u00ed\u010de se nevypisuj\u00ed.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FlotilaDto"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                }
+            }
+        },
+        "/sprava/flotila/publikace": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Posledn\u00ed publikovan\u00e9 aktualizace appky",
+                "description": "Vy\u017eaduje roli spr\u00e1vce cel\u00e9ho webu. Nejv\u00fd\u0161 50 posledn\u00edch, od nejnov\u011bj\u0161\u00ed. Zapisuje je CI p\u0159es POST /appka/publikace.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PublikaceAppkyDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     }
                 }
             }
@@ -8888,6 +8976,13 @@
                     }
                 }
             },
+            "DruhIdentityFlotily": {
+                "enum": [
+                    "ucet",
+                    "lod",
+                    "zarizeni"
+                ]
+            },
             "DruhProcedury": {
                 "enum": [
                     "Spustit",
@@ -8940,6 +9035,195 @@
                     "Program",
                     "Vystraha"
                 ]
+            },
+            "FlotilaDto": {
+                "required": [
+                    "souhrn",
+                    "radky",
+                    "balicky"
+                ],
+                "type": "object",
+                "properties": {
+                    "souhrn": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FlotilaSouhrnDto"
+                        }
+                    },
+                    "radky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FlotilaRadekDto"
+                        }
+                    },
+                    "balicky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PosledniBalicekDto"
+                        }
+                    }
+                }
+            },
+            "FlotilaRadekDto": {
+                "required": [
+                    "druh",
+                    "id",
+                    "popis",
+                    "platforma",
+                    "cisloBalicku",
+                    "otisk",
+                    "kanal",
+                    "spusteni",
+                    "aktualizace",
+                    "ceka",
+                    "odV",
+                    "hlasenoV",
+                    "aktivniV",
+                    "stav",
+                    "posledniCisloBalicku",
+                    "posledniAktualizace"
+                ],
+                "type": "object",
+                "properties": {
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhIdentityFlotily"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "popis": {
+                        "type": "string"
+                    },
+                    "platforma": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "cisloBalicku": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "otisk": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "kanal": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "spusteni": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SpusteniAppky"
+                            }
+                        ]
+                    },
+                    "aktualizace": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "uuid"
+                    },
+                    "ceka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "uuid"
+                    },
+                    "odV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "hlasenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "aktivniV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavVerzeAppky"
+                    },
+                    "posledniCisloBalicku": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "posledniAktualizace": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "uuid"
+                    }
+                }
+            },
+            "FlotilaSouhrnDto": {
+                "required": [
+                    "druh",
+                    "celkem",
+                    "aktualni",
+                    "staryBalicek",
+                    "staraAktualizace",
+                    "nouzove",
+                    "bezHlaseni"
+                ],
+                "type": "object",
+                "properties": {
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhIdentityFlotily"
+                    },
+                    "celkem": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "aktualni": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "staryBalicek": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "staraAktualizace": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nouzove": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "bezHlaseni": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
             },
             "FormatClanku": {
                 "enum": [
@@ -9276,7 +9560,9 @@
                     "id",
                     "zarizeni",
                     "vydanV",
-                    "ozvalSeV"
+                    "ozvalSeV",
+                    "cisloBalicku",
+                    "stavVerze"
                 ],
                 "type": "object",
                 "properties": {
@@ -9300,6 +9586,16 @@
                             "string"
                         ],
                         "format": "date-time"
+                    },
+                    "cisloBalicku": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "stavVerze": {
+                        "$ref": "#/components/schemas/StavVerzeAppky"
                     }
                 }
             },
@@ -11349,6 +11645,31 @@
                     }
                 }
             },
+            "PosledniBalicekDto": {
+                "required": [
+                    "platforma",
+                    "cisloBalicku",
+                    "otisk",
+                    "vydanoV"
+                ],
+                "type": "object",
+                "properties": {
+                    "platforma": {
+                        "type": "string"
+                    },
+                    "cisloBalicku": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "otisk": {
+                        "type": "string"
+                    },
+                    "vydanoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
             "PostavPrvekVstup": {
                 "required": [
                     "klic",
@@ -12210,6 +12531,50 @@
                     }
                 }
             },
+            "PublikaceAppkyDto": {
+                "required": [
+                    "platforma",
+                    "kanal",
+                    "otisk",
+                    "aktualizace",
+                    "commit",
+                    "publikovanoV",
+                    "cisloBalicku"
+                ],
+                "type": "object",
+                "properties": {
+                    "platforma": {
+                        "type": "string"
+                    },
+                    "kanal": {
+                        "type": "string"
+                    },
+                    "otisk": {
+                        "type": "string"
+                    },
+                    "aktualizace": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "commit": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "publikovanoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "cisloBalicku": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    }
+                }
+            },
             "PublikaceSerieVstup": {
                 "required": [
                     "publikovano"
@@ -13043,6 +13408,14 @@
                     }
                 }
             },
+            "SpusteniAppky": {
+                "enum": [
+                    "vestavena",
+                    "stazena",
+                    "nouzova",
+                    null
+                ]
+            },
             "StartovneVstup": {
                 "required": [
                     "zaplaceno"
@@ -13157,6 +13530,15 @@
                         ]
                     }
                 }
+            },
+            "StavVerzeAppky": {
+                "enum": [
+                    "aktualni",
+                    "stary-balicek",
+                    "stara-aktualizace",
+                    "nouzove",
+                    "bez-hlaseni"
+                ]
             },
             "StavVstup": {
                 "required": [
@@ -14861,6 +15243,47 @@
                             "null",
                             "string"
                         ]
+                    }
+                }
+            },
+            "ZapisPublikaceAppky": {
+                "required": [
+                    "platforma",
+                    "kanal",
+                    "otisk",
+                    "aktualizace",
+                    "commit"
+                ],
+                "type": "object",
+                "properties": {
+                    "platforma": {
+                        "type": "string"
+                    },
+                    "kanal": {
+                        "type": "string"
+                    },
+                    "otisk": {
+                        "type": "string"
+                    },
+                    "aktualizace": {
+                        "type": "string"
+                    },
+                    "commit": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "ZapisPublikaceAppkyVysledek": {
+                "required": [
+                    "nove"
+                ],
+                "type": "object",
+                "properties": {
+                    "nove": {
+                        "type": "boolean"
                     }
                 }
             },

@@ -1,3 +1,5 @@
+using OrlickyPohar.Api.Features.Appka;
+
 namespace OrlickyPohar.Api.Features.Upozorneni;
 
 /// <summary>Platforma zařízení. Rozhoduje jen o transportu uvnitř Expa.</summary>
@@ -24,7 +26,7 @@ public enum PlatformaZarizeni
 /// zapsat dvakrát a dostat všechno dvakrát.
 /// </para>
 /// </summary>
-public class Zarizeni
+public class Zarizeni : IHlasiVerzi
 {
     public int Id { get; set; }
 
@@ -49,6 +51,34 @@ public class Zarizeni
 
     /// <summary>Naposledy se ozvalo. Podle toho se uklízejí mrtvá zařízení.</summary>
     public DateTimeOffset NaposledyV { get; set; }
+
+    // --- Na čem telefon jede (X-Appka-Verze) -------------------------------
+    // Popis polí je u rozhraní. Zapisuje se při registraci, kterou appka
+    // dělá při každém spuštění tak jako tak.
+
+    /// <inheritdoc/>
+    public string? VerzePlatforma { get; set; }
+
+    /// <inheritdoc/>
+    public string? VerzeOtisk { get; set; }
+
+    /// <inheritdoc/>
+    public Guid? VerzeAktualizace { get; set; }
+
+    /// <inheritdoc/>
+    public string? VerzeKanal { get; set; }
+
+    /// <inheritdoc/>
+    public SpusteniAppky? VerzeSpusteni { get; set; }
+
+    /// <inheritdoc/>
+    public Guid? VerzeCeka { get; set; }
+
+    /// <inheritdoc/>
+    public DateTimeOffset? VerzeOdV { get; set; }
+
+    /// <inheritdoc/>
+    public DateTimeOffset? VerzeHlasenaV { get; set; }
 }
 
 /// <summary>

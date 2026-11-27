@@ -238,6 +238,7 @@ try
     app.MapPrevzate();
     app.MapTeplotaHladiny();
     app.MapVydaniAppky();
+    app.MapPublikaceAppky();
     app.MapNapovedu();
     app.MapVerejnePrihlasky();
     if (identita)
@@ -274,6 +275,7 @@ try
         app.MapTrat();
         app.MapSpravaPoradatelu();
         app.MapNaklady();
+        app.MapFlotila();
     }
 
     // Migrace při startu. U jedné repliky je to v pořádku a máš jistotu,

@@ -727,6 +727,18 @@ h2 { font-size: var(--pismo-nadpis); margin: 2.5rem 0 0.75rem; letter-spacing: -
    tlumeně, co nikdo nevidí; vodní modrá, co je venku; červená, co se
    právě přestavuje a veřejně znamená „počkej". */
 .stitek.stav-rozestaveno { color: var(--tlumeny); }
+/* Stav telefonu ve flotile. Tytéž barvy jako stavy výš: zelená je v pořádku,
+   modrá se spraví sama (stažená aktualizace), červená potřebuje člověka —
+   starý balíček z obchodu nebo nouzové spuštění. Bez hlášení tlumeně: neví se. */
+.stitek.stav-verze-aktualni { color: var(--stav-vypsany); }
+.stitek.stav-verze-stara-aktualizace { color: var(--voda); }
+.stitek.stav-verze-stary-balicek,
+.stitek.stav-verze-nouzove { color: var(--stav-zruseny); }
+.stitek.stav-verze-bez-hlaseni { color: var(--tlumeny); }
+/* V tabulce flotily štítek stojí v buňce sám, odsazení zleva by ho jen posunulo. */
+.tabulka-flotily .stitek { margin-left: 0; white-space: nowrap; }
+.tabulka-flotily td { white-space: nowrap; }
+.tabulka-flotily td:first-child { white-space: normal; min-width: 10rem; }
 .stitek.stav-hotovo { color: var(--stav-vypsany); }
 .stitek.stav-prijato { color: var(--voda); }
 .stitek.stav-prestavba { color: var(--stav-zruseny); }
@@ -6427,10 +6439,12 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
 .dlazdice-sekci > li[data-polozka="rocniky"] { --ukon: var(--ukon-regaty); }
 .dlazdice-sekci > li[data-polozka="opravneni-webu"] { --ukon: var(--ukon-uvod); }
 .dlazdice-sekci > li[data-polozka="naklady"] { --ukon: var(--ukon-uvod); }
+.dlazdice-sekci > li[data-polozka="flotila"] { --ukon: var(--ukon-uvod); }
 
 body:has(.vybrany-ukon[data-ukon="rocniky"]) { --ukon-strany: var(--ukon-regaty); }
 body:has(.vybrany-ukon[data-ukon="opravneni-webu"]) { --ukon-strany: var(--ukon-uvod); }
 body:has(.vybrany-ukon[data-ukon="naklady"]) { --ukon-strany: var(--ukon-uvod); }
+body:has(.vybrany-ukon[data-ukon="flotila"]) { --ukon-strany: var(--ukon-uvod); }
 
 /* Ročník jako řádek, ne karta: karta nesla pod jménem výčet obrazovek,
    které jsou o patro níž stejně v pruhu. */

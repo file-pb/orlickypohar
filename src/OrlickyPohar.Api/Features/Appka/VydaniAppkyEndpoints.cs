@@ -127,9 +127,13 @@ public static partial class VydaniAppkyEndpoints
         return new ZapisVydaniAppkyVysledek(false);
     }
 
+    /// <summary>
+    /// Tvar otisku. Sdílí ho zápis vydání, zápis publikace i hlavička
+    /// z telefonu: všechny tři se porovnávají znak po znaku mezi sebou.
+    /// </summary>
     [GeneratedRegex("^[A-Za-z0-9._-]{1,64}$")]
-    private static partial Regex Otisk();
+    internal static partial Regex Otisk();
 
     [GeneratedRegex("^[0-9a-f]{7,40}$")]
-    private static partial Regex Commit();
+    internal static partial Regex Commit();
 }

@@ -56,6 +56,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
     public DbSet<Features.Appka.VydaniAppky> VydaniAppky => Set<Features.Appka.VydaniAppky>();
+    public DbSet<Features.Appka.PublikaceAppky> PublikaceAppky => Set<Features.Appka.PublikaceAppky>();
     public DbSet<Uzivatel> Uzivatele => Set<Uzivatel>();
     public DbSet<UcetVazba> Vazby => Set<UcetVazba>();
     public DbSet<Opravneni> Opravneni => Set<Opravneni>();
@@ -329,6 +330,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Index zároveň slouží čtení od nejvyššího čísla v rámci platformy.
         vydani.HasIndex(x => new { x.Platforma, x.CisloBalicku }).IsUnique();
 
+        var publikace = b.Entity<Features.Appka.PublikaceAppky>();
+        publikace.ToTable("PublikaceAppky");
+        publikace.Property(x => x.Platforma).HasMaxLength(Features.Appka.VydaniAppky.PlatformaNejvic);
+        publikace.Property(x => x.Kanal).HasMaxLength(Features.Appka.VerzeAppky.KanalNejvic);
+        publikace.Property(x => x.Otisk).HasMaxLength(Features.Appka.VydaniAppky.OtiskNejvic);
+        publikace.Property(x => x.Commit).HasMaxLength(Features.Appka.VydaniAppky.CommitNejvic);
+        // Přirozený klíč: CI může tutéž publikaci poslat znovu a nic se
+        // nesmí zdvojit. Předpona (platforma, kanál, otisk) zároveň slouží
+        // otázce „co je pro tenhle telefon nejnovější".
+        publikace.HasIndex(x => new { x.Platforma, x.Kanal, x.Otisk, x.Aktualizace }).IsUnique();
+        // Výpis pro správu jde od nejnovější.
+        publikace.HasIndex(x => x.PublikovanoV);
+
         var fotka = b.Entity<Fotka>();
         fotka.Property(x => x.Id).ValueGeneratedNever();
         fotka.Property(x => x.Autor).HasMaxLength(Nahravani.AutorNejvic).IsRequired();
@@ -517,6 +531,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // zaregistroval.
         zarizeni.HasIndex(x => x.Token).IsUnique();
         zarizeni.Property(x => x.Odbery).HasMaxLength(2000).IsRequired();
+        VerzeAppky(zarizeni);
 
         var odeslani = b.Entity<Features.Upozorneni.Odeslani>();
         odeslani.Property(x => x.Odber).HasMaxLength(120).IsRequired();
@@ -555,6 +570,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // pohodlí. Unikátní proto, že tentýž otisk znamená totéž tajemství.
         klic.HasIndex(x => x.Otisk).IsUnique();
         klic.HasIndex(x => x.LodId);
+        VerzeAppky(klic);
 
         var okno = b.Entity<Features.Okna.OknoRegaty>();
         okno.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
@@ -610,6 +626,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // pohodlí. Unikátní proto, že tentýž otisk znamená totéž tajemství.
         klicUctu.HasIndex(x => x.Otisk).IsUnique();
         klicUctu.HasIndex(x => x.UzivatelId);
+        VerzeAppky(klicUctu);
 
         var napojeni = b.Entity<Features.Klice.NapojeniUctu>();
         napojeni.Property(x => x.Otisk).HasMaxLength(64).IsRequired();
@@ -676,5 +693,35 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .OnDelete(DeleteBehavior.Cascade);
         // „Mám to“ jednoho nesmí uzavřít sadu druhému.
         vyplneni.HasIndex(x => new { x.SadaId, x.KdoId }).IsUnique();
+    }
+
+    /// <summary>
+    /// Sloupce hlášení verze appky (<see cref="Features.Appka.IHlasiVerzi"/>),
+    /// stejné u klíče k účtu, klíče k lodi i zařízení. Délky jsou tytéž jako
+    /// u vydání, protože se s ním otisk a platforma porovnávají.
+    /// <para>
+    /// <b>Jména, ne výrazy</b>: vlastnost přes rozhraní by si EF musel
+    /// dohledat na typu entity, a jméno je jednoznačné vždycky.
+    /// </para>
+    /// <para>
+    /// <b>Spuštění jako text, ne číslo.</b> Je to telemetrie, do které se
+    /// kouká hlavně ručně a při nehodě — <c>'Nouzova'</c> se v SQL čte bez
+    /// převodní tabulky v hlavě, kdežto u čísla by stačilo přidat hodnotu
+    /// doprostřed výčtu a stará hlášení by tiše změnila význam. Místo navíc
+    /// je u flotily v řádu stovek telefonů zanedbatelné.
+    /// </para>
+    /// </summary>
+    private static void VerzeAppky<T>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<T> e)
+        where T : class, Features.Appka.IHlasiVerzi
+    {
+        e.Property<string?>(nameof(Features.Appka.IHlasiVerzi.VerzePlatforma))
+            .HasMaxLength(Features.Appka.VydaniAppky.PlatformaNejvic);
+        e.Property<string?>(nameof(Features.Appka.IHlasiVerzi.VerzeOtisk))
+            .HasMaxLength(Features.Appka.VydaniAppky.OtiskNejvic);
+        e.Property<string?>(nameof(Features.Appka.IHlasiVerzi.VerzeKanal))
+            .HasMaxLength(Features.Appka.VerzeAppky.KanalNejvic);
+        e.Property<Features.Appka.SpusteniAppky?>(nameof(Features.Appka.IHlasiVerzi.VerzeSpusteni))
+            .HasConversion<string>()
+            .HasMaxLength(16);
     }
 }

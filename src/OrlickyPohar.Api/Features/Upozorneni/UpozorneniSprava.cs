@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Appka;
 
 namespace OrlickyPohar.Api.Features.Upozorneni;
 
@@ -47,9 +48,16 @@ public class UpozorneniSprava(AppDbContext db, TimeProvider cas)
     /// protože Expo token po přeinstalaci mění — druhý zápis téhož tokenu
     /// proto jen přepíše odběry a čas, ne aby založil druhé zařízení.
     /// </para>
+    /// <para>
+    /// <b>Verze appky jde s ní</b> (<paramref name="verze"/>): registrace
+    /// běží při každém spuštění tak jako tak, a zařízení je jediná identita,
+    /// kterou má i telefon bez účtu a bez klíče. Až za kontrolou tvaru
+    /// tokenu — odmítnutá registrace nezapíše nic, ani verzi.
+    /// </para>
     /// </summary>
     public async Task<string?> ZapisZarizeniAsync(
-        string? token, PlatformaZarizeni platforma, IReadOnlyList<string> odbery, CancellationToken ct)
+        string? token, PlatformaZarizeni platforma, IReadOnlyList<string> odbery, CancellationToken ct,
+        VerzeAppky? verze = null)
     {
         if (Odbery.ProcNejdeZapsat(token, odbery) is { } chyba) return chyba;
 
@@ -57,14 +65,15 @@ public class UpozorneniSprava(AppDbContext db, TimeProvider cas)
         var zarizeni = await db.Zarizeni.FirstOrDefaultAsync(z => z.Token == token, ct);
         if (zarizeni is null)
         {
-            db.Zarizeni.Add(new Zarizeni
+            zarizeni = new Zarizeni
             {
                 Token = token!,
                 Platforma = platforma,
                 Odbery = Features.Upozorneni.Odbery.DoSloupce(odbery),
                 ZapsanoV = ted,
                 NaposledyV = ted,
-            });
+            };
+            db.Zarizeni.Add(zarizeni);
         }
         else
         {
@@ -72,6 +81,8 @@ public class UpozorneniSprava(AppDbContext db, TimeProvider cas)
             zarizeni.Odbery = Features.Upozorneni.Odbery.DoSloupce(odbery);
             zarizeni.NaposledyV = ted;
         }
+
+        if (verze is not null) VerzeAppky.Zapis(zarizeni, verze, ted);
 
         await db.SaveChangesAsync(ct);
         return null;

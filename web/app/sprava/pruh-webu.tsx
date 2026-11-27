@@ -51,7 +51,7 @@ export async function PruhWebu({
   aktivni,
   maRocniky = true,
 }: {
-  /** Klíč otevřeného tabu: `rocniky`, `clanky`, `opravneni-webu`, `naklady`. */
+  /** Klíč otevřeného tabu: `rocniky`, `clanky`, `opravneni-webu`, `naklady`, `flotila`. */
   aktivni?: string;
   /** Má přihlášený roli aspoň v jednom ročníku? Bez toho tab Ročníky nedává smysl. */
   maRocniky?: boolean;
