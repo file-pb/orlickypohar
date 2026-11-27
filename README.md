@@ -298,6 +298,15 @@ a hlídají ji testy. Existuje proto, že **lokálně se
 databáze rozjet nedá** — Docker Hub je z pracovního stroje nedostupný — a bez
 něj by se stránky nedaly vidět jinak než nasazením.
 
+Mock je **po sezóně**: sedm regat odjetých, jedna zrušená, všechno
+potvrzené. Den regaty v něm proto není vidět — nepotvrzená loď u prezence,
+upravitelný zápis, nepodepsané výsledky ani běžící rozjížďka.
+`DEN_REGATY=1 python3 tools/fake-api.py` přidá devátou, *Zkušební regatu*
+(`zkusebni-regata`) s dnešním datem: tři lodě čekají na prezenci, první
+rozjížďka je podepsaná a venku, druhá dojetá a nepodepsaná, třetí se jede
+a čtvrtá je naplánovaná. Časy se počítají od spuštění. Je to přepínač, ne
+výchozí stav, protože „po sezóně" je druhý stav, který se má dát vidět.
+
 Požadavky mlčí, dokud se o ně neřekne: `OP_LOG=1 python3 tools/fake-api.py`
 vypisuje každý na stderr jako `REQ "GET /ja/lode/3/naroky HTTP/1.1" 200`.
 Je to jediný způsob, jak ověřit, **kolik** dotazů která obrazovka posílá —

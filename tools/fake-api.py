@@ -32,6 +32,84 @@ KAT_PORADI = {k["nazev"]: k["poradi"] for k in D["kategorie"]}
 KAT_ID = {k["nazev"]: i + 1
           for i, k in enumerate(sorted(D["kategorie"], key=lambda k: k["poradi"]))}
 
+def _nasad_den_regaty():
+    """
+    Regata, která se jede **dnes** — jen na vyžádání: `DEN_REGATY=1`.
+
+    Proč existuje: konzilium nad revizí webu (27. 11. 2026) mělo osm oborů
+    a žádný neviděl den regaty. Mock je po sezóně, všechno je odjeté
+    a potvrzené, takže řádek přihlášky s nepotvrzenou lodí, upravitelný
+    zápis, nepodepsané výsledky ani cíl v běhu nebylo na čem změřit —
+    a co se o nich tvrdilo, bylo z kódu. Závěr z toho udělal první podmínku
+    stavby (`docs/konzilium/revize-webu/ZAVER.md`, oddíl *V jakém pořadí*).
+
+    Proč přepínač, a ne napořád: stav „po sezóně" je druhý, který se má dát
+    vidět, a oba naráz v jednom ročníku neexistují.
+
+    Proč nová regata, a ne přepsaná stávající: odjetých musí zůstat sedm,
+    jinak se hne průběžné pořadí, a zrušená musí zůstat zrušená — je na ní
+    vidět, jestli se počítá do „z osmi".
+
+    Časy se počítají od chvíle spuštění, takže stav vydrží, jak dlouho
+    mock běží: první rozjížďka je podepsaná a venku, druhá dojetá
+    a nepodepsaná, třetí se jede a čtvrtá je teprve naplánovaná.
+    """
+    from datetime import datetime, timedelta
+    from zoneinfo import ZoneInfo
+
+    ted = datetime.now(ZoneInfo("Europe/Prague")).replace(microsecond=0)
+
+    def za(minut):
+        return (ted + timedelta(minutes=minut)).isoformat()
+
+    lode = [p["lod"] for p in D["prihlasky"]][:12]
+    # Osm lodí prošlo prezencí, tři jsou přihlášené a k prezenci nepřišly —
+    # to je řádek, který se u stolu registrace hledá. Dvanáctou doplní
+    # požadavek z webu níž: vypsaná regata je první, na kterou míří.
+    potvrzene, cekajici = lode[:8], lode[8:11]
+    ucasti = [{"lod": l, "kormidelnik": LODE[l]["majitel"], "posadka": None,
+               "stav": "Potvrzena", "zaplaceno": i != 5}
+              for i, l in enumerate(potvrzene)]
+    ucasti += [{"lod": l, "kormidelnik": LODE[l]["majitel"], "posadka": None,
+                "stav": "Prihlasena", "zaplaceno": i == 0}
+               for i, l in enumerate(cekajici)]
+
+    def dojezdy(start, kolik, po_kolika=4):
+        return [{"lod": l, "poradiVCili": i + 1,
+                 "dojezdV": za(start + 30 + i * po_kolika),
+                 "casSekundy": (30 + i * po_kolika) * 60}
+                for i, l in enumerate(potvrzene[:kolik])]
+
+    rozjizdky = [
+        {"cislo": 1, "startV": za(-170), "konecV": za(-105), "stav": "Dokoncena",
+         "doSerie": True, "stavVysledku": "Potvrzeno", "publikovano": True,
+         "vysledky": dojezdy(-170, 7) + [{"lod": potvrzene[7], "kod": "Dnf"}]},
+        {"cislo": 2, "startV": za(-95), "konecV": za(-30), "stav": "Dokoncena",
+         "doSerie": True, "stavVysledku": "Navrzeno", "publikovano": False,
+         "vysledky": dojezdy(-95, 8)},
+        # Jede se: start před čtvrthodinou, časomíra běží a v cíli jsou
+        # zatím dvě lodě.
+        {"cislo": 3, "startV": za(-45), "konecV": None, "stav": "Probiha",
+         "doSerie": True, "stavVysledku": "Navrzeno", "publikovano": False,
+         "vysledky": dojezdy(-45, 2, po_kolika=5)},
+        {"cislo": 4, "startV": za(90), "konecV": None, "stav": "Planovana",
+         "doSerie": True, "stavVysledku": "Navrzeno", "publikovano": False,
+         "vysledky": []},
+    ]
+    D["zavody"].append({
+        "slug": "zkusebni-regata", "nazev": "Zkušební regata",
+        "poradatel": D["zavody"][0]["poradatel"],
+        "datum": ted.date().isoformat(), "datumKonce": None, "typ": "okruhový",
+        "poradi": max(z["poradi"] for z in D["zavody"]) + 1, "pocetSkrtu": 0,
+        "vyhodnoceni": "Oboje", "koeficientDoSerie": 1.0, "posunDoSerie": 0,
+        "stav": "Vypsany", "publikovano": False,
+        "ucasti": ucasti, "rozjizdky": rozjizdky,
+    })
+
+
+if os.environ.get("DEN_REGATY"):
+    _nasad_den_regaty()
+
 # Mock vznikl před workflow výsledků a o stavu zápisu neví. Doplní se
 # stejně, jako to dělá import: čísla ze sešitu rozhodčího jsou potvrzená
 # a veřejná, ne návrh.

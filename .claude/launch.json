@@ -21,6 +21,15 @@
       "port": 8080
     },
     {
+      "name": "fake-api-den-regaty",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "DEN_REGATY=1 python3 tools/fake-api.py"
+      ],
+      "port": 8080
+    },
+    {
       "name": "fake-api-2027",
       "runtimeExecutable": "python3",
       "runtimeArgs": [
