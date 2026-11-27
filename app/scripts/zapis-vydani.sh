@@ -85,6 +85,7 @@ for pokus in 1 2 3 4; do
   break
 done
 
+echo "API odpovědělo $kod: $(cat "$odpoved")"
 if [[ "$kod" != "200" ]]; then
   # 503 = na serveru chybí `/run/secrets/Appka__Token`; 401 = nesedí
   # tajemství v GitHubu se souborem na serveru.
