@@ -21,9 +21,9 @@ public enum PlatformaZarizeni
 /// </para>
 /// <para>
 /// <b>Token je identita zařízení a mění se.</b> Expo ho vydává znovu po
-/// přeinstalaci i po obnově ze zálohy, takže se registrace dělá při každém
-/// spuštění appky a token je unikátní klíč: tentýž telefon se nesmí
-/// zapsat dvakrát a dostat všechno dvakrát.
+/// přeinstalaci i po obnově ze zálohy, takže se registrace posílá při jeho
+/// změně a token je unikátní klíč: tentýž telefon se nesmí zapsat dvakrát
+/// a dostat všechno dvakrát.
 /// </para>
 /// </summary>
 public class Zarizeni : IHlasiVerzi
@@ -53,8 +53,8 @@ public class Zarizeni : IHlasiVerzi
     public DateTimeOffset NaposledyV { get; set; }
 
     // --- Na čem telefon jede (X-Appka-Verze) -------------------------------
-    // Popis polí je u rozhraní. Zapisuje se při registraci, kterou appka
-    // dělá při každém spuštění tak jako tak.
+    // Popis polí je u rozhraní. Zapisuje se při registraci: při změně tokenu
+    // či odběrů a jednou po každé nové verzi appky (obnovRegistraci).
 
     /// <inheritdoc/>
     public string? VerzePlatforma { get; set; }

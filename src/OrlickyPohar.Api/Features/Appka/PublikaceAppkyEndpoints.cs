@@ -9,7 +9,10 @@ namespace OrlickyPohar.Api.Features.Appka;
 /// <param name="Platforma"><c>android</c> nebo <c>ios</c>.</param>
 /// <param name="Kanal">Kanál Expa, do kterého aktualizace šla.</param>
 /// <param name="Otisk">Otisk nativní části (<c>runtimeVersion</c>).</param>
-/// <param name="Aktualizace">Identifikátor aktualizace (UUID), jak ho vrátí <c>eas update</c>.</param>
+/// <param name="Aktualizace">ID aktualizace PRO DANOU PLATFORMU (pole <c>id</c> položky
+/// s touto platformou ve výstupu <c>eas update --json</c>), NE ID skupiny (<c>group</c>).
+/// Totéž ID telefon hlásí jako <c>Updates.updateId</c> v hlavičce X-Appka-Verze —
+/// s ID skupiny by se nesešlo nic a všechny telefony by vyšly jako stará aktualizace.</param>
 /// <param name="Commit">Commit, ze kterého aktualizace je.</param>
 public record ZapisPublikaceAppky(
     string Platforma, string Kanal, string Otisk, string Aktualizace, string? Commit);

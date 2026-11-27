@@ -22,9 +22,9 @@ public static class UpozorneniEndpoints
             .WithTags("Upozornění")
             .WithSummary("Zapíše zařízení k odběru upozornění")
             .WithDescription(
-                "Bez přihlášení. Appka volá při každém spuštění, protože Expo token po "
-                + "přeinstalaci mění; druhý zápis téhož tokenu jen přepíše odběry. Odběr má "
-                + "tvar `serie:{slug}` nebo `zavod:{slug}`.");
+                "Bez přihlášení. Appka volá, když se změní token nebo odběry, a jednou po "
+                + "každé nové verzi appky (kvůli hlavičce X-Appka-Verze); druhý zápis téhož "
+                + "tokenu jen přepíše odběry. Odběr má tvar `serie:{slug}` nebo `zavod:{slug}`.");
     }
 
     private static async Task<IResult> ZapisAsync(

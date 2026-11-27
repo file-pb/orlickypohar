@@ -182,16 +182,16 @@ public static class FlotilaEndpoints
 
     /// <summary>
     /// Měřítko pro telefony s těmito otisky: všechna vydání (je jich
-    /// jednotky) a publikace jen pro ty otisky. Bez jediného hlášení se
-    /// nečte nic — stav „bez hlášení" měřítko nepotřebuje.
+    /// jednotky, čtou se vždycky — jinak by přehled bez jediného hlášení
+    /// tvrdil, že v obchodě nic není) a publikace jen pro hlášené otisky.
     /// </summary>
     public static async Task<Vydano> NactiVydanoAsync(
         AppDbContext db, IEnumerable<string?> otisky, CancellationToken ct)
     {
         var hlasene = otisky.OfType<string>().Distinct(StringComparer.Ordinal).ToList();
-        if (hlasene.Count == 0) return new Vydano([], []);
-
         var balicky = await db.VydaniAppky.AsNoTracking().ToListAsync(ct);
+        if (hlasene.Count == 0) return new Vydano(balicky, []);
+
         var publikace = await db.PublikaceAppky.AsNoTracking()
             .Where(p => hlasene.Contains(p.Otisk))
             .ToListAsync(ct);

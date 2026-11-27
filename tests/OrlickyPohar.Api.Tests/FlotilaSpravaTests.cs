@@ -48,6 +48,35 @@ public class FlotilaSpravaTests(PostgresFixture fixture)
         return await co(scope.ServiceProvider);
     }
 
+    /// <summary>
+    /// Měřítko balíčků se čte, i když se zatím žádný telefon nenahlásil —
+    /// jinak by přehled první den tvrdil, že v obchodě nic není (nález
+    /// kontroly 27. 11. 2026).
+    /// </summary>
+    [Fact]
+    public async Task Vydani_jsou_v_meritku_i_bez_jedineho_hlaseni()
+    {
+        var otisk = $"bez-hlaseni-{Znacka()}";
+        await VeScope(async sp =>
+        {
+            var db = sp.GetRequiredService<AppDbContext>();
+            db.VydaniAppky.Add(new VydaniAppky
+            {
+                Platforma = "ios",
+                CisloBalicku = 1_800_000_000 + Random.Shared.Next(1, 90_000_000),
+                Otisk = otisk,
+                VydanoV = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync();
+            return 0;
+        });
+
+        var vydano = await VeScope(sp =>
+            FlotilaEndpoints.NactiVydanoAsync(sp.GetRequiredService<AppDbContext>(), [], default));
+
+        Assert.NotEmpty(vydano.PosledniBalicky);
+    }
+
     /// <summary>Účet s napojeným telefonem. Vrací účet, tajemství klíče a číslo klíče.</summary>
     private Task<(Uzivatel Ucet, string Klic, int KlicId)> NapojenyTelefonAsync(string zarizeni = "Pixel u vody") =>
         VeScope(async sp =>

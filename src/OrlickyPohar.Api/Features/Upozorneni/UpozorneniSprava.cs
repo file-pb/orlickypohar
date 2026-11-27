@@ -44,15 +44,19 @@ public class UpozorneniSprava(AppDbContext db, TimeProvider cas)
     /// Zapíše zařízení, nebo obnoví to, které už token má. Vrací text chyby.
     ///
     /// <para>
-    /// <b>Registrace je idempotentní.</b> Appka ji dělá při každém spuštění,
-    /// protože Expo token po přeinstalaci mění — druhý zápis téhož tokenu
-    /// proto jen přepíše odběry a čas, ne aby založil druhé zařízení.
+    /// <b>Registrace je idempotentní.</b> Appka ji posílá, když se změní token
+    /// (po přeinstalaci) nebo odběry — druhý zápis téhož tokenu proto jen
+    /// přepíše odběry a čas, ne aby založil druhé zařízení.
     /// </para>
     /// <para>
-    /// <b>Verze appky jde s ní</b> (<paramref name="verze"/>): registrace
-    /// běží při každém spuštění tak jako tak, a zařízení je jediná identita,
-    /// kterou má i telefon bez účtu a bez klíče. Až za kontrolou tvaru
-    /// tokenu — odmítnutá registrace nezapíše nic, ani verzi.
+    /// <b>Verze appky jde s ní</b> (<paramref name="verze"/>). Appka od
+    /// 27. 11. 2026 registraci jednou zopakuje po každé nové verzi
+    /// (<c>obnovRegistraci</c> v app/src/lib/upozorneni.ts) — do té doby
+    /// chodila jen při změně odběru a verze u zařízení zamrzala. Zařízení je
+    /// jediná identita, kterou má i telefon bez účtu a bez klíče, ale je
+    /// <b>neověřená</b>: PUT /zarizeni je bez přihlášení, takže verze u ní je
+    /// orientační. Až za kontrolou tvaru tokenu — odmítnutá registrace
+    /// nezapíše nic, ani verzi.
     /// </para>
     /// </summary>
     public async Task<string?> ZapisZarizeniAsync(

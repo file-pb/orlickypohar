@@ -101,8 +101,9 @@ src/OrlickyPohar.Api/
   Features/Clanky/            novinky a články, jejich psaní a správa
   Features/Poradatele/        pořadatel jako záznam s medailonkem
   Features/Fotky/             nahrané obrázky: přepočet do WebP, úložiště R2
-  Features/Appka/             vydané balíčky appky: CI je zapíše po nahrání
-                              do Play, appka podle otisku pozná novější
+  Features/Appka/             vydané balíčky a publikace JS (zapisuje CI),
+                              hlavička X-Appka-Verze a přehled flotily: kdo
+                              jede na čem (správa → Flotila)
   Features/Vodocet/           sběr stavu Orlíku z Povodí Vltavy po 10 min,
                               přítok a odtok za 24 h
   Features/Identita/          uživatel, vazby (issuer, subject), role, Prava
@@ -134,6 +135,11 @@ web/                          veřejné stránky (Next.js, renderuje server)
   lib/schema.d.ts             generované typy — needituj, viz packages/api-client
 app/                          mobilní appka (Expo, jen čtení)
   src/app/                    obrazovky, cesty podle souborů
+  src/lib/aktualizace.ts      samoaktualizace: kdy se ptát, paměť, pravdivý stav;
+                              spouští ji components/aktualizator.tsx
+  src/lib/restart.ts          kdy se smí restartovat: zámky obrazovek (start,
+                              cíl, stavba) a překážky; nový zámek patří ke
+                              každému stavu, který žije jen v paměti
   scripts/telefon.sh          spuštění pro Expo Go, scripts/apk.sh build APK
   scripts/ikona.py            ikona a splash se kreslí kódem
 packages/api-client/          generuj.sh — typy pro web i appku z OpenAPI
