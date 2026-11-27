@@ -1,0 +1,4 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Žádné oprávnění. Aktualizaci stahuje a instaluje Obchod Play,
+       appka jen požádá o jeho obrazovku. -->
+</manifest>

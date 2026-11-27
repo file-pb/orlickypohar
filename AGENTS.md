@@ -242,10 +242,12 @@ přestože `main` je od 17. 11. na 16.4.6 (`b1ff6209`). Worktree se po
 vytvoření neinstalují samy a `git pull` do `node_modules` nesáhne.
 
 **Instalace přes kabel nestačí, když je v kanálu novější aktualizace.**
-`app/scripts/iphone.sh` postaví Release a nainstaluje ho, jenže appka má
-v `app.json` `fallbackToCacheTimeout: 5000`: při startu počká až pět vteřin
-na aktualizaci z kanálu `preview`, a když se stáhne, spustí **ji** místo
-zabudovaného kódu. Čerstvě nainstalovaná appka tak běží na starším
+`app/scripts/iphone.sh` postaví Release a nainstaluje ho, jenže appka si
+z kanálu `preview` stáhne novější aktualizaci a spustí **ji** místo
+zabudovaného kódu. Do balíčku 19 (27. 11. 2026) to bylo hned při startu
+(`fallbackToCacheTimeout: 5000`); od něj je to `0`, takže se nejdřív spustí
+zabudovaný kód a staženou verzi použije `Aktualizator` v bezpečné chvíli,
+nejpozději další studený start. Čerstvě nainstalovaná appka tak běží na starším
 JavaScriptu a vypadá to, že se změna neprojevila — 17. 11. 2026 to stálo
 půl hodiny hledání v kódu, který byl správně. Co kanál zrovna nabízí, řekne
 dotaz na manifest:

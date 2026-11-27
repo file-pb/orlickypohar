@@ -1,0 +1,27 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'cz.klihovka.orlickypohar'
+version = '1.0.0'
+
+android {
+  namespace "cz.klihovka.orlickypohar.playaktualizace"
+
+  // Bez `defaultConfig` autolinking modul nenakonfiguruje a build spadne na
+  // `'android.defaultConfig.versionName' is not defined` — viz modul Nerušit.
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // Ne zastaralé monolitické `com.google.android.play:core`. 2.1.0 je
+  // poslední verze (maven-metadata 22. 5. 2023) a Google ji vyžaduje pro
+  // cílení na Android 14. Metody, které modul volá, ověřené 26. 11. 2026
+  // přímo v bajtkódu AAR: startUpdateFlow(AppUpdateInfo, Activity,
+  // AppUpdateOptions) → Task, getAppUpdateInfo() → Task.
+  implementation 'com.google.android.play:app-update:2.1.0'
+}

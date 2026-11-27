@@ -311,6 +311,60 @@ Zápis chrání vlastní tajemství (`Appka__Token` na serveru, `APPKA_TOKEN`
 v GitHubu), zvlášť od importního i satelitního — kdo ukradne jedno,
 nemá dostat právo na zbytek.
 
+### Samoaktualizace pro flotilu
+
+Filip 27. 11. 2026: *„je to must, apka musí fungovat nezávisle a musí se
+aktualizovat sama a to 100% spolehlivě. Až to bude používat celá flotila,
+musí to být naprostá samozřejmost."* Nezávislý průzkum (pět pohledů,
+26 scénářů selhání) našel tvrdou mez a čtyři díry.
+
+**Mez platformy.** JavaScript jde doručit sám. Nový nativní balíček si
+appka na Androidu nainstalovat nesmí — potichu to umí jen automatické
+aktualizace Obchodu Play, jinak to chce jedno klepnutí (In-App Updates).
+iPhone distribuci nemá vůbec (osobní tým, kabel, podpis na 7 dní).
+Proto stojí všechno na tom, že **nativní vydání jsou vzácná** a všechno
+ostatní jede po síti.
+
+**Díry a co je zalepilo:**
+
+1. *expo-updates se ptal jen při studeném startu* a staženou verzi použil
+   až při dalším; appka leží na Androidu dny v paměti. → `Aktualizator`
+   (`components/aktualizator.tsx`) se ptá i za běhu a staženou verzi
+   použije sám, po delším návratu z pozadí nebo na domovské obrazovce —
+   jen když nic nedrží zámek (`lib/restart.ts`: start, čekající úkon,
+   cíl, stavba; záznam trasy a simulace z databáze; ukázka; zápis v letu;
+   neověřená síť). Verze, která se po restartu nevzala, se sama nezkouší.
+2. *Appka lhala „aktuální"* bez úspěšné kontroly. → `lib/aktualizace.ts`:
+   „ověřeno před X min", „nepodařilo se ověřit", nouzové spuštění
+   a odmítnutá verze; patička nabídky píše „nejnovější" jen po čerstvé
+   kontrole a s posledním balíčkem.
+3. *Nikdo nevěděl, kdo jede na čem.* → hlavička `X-Appka-Verze` s každým
+   požadavkem, přehled ve správě → Flotila (`Features/Appka`).
+4. *Publikace JS se v CI ztrácely* (diff místo stavu, vazba na barvu
+   nasazení, zelené selhání). → přestavba úlohy `aktualizace-appky` a
+   hlídání otisku (`app/scripts/otisk.sh`) — jde jako samostatný krok.
+
+**Flotilový balíček 19** nese všechno nativní najednou: modul pro
+aktualizaci z Play přímo v appce (`modules/play-aktualizace`, vlastní —
+hotové knihovny buď cílily na SDK 58, nebo dělaly nativní práci při
+každém startu), `fallbackToCacheTimeout: 0` (studený start už nečeká na
+síť; verze, která je už stažená, se při studeném startu použije — novou
+stahuje a v bezpečné chvíli použije `Aktualizator`), `fingerprint.config.js`
+(eas.json, skripty ani .gitignore už otisk neposouvají) a do zásoby
+expo-haptics, expo-image-manipulator, expo-device, expo-clipboard
+a expo-application, aby další funkce šly po síti. Nic z toho nepřidává
+oprávnění, které Play posuzuje. **expo-background-task do zásoby nešel**
+(kontrola 27. 11.): potichu by zvedl expo-task-manager, na kterém stojí
+záznam trasy na pozadí, a do startu přidal WorkManager — přidá se, až ho
+něco použije.
+
+**Rozhodnutí, která zůstala na Filipovi:** distribuce pro iPhone (Apple
+Developer Program); APK na `/appka` je slepá větev, kterou Play
+neaktualizuje (zrušit, nebo stavět automaticky); interní test Play má
+strop 100 testerů a ruční seznam e-mailů (pro flotilu uzavřený test se
+Skupinou Google, nebo produkce); postupné vydávání JS (napřed Filipův
+telefon) proti vadné verzi, která by šla naráz do celé flotily.
+
 ### Co to stojí a kde je mez
 
 Kód jde přeposlat, takže je to slabší doklad než přihlášení s heslem

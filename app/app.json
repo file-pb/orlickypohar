@@ -115,7 +115,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/247c0516-53e2-4457-bcbd-dc7b1cd6025a",
-      "fallbackToCacheTimeout": 5000
+      "fallbackToCacheTimeout": 0
     },
     "runtimeVersion": {
       "policy": "fingerprint"

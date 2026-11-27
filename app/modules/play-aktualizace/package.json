@@ -1,0 +1,7 @@
+{
+  "name": "play-aktualizace",
+  "version": "1.0.0",
+  "description": "Aktualizace z Google Play přímo v appce (jen Android).",
+  "private": true,
+  "platforms": ["android"]
+}
