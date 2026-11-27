@@ -15,7 +15,7 @@
  *
  * Čísla níž jsou volby, ne měření — a jako volby jsou tak i pojmenovaná.
  */
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 import { kolikDoStartu, PO_STARTU_NERUSIT_S, PREDEHRA_KLIDU_S, type StavStartu } from './start';
 
@@ -147,12 +147,33 @@ export function popisPrekazky(p: Prekazka): string {
 const drzene = new Map<Zamek, number>();
 
 /**
+ * Kdo chce vědět, že se zámky změnily — třeba pruh o nové verzi, který
+ * během startu nebo zápisu v cíli zmizí, ať nic nepřekrývá.
+ */
+const posluchaci = new Set<() => void>();
+/** Neměnný snímek pro useSyncExternalStore: nové pole jen při změně. */
+let snimek: Zamek[] = [];
+
+function ohlas() {
+  snimek = [...drzene.keys()];
+  for (const f of posluchaci) f();
+}
+
+export function naZmenuZamku(f: () => void): () => void {
+  posluchaci.add(f);
+  return () => {
+    posluchaci.delete(f);
+  };
+}
+
+/**
  * Vezme zámek a vrátí funkci, která ho pustí. Zámky se počítají: tentýž
  * může držet víc míst najednou a pustí ho až poslední. Druhé puštění téže
  * funkce nic neudělá, takže omylem dvojí úklid zámek neukradne jinému.
  */
 export function zamkni(z: Zamek): () => void {
   drzene.set(z, (drzene.get(z) ?? 0) + 1);
+  ohlas();
   let puzteno = false;
   return () => {
     if (puzteno) return;
@@ -160,12 +181,18 @@ export function zamkni(z: Zamek): () => void {
     const n = (drzene.get(z) ?? 1) - 1;
     if (n <= 0) drzene.delete(z);
     else drzene.set(z, n);
+    ohlas();
   };
 }
 
 /** Které zámky jsou právě držené. */
 export function zamkyTed(): Zamek[] {
   return [...drzene.keys()];
+}
+
+/** Zámky pro obrazovku: překreslí se, když se změní. */
+export function useZamky(): Zamek[] {
+  return useSyncExternalStore(naZmenuZamku, () => snimek);
 }
 
 /**

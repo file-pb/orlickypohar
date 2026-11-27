@@ -69,12 +69,22 @@ echo "Zapisuji: $telo"
 
 odpoved=$(mktemp)
 trap 'rm -f "$odpoved"' EXIT
-kod=$(curl -sS -o "$odpoved" -w '%{http_code}' -X POST "$API_URL/appka/vydani" \
-  -H 'content-type: application/json' \
-  -H "X-Vydani-Token: $APPKA_TOKEN" \
-  --data "$telo") || kod="000"
 
-echo "API odpovědělo $kod: $(cat "$odpoved")"
+# <b>Víc pokusů, jen když to má smysl.</b> Síť (000) a chyba serveru (5xx)
+# se zkusí znovu; 400 a 401 ne — tam by další pokus dopadl stejně. Jediný
+# pokus byl nález kontroly 27. 11. 2026: zápis, který selže, osmnáctky
+# o devatenáctce nedozví nikdy, protože jiný zdroj nemají.
+for pokus in 1 2 3 4; do
+  kod=$(curl -sS --max-time 30 -o "$odpoved" -w '%{http_code}' -X POST "$API_URL/appka/vydani" \
+    -H 'content-type: application/json' \
+    -H "X-Vydani-Token: $APPKA_TOKEN" \
+    --data "$telo") || kod="000"
+  case "$kod" in
+    000|5??) [ "$pokus" -lt 4 ] && { echo "Pokus $pokus: $kod, zkusím znovu."; sleep 5; continue; } ;;
+  esac
+  break
+done
+
 if [[ "$kod" != "200" ]]; then
   # 503 = na serveru chybí `/run/secrets/Appka__Token`; 401 = nesedí
   # tajemství v GitHubu se souborem na serveru.

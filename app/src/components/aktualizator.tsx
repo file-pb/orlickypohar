@@ -12,6 +12,7 @@ import {
 import {
   prekazkyRestartu, restartovatTed, zamkyTed, type Prekazka, type Prilezitost, type Zamek,
 } from '@/lib/restart';
+import { spustAktualizaci, zeptejSePlay } from '@/lib/play';
 import { overSpojeni, stavSite, zapisuVLetu } from '@/lib/sit';
 import { NEJDELSI_JIZDA_S } from '@/lib/start';
 import { bezicZaznam } from '@/lib/tracker/zaznam';
@@ -50,6 +51,19 @@ export function prekazkyTed(): Prekazka[] {
     zapisuVLetu: zapisuVLetu(),
     sit: stavSite(),
   });
+}
+
+/**
+ * Rozběhnutou aktualizaci z Play obnoví po návratu do popředí — jak radí
+ * Google (DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS): Play ji jinak dotahuje
+ * na pozadí a appku pak restartuje bez ohledu na to, co se zrovna děje.
+ * Sama jen tehdy, když nic nedrží zámek; jinak ji nabídne pruh. Na balíčku
+ * bez modulu (18) Play odpoví `nejde` a nestane se nic.
+ */
+async function obnovPrerusenou(): Promise<void> {
+  if ((await zeptejSePlay()).druh !== 'probiha') return;
+  if (prekazkyTed().some((p) => p !== 'bez-site')) return;
+  await spustAktualizaci();
 }
 
 /**
@@ -140,6 +154,7 @@ export function Aktualizator() {
         void (async () => {
           await zkusPouzit({ druh: 'navrat', vPozadiMs: pauza });
           await zkontroluj(KONTROLA_PO_NAVRATU_MS);
+          await obnovPrerusenou();
         })();
       } else if (vPozadiOd.current === null) {
         vPozadiOd.current = Date.now();

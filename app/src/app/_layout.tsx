@@ -8,6 +8,7 @@ import { BannerAktualizace } from '@/components/banner-aktualizace';
 import { Kebab } from '@/components/kebab';
 import { ProuzekSpojeni, useProuzek } from '@/components/prouzek-spojeni';
 import { SdeleniOPoloze } from '@/components/sdeleni-o-poloze';
+import { PruhNoveVerze } from '@/components/verze-appky';
 import { Colors } from '@/constants/theme';
 import { jas, pismoNaVyplni } from '@/lib/kontrast';
 // Jen kvůli vedlejšímu efektu: `TaskManager.defineTask` musí být
@@ -67,6 +68,8 @@ function Obsah() {
           paddingTop: prouzek ? 0 : okraje.top,
         }}>
       <ProuzekSpojeni prouzek={prouzek} />
+      {/* Nový balíček v obchodě: na každé obrazovce, kromě startu a cíle. */}
+      <PruhNoveVerze />
       {/* <b>Nabídka leží nad celým zásobníkem</b> (Filip, 7. 11. 2026:
           *„odevšad se musím umět vrátit na landing"*). Dokud seděla jen
           na domovské obrazovce, vedla cesta zpátky jedině gestem — a

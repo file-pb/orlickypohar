@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Alert, Linking, Platform, Text, useColorScheme, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, AppState, Linking, Platform, Pressable, Text, useColorScheme, View } from 'react-native';
 import * as Updates from 'expo-updates';
 import { useUpdates } from 'expo-updates';
 
@@ -10,7 +10,7 @@ import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiPamet, popisStavuJs, pouzijVerzi, stavJs, zkontrolujTed } from '@/lib/aktualizace';
 import { spustAktualizaci, zeptejSePlay } from '@/lib/play';
-import { popisPrekazky } from '@/lib/restart';
+import { popisPrekazky, useZamky } from '@/lib/restart';
 import {
   aktualizaceJdou, coNabidnout, kratkyOtisk, OBCHOD, OBCHOD_WEB, popisBalicku, popisNabidky,
   popisPuvodu, puvod, zjistiStavBalicku, type Nabidka, type StavBalicku,
@@ -55,13 +55,26 @@ export function VerzeAppky() {
   );
 }
 
-/** Odpověď Play spojená s naším seznamem vydání. */
+/** Jak dlouho se čeká na náš seznam vydání, než se nabídka ukáže bez něj. */
+const LIMIT_SEZNAMU_MS = 10_000;
+
+/**
+ * Odpověď Play spojená s naším seznamem vydání.
+ *
+ * Seznam má vlastní limit: `fetch` v React Native jinak nečeká nikdy
+ * nekonečně dlouho, a zaseknuté spojení by schovalo i to, co Play už ví
+ * (nález kontroly 27. 11. 2026).
+ */
 async function nactiNabidku(): Promise<{ nabidka: Nabidka; nase: StavBalicku | null }> {
-  const [play, nase] = await Promise.all([zeptejSePlay(), zjistiStavBalicku()]);
+  const seznam = Promise.race([
+    zjistiStavBalicku(),
+    new Promise<null>((hotovo) => setTimeout(() => hotovo(null), LIMIT_SEZNAMU_MS)),
+  ]);
+  const [play, nase] = await Promise.all([zeptejSePlay(), seznam]);
   return { nabidka: coNabidnout(play, nase), nase };
 }
 
-/** Totéž pro nabídku pod tečkami a pro domovskou obrazovku. Jen Android. */
+/** Totéž pro nabídku pod tečkami a pro pruh. Jen Android. */
 export function useNabidka() {
   return useData(async () => (Platform.OS === 'android' ? await nactiNabidku() : null));
 }
@@ -72,7 +85,7 @@ export function tlacitkoNabidky(n: Nabidka): string | null {
     case 'aktualizovat':
       return 'Aktualizovat';
     case 'dokoncit':
-      return 'Dokončit aktualizaci';
+      return 'Zobrazit průběh';
     case 'obchod':
       return 'Otevřít Obchod Play';
     case 'nic':
@@ -81,19 +94,27 @@ export function tlacitkoNabidky(n: Nabidka): string | null {
 }
 
 /**
- * Udělá, co nabídka slibuje. Aktualizace z Play appku restartuje, takže
- * když zrovna něco drží zámek (start, cíl, stavba), nejdřív se zeptá.
- * Nejde-li to přímo v appce, otevře obchod — nikdy neskončí mlčením.
+ * Udělá, co nabídka slibuje. Aktualizace — z appky i v obchodě — appku
+ * po dokončení restartuje a po dobu stahování ji Play překryje, takže
+ * když zrovna něco drží zámek (start, cíl, stavba, záznam), nejdřív se
+ * zeptá. Nejde-li to přímo v appce, otevře obchod — nikdy neskončí mlčením.
+ *
+ * `nastavPracuje` dostane tlačítko, ať se nedá zmáčknout podruhé.
  */
-export function nabidniAktualizaci(n: Nabidka): void {
+export function nabidniAktualizaci(n: Nabidka, nastavPracuje?: (ano: boolean) => void): void {
   if (n.druh === 'nic') return;
-  if (n.druh === 'obchod') {
-    otevriObchod();
-    return;
-  }
   const proved = async () => {
-    const v = await spustAktualizaci();
-    if (v === 'nejde' || v === 'selhalo' || v === 'nepovoleno') otevriObchod();
+    if (n.druh === 'obchod') {
+      otevriObchod();
+      return;
+    }
+    nastavPracuje?.(true);
+    try {
+      const v = await spustAktualizaci();
+      if (v === 'nejde' || v === 'selhalo' || v === 'nepovoleno') otevriObchod();
+    } finally {
+      nastavPracuje?.(false);
+    }
   };
   const vadi = prekazkyTed().filter((p) => p !== 'bez-site');
   if (vadi.length === 0) {
@@ -102,7 +123,7 @@ export function nabidniAktualizaci(n: Nabidka): void {
   }
   Alert.alert(
     'Aktualizovat teď?',
-    `Appka se po aktualizaci restartuje, a právě ${vadi.map(popisPrekazky).join(', ')}. Co je jen v paměti, se ztratí.`,
+    `Právě ${vadi.map(popisPrekazky).join(', ')}. Během stahování appku překryje Obchod Play a po dokončení se restartuje — co je jen v paměti, se ztratí.`,
     [
       { text: 'Počkat', style: 'cancel' },
       { text: 'Aktualizovat', style: 'destructive', onPress: () => void proved() },
@@ -120,6 +141,7 @@ export function nabidniAktualizaci(n: Nabidka): void {
 export function ZObchodu() {
   const t = useTheme();
   const { data, nacita } = useData(nactiNabidku);
+  const [pracuje, setPracuje] = useState(false);
   if (nacita || !data) return null;
 
   const { nabidka, nase } = data;
@@ -132,31 +154,75 @@ export function ZObchodu() {
   return (
     <Karta>
       <Text style={{ color: t.text }}>{veta}</Text>
-      {tlacitko ? <Akce text={tlacitko} onPress={() => nabidniAktualizaci(nabidka)} /> : null}
+      {tlacitko ? (
+        <Akce
+          text={tlacitko}
+          onPress={() => nabidniAktualizaci(nabidka, setPracuje)}
+          pracuje={pracuje}
+          vypnuto={pracuje}
+        />
+      ) : null}
     </Karta>
   );
 }
 
 /**
- * Karta na domovské obrazovce, když je venku nový balíček.
+ * Pruh nad každou obrazovkou, když je venku nový balíček.
  *
- * <b>Proč i tady</b> (Filip, 27. 11. 2026: *„musí to být naprostá
- * samozřejmost"*). Nativní balíček se sám nestáhne, dokud ho Play nedoručí,
- * a řádek schovaný pod tečkami se dá týdny přehlížet. Jinak tu nic nového
- * nepřibývá: když není co nabídnout, karta neexistuje.
+ * <b>Proč všude, a ne jen na domovské obrazovce</b> (nález kontroly
+ * 27. 11. 2026). Domov většinu lidí přeskočí — závodník jde rovnou na svou
+ * obrazovku, divák na ročníky — takže karta tam by se nedala vidět. Nativní
+ * balíček se přitom sám nestáhne, dokud ho Play nedoručí, a řádek pod
+ * tečkami se dá týdny přehlížet (Filip, 27. 11. 2026: *„musí to být
+ * naprostá samozřejmost"*).
+ *
+ * <b>Během startu a zápisu v cíli zmizí</b>, ať nic nepřekrývá ani nesvádí
+ * ke klepnutí, které by appku restartovalo. Po návratu z pozadí se zeptá
+ * znovu: kořenové rozvržení se připojí jednou za běh appky.
  */
-export function NovaVerze() {
+export function PruhNoveVerze() {
   const t = useTheme();
-  const { data } = useNabidka();
+  const zamky = useZamky();
+  const { data, obnov } = useNabidka();
+  const [pracuje, setPracuje] = useState(false);
+
+  useEffect(() => {
+    const odber = AppState.addEventListener('change', (s) => {
+      if (s === 'active') void obnov();
+    });
+    return () => odber.remove();
+  }, [obnov]);
+
   const n = data?.nabidka;
   if (!n || n.druh === 'nic') return null;
+  if (zamky.includes('start') || zamky.includes('cil')) return null;
   const tlacitko = tlacitkoNabidky(n);
+
   return (
-    <Karta>
-      <Text style={{ color: t.text, fontWeight: '600' }}>Nová verze appky</Text>
-      <Text style={{ color: t.tlumeny, marginTop: 4 }}>{popisNabidky(n)}</Text>
-      {tlacitko ? <Akce text={tlacitko} onPress={() => nabidniAktualizaci(n)} /> : null}
-    </Karta>
+    <Pressable
+      onPress={() => nabidniAktualizaci(n, setPracuje)}
+      disabled={pracuje}
+      accessibilityRole="button"
+      accessibilityLabel={`Nová verze appky. ${tlacitko ?? ''}`}
+      style={({ pressed }) => ({
+        minHeight: 44,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: t.papir,
+        borderBottomWidth: 1,
+        borderBottomColor: t.linka,
+        opacity: pressed || pracuje ? 0.6 : 1,
+      })}>
+      <Text style={{ color: t.text, flex: 1, fontWeight: '600' }} numberOfLines={2}>
+        Nová verze appky
+        <Text style={{ color: t.tlumeny, fontWeight: '400' }}>
+          {n.druh === 'dokoncit' ? ' · stahuje se' : n.cisloBalicku ? ` · balíček č. ${n.cisloBalicku}` : ''}
+        </Text>
+      </Text>
+      <Text style={{ color: t.voda, fontWeight: '700' }}>{pracuje ? 'Pracuji…' : tlacitko}</Text>
+    </Pressable>
   );
 }
 

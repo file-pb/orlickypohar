@@ -75,7 +75,7 @@ export function Kebab() {
         kontrola: pamet.kontrola,
       })
     : null;
-  const verze = verzeKratce(nabidkaData?.nase ?? null, puvod().otisk, js);
+  const verze = verzeKratce(nabidkaData?.nase ?? null, puvod().otisk, js, Date.now(), novaVerze);
 
   // Zavřít dřív, než se někam jde: jinak by nabídka zůstala viset nad
   // obrazovkou, na kterou se právě přešlo.
@@ -172,7 +172,7 @@ export function Kebab() {
                 novaVerze.druh === 'aktualizovat'
                   ? `${novaVerze.cisloBalicku ? `balíček č. ${novaVerze.cisloBalicku} — ` : ''}stáhne se přímo tady`
                   : novaVerze.druh === 'dokoncit'
-                    ? 'aktualizace se nedokončila'
+                    ? 'stahuje se — appka se pak sama restartuje'
                     : novaVerze.playNenabizi
                       ? 'Play ji tomuhle telefonu ještě nenabídl'
                       : `${novaVerze.cisloBalicku ? `balíček č. ${novaVerze.cisloBalicku} ` : ''}v Obchodě Play`

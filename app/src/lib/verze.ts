@@ -274,7 +274,9 @@ export function popisNabidky(n: Nabidka): string | null {
     case 'aktualizovat':
       return `Nová verze${cislo(n.cisloBalicku)} je připravená. Aktualizace proběhne přímo tady a appka se pak sama restartuje.`;
     case 'dokoncit':
-      return 'Aktualizace se nedokončila. Dokonči ji, ať nejedeš napůl na staré verzi.';
+      // DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS: Play pokračuje sám i na
+      // pozadí a po dokončení appku restartuje — není to zaseknutí.
+      return 'Aktualizace z Obchodu Play se stahuje. Až doběhne, appka se sama restartuje.';
     case 'obchod':
       return n.playNenabizi
         ? `V Obchodě Play je novější verze${cislo(n.cisloBalicku)}, ale tomuhle telefonu ji Play ještě nenabídl. Bývá to otázka hodin; v obchodě se dá zkusit hned.`
@@ -298,6 +300,7 @@ export function verzeKratce(
   otisk: string | null,
   js: StavJs | null = null,
   ted: number = Date.now(),
+  nabidka: Nabidka | null = null,
 ): string | null {
   const k = kratkyOtisk(otisk);
   const balicek =
@@ -310,7 +313,12 @@ export function verzeKratce(
           : null;
   // „Nejnovější" jen když sedí obojí: balíček z obchodu i čerstvě ověřený
   // JavaScript. Samotný balíček to neříká — JS mohl zamrznout (26. 11. 2026).
-  if (stav?.druh === 'aktualni' && js && jsOverenoCerstve(js, ted)) return `Nejnovější verze · ${balicek}`;
+  // Play může o novější verzi vědět dřív než náš seznam (zápis vydání
+  // se nepovedl) — pak „nejnovější" být nesmí, i když seznam tvrdí opak.
+  const playNabizi = nabidka !== null && nabidka.druh !== 'nic';
+  if (stav?.druh === 'aktualni' && !playNabizi && js && jsOverenoCerstve(js, ted)) {
+    return `Nejnovější verze · ${balicek}`;
+  }
   const casti = [balicek, js ? stavJsKratce(js, ted) : null].filter((x): x is string => Boolean(x));
   if (casti.length === 0) return null;
   const v = casti.join(' · ');

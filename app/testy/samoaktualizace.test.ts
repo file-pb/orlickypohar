@@ -17,7 +17,7 @@ import {
   PRAZDNA_PAMET, predChvili, stavJs, ulozPamet, zkontrolujTed, type Pamet,
 } from '../src/lib/aktualizace.ts';
 import {
-  DLOUHA_PAUZA_MS, prekazkyRestartu, restartovatTed, startDrzi, zamkni, zamkyTed,
+  DLOUHA_PAUZA_MS, naZmenuZamku, prekazkyRestartu, restartovatTed, startDrzi, zamkni, zamkyTed,
 } from '../src/lib/restart.ts';
 import { sit, zapisuVLetu } from '../src/lib/sit.ts';
 import { hlavickaTed, hlavickaVerze, spusteni, type UdajeVerze } from '../src/lib/verze-hlavicka.ts';
@@ -96,6 +96,17 @@ await zkus('krátký návrat z pozadí není příležitost', () => {
 await zkus('s překážkou se sám nerestartuje ani doma', () => {
   assert.equal(restartovatTed({ druh: 'domov' }, { id: ID_A }, null, ['zaznam']), false);
   assert.equal(restartovatTed({ druh: 'navrat', vPozadiMs: DLOUHA_PAUZA_MS }, { id: ID_A }, null, ['bez-site']), false);
+});
+
+await zkus('změna zámků se ohlásí — vzetí i puštění', () => {
+  // Pruh o nové verzi podle toho zmizí, když začne start nebo zápis v cíli.
+  let hlaseni = 0;
+  const pustOdber = naZmenuZamku(() => { hlaseni += 1; });
+  const pust = zamkni('start');
+  pust();
+  pust();
+  assert.equal(hlaseni, 2, 'dvojí puštění téže funkce se nehlásí dvakrát');
+  pustOdber();
 });
 
 await zkus('zámky se počítají a dvojí puštění nic neukradne', () => {

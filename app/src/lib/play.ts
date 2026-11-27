@@ -55,12 +55,23 @@ export async function zeptejSePlay(): Promise<OdpovedPlay> {
  * Bez časového limitu schválně: po úspěchu se slib nevyřeší vůbec (Play
  * appku restartuje) a limit by uprostřed instalace hlásil chybu.
  */
-export async function spustAktualizaci(): Promise<VysledekAktualizace> {
-  const m = modul();
-  if (!m) return 'nejde';
-  try {
-    return await m.spust();
-  } catch {
-    return 'nejde';
-  }
+export function spustAktualizaci(): Promise<VysledekAktualizace> {
+  // Jeden tok naráz: dvojí klepnutí by jinak otevřelo dvě obrazovky Play
+  // nad sebou (nález kontroly 27. 11. 2026). Po úspěchu se slib nevyřeší,
+  // appka se restartuje — a příznak s ní zanikne.
+  if (bezi) return bezi;
+  bezi = (async (): Promise<VysledekAktualizace> => {
+    const m = modul();
+    if (!m) return 'nejde';
+    try {
+      return await m.spust();
+    } catch {
+      return 'nejde';
+    }
+  })().finally(() => {
+    bezi = null;
+  });
+  return bezi;
 }
+
+let bezi: Promise<VysledekAktualizace> | null = null;

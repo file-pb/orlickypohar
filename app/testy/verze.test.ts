@@ -180,6 +180,11 @@ await zkus('patička nabídky: „nejnovější" jen s čerstvě ověřeným JS'
   );
   assert.equal(verzeKratce({ druh: 'neznamy' }, A, null, ted), 'Otisk af0083f4');
   assert.equal(verzeKratce(null, null, null, ted), null);
+  // Play nabízí novější, i když seznam tvrdí, že je telefon aktuální.
+  assert.doesNotMatch(
+    verzeKratce(aktualniBalicek, B, overeno, ted, { druh: 'aktualizovat', cisloBalicku: 19 }) ?? '',
+    /Nejnovější/,
+  );
 });
 
 

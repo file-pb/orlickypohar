@@ -1298,8 +1298,17 @@ jobs:
       # <b>Selhání je chyba, ne varování.</b> Balíček je v Play tak jako
       # tak; červená úloha jen řekne, že o něm appka neví. Nic dalšího na ní
       # nevisí — `aktualizace-appky` čeká na `nasazeni`, ne na tuhle úlohu.
+      #
+      # <b>Při každém běhu na špici, ne jen po stavbě</b> (nález kontroly
+      # 27. 11. 2026). Když zápis po nahrání selže, opakovaný běh dostane
+      # POTREBA=ne a krok by se přeskočil — a vydání by v API nechybělo jen
+      # jednou, ale navždy. Zápis je na serveru idempotentní (platforma ×
+      # číslo balíčku), takže opakování nic nezdvojí, jen dopíše chybějící.
+      # Cena: když se build povedl a nahrání do Play ne, další běh zapíše
+      # balíček, který v obchodě ještě není — appka pak napíše, že Play ho
+      # telefonu „ještě nenabídl". Lepší než osmnáctky, které se nedozví nic.
       - name: Zapsat vydání pro appku
-        if: ${{ steps.spice.outputs.aktualni == 'ano' && (steps.stav.outputs.POTREBA == 'ano' || github.event.inputs.nahrat_znovu == 'true') }}
+        if: ${{ steps.spice.outputs.aktualni == 'ano' && (steps.stav.outputs.POTREBA == 'ano' || steps.stav.outputs.POTREBA == 'ne' || github.event.inputs.nahrat_znovu == 'true') }}
         working-directory: app
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
