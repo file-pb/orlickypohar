@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dvě kontroly nad barevnými tokeny webu. Bez závislostí, bez prohlížeče.
+"""Tři kontroly nad tokeny webu. Bez závislostí, bez prohlížeče.
 
 Proč to existuje: platforma 28. 10. 2026 odmítla závazný design systém
 a přijala místo něj dvě kontroly (`platform/docs/KRAJINA-2026.md`, oddíl
@@ -12,7 +12,10 @@ není pravidlo, ale komentář.
   2. KONTRAST — poměr kontrastu je číslo spočitatelné z barev, takže WCAG
      2.2 AA se u nich dá doložit bez prohlížeče, bez axe a bez minuty CI.
 
-**Jeden soubor schválně.** Obě kontroly čtou tytéž tři bloky z `globals.css`,
+  3. STUPNICE — písmo má pět kroků a poloměr tři (konzilium nad revizí
+     webu, 27. 11. 2026). Co stojí mimo, se počítá a nesmí toho přibýt.
+
+**Jeden soubor schválně.** Všechny kontroly čtou tytéž tři bloky z `globals.css`,
 takže dva skripty by ten parser kopírovaly — a kopie hodnot bez kontroly je
 právě to, co kontrola 1 hlídá.
 
@@ -23,6 +26,7 @@ a to je pravidlo, ne tabulka.
     python3 tools/kontrola-tokenu.py            # obojí
     python3 tools/kontrola-tokenu.py --shoda    # jen první
     python3 tools/kontrola-tokenu.py --kontrast # jen druhá
+    python3 tools/kontrola-tokenu.py --stupnice # jen třetí
 
 Návratový kód 0 = projde, 1 = rozchod nebo podkročený kontrast,
 2 = kontrola sama nemá co měřit (prázdný vstup, přejmenovaný blok).
@@ -316,19 +320,41 @@ def pary_z_css(css: str, tokeny: set[str]) -> dict[tuple[str, str], int]:
     gradient skutečnou barvu pozadí neurčují, takže poměr spočítaný z jejich
     argumentu by byl číslo o ničem.
     """
+    def strana(hodnota: str) -> str | None:
+        m = re.fullmatch(r"var\(\s*(--[\w-]+)\s*\)", hodnota)
+        if m:
+            return m.group(1) if m.group(1) in tokeny else None
+        # Barva zapsaná natvrdo. Token se s režimem mění a ona ne — proto
+        # se pár musí změřit v obou vzhledech, viz komentář u `barva`.
+        return hodnota.lower() if na_rgb(hodnota) else None
+
     nalez: dict[tuple[str, str], int] = {}
     for _, telo in bloky(_bez_komentaru(css)):
         text = pozadi = None
         for jmeno, hodnota in _deklarace(telo):
             if jmeno == "color":
-                m = re.fullmatch(r"var\(\s*(--[\w-]+)\s*\)", hodnota)
-                text = m.group(1) if m else None
+                text = strana(hodnota)
             elif jmeno in ("background", "background-color"):
-                m = re.fullmatch(r"var\(\s*(--[\w-]+)\s*\)", hodnota)
-                pozadi = m.group(1) if m else None
-        if text and pozadi and text != pozadi and {text, pozadi} <= tokeny:
+                pozadi = strana(hodnota)
+        if text and pozadi and text != pozadi:
             nalez[(text, pozadi)] = nalez.get((text, pozadi), 0) + 1
     return nalez
+
+
+def barva(sada: dict[str, str], jmeno: str) -> tuple[int, int, int] | None:
+    """Token, nebo barva zapsaná natvrdo → (r, g, b).
+
+    <b>Proč i natvrdo zapsaná</b> (konzilium nad revizí webu, 27. 11. 2026,
+    nález 2-designu). Do té doby kontrola brala jen páry, kde jsou token
+    obě strany — a `.tlacitko` s `color: #fff` na `var(--voda)` jí tak
+    uteklo: ve světlém vzhledu 5,67 : 1, v tmavém 2,35. Bílá se s režimem
+    nemění, výplň ano, takže vada byla jen v jednom vzhledu a nikdo ji
+    neviděl naráz. Pár, kde je natvrdo jen jedna strana, je přesně ten,
+    který se v druhém vzhledu rozbije.
+    """
+    if jmeno.startswith("--"):
+        return na_rgb(rozvin(sada, sada.get(jmeno, "")))
+    return na_rgb(jmeno)
 
 
 def kontrola_kontrast(css: str, mez: float = 4.5) -> tuple[list[str], list[str], int]:
@@ -358,8 +384,8 @@ def kontrola_kontrast(css: str, mez: float = 4.5) -> tuple[list[str], list[str],
     for kontext in (SVETLY, TMAVY_SYSTEM, TMAVY_PREPINAC):
         sada = sady[kontext]
         for text, pozadi, duvod in pary:
-            a = na_rgb(rozvin(sada, sada.get(text, "")))
-            b = na_rgb(rozvin(sada, sada.get(pozadi, "")))
+            a = barva(sada, text)
+            b = barva(sada, pozadi)
             if not (a and b):
                 continue
             pomer = kontrast(a, b)
@@ -376,11 +402,96 @@ def kontrola_kontrast(css: str, mez: float = 4.5) -> tuple[list[str], list[str],
     return chyby, radky, merено
 
 
+# ---------------------------------------------------- kontrola 3: stupnice
+
+# Kolik deklarací ještě stojí mimo stupnici. **Číslo smí jen klesat.**
+# Vzniklo 27. 11. 2026, kdy stupnice dostala tokeny a na ně se převedly
+# hodnoty, které od kroku dělilo nejvýš 0,8 px. Zbytek se o víc než pixel
+# pohne (10,88 → 12,8 px v popiscích, 25,6 → 28 px v nadpisech), a to se
+# převádí po obrazovkách s pohledem na výsledek, ne hromadně.
+#
+# Když deklarace ubude, kontrola spadne taky a řekne nové číslo — jinak by
+# se uvolněné místo dalo potichu zaplnit novou hodnotou mimo stupnici.
+DLUH = {"font-size": 56, "border-radius": 4}
+
+# Kolik kroků stupnice má. Šestý krok je rozhodnutí, ne oprava.
+KROKU = {"font-size": ("--pismo", 5), "border-radius": ("--r", 3)}
+
+
+def _na_stupnici(vlastnost: str, hodnota: str, tokeny: set[str]) -> bool:
+    h = " ".join(hodnota.split())
+    m = re.fullmatch(r"var\(\s*(--[\w-]+)\s*\)", h)
+    if m:
+        return m.group(1) in tokeny
+    # Tabule se škáluje s obrazovkou a znak se svou velikostí; ani jedno
+    # stupnici nemá a mít nemá.
+    if "var(--tv)" in h or "var(--znacka)" in h:
+        return True
+    if h == "inherit":
+        return True
+    # Hranatý roh a kruh nejsou odrůdy poloměru, ale jiné tvary.
+    return vlastnost == "border-radius" and h in ("0", "50%")
+
+
+def kontrola_stupnice(css: str) -> tuple[list[str], list[str], int]:
+    chyby: list[str] = []
+    radky: list[str] = []
+    svetly = sady_z_css(css)[SVETLY]
+    merено = 0
+
+    for vlastnost, (predpona, kolik) in KROKU.items():
+        tokeny = {t for t in svetly if t == predpona or t.startswith(predpona + "-")}
+        if len(tokeny) != kolik:
+            chyby.append(
+                f"stupnice {vlastnost} má mít {kolik} kroků, v :root jich je "
+                f"{len(tokeny)}: {', '.join(sorted(tokeny)) or 'žádný'}"
+            )
+
+        mimo: dict[str, int] = {}
+        na = 0
+        for cesta, telo in bloky(_bez_komentaru(css)):
+            for jmeno, hodnota in _deklarace(telo):
+                # Zkratka `font` nese velikost taky. Smí být jen `inherit`,
+                # nebo základ písma na `body` — jinak by se jí dala stupnice
+                # obejít, aniž by se `font-size` vůbec napsalo.
+                if vlastnost == "font-size" and jmeno == "font":
+                    if hodnota != "inherit" and cesta[-1] != "body":
+                        mimo["font: " + " ".join(hodnota.split())] = 1 + mimo.get(
+                            "font: " + " ".join(hodnota.split()), 0)
+                    continue
+                if jmeno != vlastnost:
+                    continue
+                merено += 1
+                if _na_stupnici(vlastnost, hodnota, tokeny):
+                    na += 1
+                else:
+                    klic = " ".join(hodnota.split())
+                    mimo[klic] = mimo.get(klic, 0) + 1
+
+        celkem = sum(mimo.values())
+        dluh = DLUH[vlastnost]
+        vypis = ", ".join(f"{h} ×{n}" for h, n in sorted(mimo.items()))
+        radky.append(f"  {vlastnost}: {na} na stupnici, {celkem} mimo (dluh {dluh})")
+        if vypis:
+            radky.append(f"      mimo: {vypis}")
+        if celkem > dluh:
+            chyby.append(
+                f"{vlastnost}: mimo stupnici je {celkem} deklarací, dluh je "
+                f"{dluh} — přibyla hodnota, která není krokem stupnice"
+            )
+        elif celkem < dluh:
+            chyby.append(
+                f"{vlastnost}: mimo stupnici zbývá {celkem}, v DLUH stojí "
+                f"{dluh} — sniž číslo, ať se uvolněné místo nedá zaplnit"
+            )
+    return chyby, radky, merено
+
+
 # --------------------------------------------------------------------- běh
 
 def main(argv: list[str]) -> int:
     jen = {a.lstrip("-") for a in argv[1:]}
-    if not jen <= {"shoda", "kontrast"}:
+    if not jen <= {"shoda", "kontrast", "stupnice"}:
         # Překlep v přepínači by jinak nespustil ani jednu kontrolu a vrátil
         # nulu — tedy přesně to tiché „prošlo", kterému se tady vyhýbáme.
         print(__doc__)
@@ -423,8 +534,34 @@ def main(argv: list[str]) -> int:
             "  leží za aliasem nebo se dědí. Páry nad průhledným pozadím\n"
             "  (color-mix, gradient) spočítat nejde. A kontrast je jedna\n"
             "  vlastnost přístupnosti: zelený kontrast neznamená, že appka\n"
-            "  funguje se čtečkou."
+            "  funguje se čtečkou.\n"
+            "\n"
+            "  Co kontrast nevidí vůbec: barvu písma vedenou přes jinou proměnnou\n"
+            "  než token z :root (`--stupen` u výstrahy, `--ukon-strany` u nadpisu\n"
+            "  okna) a písmo, které pozadí dědí od rodiče. Nadpis okna s barvou\n"
+            "  úkonu má 3,13–4,32 : 1 a tahle kontrola o něm mlčí (změřeno\n"
+            "  v prohlížeči 27. 11. 2026, `docs/konzilium/revize-webu/ZAVER.md`)."
         )
+
+    if not jen or "stupnice" in jen:
+        chyby, radky, merено = kontrola_stupnice(css)
+        print(f"\nSTUPNICE písma a poloměrů ({merено} deklarací)")
+        for r in radky:
+            print(r)
+        for ch in chyby:
+            print(f"  ✗ {ch}")
+        if merено == 0:
+            print("  ✗ nenašla se jediná deklarace — kontrola neměřila nic")
+            naprazdno = True
+        elif not chyby:
+            print("  ✓ nic nepřibylo")
+        print(
+            "\n  Mez téhle kontroly: hlídá, že hodnot mimo stupnici nepřibývá, ne že\n"
+            "  je písmo dost velké — `--pismo-popisek` na údaji, podle kterého se\n"
+            "  rozhoduje, projde. A velikosti v `em` počítá jako dluh, i když\n"
+            "  vycházejí z kroku stupnice: co z nich vyjde v pixelech, neví."
+        )
+        spadlo |= bool(chyby)
 
     if naprazdno:
         return 2

@@ -111,6 +111,33 @@
   /* Šířka obsahu. Roste ve dvou krocích, ne plynule — mezikroky by na
      každém displeji vypadaly trochu jinak a nikde dobře. */
   --sirka: 62rem;
+
+  /* <b>Stupnice písma: pět kroků a nic mezi nimi</b> (konzilium nad revizí
+     webu, 27. 11. 2026). Před ní tu bylo 34 různých velikostí, z toho
+     jedenáct mezi 10,88 a 15,2 px — krok o 0,3 px oko nečte jako úroveň,
+     jen jako neklid, a nadpis okna se od nadpisu oddílu lišil o 0,8 px.
+
+     Co na kterém kroku stojí: **popisek** nese verzálkový popisek
+     a metadata (datum, zdroj, nápověda); **drobné** je nejmenší písmo pro
+     údaj, podle kterého se rozhoduje — jméno lodi, body, kód, čas;
+     u vody (cíl, zápis) se čte nejmíň `--pismo`.
+
+     Tabule a znak stupnici nemají: tabule se škáluje s obrazovkou (`--tv`)
+     a znak se svou velikostí (`--znacka`). Co je ještě mimo, počítá
+     `tools/kontrola-tokenu.py` a nedovolí, aby toho přibylo. */
+  --pismo-popisek: 0.8rem;
+  --pismo-drobne: 0.9rem;
+  --pismo: 1rem;
+  --pismo-nadpis: 1.2rem;
+  --pismo-titul: 1.75rem;
+
+  /* <b>Tři poloměry.</b> Dřív 10, 8, 7, 6, 4, 12 a 14 px — karta a dlaždice
+     vedle sebe „skoro" seděly, což je horší než zřetelný rozdíl. Pole
+     a drobnosti, karta s dlaždicí a tlačítkem, a pilulka. **Pilulka je
+     tvar štítku, na který se neklepe**; úkon ji mít nemá. */
+  --r-pole: 4px;
+  --r: 10px;
+  --r-stitek: 999px;
 }
 
 /* Široký monitor. Rozšiřuje se to, co z místa doopravdy těží: tabulka
@@ -308,7 +335,7 @@ header.hlavicka .obal {
   gap: 1rem; padding-top: 0.2rem; padding-bottom: 0.2rem;
 }
 header.hlavicka a { color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
-header.hlavicka a.znacka { display: inline-flex; align-items: center; gap: 0.55rem; font-size: 1rem; }
+header.hlavicka a.znacka { display: inline-flex; align-items: center; gap: 0.55rem; font-size: var(--pismo); }
 /* Plachta je to nejhezčí, co web má, a ve čtyřiceti bodech z ní nebylo nic
    vidět. Zdroj je 512×512, takže zvětšení nic nestojí. Velikost je v CSS,
    ne jen v atributech, aby se dala na úzkém displeji stáhnout. */
@@ -458,7 +485,7 @@ body:has(.uvod) .pozadi-znak { display: none; }
 :root[data-rezim="tmavy"] .logo-oys { --logo-oys: #b8d4ea; }
 :root[data-rezim="tmavy"] header.hlavicka { --barva-znacky: #d6e6f5; --napis-znacky: #7d848c; }
 header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
-header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
+header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: var(--pismo-drobne); }
 header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
 /* Na úzkém displeji zůstane jen značka — tři odkazy a název se do řádku
    nevejdou a menu je důležitější než wordmark. */
@@ -493,20 +520,20 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
    by se pilulky slily do jedné plochy, proto až odsud. */
 @media (min-width: 1180px) {
   header.hlavicka .obal { padding-top: 0.2rem; padding-bottom: 0.2rem; }
-  header.hlavicka a.znacka { font-size: 1.05rem; }
+  header.hlavicka a.znacka { font-size: var(--pismo); }
   header.hlavicka a.znacka svg.logo-monitor { height: 76px; margin-bottom: -24px; }
   header.hlavicka a.znacka svg.logo-oys { width: 104px; height: 104px; }
   header.hlavicka a.znacka svg.logo-napis-monitor { height: 36px; }
   header.hlavicka nav { gap: 0.35rem; align-items: center; }
   header.hlavicka nav > a {
-    padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.925rem;
+    padding: 0.4rem 0.7rem; border-radius: var(--r); font-size: var(--pismo-drobne);
     transition: background-color 120ms ease, color 120ms ease;
   }
   header.hlavicka nav > a:hover { background: var(--zvyrazneni); color: var(--text); }
 }
 
-h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
-h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
+h1 { font-size: var(--pismo-titul); line-height: 1.25; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
+h2 { font-size: var(--pismo-nadpis); margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .podtitulek { color: var(--tlumeny); margin: 0 0 2rem; }
 /* Podtitulek těsně nad tabulkou — pod ním hned následují taby tříd,
    takže celý odstup odstavce by je od jejich nadpisu odtrhl. */
@@ -618,7 +645,7 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 /* Živá věta: co se právě děje. Odděleno tečkami, na telefonu se zalomí. */
 .hero-zivot {
   display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem;
-  margin-top: 0.6rem !important; font-size: 0.9rem;
+  margin-top: 0.6rem !important; font-size: var(--pismo-drobne);
   color: rgba(255, 255, 255, 0.92) !important;
 }
 .hero-zivot span + span::before { content: "· "; opacity: 0.6; }
@@ -632,14 +659,18 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 }
 .hero-zivot a:hover,
 .hero-zivot a:focus-visible { text-decoration-color: rgba(255, 255, 255, 0.75); }
-.hero-zivot a:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; border-radius: 3px; }
+.hero-zivot a:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; border-radius: var(--r-pole); }
 /* Na úzkém displeji se věta láme na řádky a tečka by začínala řádek. */
 @media (max-width: 32rem) {
   .hero-zivot { flex-direction: column; gap: 0.1rem; }
   .hero-zivot span + span::before { content: none; }
 }
 
-.tlacitko.druhotne { background: rgba(255, 255, 255, 0.16); backdrop-filter: blur(2px); }
+/* <b>Druhé tlačítko je obrysové.</b> Dřív průsvitná bílá s bílým písmem —
+   tvar pro tlačítko na fotce, jenže na fotce žádné není: stojí na stránce
+   odhlášení a nepovedeného přihlášení, kde bylo ve světlém vzhledu bílé
+   na bílé. Plné tlačítko je na obrazovce jedno, zbytek je obrys. */
+.tlacitko.druhotne { background: transparent; color: var(--voda); box-shadow: inset 0 0 0 1px var(--voda); }
 .kredit {
   position: absolute; right: 0.6rem; top: 0.5rem; margin: 0;
   font-size: 0.7rem; color: rgba(255, 255, 255, 0.75);
@@ -675,11 +706,11 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 }
 .karta {
   display: block; padding: 1rem 1.15rem; background: var(--papir);
-  border: 1px solid var(--linka); border-radius: 10px; color: inherit;
+  border: 1px solid var(--linka); border-radius: var(--r); color: inherit;
 }
 .karta:hover { border-color: var(--voda); text-decoration: none; }
 .karta .nazev { font-weight: 600; }
-.karta .detail { color: var(--tlumeny); font-size: 0.875rem; margin-top: 0.15rem; }
+.karta .detail { color: var(--tlumeny); font-size: var(--pismo-drobne); margin-top: 0.15rem; }
 /* Stav zastávky. Odjetá má výsledky, proto jediná nese barvu; zrušená se
    drží v pozadí, ale nemizí — „nekonalo se" je taky informace. */
 /* Barvy stavů musí být specifičtější než obecný `.stitek`, jinak je přebije
@@ -706,7 +737,7 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .verze-smernice > li { padding: 0.55rem 0; border-bottom: 1px solid var(--linka); }
 .verze-smernice > li:last-child { border-bottom: 0; }
 .verze-smernice .detail {
-  display: block; color: var(--tlumeny); font-size: 0.875rem; margin-top: 0.15rem;
+  display: block; color: var(--tlumeny); font-size: var(--pismo-drobne); margin-top: 0.15rem;
 }
 /* Formulář stažení patří pod údaje, ne vedle nich: je to úkon nad tou
    verzí, a na úzké obrazovce by se vedle textu stejně nevešel. */
@@ -735,7 +766,7 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .radek-regaty .nazev { font-weight: 600; color: var(--voda); }
 /* Termín doprava, ale `margin-left: auto` jen dokud se vejde na řádek —
    po zalomení by odsazoval sám sebe od levého okraje. */
-.radek-regaty .termin { margin-left: auto; color: var(--tlumeny); font-size: 0.875rem; }
+.radek-regaty .termin { margin-left: auto; color: var(--tlumeny); font-size: var(--pismo-drobne); }
 
 /* ---------------------------------------------------------------------
    Stav v rámečku karty (Filip, 27. 10. 2026).
@@ -798,7 +829,7 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .rozjizdka-stav .panylek-stavu {
   display: inline-grid; place-items: center;
   min-width: 1.75rem; height: 1.75rem; padding: 0 0.3rem;
-  border-radius: 7px; border: 2px solid var(--barva-stavu);
+  border-radius: var(--r); border: 2px solid var(--barva-stavu);
   font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums;
   color: var(--barva-stavu); vertical-align: -0.4em; margin-right: 0.35rem;
 }
@@ -817,7 +848,7 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
    v něm barva ztratila. Plochu drží panýlek, písmo bere čitelnou odrůdu. */
 .rozjizdka-probiha .slovy { color: var(--pozor-pismo); }
 .rozjizdka-stav .slovy {
-  color: var(--barva-stavu); font-weight: 400; font-size: 0.78rem;
+  color: var(--barva-stavu); font-weight: 400; font-size: var(--pismo-popisek);
   letter-spacing: 0.06em; text-transform: uppercase; margin-left: 0.4rem;
 }
 
@@ -853,8 +884,8 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .presun { color: var(--tlumeny); }
 
 .stitek {
-  display: inline-block; font-size: 0.75rem; color: var(--tlumeny);
-  border: 1px solid var(--linka); border-radius: 999px; padding: 0.05rem 0.5rem;
+  display: inline-block; font-size: var(--pismo-popisek); color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: var(--r-stitek); padding: 0.05rem 0.5rem;
   margin-left: 0.4rem; vertical-align: 0.1em;
 }
 
@@ -886,7 +917,7 @@ button.stitek-role:focus-visible { color: var(--stav-zruseny); border-color: cur
 .kod-u-lodi { margin: 0.4rem 0 0; }
 .kod-u-lodi .kod-velky { font-size: 1.4rem; margin: 0.2rem 0; }
 .kod-u-lodi .qr { width: min(9rem, 40vw); }
-.qr svg { width: 100%; height: auto; display: block; background: #fdfbf7; border-radius: 8px; padding: 0.4rem; }
+.qr svg { width: 100%; height: auto; display: block; background: #fdfbf7; border-radius: var(--r); padding: 0.4rem; }
 
 /* Štítek zdroje u přejatého článku nese i malé logo. Logo je dekorace vedle
    jména, ne náhrada za něj — proto `alt=""` a jméno zůstává textem. */
@@ -906,12 +937,12 @@ button.stitek-role:focus-visible { color: var(--stav-zruseny); border-color: cur
 /* Výsledková tabulka. Nejtěžší kus celého webu: dvacet lodí krát osm
    rozjížděk se na telefon nevejde. Řešení je vodorovný posuv s ukotveným
    sloupcem lodi — jméno zůstane vidět, čísla se posouvají pod ním. */
-.tabulka-obal { overflow-x: auto; border: 1px solid var(--linka); border-radius: 10px; background: var(--papir); }
+.tabulka-obal { overflow-x: auto; border: 1px solid var(--linka); border-radius: var(--r); background: var(--papir); }
 /* Odstup pod tabulkou, aby na ni nenasedl následující odstavec. */
 .tabulka-sekce { margin-bottom: 1.5rem; }
-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+table { border-collapse: collapse; width: 100%; font-size: var(--pismo-drobne); }
 th, td { padding: 0.55rem 0.7rem; text-align: right; white-space: nowrap; }
-thead th { font-weight: 600; color: var(--tlumeny); font-size: 0.8rem; border-bottom: 1px solid var(--linka); }
+thead th { font-weight: 600; color: var(--tlumeny); font-size: var(--pismo-popisek); border-bottom: 1px solid var(--linka); }
 tbody tr + tr td { border-top: 1px solid var(--linka); }
 th.lod, td.lod {
   text-align: left; position: sticky; left: 0; background: var(--papir);
@@ -930,7 +961,7 @@ tbody tr:hover td { background: var(--zvyrazneni); }
 tbody tr:hover td.body { background: var(--zvyrazneni); }
 tbody tr:hover td.lod { background: var(--zvyrazneni); }
 tr.kategorie td {
-  background: var(--zvyrazneni); font-weight: 600; font-size: 0.8rem;
+  background: var(--zvyrazneni); font-weight: 600; font-size: var(--pismo-popisek);
   text-transform: uppercase; letter-spacing: 0.04em; color: var(--tlumeny);
   text-align: left; position: sticky; left: 0;
 }
@@ -938,7 +969,7 @@ td.kod { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
 /* Pořadí a majitel se vejdou do ukotveného sloupce s lodí, aby si na ně
    čtenář nemusel odscrollovat. */
 .poradi-cislo { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
-.majitel { font-size: 0.78rem; color: var(--tlumeny); font-weight: 400; }
+.majitel { font-size: var(--pismo-popisek); color: var(--tlumeny); font-weight: 400; }
 /* Kód závodních pravidel u bodů: body platí, kód říká, odkud jsou. */
 .znacka { font-size: 0.7rem; color: var(--tlumeny); margin-left: 0.3rem; letter-spacing: 0.03em; }
 td.skrtnuto { color: var(--tlumeny); text-decoration: line-through; }
@@ -947,7 +978,7 @@ td.skrtnuto { color: var(--tlumeny); text-decoration: line-through; }
 td.cislo { font-variant-numeric: tabular-nums; }
 .mimo-serii { color: var(--tlumeny); font-weight: 400; }
 
-.pravidla { display: grid; gap: 0.4rem 1.5rem; grid-template-columns: auto 1fr; margin: 0; font-size: 0.9rem; }
+.pravidla { display: grid; gap: 0.4rem 1.5rem; grid-template-columns: auto 1fr; margin: 0; font-size: var(--pismo-drobne); }
 .pravidla dt { color: var(--tlumeny); }
 .pravidla dd { margin: 0; }
 
@@ -956,7 +987,7 @@ td.cislo { font-variant-numeric: tabular-nums; }
    a rozbíjel design. Při rolování odjede nahoru a hlavička zůstane. */
 .ukazka {
   margin: 0; padding: 0.3rem 1.25rem; text-align: center;
-  font-size: 0.78rem; line-height: 1.4; color: var(--tlumeny);
+  font-size: var(--pismo-popisek); line-height: 1.4; color: var(--tlumeny);
   background: var(--zvyrazneni); border-bottom: 1px solid var(--linka);
 }
 .ukazka b { color: var(--text); font-weight: 600; }
@@ -967,18 +998,23 @@ td.cislo { font-variant-numeric: tabular-nums; }
    pozadí čtečka nepřečte a nikdo nepozná proč. */
 .stahni .qr {
   width: 168px; height: 168px; flex: none; background: #fff;
-  padding: 8px; border-radius: 10px; box-sizing: content-box;
+  padding: 8px; border-radius: var(--r); box-sizing: content-box;
 }
 .stahni .qr svg { width: 100%; height: 100%; display: block; }
+/* <b>Písmo je `--papir`, ne bílá natvrdo.</b> `--voda` je v tmavém vzhledu
+   světlá a bílá na ní měla 2,35 : 1 — nejdůležitější úkon měl nejhorší
+   kontrast na stránce, a jen v jednom vzhledu, takže to nikdo neviděl
+   (konzilium nad revizí webu, 27. 11. 2026). S `--papir` vychází 5,67
+   ve světlém a 7,06 v tmavém a `tools/kontrola-tokenu.py` to hlídá. */
 .tlacitko {
-  display: inline-block; background: var(--voda); color: #fff;
-  padding: 0.6rem 1.1rem; border-radius: 10px; font-weight: 600;
+  display: inline-block; background: var(--voda); color: var(--papir);
+  padding: 0.6rem 1.1rem; border-radius: var(--r); font-weight: 600;
 }
 .tlacitko:hover { text-decoration: none; opacity: 0.9; }
 button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 
-.poznamka { color: var(--tlumeny); font-size: 0.85rem; margin-top: 0.75rem; }
-.prazdno { color: var(--tlumeny); background: var(--papir); border: 1px dashed var(--linka); border-radius: 10px; padding: 2rem 1.25rem; text-align: center; }
+.poznamka { color: var(--tlumeny); font-size: var(--pismo-drobne); margin-top: 0.75rem; }
+.prazdno { color: var(--tlumeny); background: var(--papir); border: 1px dashed var(--linka); border-radius: var(--r); padding: 2rem 1.25rem; text-align: center; }
 
 /* Novinky a články.
 
@@ -986,7 +1022,7 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
    navíc. Vlastní vzhled by z blogu udělal druhý web uvnitř webu. */
 .novinky .karta .nazev { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
 .novinky .perex {
-  margin: 0.4rem 0 0; color: var(--tlumeny); font-size: 0.925rem; line-height: 1.55;
+  margin: 0.4rem 0 0; color: var(--tlumeny); font-size: var(--pismo-drobne); line-height: 1.55;
 }
 .novinky-blok { margin-top: 3rem; }
 /* Střed vedle boků začíná v rovině s nimi a nadpis má podobu nadpisů
@@ -994,7 +1030,7 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
    karty šly cikcak (Filip, 15. 9. 2026: jednotný design). */
 .s-boky-stred > .novinky-blok:first-child { margin-top: 0; }
 .novinky-blok > h2 {
-  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em;
+  font-size: var(--pismo-popisek); text-transform: uppercase; letter-spacing: 0.07em;
   color: var(--tlumeny); margin: 0 0 0.6rem; font-weight: 600;
 }
 
@@ -1002,13 +1038,13 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
    špatně — tabulka výsledků ji potřebuje, souvislý text ne. */
 .clanek { max-width: 38rem; }
 .clanek p { line-height: 1.7; margin: 0 0 1.1rem; }
-.clanek .perex { font-size: 1.05rem; color: var(--tlumeny); }
+.clanek .perex { font-size: var(--pismo); color: var(--tlumeny); }
 /* Drobečková navigace. Malá, tlumená a proklikatelná až na kořen — smysl je
    skočit o dvě úrovně naráz, ne o jednu jako u „zpět". */
 .drobecky {
   display: flex; flex-wrap: wrap; align-items: center;
   gap: 0.35rem; margin: 0 0 0.85rem;
-  font-size: 0.85rem; color: var(--tlumeny);
+  font-size: var(--pismo-drobne); color: var(--tlumeny);
 }
 .drobecky > span { display: inline-flex; align-items: center; gap: 0.35rem; }
 .drobecky a { color: var(--tlumeny); text-decoration: underline; text-underline-offset: 0.15em; }
@@ -1032,7 +1068,7 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   position: fixed; right: 1rem; bottom: calc(var(--paticka, 0rem) + 0.75rem); z-index: 20;
   display: grid; place-items: center;
   width: 2.75rem; height: 2.75rem;
-  border: 1px solid var(--linka); border-radius: 999px;
+  border: 1px solid var(--linka); border-radius: var(--r-stitek);
   background: color-mix(in srgb, var(--papir) 92%, transparent);
   color: var(--tlumeny); font-size: 1.1rem; line-height: 1;
   backdrop-filter: blur(6px);
@@ -1077,7 +1113,7 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 .profil > summary::-webkit-details-marker { display: none; }
 .profil .kruh {
   display: grid; place-items: center;
-  width: 2rem; height: 2rem; border-radius: 999px;
+  width: 2rem; height: 2rem; border-radius: var(--r-stitek);
   background: var(--zvyrazneni); border: 1px solid var(--linka);
   color: var(--tlumeny); font-size: 0.7rem; font-weight: 600;
   letter-spacing: 0.02em;
@@ -1096,7 +1132,7 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   min-width: 14rem; padding: 0.35rem;
   display: grid; gap: 0.15rem;
   background: var(--papir);
-  border: 1px solid var(--linka); border-radius: 10px;
+  border: 1px solid var(--linka); border-radius: var(--r);
   box-shadow: var(--stin-nabidky);
 }
 .profil .nabidka .hlava {
@@ -1104,23 +1140,23 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   padding: 0.9rem 0.6rem 0.85rem;
   border-bottom: 1px solid var(--linka); margin-bottom: 0.2rem;
 }
-.profil .nabidka .hlava b { font-size: 0.95rem; margin-top: 0.5rem; }
+.profil .nabidka .hlava b { font-size: var(--pismo-drobne); margin-top: 0.5rem; }
 /* Velký kruh v nabídce. Barvu drží tlumeně — Zitadel má plnou modrou,
    ale tenhle web je utilitární a plná plocha by v něm křičela. */
 .profil .kruh.velky {
-  width: 3rem; height: 3rem; font-size: 1rem;
+  width: 3rem; height: 3rem; font-size: var(--pismo);
   background: color-mix(in srgb, var(--voda) 14%, transparent);
   border-color: color-mix(in srgb, var(--voda) 35%, transparent);
   color: var(--voda);
 }
 .profil .nabidka .hlava span {
-  color: var(--tlumeny); font-size: 0.8rem;
+  color: var(--tlumeny); font-size: var(--pismo-popisek);
   /* Dlouhý e-mail nesmí nabídku rozšířit přes půl obrazovky. */
   overflow-wrap: anywhere;
 }
 .profil .nabidka a {
-  padding: 0.45rem 0.6rem; border-radius: 7px;
-  color: var(--text); font-size: 0.9rem; font-weight: 500;
+  padding: 0.45rem 0.6rem; border-radius: var(--r);
+  color: var(--text); font-size: var(--pismo-drobne); font-weight: 500;
 }
 .profil .nabidka a:hover { background: var(--zvyrazneni); text-decoration: none; }
 /* Odhlášení je tlačítko ve formuláři, ale v nabídce má vypadat jako
@@ -1138,7 +1174,7 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 .menu { position: relative; }
 .menu > summary {
   list-style: none; cursor: pointer;
-  display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 999px;
+  display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: var(--r-stitek);
   color: var(--tlumeny); font-size: 1.3rem; line-height: 1; font-weight: 700;
 }
 .menu > summary::-webkit-details-marker { display: none; }
@@ -1151,12 +1187,12 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   min-width: 11rem; padding: 0.35rem;
   display: grid; gap: 0.15rem;
   background: var(--papir);
-  border: 1px solid var(--linka); border-radius: 10px;
+  border: 1px solid var(--linka); border-radius: var(--r);
   box-shadow: var(--stin-nabidky);
 }
 .menu .nabidka a {
-  padding: 0.45rem 0.6rem; border-radius: 7px;
-  color: var(--text); font-size: 0.9rem; font-weight: 500;
+  padding: 0.45rem 0.6rem; border-radius: var(--r);
+  color: var(--text); font-size: var(--pismo-drobne); font-weight: 500;
 }
 .menu .nabidka a:hover { background: var(--zvyrazneni); text-decoration: none; }
 /* <b>Nadpis skupiny</b> — Závodím / Fandím / Legislativa. Tlumený a malý:
@@ -1171,8 +1207,8 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 /* „Vzhled podle systému" je formulář, ale v nabídce vypadá jako položka. */
 .menu .nabidka form { margin: 0; border-top: 1px solid var(--linka); padding-top: 0.15rem; }
 .menu .nabidka button {
-  font: inherit; font-size: 0.9rem; width: 100%; text-align: left; cursor: pointer;
-  background: none; border: 0; border-radius: 7px; padding: 0.45rem 0.6rem; color: var(--tlumeny);
+  font: inherit; font-size: var(--pismo-drobne); width: 100%; text-align: left; cursor: pointer;
+  background: none; border: 0; border-radius: var(--r); padding: 0.45rem 0.6rem; color: var(--tlumeny);
 }
 .menu .nabidka button:hover { background: var(--zvyrazneni); color: var(--text); }
 
@@ -1196,7 +1232,7 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 .rezim form { margin: 0; }
 .rezim button {
   display: grid; place-items: center; width: 2rem; height: 2rem; padding: 0;
-  border: 0; border-radius: 999px; background: none; color: var(--tlumeny); cursor: pointer;
+  border: 0; border-radius: var(--r-stitek); background: none; color: var(--tlumeny); cursor: pointer;
 }
 .rezim button:hover { background: var(--zvyrazneni); color: var(--text); }
 .rezim button:focus-visible { outline: 2px solid var(--voda); outline-offset: 2px; }
@@ -1221,15 +1257,15 @@ header.hlavicka .jen-uzke { display: none; }
 /* Správa oprávnění. Formulář i tabulka jsou serverové, takže tu nejsou
    žádné stavy „ukládám" — po odeslání přijde nová stránka s hláškou. */
 .hlaska {
-  border: 1px solid var(--linka); border-left-width: 4px; border-radius: 8px;
+  border: 1px solid var(--linka); border-left-width: 4px; border-radius: var(--r);
   padding: 0.7rem 0.9rem; margin: 0 0 1.25rem; background: var(--papir);
 }
 .hlaska.chyba { border-left-color: var(--stav-zruseny); }
 /* Tlačítko v hlášce (publikace ročníku): formulář nesmí zalomit větu. */
 .hlaska form.radkove { display: inline; }
 .hlaska button.maly {
-  font: inherit; font-size: 0.85rem; cursor: pointer; margin-left: 0.2rem;
-  padding: 0.25rem 0.7rem; border-radius: 999px;
+  font: inherit; font-size: var(--pismo-drobne); cursor: pointer; margin-left: 0.2rem;
+  padding: 0.25rem 0.7rem; border-radius: var(--r-stitek);
   border: 1px solid var(--linka); background: var(--pozadi); color: var(--text);
 }
 .hlaska button.maly:hover { border-color: var(--voda); color: var(--voda); }
@@ -1257,25 +1293,25 @@ header.hlavicka .jen-uzke { display: none; }
 /* Poloha odjinud než z GPS. Složené schválně: z mobilu se pípá, tohle je
    cesta pro nestandardní případ (Filip, 9. 10. 2026). */
 .zmapy {
-  border: 1px dashed var(--linka); border-radius: 10px;
+  border: 1px dashed var(--linka); border-radius: var(--r);
   padding: 0.6rem 0.9rem; margin-top: 1.25rem;
 }
 .zmapy > summary { cursor: pointer; font-weight: 600; }
 .zmapy[open] > summary { margin-bottom: 0.75rem; }
 .zmapy textarea {
   width: 100%; font: inherit; padding: 0.45rem 0.6rem;
-  border: 1px solid var(--linka); border-radius: 8px;
+  border: 1px solid var(--linka); border-radius: var(--r);
   background: var(--pozadi); color: var(--text);
 }
 .zmapy .tlacitka { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
 /* Panel stavu trati stojí nad pípnutím, protože rozhoduje, jestli se smí
    vůbec pípat. Orámovaný, ať se na vodě najde bez čtení. */
 .stav-trati {
-  border: 1px solid var(--linka); border-radius: 10px; background: var(--papir);
+  border: 1px solid var(--linka); border-radius: var(--r); background: var(--papir);
   padding: 0.9rem 1rem; margin: 1rem 0;
 }
 .stav-trati h2 { margin-top: 0; }
-.stav-trati .stitek { margin-left: 0; font-size: 0.85rem; }
+.stav-trati .stitek { margin-left: 0; font-size: var(--pismo-drobne); }
 .stav-trati .tlacitka { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
 /* Prvky trati. Ikonka je tentýž tvar jako na mapě, aby seznam a mapa
    mluvily stejně: kolečko konec, úsečka čára nebo brána, oblouček strana. */
@@ -1310,10 +1346,10 @@ header.hlavicka .jen-uzke { display: none; }
   margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; flex: none;
 }
 .seznam-prvku .nahled-fotky {
-  width: 32px; height: 24px; object-fit: cover; border-radius: 4px;
+  width: 32px; height: 24px; object-fit: cover; border-radius: var(--r-pole);
   border: 1px solid var(--linka);
 }
-.seznam-prvku .rozbalit { font-size: 0.8rem; color: var(--tlumeny); }
+.seznam-prvku .rozbalit { font-size: var(--pismo-popisek); color: var(--tlumeny); }
 .seznam-prvku .shrnuti-prvku:hover .rozbalit { color: var(--voda); }
 
 /* Štítek boku barevně a průhledně (Filip, 15. 10. 2026). Červená a zelená
@@ -1358,7 +1394,7 @@ header.hlavicka .jen-uzke { display: none; }
   align-items: center;
   min-height: 44px;
   padding: 0 0 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--pismo-drobne);
   color: var(--tlumeny);
   cursor: pointer;
 }
@@ -1394,7 +1430,7 @@ header.hlavicka .jen-uzke { display: none; }
   border-radius: 50%;
   /* Kolečko musí spojnici překrýt, jinak jí tečky prosvítají skrz. */
   background: var(--pozadi);
-  font-size: 0.8rem;
+  font-size: var(--pismo-popisek);
   color: var(--tlumeny);
   font-variant-numeric: tabular-nums;
 }
@@ -1416,12 +1452,12 @@ header.hlavicka .jen-uzke { display: none; }
 .detail-prvku-verejny .nahled-prvku { margin: 0 0 0.6rem; max-width: 22rem; }
 .detail-prvku-verejny p { margin: 0 0 0.35rem; }
 .detail-prvku-verejny .jak-se-jede { color: var(--text); }
-.detail-prvku-verejny .poznamka { font-size: 0.85rem; }
+.detail-prvku-verejny .poznamka { font-size: var(--pismo-drobne); }
 /* Poznámka se vejde na řádek celá jen někdy; zbytek se nechá uříznout,
    protože v detailu je stejně celá. */
 .seznam-prvku .jak-to-jet {
   flex: 1 1 100%;
-  font-size: 0.85rem;
+  font-size: var(--pismo-drobne);
   color: var(--tlumeny);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1440,14 +1476,14 @@ header.hlavicka .jen-uzke { display: none; }
   cursor: pointer;
   font-weight: 600;
 }
-.boje-mimo .jine-boje > summary { font-weight: 400; font-size: 0.9rem; }
+.boje-mimo .jine-boje > summary { font-weight: 400; font-size: var(--pismo-drobne); }
 .historie-boji { margin-top: 1.5rem; }
 .historie-boji > summary { font-size: 1.1rem; }
 
 /* „Totéž jedou ještě…" u trati a u rozjížďky. <b>Malá a rozbalovací</b>
    (Filip, 15. 10. 2026): je to doplňující pohled, ne údaj, kvůli kterému
    se na obrazovku chodí — zabalená zabere řádek, rozbalená vydá odkazy. */
-.stejna-trat { margin: 0.25rem 0 0; font-size: 0.78rem; }
+.stejna-trat { margin: 0.25rem 0 0; font-size: var(--pismo-popisek); }
 .stejna-trat > summary { color: var(--tlumeny); cursor: pointer; }
 .stejna-trat > summary:hover { color: var(--voda); }
 .stejna-trat > p { margin: 0.2rem 0 0; }
@@ -1474,8 +1510,8 @@ header.hlavicka .jen-uzke { display: none; }
   list-style: none; cursor: pointer; user-select: none;
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 44px; min-height: 44px; padding: 0 0.6rem;
-  font-size: 1.25rem; line-height: 1; color: var(--tlumeny);
-  border: 1px solid var(--linka); border-radius: 10px;
+  font-size: var(--pismo-nadpis); line-height: 1; color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: var(--r);
 }
 .zalozky-trati .pridat-trat > summary:hover { color: var(--text); }
 .zalozky-trati .pridat-trat[open] > summary { color: var(--text); }
@@ -1493,8 +1529,8 @@ header.hlavicka .jen-uzke { display: none; }
 .zalozky-trati button {
   display: inline-flex; flex-direction: column; justify-content: center;
   padding: 0.3rem 0.75rem; min-height: 44px;
-  font-size: 0.85rem; color: var(--tlumeny); text-decoration: none;
-  background: transparent; border: 1px solid var(--linka); border-radius: 10px;
+  font-size: var(--pismo-drobne); color: var(--tlumeny); text-decoration: none;
+  background: transparent; border: 1px solid var(--linka); border-radius: var(--r);
   cursor: pointer;
 }
 .zalozky-trati a:hover,
@@ -1520,8 +1556,8 @@ header.hlavicka .jen-uzke { display: none; }
 .prvek-taby > input { position: absolute; opacity: 0; pointer-events: none; }
 .prvek-taby > .zalozky { display: flex; gap: 0.3rem; margin: 0 0 0.7rem; flex-wrap: wrap; }
 .prvek-taby > .zalozky label {
-  padding: 0.25rem 0.7rem; font-size: 0.85rem; color: var(--tlumeny);
-  border: 1px solid var(--linka); border-radius: 999px; cursor: pointer;
+  padding: 0.25rem 0.7rem; font-size: var(--pismo-drobne); color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: var(--r-stitek); cursor: pointer;
   /* Dotyková plocha: na vodě se kliká palcem v rukavici. */
   min-height: 32px; display: inline-flex; align-items: center;
 }
@@ -1545,8 +1581,8 @@ header.hlavicka .jen-uzke { display: none; }
 .volba-znacky { display: flex; gap: 0.3rem; margin: 0 0 0.6rem; flex-wrap: wrap; }
 .volba-znacky input { position: absolute; opacity: 0; pointer-events: none; }
 .volba-znacky label {
-  padding: 0.2rem 0.65rem; font-size: 0.8rem; color: var(--tlumeny);
-  border: 1px solid var(--linka); border-radius: 999px; cursor: pointer;
+  padding: 0.2rem 0.65rem; font-size: var(--pismo-popisek); color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: var(--r-stitek); cursor: pointer;
   min-height: 30px; display: inline-flex; align-items: center;
 }
 .volba-znacky span:has(input:checked) label {
@@ -1559,14 +1595,14 @@ header.hlavicka .jen-uzke { display: none; }
   display: list-item;
 }
 .detail-prvku .formular { margin-bottom: 0.8rem; }
-.detail-prvku > .poznamka { font-size: 0.8rem; }
+.detail-prvku > .poznamka { font-size: var(--pismo-popisek); }
 .akce-prvku { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .akce-prvku button {
   font: inherit;
   min-height: 44px;
   padding: 0.5rem 0.9rem;
   border: 1px solid var(--linka);
-  border-radius: 8px;
+  border-radius: var(--r);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -1605,25 +1641,25 @@ header.hlavicka .jen-uzke { display: none; }
 .fotky-boje { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.6rem; }
 .fotky-boje img {
   display: block; width: 120px; height: 90px; object-fit: cover;
-  border-radius: 8px; border: 1px solid var(--linka);
+  border-radius: var(--r); border: 1px solid var(--linka);
 }
 .fotky-boje .fotka { display: flex; flex-direction: column; gap: 0.25rem; align-items: center; }
 .fotky-boje button.maly {
-  font: inherit; font-size: 0.75rem; cursor: pointer;
-  padding: 0.15rem 0.6rem; border-radius: 999px;
+  font: inherit; font-size: var(--pismo-popisek); cursor: pointer;
+  padding: 0.15rem 0.6rem; border-radius: var(--r-stitek);
   border: 1px solid var(--linka); background: var(--pozadi); color: var(--tlumeny);
 }
 .fotky-boje button.maly:hover { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
 
 .udeleni {
   display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end;
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
   padding: 1rem; margin-bottom: 1rem;
 }
 .udeleni label { display: grid; gap: 0.25rem; flex: 1 1 12rem; }
-.udeleni label > span { font-size: 0.8rem; color: var(--tlumeny); }
+.udeleni label > span { font-size: var(--pismo-popisek); color: var(--tlumeny); }
 .udeleni input, .udeleni select {
-  font: inherit; padding: 0.5rem 0.6rem; border-radius: 8px;
+  font: inherit; padding: 0.5rem 0.6rem; border-radius: var(--r);
   border: 1px solid var(--linka); background: var(--pozadi); color: var(--text);
 }
 .udeleni input:focus-visible, .udeleni select:focus-visible {
@@ -1641,14 +1677,14 @@ header.hlavicka .jen-uzke { display: none; }
 .role-napoveda .poznamka { margin: 0; display: inline; }
 
 .skupina-opravneni { margin-top: 2rem; }
-.skupina-opravneni h2 { font-size: 1.05rem; margin: 0 0 0.6rem; }
+.skupina-opravneni h2 { font-size: var(--pismo); margin: 0 0 0.6rem; }
 .skupina-opravneni .prazdno { padding: 1rem; text-align: left; }
 
 th.vlevo, td.vlevo { text-align: left; }
 
 .odebrat {
-  font: inherit; font-size: 0.85rem; cursor: pointer; color: var(--stav-zruseny);
-  background: none; border: 1px solid var(--linka); border-radius: 999px;
+  font: inherit; font-size: var(--pismo-drobne); cursor: pointer; color: var(--stav-zruseny);
+  background: none; border: 1px solid var(--linka); border-radius: var(--r-stitek);
   padding: 0.25rem 0.7rem;
 }
 .odebrat:hover { border-color: var(--stav-zruseny); }
@@ -1665,20 +1701,20 @@ th.vlevo, td.vlevo { text-align: left; }
    Vstupy vypadají stejně jako u oprávnění — je to jedna administrace. */
 .formular {
   display: grid; gap: 0.9rem;
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
   padding: 1rem; margin-bottom: 1.5rem;
   /* Text se píše, ne čte přes celou zeď — stejná míra jako u článku. */
   max-width: 46rem;
 }
-.formular label { display: grid; gap: 0.3rem; font-size: 0.9rem; }
+.formular label { display: grid; gap: 0.3rem; font-size: var(--pismo-drobne); }
 .formular input, .formular select, .formular textarea {
-  font: inherit; padding: 0.55rem 0.65rem; border-radius: 8px;
+  font: inherit; padding: 0.55rem 0.65rem; border-radius: var(--r);
   border: 1px solid var(--linka); background: var(--pozadi); color: var(--text);
   width: 100%;
 }
 .formular textarea { resize: vertical; line-height: 1.6; font-family: inherit; }
 .formular :focus-visible { outline: 2px solid var(--voda); outline-offset: 1px; }
-.formular label > .poznamka { margin: 0; font-size: 0.8rem; }
+.formular label > .poznamka { margin: 0; font-size: var(--pismo-popisek); }
 
 /* Přepínač patří před svůj text, ne nad něj: `.formular label` je grid,
    takže by se jinak zalomil a kroužek by stál na vlastním řádku. */
@@ -1696,15 +1732,15 @@ th.vlevo, td.vlevo { text-align: left; }
   display: grid;
   gap: 0.6rem;
   border: 1px solid var(--linka, #3a3a3a);
-  border-radius: 6px;
+  border-radius: var(--r-pole);
   padding: 0.7rem 0.8rem 0.9rem;
   margin: 0;
 }
-.formular fieldset legend { padding: 0 0.3rem; font-size: 0.85rem; font-weight: 600; }
+.formular fieldset legend { padding: 0 0.3rem; font-size: var(--pismo-drobne); font-weight: 600; }
 .formular > button,
 .formular > .tlacitka > button {
   justify-self: start; font: inherit; font-weight: 600; cursor: pointer;
-  padding: 0.6rem 1.1rem; border: 0; border-radius: 8px;
+  padding: 0.6rem 1.1rem; border: 0; border-radius: var(--r);
   background: var(--voda); color: var(--papir);
 }
 
@@ -1723,7 +1759,7 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .formular > .tlacitka > button:disabled { opacity: 0.5; cursor: default; }
 
-.formular > h2 { margin: 0.6rem 0 0; font-size: 1.05rem; }
+.formular > h2 { margin: 0.6rem 0 0; font-size: var(--pismo); }
 
 /* Kalendář: krátké údaje vedle sebe.
 
@@ -1746,7 +1782,7 @@ th.vlevo, td.vlevo { text-align: left; }
    nemá ho hledat pod velkým obrázkem. */
 .medailonek {
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem;
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
   padding: 1rem; margin: 2.5rem 0 1.5rem;
   scroll-margin-top: 1rem;
 }
@@ -1755,11 +1791,11 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .medailonek-foto { margin: 0; }
 .medailonek-foto img {
-  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px;
+  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r);
 }
 .medailonek-foto figcaption { color: var(--tlumeny); font-size: 0.72rem; margin-top: 0.3rem; }
 .medailonek-stitek {
-  margin: 0; color: var(--tlumeny); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+  margin: 0; color: var(--tlumeny); font-size: var(--pismo-popisek); text-transform: uppercase; letter-spacing: 0.06em;
 }
 .medailonek h2 { margin: 0.1rem 0 0.6rem; }
 .medailonek-text > p:not(.medailonek-stitek) { line-height: 1.65; margin: 0 0 0.8rem; max-width: 38rem; }
@@ -1772,8 +1808,8 @@ th.vlevo, td.vlevo { text-align: left; }
 .stavy { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
 .stavy form { margin: 0; }
 .stavy button {
-  font: inherit; font-size: 0.8rem; cursor: pointer;
-  padding: 0.3rem 0.65rem; border-radius: 999px;
+  font: inherit; font-size: var(--pismo-popisek); cursor: pointer;
+  padding: 0.3rem 0.65rem; border-radius: var(--r-stitek);
   border: 1px solid var(--linka); background: var(--pozadi); color: var(--tlumeny);
 }
 .stavy button:hover { border-color: var(--voda); color: var(--voda); }
@@ -1792,7 +1828,7 @@ th.vlevo, td.vlevo { text-align: left; }
 /* Důvod vrácení. Čte se pokaždé, když se na rozjížďku někdo podívá,
    takže stojí v kartě, ne pod rozbalovátkem. */
 .karta .duvod {
-  margin: 0.6rem 0 0; font-size: 0.875rem;
+  margin: 0.6rem 0 0; font-size: var(--pismo-drobne);
   border-left: 3px solid var(--stav-zruseny); padding-left: 0.7rem;
 }
 /* Co bude dál. Tlumené schválně: důvod od rozhodčího je to hlavní, tohle
@@ -1812,7 +1848,7 @@ th.vlevo, td.vlevo { text-align: left; }
    znamenalo třicet obrazovek. Jen ke čtení ztratí pole rámeček, aby
    nevypadala, že do nich jde psát. */
 .zapis td input, .zapis td select {
-  font: inherit; padding: 0.3rem 0.45rem; border-radius: 6px;
+  font: inherit; padding: 0.3rem 0.45rem; border-radius: var(--r-pole);
   border: 1px solid var(--linka); background: var(--pozadi); color: var(--text);
 }
 .zapis td input { width: 4.5rem; text-align: right; font-variant-numeric: tabular-nums; }
@@ -1831,7 +1867,7 @@ th.vlevo, td.vlevo { text-align: left; }
 .zapis .presun { display: inline-flex; gap: 0.15rem; flex: none; }
 .zapis .presun button {
   font: inherit; width: 1.9rem; height: 1.9rem; padding: 0; line-height: 1;
-  border: 1px solid var(--linka); border-radius: 6px;
+  border: 1px solid var(--linka); border-radius: var(--r-pole);
   background: var(--pozadi); color: var(--tlumeny); cursor: pointer;
 }
 .zapis .presun button:hover:not(:disabled) { color: var(--voda); border-color: var(--voda); }
@@ -1843,7 +1879,7 @@ th.vlevo, td.vlevo { text-align: left; }
 .karta .krok-vpred { margin: 0.6rem 0 0.2rem; }
 .karta .krok-vpred > button {
   font: inherit; font-weight: 600; cursor: pointer;
-  padding: 0.5rem 1rem; border: 0; border-radius: 8px;
+  padding: 0.5rem 1rem; border: 0; border-radius: var(--r);
   background: var(--voda); color: var(--papir);
 }
 
@@ -1871,11 +1907,11 @@ th.vlevo, td.vlevo { text-align: left; }
 .zapis-akce { margin-top: 1rem; }
 .zapis-akce > button, .pridat > button {
   font: inherit; font-weight: 600; cursor: pointer;
-  padding: 0.6rem 1.1rem; border: 0; border-radius: 8px;
+  padding: 0.6rem 1.1rem; border: 0; border-radius: var(--r);
   background: var(--voda); color: var(--papir);
 }
 .pridat { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
-.zaskrtnuti { display: inline-flex; gap: 0.4rem; align-items: center; font-size: 0.9rem; }
+.zaskrtnuti { display: inline-flex; gap: 0.4rem; align-items: center; font-size: var(--pismo-drobne); }
 
 /* Cílová obrazovka (22. 9. 2026). Dělaná na telefon v ruce na lodi:
    tlačítka lodí velká, aby se trefila i v rukavici a na houpající se
@@ -1883,7 +1919,7 @@ th.vlevo, td.vlevo { text-align: left; }
    kouká mezi každými dvěma dojezdy. */
 .cil button { font: inherit; cursor: pointer; color: var(--text); }
 .cil button.maly {
-  font-size: 0.85rem; padding: 0.35rem 0.7rem; border-radius: 999px;
+  font-size: var(--pismo-drobne); padding: 0.35rem 0.7rem; border-radius: var(--r-stitek);
   border: 1px solid var(--linka); background: var(--pozadi);
 }
 /* Lišta se lepí pod hlavičku, která je taky lepivá. Výška hlavičky je
@@ -1892,7 +1928,7 @@ th.vlevo, td.vlevo { text-align: left; }
 .cil-lista {
   position: sticky; top: 5.5rem; z-index: 5;
   display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: space-between;
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
   padding: 0.6rem 0.8rem; margin-bottom: 1rem;
 }
 @media (max-width: 48rem) { .cil-lista { top: 4.75rem; } }
@@ -1902,27 +1938,27 @@ th.vlevo, td.vlevo { text-align: left; }
 /* Věta vedle tlačítka v liště cíle — proč se s tím má počkat. Používá to
    visící první opakovač (ZPJ 29.2): tam je ta informace podstatnější než
    kterékoliv číslo, protože minuta se měří od svěšení. */
-.cil-poznamka { font-size: 0.8rem; color: var(--tlumeny); flex-basis: 100%; }
+.cil-poznamka { font-size: var(--pismo-popisek); color: var(--tlumeny); flex-basis: 100%; }
 .cil-startuj {
-  font-weight: 700; font-size: 1.15rem; padding: 0.7rem 2.2rem; border: 0; border-radius: 10px;
+  font-weight: 700; font-size: var(--pismo-nadpis); padding: 0.7rem 2.2rem; border: 0; border-radius: var(--r);
   background: var(--stav-vypsany); color: var(--papir) !important;
 }
-.cil-ulozeno { font-size: 0.8rem; color: var(--tlumeny); }
+.cil-ulozeno { font-size: var(--pismo-popisek); color: var(--tlumeny); }
 .cil-ulozeno.ukladam { color: var(--voda); }
 .cil-ulozeno.chyba { color: var(--stav-zruseny); font-weight: 600; }
-.cil h2 { font-size: 1.05rem; margin: 1.4rem 0 0.6rem; }
+.cil h2 { font-size: var(--pismo); margin: 1.4rem 0 0.6rem; }
 .cil h3 {
-  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: var(--pismo-popisek); text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--tlumeny); margin: 0.9rem 0 0.4rem;
 }
 .cil-lode { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 0.5rem; }
 .cil-lod {
   display: grid; gap: 0.15rem; text-align: left; min-height: 3.6rem;
-  padding: 0.6rem 0.75rem; border-radius: 10px; font-weight: 600;
+  padding: 0.6rem 0.75rem; border-radius: var(--r); font-weight: 600;
   border: 1px solid var(--linka); background: var(--papir);
   touch-action: manipulation;
 }
-.cil-lod small { font-weight: 400; color: var(--tlumeny); font-size: 0.8rem; }
+.cil-lod small { font-weight: 400; color: var(--tlumeny); font-size: var(--pismo-popisek); }
 .cil-lod:active { background: var(--zvyrazneni); border-color: var(--voda); }
 .cil-lod:focus-visible, .cil button:focus-visible { outline: 2px solid var(--voda); outline-offset: 2px; }
 .cil-nadpis { display: flex; gap: 0.75rem; align-items: baseline; justify-content: space-between; }
@@ -1933,11 +1969,11 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .cil-misto { min-width: 2rem; font-variant-numeric: tabular-nums; color: var(--tlumeny); }
 .cil-jmeno { flex: 1; min-width: 0; font-weight: 600; }
-.cil-jmeno small { display: block; font-weight: 400; color: var(--tlumeny); font-size: 0.8rem; }
-.cil-poradi .cil-cas { color: var(--tlumeny); font-size: 0.9rem; }
+.cil-jmeno small { display: block; font-weight: 400; color: var(--tlumeny); font-size: var(--pismo-popisek); }
+.cil-poradi .cil-cas { color: var(--tlumeny); font-size: var(--pismo-drobne); }
 .cil-opravy { display: flex; gap: 0.25rem; }
 .cil-opravy button, .cil-volby button {
-  min-width: 2.4rem; min-height: 2.4rem; border-radius: 8px;
+  min-width: 2.4rem; min-height: 2.4rem; border-radius: var(--r);
   border: 1px solid var(--linka); background: var(--pozadi);
 }
 .cil-opravy button:disabled { opacity: 0.35; cursor: default; }
@@ -1952,7 +1988,7 @@ th.vlevo, td.vlevo { text-align: left; }
 .cil details > summary { cursor: pointer; font-weight: 600; padding: 0.4rem 0; }
 .cil details .cil-lode { margin-top: 0.6rem; }
 .cil-znaky li input {
-  flex: 1; min-width: 0; font: inherit; padding: 0.45rem 0.6rem; border-radius: 8px;
+  flex: 1; min-width: 0; font: inherit; padding: 0.45rem 0.6rem; border-radius: var(--r);
   border: 1px solid var(--linka); background: var(--pozadi); color: var(--text);
 }
 .cil-znaky li .cil-jmeno { flex: 0 1 45%; }
@@ -1960,7 +1996,7 @@ th.vlevo, td.vlevo { text-align: left; }
 .cil-nova .formular > button { background: var(--voda); color: var(--papir); }
 .cil-kody li { flex-wrap: wrap; }
 .cil-volby { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
-.cil-volby button { font-size: 0.8rem; padding: 0 0.5rem; }
+.cil-volby button { font-size: var(--pismo-popisek); padding: 0 0.5rem; }
 .cil-kody li.ma-kod b { color: var(--stav-zruseny); margin-right: 0.3rem; }
 
 /* Porovnání zápisů dvou zapisovatelů (22. 9. 2026). Zvýrazněný je řádek,
@@ -1980,14 +2016,14 @@ th.vlevo, td.vlevo { text-align: left; }
 .stitek.ucast-kdoplneni { color: var(--akcent, var(--voda)); border-style: dashed; border-color: currentColor; }
 /* Podrobnosti přihlášky v tabulce pořadatele: sbalené, rozbalí se klikem. */
 .podrobnosti-lodi { margin-top: 0.35rem; font-weight: 400; }
-.podrobnosti-lodi > summary { cursor: pointer; color: var(--voda); font-size: 0.8rem; }
-.podrobnosti-lodi .pravidla { margin: 0.5rem 0; font-size: 0.85rem; }
-.podrobnosti-lodi .startovne { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin: 0.4rem 0; font-size: 0.85rem; }
+.podrobnosti-lodi > summary { cursor: pointer; color: var(--voda); font-size: var(--pismo-popisek); }
+.podrobnosti-lodi .pravidla { margin: 0.5rem 0; font-size: var(--pismo-drobne); }
+.podrobnosti-lodi .startovne { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin: 0.4rem 0; font-size: var(--pismo-drobne); }
 .podrobnosti-lodi .startovne input[name="poznamka"] { flex: 1 1 10rem; min-width: 0; }
-.podrobnosti-lodi .historie { margin: 0.4rem 0 0; padding-left: 1.1rem; color: var(--tlumeny); font-size: 0.78rem; }
+.podrobnosti-lodi .historie { margin: 0.4rem 0 0; padding-left: 1.1rem; color: var(--tlumeny); font-size: var(--pismo-popisek); }
 .stavy details.s-duvodem > summary {
-  cursor: pointer; list-style: none; font-size: 0.85rem; padding: 0.3rem 0.7rem;
-  border: 1px solid var(--linka); border-radius: 999px;
+  cursor: pointer; list-style: none; font-size: var(--pismo-drobne); padding: 0.3rem 0.7rem;
+  border: 1px solid var(--linka); border-radius: var(--r-stitek);
 }
 .stavy details.s-duvodem > summary::-webkit-details-marker { display: none; }
 .stavy details.s-duvodem[open] form { display: grid; gap: 0.35rem; margin-top: 0.35rem; min-width: 14rem; }
@@ -2130,7 +2166,7 @@ body:has(.bez-partneru) .dlazdice-sekci > li { flex: none; min-width: 0; }
   min-width: min(var(--min-dlazdice), 100%);
   max-width: 100%;
 }
-.dlazdice-sekci .karta { padding: 0.3rem 0.7rem 0.3rem 0.8rem; border-radius: 7px; }
+.dlazdice-sekci .karta { padding: 0.3rem 0.7rem 0.3rem 0.8rem; border-radius: var(--r); }
 /* <b>Barevný proužek místo vlajky</b> (Filip, 29. 10. 2026: „zkus místo
    vlajky dát doleva do dlaždice jen nějakou barvičku" — a „včetně těch
    radiusů"). Je to <b>levý okraj karty</b>, ne proužek položený na ni:
@@ -2160,7 +2196,7 @@ body:has(.bez-partneru) .dlazdice-sekci > li { flex: none; min-width: 0; }
 
 .dlazdice-sekci .nazev {
   display: flex; align-items: center; gap: 0.45rem;
-  font-size: 0.95rem; line-height: 1.35; white-space: nowrap;
+  font-size: var(--pismo-drobne); line-height: 1.35; white-space: nowrap;
 }
 /* <b>Zkratka naskočí, až když je potřeba</b> (Filip, 29. 10. 2026: „zkratky
    zapnout, jakmile bude potřeba kvůli šířce"). Rozhoduje šířka dlaždice,
@@ -2199,11 +2235,11 @@ body:has(.bez-partneru) .dlazdice-sekci > li { flex: none; min-width: 0; }
   max-width: 17rem;
   padding: 0.35rem 0.6rem;
   border: 1px solid var(--linka);
-  border-radius: 7px;
+  border-radius: var(--r);
   background: var(--papir);
   box-shadow: 0 6px 16px rgb(0 0 0 / 0.14);
   color: var(--tlumeny);
-  font-size: 0.8rem;
+  font-size: var(--pismo-popisek);
   line-height: 1.35;
   opacity: 0;
   pointer-events: none;
@@ -2350,7 +2386,7 @@ body:has(.vybrany-ukon) h1 {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  font-size: 1.2rem;
+  font-size: var(--pismo-nadpis);
   color: var(--ukon-strany, inherit);
 }
 /* Štítek stavu vedle názvu regaty se nesmí roztáhnout spolu s řádkem. */
@@ -2376,7 +2412,7 @@ body:has(.vybrany-ukon) h1 > * { flex: none; }
 .radek-nadpisu > .podtitulek {
   flex: 0 1 auto;
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--pismo-drobne);
   /* <b>Barva lana stažená do čitelna.</b> Sama o sobě dává na drobném písmu
      4,02 : 1, což je pod hranicí 4,5 pro malý text — třetina barvy textu ji
      zvedne, a pořád je to táž barva. Týž postup jako u `--pozor-pismo`:
@@ -2441,10 +2477,10 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .upozorneni { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; gap: 0.4rem; }
 .upozorneni li {
   padding: 0.5rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--r);
   border: 1px solid var(--linka);
   background: var(--papir);
-  font-size: 0.925rem;
+  font-size: var(--pismo-drobne);
 }
 .upozorneni li.nalehave { border-color: var(--voda); background: var(--zvyrazneni); }
 .taby-trid .znak-tridy { height: 2.6rem; }
@@ -2462,7 +2498,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .bok-trida-hlava .znak-tridy { height: 2.4rem; }
 .nadpis-tridy {
   display: flex; align-items: center; gap: 0.55rem;
-  font-size: 0.95rem; margin: 1.25rem 0 0.5rem;
+  font-size: var(--pismo-drobne); margin: 1.25rem 0 0.5rem;
 }
 .nadpis-tridy .znak-tridy { height: 2.4rem; }
 
@@ -2507,7 +2543,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
     grid-template-areas: "vlevo stred vpravo";
   }
   .s-boky-stred { grid-area: stred; min-width: 0; }
-  .s-boky > .bok { display: block; font-size: 0.875rem; }
+  .s-boky > .bok { display: block; font-size: var(--pismo-drobne); }
   /* Ukotvený jen bok bez widgetů — samotné pořadí nebo kalendář. Bok
      s widgety je delší než okno a ukotvený by se posouval uvnitř sebe
      (Filip, 18. 9. 2026: pravý bok byl delší než obrazovka). */
@@ -2522,11 +2558,11 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .bok section + .bok-doplnky,
 .bok-doplnky > .doplnek + .doplnek { margin-top: 1.75rem; }
 .bok-nadpis {
-  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em;
+  font-size: var(--pismo-popisek); text-transform: uppercase; letter-spacing: 0.07em;
   color: var(--tlumeny); margin: 0 0 0.6rem; font-weight: 600;
 }
 .bok-trida {
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
   padding: 0.6rem 0.75rem; margin-bottom: 0.6rem;
 }
 .bok-trida-hlava { display: flex; align-items: center; gap: 0.45rem; font-weight: 600; color: var(--text); }
@@ -2538,7 +2574,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .bok-seznam a {
   display: grid; grid-template-columns: 2.4rem 1fr; align-items: center;
   gap: 0.1rem 0.6rem; padding: 0.5rem 0.7rem; color: inherit;
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
 }
 /* Den jako na trhacím kalendáři: číslo nese váhu, měsíc je popisek pod ním.
    Oddělovač vpravo drží dvojici pohromadě, aby číslo nesplynulo se jménem. */
@@ -2546,7 +2582,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
   display: grid; justify-items: center; line-height: 1.05;
   padding-right: 0.55rem; border-right: 1px solid var(--linka);
 }
-.bok-den .cislo { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bok-den .cislo { font-size: var(--pismo-nadpis); font-weight: 700; font-variant-numeric: tabular-nums; }
 .bok-den .mesic {
   font-size: 0.68rem; color: var(--tlumeny); text-transform: lowercase; letter-spacing: 0.02em;
 }
@@ -2559,9 +2595,9 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 }
 .bok-seznam a:hover { border-color: var(--voda); text-decoration: none; }
 .bok-nazev { font-weight: 600; line-height: 1.35; }
-.bok-seznam .detail { color: var(--tlumeny); font-size: 0.8rem; }
+.bok-seznam .detail { color: var(--tlumeny); font-size: var(--pismo-popisek); }
 .bok-seznam .stitek { margin-left: 0.2rem; }
-.bok-dal { margin: 0.5rem 0 0; font-size: 0.85rem; }
+.bok-dal { margin: 0.5rem 0 0; font-size: var(--pismo-drobne); }
 
 /* Karusel pořadí (Filip, 15. 9. 2026): celá třída dokola, ne jen první
    trojice. Pás lodí je v HTML dvakrát a posouvá se o polovinu své délky,
@@ -2579,7 +2615,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
    o kus vyšší než pás. */
 .bok-pocasi { margin-top: 0.75rem; }
 .bok-pocasi iframe {
-  display: block; width: 100%; height: 19rem; border: 0; border-radius: 10px;
+  display: block; width: 100%; height: 19rem; border: 0; border-radius: var(--r);
   background: var(--zvyrazneni);
 }
 /* Windy tmavý režim nemá a do cizího iframe styl nesáhne. Bílá tabulka
@@ -2590,7 +2626,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
   :root:not([data-rezim="svetly"]) .bok-pocasi iframe { filter: brightness(0.82); }
 }
 :root[data-rezim="tmavy"] .bok-pocasi iframe { filter: brightness(0.82); }
-.bok-pocasi-zdroj { margin: 0.35rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--tlumeny); }
+.bok-pocasi-zdroj { margin: 0.35rem 0 0; font-size: var(--pismo-popisek); line-height: 1.45; color: var(--tlumeny); }
 
 /* Vodočet Orlíku (Filip, 16. 9. 2026): velké číslo hladiny se šipkou,
    graf a dvě menší políčka s přítokem a odtokem. Stoupání modře jako
@@ -2604,8 +2640,8 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
   font-size: 1.9rem; font-weight: 700; line-height: 1; letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums; color: var(--text);
 }
-.vodocet-jednotka { font-size: 0.75rem; color: var(--tlumeny); }
-.vodocet-zmena { margin: 0.25rem 0 0.5rem; font-size: 0.8rem; color: var(--tlumeny); }
+.vodocet-jednotka { font-size: var(--pismo-popisek); color: var(--tlumeny); }
+.vodocet-zmena { margin: 0.25rem 0 0.5rem; font-size: var(--pismo-popisek); color: var(--tlumeny); }
 /* Přepínač rozsahu nad grafem. <b>Malá tlačítka v řádku</b> (Filip,
    15. 10. 2026) — je jich až sedm a widget má v boku kolem tří set pixelů,
    takže se musí vejít na jeden řádek i s diakritikou. */
@@ -2616,7 +2652,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
   flex: 1 1 auto; min-width: 2.1rem; padding: 0.1rem 0.25rem;
   font-size: 0.7rem; font-variant-numeric: tabular-nums;
   background: transparent; color: var(--tlumeny);
-  border: 1px solid var(--linka); border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--linka); border-radius: var(--r-stitek); cursor: pointer;
 }
 .vodocet-rozsahy button:hover { color: var(--voda); border-color: var(--voda); }
 /* Vybraný nese barvu vody jako zbytek widgetu, ne výplň: plná pilulka by
@@ -2630,7 +2666,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 /* Místo grafu, dokud řada nedorazí: drží výšku, ať obsah pod ním
    nepodskakuje. */
 .vodocet-graf-misto { height: 56px; }
-.vodocet-chyba { font-size: 0.78rem; color: var(--tlumeny); margin: 0.2rem 0 0; }
+.vodocet-chyba { font-size: var(--pismo-popisek); color: var(--tlumeny); margin: 0.2rem 0 0; }
 
 .vodocet-graf { display: block; width: 100%; height: 3.5rem; }
 .vodocet-graf .plocha { fill: color-mix(in srgb, var(--voda) 16%, transparent); }
@@ -2640,7 +2676,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 }
 .vodocet-toky { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0.6rem 0 0; }
 .vodocet-toky div {
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 8px;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
   /* Vpravo je místo pro sloupec vybuzení, jinak by pod něj podtekla čísla. */
   padding: 0.35rem 1.15rem 0.35rem 0.55rem;
   /* Kotva pro sloupec vybuzení u pravé hrany. Ten stojí mimo tok textu
@@ -2670,12 +2706,12 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .vodocet-toky dt { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tlumeny); }
 .vodocet-toky dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .vodocet-toky dd.vodocet-den { font-weight: 400; font-size: 0.72rem; color: var(--tlumeny); }
-.vodocet-bilance { margin: 0.55rem 0 0; font-size: 0.8rem; line-height: 1.45; }
+.vodocet-bilance { margin: 0.55rem 0 0; font-size: var(--pismo-popisek); line-height: 1.45; }
 /* Vítr ze stanic ČHMÚ: šipka, kam fouká, rychlost, nárazy v barvě síly,
    průběh za 24 h a ostatní stanice po řádcích. */
 .vitr-hlava { display: flex; align-items: center; gap: 0.45rem; }
 .vitr-rychlost { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
-.vitr-jednotka { font-size: 0.75rem; color: var(--tlumeny); }
+.vitr-jednotka { font-size: var(--pismo-popisek); color: var(--tlumeny); }
 .vitr-rukav { width: 2.1rem; height: 2.1rem; flex: none; }
 .vitr-rukav.velky { width: 4rem; height: 4rem; }
 .vitr-rukav .kompas { fill: color-mix(in srgb, var(--voda) 7%, transparent); stroke: var(--linka); stroke-width: 0.8; }
@@ -2686,14 +2722,14 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .vitr-rukav .pruh.bily { fill: #fdfbf7; }
 .vitr-rukav .pruh.prazdny { fill: none; stroke: var(--tlumeny); stroke-dasharray: 0.8 0.6; opacity: 0.6; }
 .vitr-rukav .stozar { fill: var(--text); }
-.vitr-naraz { margin: 0.2rem 0 0.5rem; font-size: 0.8rem; font-weight: 600; }
+.vitr-naraz { margin: 0.2rem 0 0.5rem; font-size: var(--pismo-popisek); font-weight: 600; }
 .sila-klid { color: var(--tlumeny); }
 .sila-cerstvy { color: var(--voda); }
 .sila-silny { color: #e07a12; }
 .sila-prudky { color: #d62e2e; }
 .vitr-stoceni {
-  margin: 0 0 0.5rem; padding: 0.35rem 0.55rem; font-size: 0.8rem; line-height: 1.4;
-  border-left: 3px solid #e07a12; background: color-mix(in srgb, #e07a12 10%, transparent); border-radius: 4px;
+  margin: 0 0 0.5rem; padding: 0.35rem 0.55rem; font-size: var(--pismo-popisek); line-height: 1.4;
+  border-left: 3px solid #e07a12; background: color-mix(in srgb, #e07a12 10%, transparent); border-radius: var(--r-pole);
 }
 .vitr-graf-obal { margin: 0; }
 .vitr-graf { display: block; width: 100%; height: 3.5rem; }
@@ -2704,15 +2740,15 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 }
 .vitr-graf-obal figcaption { margin-top: 0.2rem; font-size: 0.72rem; color: var(--tlumeny); }
 .vitr-stanice { list-style: none; margin: 0.6rem 0 0; padding: 0; display: grid; gap: 0.3rem; }
-.vitr-stanice li { display: flex; align-items: center; gap: 0.45rem; font-size: 0.8rem; }
+.vitr-stanice li { display: flex; align-items: center; gap: 0.45rem; font-size: var(--pismo-popisek); }
 .vitr-stanice-nazev { flex: 1; min-width: 0; }
 .vitr-km { color: var(--tlumeny); font-size: 0.72rem; }
-.vitr-strana { color: var(--tlumeny); font-size: 0.75rem; min-width: 2.2rem; }
+.vitr-strana { color: var(--tlumeny); font-size: var(--pismo-popisek); min-width: 2.2rem; }
 .vitr-stanice-hodnota { font-variant-numeric: tabular-nums; font-weight: 600; }
 /* Tlak pod stanicemi: hodnota na řádku s názvem, trend pod ní. */
 .vitr-tlak {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.1rem 0.45rem;
-  margin: 0.6rem 0 0.4rem; padding-top: 0.5rem; border-top: 1px solid var(--linka); font-size: 0.8rem;
+  margin: 0.6rem 0 0.4rem; padding-top: 0.5rem; border-top: 1px solid var(--linka); font-size: var(--pismo-popisek);
 }
 .vitr-tlak-zmena { flex-basis: 100%; font-size: 0.72rem; color: var(--tlumeny); font-variant-numeric: tabular-nums; }
 
@@ -2744,9 +2780,9 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 
 /* Teplota vody: nádrž ze satelitu a kvalita ke koupání. */
 .teplota-vody ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
-.teplota-reka { font-size: 0.85rem; font-weight: 600; }
-.teplota-misto { font-weight: 400; color: var(--tlumeny); font-size: 0.78rem; }
-.teplota-hodnota { font-size: 1.05rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.teplota-reka { font-size: var(--pismo-drobne); font-weight: 600; }
+.teplota-misto { font-weight: 400; color: var(--tlumeny); font-size: var(--pismo-popisek); }
+.teplota-hodnota { font-size: var(--pismo); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .teplota-zmena { font-size: 0.72rem; color: var(--tlumeny); }
 /* Nádrž ze satelitu nad přítoky: jedno velké číslo, pod ním dvě menší. */
 .nadrz-hlavni { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
@@ -2754,7 +2790,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .teplota-vody ul.nadrz-dalsi { margin-top: 0.45rem; gap: 0.2rem; }
 .nadrz-dalsi li { display: flex; align-items: baseline; gap: 0.5rem; }
 .nadrz-dalsi .teplota-zmena { margin-left: auto; }
-.nadrz-dalsi .teplota-hodnota { font-size: 0.95rem; min-width: 4.2em; text-align: right; }
+.nadrz-dalsi .teplota-hodnota { font-size: var(--pismo-drobne); min-width: 4.2em; text-align: right; }
 .nadrz-pozn { margin: 0.45rem 0 0; line-height: 1.4; }
 .nadrz-graf { margin: 0.55rem 0 0; }
 .nadrz-graf svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -2767,10 +2803,10 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .nadrz-legenda .znacka { display: inline-block; width: 0.9rem; height: 0; border-top: 2px solid var(--voda); }
 .nadrz-legenda .znacka.trhovky { border-top: 1.5px dashed var(--tlumeny); margin-left: 0.4rem; }
 .koupani ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
-.koupani li { display: flex; align-items: baseline; gap: 0.45rem; font-size: 0.8rem; line-height: 1.4; }
+.koupani li { display: flex; align-items: baseline; gap: 0.45rem; font-size: var(--pismo-popisek); line-height: 1.4; }
 .koupani-stupen { display: block; color: var(--tlumeny); font-size: 0.72rem; }
 .koupani-misto { font-weight: 600; }
-.koupani-tecka { width: 0.55rem; height: 0.55rem; border-radius: 999px; flex: none; transform: translateY(0.05rem); }
+.koupani-tecka { width: 0.55rem; height: 0.55rem; border-radius: var(--r-stitek); flex: none; transform: translateY(0.05rem); }
 /* Barvy podle legendy hygieniků: zelená, žlutá, oranžová, červená, tmavě červená. */
 .koupani-tecka.stupen-1 { background: #3aa76d; }
 .koupani-tecka.stupen-2 { background: #d4b20f; }
@@ -2790,8 +2826,8 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 
 /* Výstrahy ČHMÚ (Filip, 16. 9. 2026). Bez výstrahy klidná věta se zelenou
    tečkou; s výstrahou proužek v barvě stupně, jak je barví ČHMÚ. */
-.vystrahy-klid { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 0.85rem; color: var(--tlumeny); }
-.vystrahy-tecka { width: 0.6rem; height: 0.6rem; border-radius: 999px; flex: none; background: #3aa76d; box-shadow: 0 0 0 3px color-mix(in srgb, #3aa76d 25%, transparent); }
+.vystrahy-klid { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: var(--pismo-drobne); color: var(--tlumeny); }
+.vystrahy-tecka { width: 0.6rem; height: 0.6rem; border-radius: var(--r-stitek); flex: none; background: #3aa76d; box-shadow: 0 0 0 3px color-mix(in srgb, #3aa76d 25%, transparent); }
 /* Výpadek zdroje, ne klid: dutá tečka, aby se zelená „nic neplatí"
    a šedá „nevíme" nedaly splést ani koutkem oka. */
 .vystrahy-tecka.nezname { background: transparent; border: 2px solid var(--tlumeny); box-shadow: none; }
@@ -2800,23 +2836,23 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
   --stupen: #e5b50b;
   display: grid; gap: 0.15rem; padding: 0.5rem 0.65rem;
   background: var(--papir); border: 1px solid var(--linka); border-left: 4px solid var(--stupen);
-  border-radius: 8px; font-size: 0.8rem;
+  border-radius: var(--r); font-size: var(--pismo-popisek);
 }
 .vystraha.stupen-3 { --stupen: #f07c12; }
 .vystraha.stupen-4 { --stupen: #d62e2e; }
 .vystraha-hlava { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.1rem 0.45rem; }
-.vystraha-hlava b { color: var(--text); font-size: 0.875rem; }
+.vystraha-hlava b { color: var(--text); font-size: var(--pismo-drobne); }
 .vystraha-stupen { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--stupen); }
 .vystraha-popis { color: var(--text); }
-.vystraha-cas { color: var(--tlumeny); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.vystraha-cas { color: var(--tlumeny); font-size: var(--pismo-popisek); font-variant-numeric: tabular-nums; }
 /* Radar na příští hodinu pod výstrahami: věta, pás sedmi políček, poznámka. */
 .radar { margin-top: 0.75rem; padding-top: 0.6rem; border-top: 1px solid var(--linka); }
 .radar-nadpis { margin: 0 0 0.35rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tlumeny); }
-.radar-zprava { margin: 0 0 0.5rem; font-size: 0.85rem; }
+.radar-zprava { margin: 0 0 0.5rem; font-size: var(--pismo-drobne); }
 .radar-klid { color: var(--tlumeny); }
 .radar-dest { font-weight: 600; color: var(--voda); }
 .radar-silny, .radar-bourka {
-  font-weight: 600; padding: 0.35rem 0.55rem; border-radius: 4px;
+  font-weight: 600; padding: 0.35rem 0.55rem; border-radius: var(--r-pole);
   border-left: 3px solid var(--stupen); background: color-mix(in srgb, var(--stupen) 12%, transparent);
 }
 .radar-silny { --stupen: #f07c12; }
@@ -2824,7 +2860,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .radar-pas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; }
 .radar-pas li { display: grid; gap: 0.15rem; justify-items: center; }
 .radar-policko {
-  width: 100%; height: 0.9rem; border-radius: 3px;
+  width: 100%; height: 0.9rem; border-radius: var(--r-pole);
   border: 1px solid var(--linka); background: var(--papir); opacity: 0.45;
 }
 .radar-policko.prsi { opacity: 1; }
@@ -2960,15 +2996,15 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.95rem;
+  font-size: var(--pismo-drobne);
   font-variant-numeric: tabular-nums;
 }
 .paticka-udaj .vystrahy-tecka { width: 0.5rem; height: 0.5rem; box-shadow: none; }
 /* Údaj druhého řádu u téhož čísla — nárazy u větru. */
-.paticka-vedle { color: var(--tlumeny); font-size: 0.8rem; }
+.paticka-vedle { color: var(--tlumeny); font-size: var(--pismo-popisek); }
 /* Tytéž barvy jako šipka vodočtu a změna teploty v boku — na liště musí
    šipka znamenat totéž, co znamená o patro výš. */
-.paticka-trend { font-size: 0.8rem; line-height: 1; }
+.paticka-trend { font-size: var(--pismo-popisek); line-height: 1; }
 .paticka-trend.nahoru { color: var(--voda); }
 .paticka-trend.dolu { color: var(--stav-zruseny); }
 /* Kompas s rukávem na liště. Menší než v boku a bez písmene „S" —
@@ -2985,7 +3021,7 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 }
 .paticka-stitek {
   color: var(--tlumeny);
-  font-size: 0.75rem;
+  font-size: var(--pismo-popisek);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-right: 0.3rem;
@@ -2993,15 +3029,15 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 .paticka-dest { color: var(--voda); }
 .paticka-vystraha {
   padding: 0.1rem 0.45rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
+  border-radius: var(--r-stitek);
+  font-size: var(--pismo-popisek);
   background: var(--zvyrazneni);
   border: 1px solid var(--linka);
 }
 .paticka-vystraha.stupen-3,
 .paticka-vystraha.stupen-4 { border-color: currentColor; font-weight: 600; }
 
-.paticka-popis { color: var(--tlumeny); font-size: 0.85rem; white-space: nowrap; flex: none; }
+.paticka-popis { color: var(--tlumeny); font-size: var(--pismo-drobne); white-space: nowrap; flex: none; }
 .paticka-sipka { flex: none; }
 /* Na telefonu ustoupí nápis číslům: „Počasí a voda" zabírá přes třetinu
    lišty a co lišta dělá, řekne šipka. Zpátky je od šířky, kde na něj
@@ -3059,7 +3095,7 @@ body:has(.paticka-pocasi) .nahoru {
   }
   .doplnky-siroke:has(.doplnek-stred) {
     display: grid; grid-area: siroke; min-width: 0; gap: 1.75rem; align-items: start;
-    font-size: 0.875rem;
+    font-size: var(--pismo-drobne);
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .doplnky-siroke > :not(.doplnek-stred) { display: none; }
@@ -3105,7 +3141,7 @@ body:has(.paticka-pocasi) .nahoru {
   .doplnky-siroke,
   .doplnky-siroke:has(.doplnek-stred) {
     display: grid; grid-area: siroke; min-width: 0; gap: 1.75rem; align-items: start;
-    font-size: 0.875rem;
+    font-size: var(--pismo-drobne);
     grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   }
   /* V řadě zase každý ve svém sloupci, v pořadí z HTML. */
@@ -3135,14 +3171,14 @@ body:has(.paticka-pocasi) .nahoru {
    lodě plynou doleva. S boky se blok schová, pořadí je v levém boku. */
 .poradi-radky { display: grid; gap: 0.5rem; margin: 0 0 2rem; }
 .poradi-radky > h2 {
-  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em;
+  font-size: var(--pismo-popisek); text-transform: uppercase; letter-spacing: 0.07em;
   color: var(--tlumeny); margin: 0 0 0.1rem; font-weight: 600;
 }
 .poradi-radky > .poznamka { margin: 0.1rem 0 0; }
 .poradi-radek {
   display: grid; grid-template-columns: 8rem minmax(0, 1fr); align-items: center; gap: 0.75rem;
-  padding: 0.45rem 0.9rem; font-size: 0.9rem;
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  padding: 0.45rem 0.9rem; font-size: var(--pismo-drobne);
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
 }
 .poradi-radek-trida { display: flex; align-items: center; gap: 0.45rem; font-weight: 600; color: var(--text); }
 .poradi-radek-trida:hover { text-decoration: none; color: var(--voda); }
@@ -3188,19 +3224,21 @@ body:has(.paticka-pocasi) .nahoru {
   display: grid; justify-items: center; align-content: center; gap: 0.35rem;
   /* 13 rem = změřená výška seznamu tří termínů (207 px). */
   min-height: 13rem; padding: 1rem; text-align: center;
-  border: 1px dashed var(--linka); border-radius: 10px;
+  border: 1px dashed var(--linka); border-radius: var(--r);
   background: color-mix(in srgb, var(--papir) 70%, transparent);
-  color: var(--tlumeny); font-size: 0.8rem; line-height: 1.45;
+  color: var(--tlumeny); font-size: var(--pismo-popisek); line-height: 1.45;
 }
 .bok-priprava svg {
   width: 2rem; height: 2rem; margin-bottom: 0.2rem;
   fill: none; stroke: var(--voda); stroke-width: 1.6; stroke-linecap: round;
 }
-.bok-priprava b { color: var(--text); font-size: 0.95rem; }
+.bok-priprava b { color: var(--text); font-size: var(--pismo-drobne); }
 /* Plakát akce: fotka na výšku a text dole přes přechod, jako úvodní fotka. */
 .bok-plakat {
   position: relative; display: block; overflow: hidden;
-  aspect-ratio: 3 / 4; border-radius: 12px; color: #fff; background: var(--zvyrazneni);
+  /* Podklad pod fotkou je tmavý, protože text na něm je bílý: když se
+     fotka nenačte, zůstane čitelný. Se `--zvyrazneni` byl bílý na světlé. */
+  aspect-ratio: 3 / 4; border-radius: var(--r); color: #fff; background: #10202a;
 }
 .bok-plakat img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 400ms ease; }
 .bok-plakat:hover { text-decoration: none; }
@@ -3210,8 +3248,8 @@ body:has(.paticka-pocasi) .nahoru {
   padding: 3rem 0.9rem 0.9rem;
   background: linear-gradient(transparent, rgba(10, 20, 26, 0.9) 55%);
 }
-.bok-plakat .text b { font-size: 1.15rem; line-height: 1.25; }
-.bok-plakat .text > span:last-child { color: rgba(255, 255, 255, 0.85); font-size: 0.85rem; }
+.bok-plakat .text b { font-size: var(--pismo-nadpis); line-height: 1.25; }
+.bok-plakat .text > span:last-child { color: rgba(255, 255, 255, 0.85); font-size: var(--pismo-drobne); }
 .bok-plakat .stitek { justify-self: start; margin: 0; color: #fff; border-color: rgba(255, 255, 255, 0.6); }
 
 /* Partneři jako pevný pruh dole (Filip, 15. 9. 2026). Je na očích
@@ -3264,7 +3302,7 @@ body:has(.bez-partneru) .partneri { display: none; }
   display: grid; place-items: center;
   height: calc(var(--paticka) - 0.9rem); width: calc((var(--paticka) - 0.9rem) * 2.6);
   padding: 0.3rem 0.6rem; box-sizing: border-box;
-  background: #fff; border: 1px solid var(--linka); border-radius: 8px;
+  background: #fff; border: 1px solid var(--linka); border-radius: var(--r);
 }
 .partneri-pas a.tmave, .partneri-pas span.tmave { background: #14171a; border-color: #14171a; }
 /* Rozměry výslovně, ne v procentech: v mřížce se procenta výšky vztahují
@@ -3290,7 +3328,7 @@ body:has(.bez-partneru) .partneri { display: none; }
 /* Rozbalovátko mimo kartu — nová loď na stránce přihlášek. */
 details.uprava-samostatna { margin: 1rem 0 1.5rem; }
 details.uprava-samostatna > summary {
-  cursor: pointer; font-size: 0.9rem; color: var(--tlumeny); width: fit-content; margin-bottom: 0.75rem;
+  cursor: pointer; font-size: var(--pismo-drobne); color: var(--tlumeny); width: fit-content; margin-bottom: 0.75rem;
 }
 details.uprava-samostatna > summary:hover { color: var(--voda); }
 
@@ -3302,7 +3340,7 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
    mění zřídka a kvůli pár údajům není proč odcházet z kalendáře. */
 .karta > details.uprava { margin-top: 0.7rem; }
 .karta > details.uprava > summary {
-  cursor: pointer; font-size: 0.85rem; color: var(--tlumeny); width: fit-content;
+  cursor: pointer; font-size: var(--pismo-drobne); color: var(--tlumeny); width: fit-content;
 }
 .karta > details.uprava > summary:hover { color: var(--voda); }
 .karta > details.uprava .formular { margin-top: 0.75rem; }
@@ -3324,7 +3362,7 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .karta.s-fotkou > .text { min-width: 0; }
 .nahled img {
   display: block; width: 5.5rem; height: 4.2rem;
-  object-fit: cover; border-radius: 8px;
+  object-fit: cover; border-radius: var(--r);
   /* Než se fotka načte, ať tam není bílá díra. */
   background: var(--zvyrazneni);
 }
@@ -3351,7 +3389,7 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
    stránky. Průhlednost sedí na obrázku, podklad na `picture` — na jednom
    prvku by `opacity` ztlumila i podklad a zbyla by díra.
    --------------------------------------------------------------------- */
-.nahled-vodoznak { display: block; background: var(--zvyrazneni); border-radius: 8px; }
+.nahled-vodoznak { display: block; background: var(--zvyrazneni); border-radius: var(--r); }
 .nahled-vodoznak img {
   background: none;
   object-fit: contain;
@@ -3390,7 +3428,7 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .novinky-uvod .hlavni .nahled-velky img {
   width: 100%; height: clamp(10rem, 22vw, 16rem);
 }
-.novinky-uvod .hlavni .nazev { font-size: 1.15rem; }
+.novinky-uvod .hlavni .nazev { font-size: var(--pismo-nadpis); }
 @container (min-width: 52rem) {
   .s-boky-stred .seznam.novinky-uvod,
   .seznam.novinky-uvod {
@@ -3418,10 +3456,10 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .fotka-clanku { margin: 0 0 1.5rem; max-width: 46rem; }
 .fotka-clanku img {
   display: block; width: 100%; height: clamp(180px, 30vh, 320px);
-  object-fit: cover; border-radius: 12px; background: var(--zvyrazneni);
+  object-fit: cover; border-radius: var(--r); background: var(--zvyrazneni);
 }
 .fotka-clanku figcaption {
-  margin-top: 0.4rem; font-size: 0.75rem; color: var(--tlumeny);
+  margin-top: 0.4rem; font-size: var(--pismo-popisek); color: var(--tlumeny);
 }
 
 /* Přepínač kalendáře: Pohár · Vše · Mimo pohár (Filip, 22. 9. 2026).
@@ -3436,11 +3474,11 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .kalendar-hlava h2 { margin: 0; }
 .prepinac-kalendare {
   display: inline-flex; margin: 0; padding: 2px; gap: 2px; max-width: 100%;
-  background: var(--zvyrazneni); border: 1px solid var(--linka); border-radius: 999px;
+  background: var(--zvyrazneni); border: 1px solid var(--linka); border-radius: var(--r-stitek);
 }
 .prepinac-kalendare button {
-  font: inherit; font-size: 0.8rem; line-height: 1.2; white-space: nowrap;
-  padding: 0.3rem 0.75rem; border: 0; border-radius: 999px; cursor: pointer;
+  font: inherit; font-size: var(--pismo-popisek); line-height: 1.2; white-space: nowrap;
+  padding: 0.3rem 0.75rem; border: 0; border-radius: var(--r-stitek); cursor: pointer;
   background: transparent; color: var(--tlumeny);
 }
 .prepinac-kalendare button:hover { color: var(--text); }
@@ -3453,7 +3491,7 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .bok .prepinac-kalendare,
 .kalendar-uvod .prepinac-kalendare { display: flex; margin-bottom: 0.6rem; }
 .bok .prepinac-kalendare button,
-.kalendar-uvod .prepinac-kalendare button { flex: 1 1 auto; padding: 0.3rem 0.4rem; font-size: 0.75rem; }
+.kalendar-uvod .prepinac-kalendare button { flex: 1 1 auto; padding: 0.3rem 0.4rem; font-size: var(--pismo-popisek); }
 .kalendar-uvod .prepinac-kalendare { width: fit-content; }
 /* Kotva po přepnutí: nadpis nesmí zajet pod ukotvenou hlavičku. */
 #kalendar { scroll-margin-top: 6rem; }
@@ -3470,9 +3508,9 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 }
 .naklady-souhrn > div {
   flex: 1 1 12rem; display: grid; gap: 0.2rem; padding: 1rem 1.1rem;
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
 }
-.naklady-souhrn .popis { font-size: 0.8rem; color: var(--tlumeny); }
+.naklady-souhrn .popis { font-size: var(--pismo-popisek); color: var(--tlumeny); }
 .naklady-souhrn b { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
 /* Čísla pod sebou se čtou jen tehdy, když mají stejně široké číslice. */
 .naklady-souhrn + .skupina-opravneni table td:not(.vlevo),
@@ -3481,7 +3519,7 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
    bublina se prstem nevyvolá. */
 .poznamka-radku {
   display: block; margin-top: 0.15rem; white-space: normal;
-  font-size: 0.78rem; color: var(--tlumeny); max-width: 24rem;
+  font-size: var(--pismo-popisek); color: var(--tlumeny); max-width: 24rem;
 }
 .skupina-opravneni tfoot td {
   border-top: 1px solid var(--linka); font-weight: 600;
@@ -3493,14 +3531,14 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 @media (max-width: 32rem) {
   .skupina-opravneni th,
   .skupina-opravneni td { padding: 0.5rem 0.4rem; }
-  .skupina-opravneni table { font-size: 0.82rem; }
+  .skupina-opravneni table { font-size: var(--pismo-popisek); }
   .poznamka-radku { font-size: 0.72rem; }
   /* Dlouhé názvy položek se na telefonu smějí zalomit. Nowrap patří
      číslům, ne textu — kvůli němu tabulka přetékala. */
   .skupina-opravneni td.vlevo { white-space: normal; }
 }
 /* Poslední řádek stránky nákladů: suma, kvůli které se sem chodí. */
-.skupina-opravneni tfoot tr.celkem td { font-size: 1.05rem; }
+.skupina-opravneni tfoot tr.celkem td { font-size: var(--pismo); }
 /* Rozbor jedné platby uvnitř tabulky. Odsazený a tlumený, aby bylo poznat,
    že se nepřičítá — sčítá se do řádku nad sebou. */
 .skupina-opravneni tr.slozka td { color: var(--tlumeny); border-top: 0; padding-top: 0.15rem; }
@@ -3511,7 +3549,7 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
    (--voda má vlastní tmavou obdobu) a popisky nosí textové tokeny. */
 .graf-dnu {
   height: 8rem; margin-top: 0.5rem; padding: 0.6rem 0.6rem 0;
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
   box-sizing: border-box;
 }
 /* Kreslicí plocha. Vrstvy nad ní (vodítko průměru, tečka posledního dne) se
@@ -3541,11 +3579,11 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 }
 .graf-popisky {
   display: flex; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;
-  font-size: 0.78rem; color: var(--tlumeny); margin-top: 0.35rem;
+  font-size: var(--pismo-popisek); color: var(--tlumeny); margin-top: 0.35rem;
 }
 .graf-popisky .vrchol { margin-inline: auto; }
 .graf-cisla { margin-top: 0.75rem; }
-.graf-cisla > summary { font-size: 0.85rem; color: var(--tlumeny); cursor: pointer; }
+.graf-cisla > summary { font-size: var(--pismo-drobne); color: var(--tlumeny); cursor: pointer; }
 .graf-cisla > summary:hover { color: var(--voda); }
 .graf-cisla .tabulka-obal { margin-top: 0.5rem; }
 .poznamka.bez-odsazeni { margin-top: 0; }
@@ -3555,7 +3593,7 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 /* Zkrácení: tlačítko pod prvkem, u kterého má být cíl. Mimo panel
    úprav schválně — je to rozhodnutí za jízdy, ne změna předpisu. */
 .formular.radkove.zkratit { margin: 0 0 0.4rem 2.5rem; padding: 0; background: none; border: none; }
-.formular.radkove.zkratit button { padding: 0.1rem 0.6rem; font-size: 0.9rem; }
+.formular.radkove.zkratit button { padding: 0.1rem 0.6rem; font-size: var(--pismo-drobne); }
 .stitek.zkraceno { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
 
 /* Úkony komise za jízdy u prvku — změna úseku (C) a chybějící značka (M).
@@ -3563,28 +3601,28 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
    se stejně, aby se v detailu prvku poznalo, že patří k sobě. */
 .ukony-prvku { margin: 0 0 0.4rem 2.5rem; display: grid; gap: 0.3rem; }
 .ukony-prvku .formular.radkove { margin: 0; padding: 0; background: none; border: none; }
-.ukony-prvku .formular.radkove button { padding: 0.1rem 0.6rem; font-size: 0.9rem; }
-.ukony-prvku label { display: inline-flex; align-items: baseline; gap: 0.3rem; font-size: 0.9rem; }
+.ukony-prvku .formular.radkove button { padding: 0.1rem 0.6rem; font-size: var(--pismo-drobne); }
+.ukony-prvku label { display: inline-flex; align-items: baseline; gap: 0.3rem; font-size: var(--pismo-drobne); }
 .ukony-prvku input[type="number"] { width: 4.5rem; }
 .ukony-prvku input[type="text"] { width: 11rem; }
 
 .ukony-vyhlasene { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.2rem; }
 .ukony-vyhlasene li {
   display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;
-  font-size: 0.9rem;
+  font-size: var(--pismo-drobne);
 }
 /* Vlajka je písmeno, ne obrázek: na vodě se o ní mluví jménem a v zápisu
    se tak i čte. Rámeček z ní dělá znamení, ne iniciálu ve větě. */
 .ukon-vlajka {
   font-weight: 700; line-height: 1;
-  border: 1px solid currentColor; border-radius: 3px;
+  border: 1px solid currentColor; border-radius: var(--r-pole);
   padding: 0.05rem 0.35rem;
 }
 
 /* Pole s časem startu u cílové lišty. Malé, vedle „Přepsat na teď" —
    je to oprava, ne hlavní tlačítko. */
 .cil-cas-startu input {
-  font-size: 0.9rem; padding: 0.1rem 0.3rem; width: 7.5rem;
+  font-size: var(--pismo-drobne); padding: 0.1rem 0.3rem; width: 7.5rem;
 }
 
 /* Zkrácená trať: prvky za cílem zůstávají, jen zešednou. Mizet nesmějí —
@@ -3601,23 +3639,23 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
   margin: 0; padding: 0; background: none; border: none;
 }
 .co-s-trati button, .formular.radkove.postavit-trat button { padding: 0.1rem 0.6rem; }
-.co-s-trati details > summary { cursor: pointer; font-size: 0.9rem; }
+.co-s-trati details > summary { cursor: pointer; font-size: var(--pismo-drobne); }
 
 /* Náhled fotky na konci řádku prvku: malý čtvereček, ať řádek zůstane
    řádkem. Fotky celé jsou až v detailu. */
 .shrnuti-prvku .nahled-znacky { margin-left: auto; flex: none; line-height: 0; }
 .shrnuti-prvku .nahled-znacky img {
-  width: 2.4rem; height: 2.4rem; object-fit: cover; border-radius: 4px;
+  width: 2.4rem; height: 2.4rem; object-fit: cover; border-radius: var(--r-pole);
 }
 /* Fotky značky v detailu prvku. Vedle sebe, dokud se vejdou. */
-.fotky-znacky h4 { margin: 0.75rem 0 0.25rem; font-size: 1rem; }
+.fotky-znacky h4 { margin: 0.75rem 0 0.25rem; font-size: var(--pismo); }
 .fotky-znacky .rada-fotek { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .fotky-znacky figure { margin: 0; max-width: 16rem; }
-.fotky-znacky figure img { width: 100%; height: auto; border-radius: 6px; display: block; }
-.fotky-znacky figcaption { font-size: 0.85rem; color: var(--tlumeny); margin-top: 0.25rem; }
+.fotky-znacky figure img { width: 100%; height: auto; border-radius: var(--r-pole); display: block; }
+.fotky-znacky figcaption { font-size: var(--pismo-drobne); color: var(--tlumeny); margin-top: 0.25rem; }
 
 .mapka-trati { margin: 1rem 0; }
-.mapka { width: 100%; height: auto; display: block; border-radius: 8px; background: #e8e6e1; }
+.mapka { width: 100%; height: auto; display: block; border-radius: var(--r); background: #e8e6e1; }
 
 .znak-boje { vertical-align: -0.25em; margin-right: 0.3rem; }
 
@@ -4332,17 +4370,17 @@ body:has(.tabule) {
    závažím a lany). Cíle jsou velké schválně — na houpající se palubě se
    netrefíš do odkazu velkého jako písmeno. */
 .volby { border: 0; padding: 0; margin: 0 0 0.8rem; }
-.volby legend { font-size: 0.9rem; padding: 0; margin-bottom: 0.35rem; }
-.volby > summary { font-size: 0.9rem; cursor: pointer; padding: 0.5rem 0; }
+.volby legend { font-size: var(--pismo-drobne); padding: 0; margin-bottom: 0.35rem; }
+.volby > summary { font-size: var(--pismo-drobne); cursor: pointer; padding: 0.5rem 0; }
 .chipy { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
 .chip {
   min-height: 44px;
   padding: 0.5rem 0.9rem;
   border: 1px solid var(--linka, #3a3a3a);
-  border-radius: 999px;
+  border-radius: var(--r-stitek);
   background: transparent;
   color: inherit;
-  font-size: 1rem;
+  font-size: var(--pismo);
 }
 .chip.vybrany { border-color: var(--voda); box-shadow: inset 0 0 0 1px var(--voda); }
 .barva {
@@ -4357,7 +4395,7 @@ body:has(.tabule) {
 /* Průvodce stavbou prvku. Hlavní tlačítko je velké schválně: je to
    jediná věc, kterou stavitel na vodě dělá opakovaně. */
 .stavba { margin: 1rem 0 1.5rem; }
-.stavba .krok { font-size: 1.05rem; margin: 0.4rem 0 0.7rem; }
+.stavba .krok { font-size: var(--pismo); margin: 0.4rem 0 0.7rem; }
 /* Tlačítka výběru z mapy nesmějí viset na `.stavba`: tatáž komponenta
    visí i pod formulářem jedné bóje, a tam by "Vzít tenhle bod" zůstalo
    drobné vedle velkého tlačítka průvodce. Stejná věc má vypadat stejně
@@ -4366,7 +4404,7 @@ body:has(.tabule) {
 .vyber-mapy .velke {
   min-height: 56px;
   width: 100%;
-  font-size: 1.15rem;
+  font-size: var(--pismo-nadpis);
 }
 .stavba .zrusit,
 .vyber-mapy .zrusit { margin-top: 0.5rem; background: transparent; }
@@ -4389,13 +4427,13 @@ body:has(.tabule) {
   padding: 0.6rem 0.9rem;
   text-align: left;
   border: 1px solid var(--linka, #3a3a3a);
-  border-radius: 12px;
+  border-radius: var(--r);
   background: transparent;
   color: inherit;
 }
 .stavba .volba.vybrany { border-color: var(--voda); box-shadow: inset 0 0 0 1px var(--voda); }
-.stavba .volba > b { grid-area: jmeno; font-size: 1.05rem; }
-.stavba .volba .detail { grid-area: detail; font-size: 0.85rem; opacity: 0.75; }
+.stavba .volba > b { grid-area: jmeno; font-size: var(--pismo); }
+.stavba .volba .detail { grid-area: detail; font-size: var(--pismo-drobne); opacity: 0.75; }
 /* Místo pro znak se drží i u plavidla a mola, kde žádný není: jinak by
    se nadpisy v seznamu rozjely do dvou sloupců. */
 .stavba .volba .znacka { grid-area: znacka; display: inline-flex; width: 22px; justify-content: center; }
@@ -4420,7 +4458,7 @@ body:has(.tabule) {
 
 /* Poznámka ke značce se rozbalí, až ji někdo vyvolá: píše se jen občas
    a hlavní cesta je předvolba → pípnout. */
-.stavba .poznamka-znacky { display: block; margin: 0.2rem 0 0.6rem; font-size: 0.9rem; }
+.stavba .poznamka-znacky { display: block; margin: 0.2rem 0 0.6rem; font-size: var(--pismo-drobne); }
 .stavba .poznamka-znacky input { width: 100%; min-height: 44px; margin-top: 0.25rem; }
 
 /* Pípnutí jedné bóje je zvláštní případ — rozbalovátko, ne sekce. */
@@ -4440,7 +4478,7 @@ body:has(.tabule) {
 .nahled-prvku { margin: 0 0 0.8rem; }
 /* Strop schválně: na telefonu je přes celou šířku, u stolu by se bez
    něj roztáhl přes půl obrazovky a z kontroly zadání by byl plakát. */
-.nahled-prvku svg { display: block; width: 100%; max-width: 420px; height: auto; border-radius: 10px; }
+.nahled-prvku svg { display: block; width: 100%; max-width: 420px; height: auto; border-radius: var(--r); }
 .nahled-prvku .hladina { fill: var(--voda-podklad, #1b2a36); }
 .nahled-prvku .linie {
   stroke: var(--text, #e8e6e1);
@@ -4460,7 +4498,7 @@ body:has(.tabule) {
 .nahled-prvku .stopa.vetev { stroke-width: 2.2; stroke-dasharray: 6 5; opacity: 0.65; }
 .nahled-prvku .hrot.vetev { opacity: 0.65; }
 .nahled-prvku figcaption {
-  font-size: 0.85rem;
+  font-size: var(--pismo-drobne);
   opacity: 0.8;
   margin-top: 0.3rem;
 }
@@ -4473,7 +4511,7 @@ body:has(.tabule) {
   /* Šířku dává rodič, výšku komponenta podle změřené šířky. Na telefonu
      tím mapa vyplní obrazovku, dřív jí zbýval pruh vedle. */
   width: 100%;
-  border-radius: 6px;
+  border-radius: var(--r-pole);
   touch-action: none; /* jinak si tah vezme rolování stránky */
   cursor: grab;
   max-width: 100%;
@@ -4496,14 +4534,14 @@ body:has(.tabule) {
   min-height: 44px;
   padding: 0 0.6rem;
   border: 1px solid rgba(0, 0, 0, 0.35);
-  border-radius: 10px;
+  border-radius: var(--r);
   background: rgba(255, 255, 255, 0.92);
   color: #16181c;
   font-size: 1.3rem;
   line-height: 1;
   cursor: pointer;
 }
-.vyber-mapy .ovladani button.podklad { font-size: 0.9rem; }
+.vyber-mapy .ovladani button.podklad { font-size: var(--pismo-drobne); }
 .vyber-mapy .ovladani button[aria-pressed="true"] { background: #16181c; color: #fff; }
 .vyber-mapy .ovladani button:disabled { opacity: 0.45; cursor: default; }
 
@@ -4535,7 +4573,7 @@ body:has(.tabule) {
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--linka);
-  border-radius: 6px;
+  border-radius: var(--r-pole);
   background: var(--pozadi);
   cursor: pointer;
 }
@@ -4582,7 +4620,7 @@ body:has(.tabule) {
   overflow: auto;
   padding: 1rem 1.1rem 0.6rem;
   border: 1px solid var(--linka);
-  border-radius: 14px;
+  border-radius: var(--r);
   background: var(--pozadi);
   box-shadow: 0 1.4rem 3rem rgb(0 0 0 / 35%);
 }
@@ -4603,7 +4641,7 @@ body:has(.tabule) {
   cursor: pointer;
 }
 :is(.modal-prvku, .modal-potvrzeni) .zavrit-modal:hover { color: var(--text); background: var(--linka); }
-:is(.modal-prvku, .modal-potvrzeni) h3 { margin: 0 0 0.6rem; font-size: 1.05rem; }
+:is(.modal-prvku, .modal-potvrzeni) h3 { margin: 0 0 0.6rem; font-size: var(--pismo); }
 .modal-prvku h3 .znacky { color: var(--tlumeny); font-weight: 400; }
 
 /* Dva popsané údaje pod nákresem: čím ta bóje je a jak se objíždí. */
@@ -4612,7 +4650,7 @@ body:has(.tabule) {
   grid-template-columns: auto 1fr;
   gap: 0.15rem 0.6rem;
   margin: 0 0 0.6rem;
-  font-size: 0.9rem;
+  font-size: var(--pismo-drobne);
 }
 .udaje-prvku dt { color: var(--tlumeny); }
 .udaje-prvku dd { margin: 0; }
@@ -4674,7 +4712,7 @@ body:has(.tabule) {
 .seznam-prvku .presun-radkem form { display: contents; }
 .seznam-prvku .presun-radkem button {
   width: 1.9rem; height: 1.9rem; padding: 0; line-height: 1;
-  border: 1px solid var(--linka); border-radius: 6px;
+  border: 1px solid var(--linka); border-radius: var(--r-pole);
   background: var(--pozadi); color: var(--tlumeny); cursor: pointer;
 }
 .seznam-prvku .presun-radkem button:hover:not(:disabled) {
@@ -4685,7 +4723,7 @@ body:has(.tabule) {
 /* „Právě teď" pod průměrem. Menší a tlumené: u Orlíku je okamžitý průtok
    většinu času nula, protože se pouští nárazově — je to pravda o téhle
    vteřině, ne to, kvůli čemu se na vodočet kouká. */
-.vodocet-toky .vodocet-ted { font-size: 0.78rem; color: var(--tlumeny); }
+.vodocet-toky .vodocet-ted { font-size: var(--pismo-popisek); color: var(--tlumeny); }
 
 /* Odepnout a smazat u vybrané trati. Pod záložkami a pod větou o tom, kdo
    ji jede — jsou to úkony nad tou tratí, co je zrovna vidět. */
@@ -4700,7 +4738,7 @@ body:has(.tabule) {
   min-height: 44px;
   padding: 0.5rem 0.9rem;
   border: 1px solid var(--linka);
-  border-radius: 8px;
+  border-radius: var(--r);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -4750,7 +4788,7 @@ body:has(.tabule) {
   border-left: 4px solid var(--stav-zruseny);
   padding: 0.6rem 0.9rem;
   margin-bottom: 1rem;
-  border-radius: 4px;
+  border-radius: var(--r-pole);
 }
 
 .nacrt {
@@ -4866,7 +4904,7 @@ body:has(.tracker-strana) main.obal { max-width: none; }
   width: 100%;
   height: 100%;
   background: var(--zvyrazneni);
-  border-radius: 6px;
+  border-radius: var(--r-pole);
   touch-action: none;
   cursor: grab;
 }
@@ -4874,7 +4912,7 @@ body:has(.tracker-strana) main.obal { max-width: none; }
 
 
 .nacrt-znacka {
-  font-size: 13px;
+  font-size: var(--pismo-popisek);
   font-weight: 600;
   fill: #fff;
   paint-order: stroke;
@@ -4899,11 +4937,11 @@ body:has(.tracker-strana) main.obal { max-width: none; }
 
 .nacrt-ovladani input[type="range"] { width: 240px; }
 
-.nacrt-poradi h2 { margin: 0 0 0.25rem; font-size: 1.05rem; }
+.nacrt-poradi h2 { margin: 0 0 0.25rem; font-size: var(--pismo); }
 
 .nacrt-vysvetlivka {
   margin: 0.5rem 0 0;
-  font-size: 0.8rem;
+  font-size: var(--pismo-popisek);
   color: var(--tlumeny);
 }
 
@@ -4952,7 +4990,7 @@ body:has(.tracker-strana) main.obal { max-width: none; }
   padding: 0.25rem 0.4rem;
   line-height: 1.25;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--r-pole);
   background: none;
   color: inherit;
   text-align: left;
@@ -4977,17 +5015,17 @@ body:has(.tracker-strana) main.obal { max-width: none; }
   margin-bottom: 0.5rem;
   padding: 0.2rem 0.5rem;
   border: 1px solid var(--linka);
-  border-radius: 4px;
+  border-radius: var(--r-pole);
   background: var(--papir);
   color: var(--text);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--pismo-popisek);
   cursor: pointer;
 }
 
 .nacrt-cislo { font-variant-numeric: tabular-nums; color: var(--tlumeny); }
 .nacrt-nazev { font-weight: 600; }
-.nacrt-kategorie { font-size: 0.75rem; color: var(--tlumeny); }
+.nacrt-kategorie { font-size: var(--pismo-popisek); color: var(--tlumeny); }
 
 /* Značka třídy místo slova — loď se pozná podle siluety rychleji. */
 .nacrt-trida {
@@ -5014,7 +5052,7 @@ body:has(.tracker-strana) main.obal { max-width: none; }
   align-items: center;
   padding: 0.2rem 0.45rem;
   border: 1px solid var(--linka);
-  border-radius: 999px;
+  border-radius: var(--r-stitek);
   background: none;
   color: var(--tlumeny);
   font: inherit;
@@ -5036,7 +5074,7 @@ body:has(.tracker-strana) main.obal { max-width: none; }
 
 
 .nacrt-stav {
-  font-size: 0.75rem;
+  font-size: var(--pismo-popisek);
   justify-self: end;
   white-space: nowrap;
 }
@@ -5051,7 +5089,7 @@ body:has(.tracker-strana) main.obal { max-width: none; }
   bottom: 0.75rem;
   min-width: 230px;
   padding: 0.6rem 0.75rem;
-  border-radius: 6px;
+  border-radius: var(--r-pole);
   background: var(--papir);
   color: var(--text);
   border: 1px solid var(--linka);
@@ -5102,12 +5140,12 @@ body:has(.tracker-strana) main.obal { max-width: none; }
   right: 0.75rem;
   top: 0.75rem;
   padding: 0.45rem 0.7rem;
-  border-radius: 6px;
+  border-radius: var(--r-pole);
   background: var(--papir);
   color: var(--text);
   border: 1px solid var(--linka);
   box-shadow: 0 2px 10px rgb(0 0 0 / 35%);
-  font-size: 0.9rem;
+  font-size: var(--pismo-drobne);
 }
 
 /* Hláška o prohození: přijede a šipky se jednou nadechnou, aby si jich
@@ -5132,7 +5170,7 @@ body:has(.tracker-strana) main.obal { max-width: none; }
 }
 
 .nacrt-souboj-lod span {
-  font-size: 0.95rem;
+  font-size: var(--pismo-drobne);
   animation: nacrt-sipka 1.4s ease-in-out 2;
 }
 
@@ -5174,7 +5212,7 @@ body:has(.tracker-strana) main.obal { max-width: none; }
   left: 0.75rem;
   top: 0.75rem;
   display: grid;
-  border-radius: 7px;
+  border-radius: var(--r);
   overflow: hidden;
   box-shadow: 0 1px 6px rgb(0 0 0 / 35%);
 }
@@ -5185,7 +5223,7 @@ body:has(.tracker-strana) main.obal { max-width: none; }
   border: 0;
   background: var(--papir);
   color: var(--text);
-  font-size: 1.15rem;
+  font-size: var(--pismo-nadpis);
   line-height: 1;
   cursor: pointer;
   display: grid;
@@ -5274,7 +5312,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   z-index: 2;
   margin: 0;
   padding: 0.15rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--r-stitek);
   background: rgb(0 0 0 / 35%);
   font-size: 0.72rem;
   letter-spacing: 0.04em;
@@ -5309,7 +5347,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr);
   padding: 0.8rem 0.9rem;
-  border-radius: 10px;
+  border-radius: var(--r);
   background: color-mix(in srgb, var(--papir) 86%, transparent);
   backdrop-filter: blur(6px);
   box-shadow: 0 4px 20px rgb(0 0 0 / 35%);
@@ -5322,22 +5360,22 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .nacrt-na-tv .nacrt-poradi h2 {
   display: flex; align-items: center; gap: 0.45rem;
   margin-bottom: 0.3rem;
-  font-size: 0.95rem;
+  font-size: var(--pismo-drobne);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--tlumeny);
 }
 .nacrt-na-tv .nacrt-poradi h2 .znak-tridy { height: 1.2rem; width: auto; opacity: 0.8; }
-.nacrt-na-tv .nacrt-vysvetlivka { font-size: 0.85rem; }
+.nacrt-na-tv .nacrt-vysvetlivka { font-size: var(--pismo-drobne); }
 .nacrt-na-tv .nacrt-poradi ol { max-height: none; overflow: hidden; }
 
 /* Řádek žebříčku se čte přes místnost, ne z klína — ale drží se při
    zemi jako pásy dole (Filip, 24. 10. 2026), aby se jich vešlo víc. */
-.nacrt-na-tv .nacrt-poradi li button { font-size: 1.05rem; padding: 0.1rem 0.4rem; }
-.nacrt-na-tv .nacrt-cislo { font-size: 1.05rem; }
+.nacrt-na-tv .nacrt-poradi li button { font-size: var(--pismo); padding: 0.1rem 0.4rem; }
+.nacrt-na-tv .nacrt-cislo { font-size: var(--pismo); }
 .nacrt-na-tv .nacrt-kategorie,
-.nacrt-na-tv .nacrt-stav { font-size: 0.8rem; }
+.nacrt-na-tv .nacrt-stav { font-size: var(--pismo-popisek); }
 .nacrt-na-tv .nacrt-trida .znak-tridy { height: 1.3rem; }
 
 /* <b>Žebříček se točí</b>, aby se divák dostal i na zadní lodě — dělá to
@@ -5374,7 +5412,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   padding: 0.8rem 1.2rem;
 }
 
-.nacrt-na-tv .nacrt-souboj-pozice { font-size: 1rem; }
+.nacrt-na-tv .nacrt-souboj-pozice { font-size: var(--pismo); }
 .nacrt-na-tv .nacrt-zoom { display: none; }
 
 
@@ -5388,7 +5426,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   margin-left: 0.4em;
   padding: 0 0.4em;
   border: 1px solid currentColor;
-  border-radius: 999px;
+  border-radius: var(--r-stitek);
   font-size: 0.72em;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -5402,7 +5440,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   justify-self: end;
   padding: 0.05rem 0.35rem;
   border: 1px solid currentColor;
-  border-radius: 999px;
+  border-radius: var(--r-stitek);
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -5486,7 +5524,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule-tridy .pas-stari { font-size: calc(0.7 * var(--tv)); color: var(--stav-vypsany); }
 .tabule-tridy .pas-stitek {
   font-size: calc(0.65 * var(--tv)); text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--voda); border: 1px solid currentColor; border-radius: 999px;
+  color: var(--voda); border: 1px solid currentColor; border-radius: var(--r-stitek);
   padding: 0 calc(0.3 * var(--tv));
 }
 
@@ -5526,7 +5564,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    Modrá zůstala štítku „v cíli", aby znamenala jedinou věc. */
 .tabule .nacrt-poradi li > button.nacrt-v-zaberu {
   background: color-mix(in srgb, var(--barva-lodi, var(--voda)) 18%, transparent);
-  border-radius: 8px;
+  border-radius: var(--r);
   box-shadow: inset 3px 0 0 var(--barva-lodi, var(--voda));
 }
 
@@ -5552,7 +5590,9 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   right: calc(100% + 0.5 * var(--tv)); transform: translateY(-50%);
   display: flex; align-items: center;
   height: calc(2 * var(--tv)); padding: 0 calc(1 * var(--tv));
-  background: var(--voda); color: #06121c;
+  /* `--papir`, ne tmavá natvrdo: tabule drží vzhled webu a ve světlém
+     měla tmavá na `--voda` jen 3,33 : 1. */
+  background: var(--voda); color: var(--papir);
   font-size: calc(0.8 * var(--tv)); font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap;
   border-radius: 6px 0 0 6px;
@@ -5581,7 +5621,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   display: grid; place-items: center;
   min-width: calc(2.6 * var(--znacka)); height: calc(2.6 * var(--znacka));
   padding: 0 calc(0.5 * var(--znacka));
-  border-radius: 999px;
+  border-radius: var(--r-stitek);
   font-size: calc(0.75 * var(--znacka)); font-variant-numeric: tabular-nums;
   color: var(--tlumeny);
   background: color-mix(in srgb, var(--pozadi) 70%, transparent);
@@ -5603,7 +5643,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .rozjizdka-panylek {
   height: calc(2.4 * var(--znacka)); width: calc(2.4 * var(--znacka));
   display: flex; align-items: center; justify-content: center; gap: calc(0.5 * var(--znacka));
-  border-radius: 8px; font-style: normal;
+  border-radius: var(--r); font-style: normal;
   background: var(--pozadi); color: var(--text);
   border: 2px solid transparent;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
@@ -5643,7 +5683,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .rozjizdka-procedura {
   height: calc(2.4 * var(--znacka));
   display: flex; align-items: center; padding: 0 calc(0.9 * var(--znacka));
-  border-radius: 8px; font-style: normal;
+  border-radius: var(--r); font-style: normal;
   font-size: calc(0.78 * var(--znacka)); letter-spacing: 0.06em;
   text-transform: uppercase; font-variant-numeric: tabular-nums;
   /* Odpočet je výzva, ne výtka (Filip, 25. 10. 2026: „aby to nevypadalo
@@ -5824,7 +5864,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    a víc je naopak dobrá zpráva (záloha na palubě), tak je jen tlumená. */
 .tabule .tabule-teaser-trida li .bez-telefonu {
   font-size: calc(0.78 * var(--tv)); color: var(--stav-zruseny);
-  border: 1px solid currentColor; border-radius: 999px;
+  border: 1px solid currentColor; border-radius: var(--r-stitek);
   padding: 0 calc(0.45 * var(--tv)); white-space: nowrap;
 }
 /* Telefony jako kostičky: jedna na každý, výplň odspodu podle baterie.
@@ -5928,7 +5968,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .tabule-info-tecky { display: inline-flex; gap: calc(0.25 * var(--tv)); }
 .tabule .tabule-info-tecky i {
   width: calc(0.3 * var(--tv)); height: calc(0.3 * var(--tv));
-  border-radius: 999px; background: var(--tlumeny); opacity: 0.4;
+  border-radius: var(--r-stitek); background: var(--tlumeny); opacity: 0.4;
 }
 .tabule .tabule-info-tecky i.ted { opacity: 1; }
 
@@ -5940,7 +5980,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   bottom: calc(var(--dolni-blok, 0px) + 0.8 * var(--znacka) + 0.6 * var(--znacka));
   font-size: calc(0.7 * var(--tv)); letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--stav-zruseny); border: 1px solid currentColor;
-  border-radius: 999px; padding: calc(0.2 * var(--tv)) calc(0.6 * var(--tv));
+  border-radius: var(--r-stitek); padding: calc(0.2 * var(--tv)) calc(0.6 * var(--tv));
   background: color-mix(in srgb, var(--pozadi) 80%, transparent);
 }
 
@@ -5957,7 +5997,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   list-style: none; cursor: pointer;
   display: grid; place-items: center;
   width: calc(2.6 * var(--znacka)); height: calc(2.6 * var(--znacka));
-  border-radius: 999px; border: 1px solid var(--linka);
+  border-radius: var(--r-stitek); border: 1px solid var(--linka);
   background: color-mix(in srgb, var(--pozadi) 70%, transparent);
   color: var(--tlumeny); font-size: calc(1.1 * var(--znacka)); line-height: 1;
   opacity: 0.5;
@@ -6023,7 +6063,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .tabule-vysledky-varovani {
   margin: 0; align-self: start;
   font-size: calc(0.85 * var(--tv)); color: #e8900c;
-  border: 1px solid currentColor; border-radius: 999px;
+  border: 1px solid currentColor; border-radius: var(--r-stitek);
   padding: calc(0.15 * var(--tv)) calc(0.7 * var(--tv));
 }
 .tabule .tabule-vysledky-tridy {
@@ -6092,7 +6132,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    jako živý přenos a divák by čekal, že vidí, kdo zrovna vede. */
 .tabule .tabule-prehravka-popis span {
   font-size: calc(0.85 * var(--tv)); color: #e8900c;
-  border: 1px solid currentColor; border-radius: 999px;
+  border: 1px solid currentColor; border-radius: var(--r-stitek);
   padding: calc(0.1 * var(--tv)) calc(0.6 * var(--tv));
   letter-spacing: 0.04em; text-transform: uppercase;
 }
@@ -6124,9 +6164,9 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   --sada-rozdelane: var(--pozor);
 }
 
-.sada-otazek-karta h2 { margin: 0; font-size: 1.05rem; }
+.sada-otazek-karta h2 { margin: 0; font-size: var(--pismo); }
 .sada-otazek-karta .poznamka { margin-top: 0.4rem; }
-.sada-stav { margin: 0.6rem 0 0; font-size: 0.9rem; }
+.sada-stav { margin: 0.6rem 0 0; font-size: var(--pismo-drobne); }
 .sada-stav-odpovezeno { color: var(--sada-hotovo); }
 .sada-stav-rozpracovano { color: var(--sada-rozdelane); }
 .sada-stav-neodpovezeno { color: var(--tlumeny); }
@@ -6138,7 +6178,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    až štítek u nálezů — ten je pro Filipa, ne pro rozhodčího. */
 .otazky { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 1.5rem; }
 .otazka {
-  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: var(--r);
   padding: 1rem 1.15rem;
 }
 .otazka-text { margin: 0; font-weight: 600; line-height: 1.5; }
@@ -6147,7 +6187,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 }
 .otazka-volby { background: var(--pozadi); }
 .otazka-volby .zaskrtnuti { display: flex; }
-.otazka-uvolni { font-size: 0.78rem; }
+.otazka-uvolni { font-size: var(--pismo-popisek); }
 
 /* Mikrofon. Vedle textu, ne pod ním — hlas je u téhle obrazovky hlavní
    cesta, ne náhradní (Miloš: osm otázek třinácti nahrávkami). */
@@ -6157,14 +6197,14 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 }
 .hlas button {
   font: inherit; font-weight: 600; cursor: pointer;
-  padding: 0.6rem 1.1rem; border-radius: 8px; border: 1px solid var(--linka);
+  padding: 0.6rem 1.1rem; border-radius: var(--r); border: 1px solid var(--linka);
   background: var(--pozadi); color: var(--text);
 }
 .hlas button:hover:not(:disabled) { border-color: var(--voda); color: var(--voda); }
 .hlas button:disabled { cursor: progress; color: var(--tlumeny); }
 .hlas .hlas-stop { border-color: var(--hlas-bezi); color: var(--hlas-bezi); }
-.hlas-bezi { font-size: 0.85rem; color: var(--hlas-bezi); }
-.hlas-chyba { font-size: 0.85rem; color: var(--stav-zruseny); }
+.hlas-bezi { font-size: var(--pismo-drobne); color: var(--hlas-bezi); }
+.hlas-chyba { font-size: var(--pismo-drobne); color: var(--stav-zruseny); }
 
 .nahravky { list-style: none; padding: 0; margin: 0.9rem 0 0; display: grid; gap: 0.8rem; }
 .nahravky li {
@@ -6294,7 +6334,7 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
 
   /* Štítek role je na dotyk cíl, ne jen popisek — 2,2 rem je minimum,
      pod kterým se do něj na telefonu trefuje palcem na dvakrát. */
-  button.stitek-role { min-height: 2.2rem; padding: 0.45rem 0.75rem; font-size: 0.8rem; }
+  button.stitek-role { min-height: 2.2rem; padding: 0.45rem 0.75rem; font-size: var(--pismo-popisek); }
 
   /* Hlavní krok je na dotyku cíl jako každý jiný: s výplní 0,5 rem a
      patnáctibodovým písmem vycházel na 42 pt (změřeno na 375 px). */
@@ -6353,7 +6393,7 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
 /* Úkoly v „Co teď". Karta faktu nese stav regaty nad jménem — a nemá
    sloveso, protože to není úkol. */
 .ukoly-ted .karta .cim {
-  font-size: 0.8rem;
+  font-size: var(--pismo-popisek);
   color: var(--tlumeny);
   margin-bottom: 0.25rem;
 }
@@ -6364,7 +6404,7 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
   margin: 1rem 0 0;
   padding-top: 0.7rem;
   border-top: 1px solid var(--linka);
-  font-size: 0.85rem;
+  font-size: var(--pismo-drobne);
   display: flex;
   gap: 0.9rem;
   flex-wrap: wrap;
@@ -6372,7 +6412,7 @@ body:has(.vybrany-ukon[data-ukon="opravneni"]) { --ukon-strany: var(--ukon-uvod)
 
 /* Řádek regaty nese větu o tom, na kom to je. Čeká-li se, je to barva
    stavu, ne další štítek — štítků už řádek nese dost. */
-.seznam-regat .prubeh { font-size: 0.85rem; color: var(--tlumeny); }
+.seznam-regat .prubeh { font-size: var(--pismo-drobne); color: var(--tlumeny); }
 .seznam-regat .prubeh .ceka { color: var(--pozor-pismo, var(--text)); font-weight: 600; }
 .seznam-regat .prubeh .klid { color: var(--tlumeny); }
 
@@ -6396,16 +6436,16 @@ body:has(.vybrany-ukon[data-ukon="naklady"]) { --ukon-strany: var(--ukon-uvod); 
    které jsou o patro níž stejně v pruhu. */
 .seznam-rocniku { list-style: none; margin: 0; padding: 0;
   background: var(--papir); border: 1px solid var(--linka);
-  border-radius: 10px; overflow: hidden; }
+  border-radius: var(--r); overflow: hidden; }
 .seznam-rocniku > li + li { border-top: 1px solid var(--linka); }
 .radek-rocniku {
   display: grid; grid-template-columns: 1fr auto auto; align-items: center;
   gap: 0.9rem; padding: 0.8rem 1rem; color: inherit; text-decoration: none;
 }
 .radek-rocniku:hover { background: var(--zvyrazneni); text-decoration: none; }
-.radek-rocniku .nazev { font-weight: 700; font-size: 1.05rem; }
+.radek-rocniku .nazev { font-weight: 700; font-size: var(--pismo); }
 .radek-rocniku .role { display: flex; gap: 0.3rem; flex-wrap: wrap; }
-.radek-rocniku .sipka { color: var(--tlumeny); font-size: 1.05rem; }
+.radek-rocniku .sipka { color: var(--tlumeny); font-size: var(--pismo); }
 
 /* Části veřejného ročníku (konzilium, 12. 11. 2026). Pořadí dědí barvu
    výsledků, protože je to tatáž agenda o patro výš; Správa ročníku má šeď,
