@@ -88,7 +88,10 @@ export function posud(fix: Fix | null, ted: number): Posudek {
     };
 
   if (!vCesku(fix.sirka, fix.delka))
-    return { ok: false, proc: 'Tahle poloha není v Česku. Zkontroluj signál z družic.' };
+    // Sem dojde jen čerstvá a přesná poloha, takže telefon v cizině
+    // opravdu je — rada o družicích by vedla jinam (nezávislá kontrola,
+    // 28. 11. 2026). Cesta dál je mapa.
+    return { ok: false, proc: 'Tahle poloha není v Česku, pípnout tu nejde. Bod vezmi z mapy.' };
 
   if (fix.presnostM == null)
     return { ok: true, varovani: 'Telefon nehlásí přesnost.' };

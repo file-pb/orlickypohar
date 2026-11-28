@@ -207,32 +207,37 @@ export function MapkaVyber({
         onClick={() => vyber(kde)}
         disabled={cekam || !jeVCesku}
       >
-        {cekam ? "Zapisuji…" : jeVCesku ? "Vzít tenhle bod" : "Mimo meze — posuň mapu"}
+        {cekam ? "Zapisuji…" : jeVCesku ? "Vzít tenhle bod" : "Mimo Česko — posuň mapu"}
       </button>
       <button type="button" className="zrusit" onClick={zrus} disabled={cekam}>
         Zpět
       </button>
 
+      {/* Atribuce podle podmínek zdroje. Esri chce „Powered by Esri"
+          a jména zdrojů vrstvy; ta se mění (28. 11. 2026 už Vantor místo
+          Maxaru), takže se ověřují v `copyrightText` služby:
+          server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer?f=json */}
       <p className="poznamka">
-        Podklad{" "}
         {satelit ? (
-          <a
-            href="https://www.esri.com/en-us/legal/terms/full-master-agreement"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            © Esri World Imagery
-          </a>
+          <>
+            <a href="https://www.esri.com" target="_blank" rel="noopener noreferrer">
+              Powered by Esri
+            </a>
+            {" · Zdroj: Esri, Vantor, Earthstar Geographics a GIS User Community."}
+          </>
         ) : (
-          <a
-            href="https://www.openstreetmap.org/copyright"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            © přispěvatelé OpenStreetMap
-          </a>
+          <>
+            Podklad{" "}
+            <a
+              href="https://www.openstreetmap.org/copyright"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              © přispěvatelé OpenStreetMap
+            </a>
+            .
+          </>
         )}
-        .
       </p>
     </div>
   );

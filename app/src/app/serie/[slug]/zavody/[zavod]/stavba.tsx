@@ -1,7 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9,8 +10,10 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DetailZnacky } from '@/components/detail-znacky';
+import { MapkaVyber } from '@/components/mapka-vyber';
 import { OsaTrati, RadkaTrati } from '@/components/radka-trati';
 import { Chyba, Nacitani, Nadpis, Prazdno, Sekce } from '@/components/ui';
 import type { Barvy } from '@/constants/theme';
@@ -24,6 +27,7 @@ import {
   type PrvekSpravy,
 } from '@/lib/api';
 import { pismoNaVyplni } from '@/lib/kontrast';
+import { vychoziStred, type Bod } from '@/lib/mapa';
 import { mojeOpravneni } from '@/lib/opravneni';
 import { lzePotvrdit, vyprselo } from '@/lib/stavba/potvrzeni';
 import { posliUkony } from '@/lib/stavba/ukony';
@@ -45,6 +49,7 @@ import {
   jmenaBodu,
   vyzvaBodu,
   kolmice,
+  NEJKRATSI_LINIE_M,
   patriSmer,
   type Predvolba,
   type TypStavby,
@@ -59,7 +64,7 @@ import {
   type PrvekKPostaveni,
 } from '@/lib/stavba/fronta';
 import { odesliFrontu } from '@/lib/stavba/odesilani';
-import { popisPresnosti, posud, type Fix } from '@/lib/stavba/poloha';
+import { popisPresnosti, posud, type Fix, type Posudek } from '@/lib/stavba/poloha';
 import { useZamekRestartu } from '@/lib/restart';
 
 /**
@@ -87,10 +92,18 @@ import { useZamekRestartu } from '@/lib/restart';
  *
  * <para>
  * <b>Co obrazovka vědomě neumí:</b> fotku u značky (byla by to nativní
- * závislost, tedy posunutý otisk a ruční přeinstalace APK u všech),
- * výběr bodu z mapy (ten vznikl pro člověka u počítače — na vodě telefon
- * měří) a přenastavení či sebrání značky (cesta pro zvláštní případ, ta
- * zůstává na webu).
+ * závislost, tedy posunutý otisk a ruční přeinstalace APK u všech)
+ * a přenastavení či sebrání značky (cesta pro zvláštní případ, ta zůstává
+ * na webu).
+ * </para>
+ *
+ * <para>
+ * <b>Výběr bodu z mapy umí od 28. 11. 2026</b> (Filip, mimo republiku:
+ * *„trať můžu stavět prostě doma, mimo vodu. A určitě potřebuji mít možnost
+ * pípnout to z mapy."*). Do té doby ho vědomě neměla — „na vodě telefon
+ * měří" — jenže mimo Česko ověření polohy pípnutí zastavilo a jiná cesta
+ * nebyla. Pípnutí z družic dál hlídá `posud`; bod z mapy nemá přesnost
+ * a server ho pozná podle zdroje `Mapa`.
  * </para>
  */
 
@@ -112,8 +125,21 @@ function popisPrvku(p: PrvekSpravy): string {
   return [NAZVY_TYPU[p.typ ?? ''] ?? p.typ, znacky, strana].filter(Boolean).join(' · ');
 }
 
+/**
+ * Jak dlouho po zavření mapy se nebere Pípnout: zavírací animace a jedno
+ * houpnutí navíc.
+ */
+const KLID_PO_MAPE_MS = 600;
+
 /** Výchozí značení: naše bóje. Tatáž předvolba, jakou nabízí web. */
 const VYCHOZI_ZNACENI = ZNACENI.find((z) => z.id === 'NaseBoje')!;
+
+/**
+ * Nasbíraný bod rozdělaného prvku: změřený telefonem, nebo vybraný z mapy.
+ * Zdroj se pamatuje u bodu, ne u prvku — u startu se klidně pípne bóje
+ * z vody a konec u mola z mapy.
+ */
+type BodStavby = Fix & { zdroj: 'Telefon' | 'Mapa' };
 
 export default function StavbaTrati() {
   const { slug, zavod } = useLocalSearchParams<{ slug: string; zavod: string }>();
@@ -122,6 +148,27 @@ export default function StavbaTrati() {
   const s = styly(t);
 
   const { fix, opravneni } = usePoloha(true);
+  const okraje = useSafeAreaInsets();
+  const [zMapy, setZMapy] = useState(false);
+  // Kam se mapa naposledy posunula. Omylem zavřený výběr (na Androidu
+  // s gesty je tah od kraje systémové Zpět) se otevře tam, kde byl;
+  // nový bod tuhle paměť smaže, ať další výběr začne u něj.
+  const [stredMapy, setStredMapy] = useState<Bod | null>(null);
+  // Co výběr ukazuje, zachycené při otevření. Modal po zavření ještě
+  // dojíždí animací, a kdyby četl živý stav, problikl by v něm už další
+  // bod: nový nadpis, tečka pod křížkem a „Moc blízko" (viděno
+  // v simulátoru 28. 11. 2026).
+  const [mapaPro, setMapaPro] = useState<{ copipat: string; body: BodStavby[] } | null>(null);
+  /**
+   * <b>Klid po zavření mapy</b> (nezávislá kontrola, 28. 11. 2026).
+   * „Zpět" v mapě leží nad Pípnout; druhé klepnutí dvojklepu z houpnutí
+   * lodi by po zavření pípnulo bod tam, kde zrovna stojí loď.
+   */
+  const klidDo = useRef(0);
+  const zavriMapu = () => {
+    klidDo.current = Date.now() + KLID_PO_MAPE_MS;
+    setZMapy(false);
+  };
 
   // Která značka má otevřený detail.
   const [vybrana, setVybrana] = useState<ZnackaNaOse | null>(null);
@@ -156,10 +203,11 @@ export default function StavbaTrati() {
   const [typ, setTyp] = useState<TypStavby | null>(null);
   const [volba, setVolba] = useState<Volba | null>(null);
   const [znaceni, setZnaceni] = useState<Predvolba>(VYCHOZI_ZNACENI);
-  const [body, setBody] = useState<Fix[]>([]);
+  const [body, setBody] = useState<BodStavby[]>([]);
   // Rozpracovaný prvek je jen v paměti: restart by zahodil změřené body
   // a stavitel by bóji objížděl znovu.
   useZamekRestartu('stavba', typ !== null || body.length > 0 || posila);
+  useEffect(() => setStredMapy(null), [body.length, typ]);
   const [smer, setSmer] = useState<(typeof SMERY)[number] | null>(null);
 
   const odemkni = useCallback(async () => {
@@ -219,7 +267,12 @@ export default function StavbaTrati() {
   }, [slug, zavod]);
 
   const zamcena = zavodData?.stav === 'Prijato';
-  const posudek = posud(fix, Date.now());
+  // Bez přístupu k poloze fix nikdy nepřijde a „Čekám na polohu
+  // z družic" by čekalo donekonečna (nezávislá kontrola, 28. 11. 2026).
+  const posudek: Posudek =
+    opravneni === 'ne'
+      ? { ok: false, proc: 'Bez přístupu k poloze pípnout nejde. Bod vezmi z mapy.' }
+      : posud(fix, Date.now());
 
   // Kolikátý prvek se staví — jen do automatických jmen. Počítá se
   // i s tím, co čeká ve frontě: jinak by dvě značky postavené bez signálu
@@ -247,8 +300,19 @@ export default function StavbaTrati() {
    * `posud`, ne tahle funkce.
    */
   const pipni = () => {
-    if (!fix || !posudek.ok || !typ) return;
-    setBody([...body, fix]);
+    if (!fix || !posudek.ok || !typ || Date.now() < klidDo.current) return;
+    setBody([...body, { ...fix, zdroj: 'Telefon' }]);
+    setHlaska(null);
+  };
+
+  /**
+   * Bod z mapy. Přesnost nemá — vymyslet k bodu z mapy metry by byla lež
+   * v záznamu, a server ji u zdroje `Mapa` ani nepřijme. Čas je čas výběru.
+   */
+  const vzitZMapy = (bod: Bod) => {
+    if (!typ) return;
+    setBody([...body, { sirka: bod.sirka, delka: bod.delka, presnostM: null, kdy: Date.now(), zdroj: 'Mapa' }]);
+    zavriMapu();
     setHlaska(null);
   };
 
@@ -264,9 +328,10 @@ export default function StavbaTrati() {
         sirka: b.sirka,
         delka: b.delka,
         // Přesnost hlásí jen měření. Když ji telefon neudá, neposílá se
-        // nic — vymyslet k poloze metry by byla lež v záznamu.
-        presnostM: b.presnostM,
-        zdroj: 'Telefon',
+        // nic — vymyslet k poloze metry by byla lež v záznamu. Bod z mapy
+        // ji nemá nikdy.
+        presnostM: b.zdroj === 'Mapa' ? null : b.presnostM,
+        zdroj: b.zdroj,
         barva: znaceni.barva,
         tvar: znaceni.tvary[0] ?? null,
         znaceni: znaceni.id,
@@ -687,11 +752,25 @@ export default function StavbaTrati() {
         značce patří do detailu, kde je ke které — tady se teprve pípá,
         takže cíl zatím neexistuje. */}
     {zamcena ? null : (
-      <View style={[s.pruh, { borderColor: t.linka, backgroundColor: t.papir }]}>
+      <View
+        style={[
+          s.pruh,
+          {
+            borderColor: t.linka,
+            backgroundColor: t.papir,
+            // <b>Dolní bezpečný okraj</b> (Filip, 28. 11. 2026, se snímkem
+            // z Ulefonu: „přepolené tlačítko"). Expo kreslí na Androidu až
+            // pod systémovou lištu a kořenové rozvržení odsazuje jen nahoře.
+            // Pevných 26 bodů nestačilo na tři tlačítka ◁ ○ □ (48 dp), takže
+            // pod nimi zmizela spodní třetina Pípnout — a pruh se neroluje,
+            // takže se k ní nedalo dostat ani tahem.
+            paddingBottom: Math.max(16, okraje.bottom + 8),
+          },
+        ]}>
         <Text style={[s.pruhRadek, { color: t.tlumeny }]}>
           {(prvky?.length ?? 0) + fronta.length} {pocetPrvku((prvky?.length ?? 0) + fronta.length)}
           {' · '}
-          {popisPresnosti(fix)}
+          {opravneni === 'ne' ? 'bez přístupu k poloze' : popisPresnosti(fix)}
           {cekaUkonu > 0 ? ` · ${cekaUkonu} ${cekaUkonu === 1 ? 'úkon čeká' : 'úkonů čeká'}` : ''}
           {copipat ? ` · ${copipat}` : ''}
         </Text>
@@ -699,35 +778,109 @@ export default function StavbaTrati() {
         {copipat ? (
           <>
             {!posudek.ok ? (
-              <Text style={[s.pruhRadek, { color: t.vystraha }]}>{posudek.proc}</Text>
-            ) : posudek.varovani ? (
-              <Text style={[s.pruhRadek, { color: t.vystraha }]}>{posudek.varovani}</Text>
-            ) : null}
-            <Pressable
-              onPress={pipni}
-              disabled={!posudek.ok}
-              accessibilityRole="button"
-              accessibilityLabel={`Pípnout ${copipat}`}
-              style={({ pressed }) => [
-                s.pipnout,
-                {
-                  backgroundColor: posudek.ok ? t.voda : t.linka,
-                  opacity: pressed ? 0.7 : 1,
-                },
-              ]}>
-              <Text
-                style={{
-                  color: pismoNaVyplni(t, posudek.ok ? t.voda : t.linka),
-                  fontSize: 22,
-                  fontWeight: '700',
-                }}>
-                Pípnout
+              <Text numberOfLines={2} style={[s.pruhRadek, { color: t.vystraha }]}>
+                {/* Nejvýš dva řádky: pruh je pevný a každý řádek navíc bere
+                    místo seznamu nad ním. Cestu dál ukazuje plné Z mapy. */}
+                {posudek.proc}
               </Text>
-            </Pressable>
+            ) : posudek.varovani ? (
+              <Text numberOfLines={2} style={[s.pruhRadek, { color: t.vystraha }]}>
+                {posudek.varovani}
+              </Text>
+            ) : null}
+            <View style={s.akcePruhu}>
+              <Pressable
+                onPress={pipni}
+                disabled={!posudek.ok}
+                accessibilityRole="button"
+                accessibilityLabel={`Pípnout ${copipat}`}
+                style={({ pressed }) => [
+                  s.pipnout,
+                  {
+                    backgroundColor: posudek.ok ? t.voda : t.linka,
+                    opacity: pressed ? 0.7 : 1,
+                  },
+                ]}>
+                <Text
+                  style={{
+                    color: pismoNaVyplni(t, posudek.ok ? t.voda : t.linka),
+                    fontSize: 22,
+                    fontWeight: '700',
+                  }}>
+                  Pípnout
+                </Text>
+              </Pressable>
+              {/* Z mapy jde vždycky — doma, v zahraničí i bez signálu z družic
+                  (Filip, 28. 11. 2026). Ověřuje se až bod pod křížkem.
+                  <b>Když pípnutí stojí, je Z mapy plné</b>: je to jediná
+                  cesta dál. <b>Místo ani velikost se ale nemění</b> —
+                  přesnost na vodě kolísá kolem meze, a tlačítka, která si
+                  při tom prohazují místa, by pod prstem vyměnila Pípnout
+                  za mapu. */}
+              <Pressable
+                onPress={() => {
+                  setMapaPro({ copipat, body });
+                  setZMapy(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`Vybrat ${copipat} z mapy`}
+                style={({ pressed }) => [
+                  s.zMapy,
+                  {
+                    borderColor: t.voda,
+                    backgroundColor: posudek.ok ? t.papir : t.voda,
+                    opacity: pressed ? 0.7 : 1,
+                  },
+                ]}>
+                <Text
+                  style={{
+                    color: posudek.ok ? t.voda : pismoNaVyplni(t, t.voda),
+                    fontSize: 18,
+                    fontWeight: '700',
+                  }}>
+                  Z mapy
+                </Text>
+              </Pressable>
+            </View>
           </>
         ) : null}
       </View>
     )}
+
+    {/* Výběr z mapy přes celou obrazovku: mapa potřebuje plochu, a pruh
+        s tlačítky by ji zmenšil na proužek. */}
+    <Modal visible={zMapy} animationType="slide" onRequestClose={zavriMapu}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: t.pozadi,
+          paddingTop: okraje.top,
+          paddingBottom: Math.max(12, okraje.bottom),
+        }}>
+        <Text style={[s.mapaNadpis, { color: t.text }]}>
+          {mapaPro ? `Vyber z mapy: ${mapaPro.copipat}` : 'Vyber z mapy'}
+        </Text>
+        <MapkaVyber
+          stred={
+            stredMapy ??
+            vychoziStred(
+              [
+                body[body.length - 1],
+                fronta[fronta.length - 1]?.vstup.body.at(-1),
+                prvky?.length ? (prvky[prvky.length - 1].b ?? prvky[prvky.length - 1].a) : null,
+              ],
+              fix,
+            )
+          }
+          body={mapaPro?.body ?? body}
+          odstupM={NEJKRATSI_LINIE_M}
+          procBlizko={`Od bodu, který už máš, je to pod ${NEJKRATSI_LINIE_M} m — dva body na jednom místě prvek neudělají.`}
+          vyber={vzitZMapy}
+          zrus={zavriMapu}
+          onPohyb={setStredMapy}
+        />
+      </View>
+    </Modal>
     </View>
   );
 }
@@ -769,11 +922,23 @@ const styly = (t: Barvy) =>
       marginBottom: 10,
     },
     pipnout: {
+      flex: 2,
       borderRadius: 14,
       paddingVertical: 24,
       alignItems: 'center',
-      marginTop: 4,
     },
+    // Pípnout a Z mapy vedle sebe: pípnutí zůstává hlavní a širší,
+    // mapa je po ruce, ne schovaná pod čarou.
+    akcePruhu: { flexDirection: 'row', gap: 12, marginTop: 4 },
+    zMapy: {
+      flex: 1,
+      borderRadius: 14,
+      borderWidth: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 56,
+    },
+    mapaNadpis: { fontSize: 18, fontWeight: '700', paddingHorizontal: 16, paddingVertical: 12 },
     zpet: {
       paddingVertical: 14,
       alignItems: 'center',

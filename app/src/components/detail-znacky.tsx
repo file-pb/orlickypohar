@@ -1,5 +1,13 @@
-import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Barvy } from '@/constants/theme';
@@ -16,10 +24,15 @@ import {
 import { akceDetailu } from '@/lib/detail-prvku';
 import { barvaNaVyplni, pismoNaVyplni } from '@/lib/kontrast';
 import type { ZnackaNaOse } from '@/lib/radka-trati';
+import { MapkaVyber } from '@/components/mapka-vyber';
 import { BARVY, NAZVY_BAREV, NAZVY_TVARU, SiluetaZnacky } from '@/components/znak-boje';
 import { znakPodleVyhlasky } from '@/lib/znak-vyhlaska';
 import { azimut, vzdalenostM } from '@/lib/stavba-prvku';
+import type { Bod } from '@/lib/mapa';
 import type { Fix, Posudek } from '@/lib/stavba/poloha';
+
+/** Jak dlouho po přepnutí mapky se neberou PÍPNI ani Z mapy (dvojklep). */
+const KLID_PO_MAPE_MS = 500;
 
 /**
  * Detail značky: <b>fakta nahoře, akce pod nimi podle četnosti,
@@ -32,11 +45,19 @@ import type { Fix, Posudek } from '@/lib/stavba/poloha';
  * </para>
  *
  * <para>
- * <b>Hlavní akcí je přesun, protože měří.</b> Drží plnou plochu dole
- * a slovo se nemění: řádka 1 `PÍPNI`, řádka 2 říká, čeho se to týká.
+ * <b>Hlavní akcí je přesun, protože měří.</b> Drží dvě třetiny plochy
+ * dole a slovo se nemění: řádka 1 `PÍPNI`, řádka 2 říká, čeho se to týká.
  * Návyk z hlavní obrazovky tím přechází beze změny. Potvrzení u něj
  * není — přesun není nevratný, starý záznam zůstává platný pro dobu,
  * kdy platil.
+ * </para>
+ *
+ * <para>
+ * <b>Třetinu vedle má Z mapy</b> (28. 11. 2026): přesun pro toho, kdo
+ * staví doma nebo v cizině a pípnout nemůže. Bez polohy je PÍPNI
+ * zešedlé, ne pryč — na rozdíl od fotek níž ten úkon existuje, jen teď
+ * nejde, stejně jako Pípnout na hlavní obrazovce. A terče nesmějí měnit
+ * místo, viz `akcePruhu`.
  * </para>
  *
  * <para>
@@ -86,6 +107,38 @@ export function DetailZnacky({
   // Barva a tvar se mění jednou za ráno, z jedné krabice bójí — proto
   // jsou schované, dokud o ně někdo nepožádá.
   const [prebarvuje, setPrebarvuje] = useState(false);
+  // Přesun z mapy: mapka se položí přes detail, ne jako další Modal nad
+  // Modalem. Detail pod ní zůstane, jak byl, i s tím, kam byl odrolovaný.
+  const [zMapy, setZMapy] = useState(false);
+  // Kam se mapa naposledy posunula: omylem zavřená (tah od kraje je na
+  // Androidu s gesty systémové Zpět) se otevře tam, kde byla.
+  const [stredMapy, setStredMapy] = useState<Bod | null>(null);
+  /**
+   * <b>Klid po přepnutí mapky</b> (nezávislá kontrola, 28. 11. 2026).
+   * Překryv mizí bez animace a jeho „Zpět" leží přesně nad PÍPNI: druhé
+   * klepnutí dvojklepu z houpnutí lodi by přesunulo značku na loď, bez
+   * potvrzení. Do té doby se PÍPNI ani Z mapy neberou.
+   */
+  const klidDo = useRef(0);
+  const prepniMapu = (otevrit: boolean) => {
+    klidDo.current = Date.now() + KLID_PO_MAPE_MS;
+    setZMapy(otevrit);
+  };
+  const vKlidu = () => Date.now() < klidDo.current;
+  // Čtečka obrazovky: po otevření na nadpis mapky, po zavření zpátky na
+  // tlačítko, které ji otevřelo. Při prvním vykreslení nic — detail má
+  // začít nahoře.
+  const nadpisMapy = useRef<Text>(null);
+  const tlacitkoMapy = useRef<View>(null);
+  const prvni = useRef(true);
+  useEffect(() => {
+    if (prvni.current) {
+      prvni.current = false;
+      return;
+    }
+    const cil = zMapy ? nadpisMapy.current : tlacitkoMapy.current;
+    if (cil) AccessibilityInfo.sendAccessibilityEvent(cil, 'focus');
+  }, [zMapy]);
 
   const akce = akceDetailu({
     naServeru: znacka.prvky.every((p) => p.id !== undefined),
@@ -140,8 +193,9 @@ export function DetailZnacky({
     }
   };
 
-  const presun = () =>
-    udelej(() => {
+  const presun = () => {
+    if (vKlidu()) return;
+    void udelej(() => {
       if (!fix) throw new Error('Bez polohy se přesunout nedá.');
       // Jméno, barva, tvar i značení si přenastavená bóje přebírá po té
       // staré — je to tentýž kus plastu, jen jinde. Pořadí nechává
@@ -160,6 +214,30 @@ export function DetailZnacky({
         postavenaV: new Date().toISOString(),
       });
     });
+  };
+
+  /**
+   * Přesun na bod z mapy (nezávislá kontrola, 28. 11. 2026). Kdo staví
+   * doma nebo v zahraničí, pípnout nemůže — a značku vzatou vedle by
+   * jinak neopravil: pomocník ji nesmí smazat ani přerovnat a zbyla by
+   * mu jen druhá značka vedle té špatné. Přesnost bod z mapy nemá
+   * a server ji u zdroje `Mapa` ani nepřijme.
+   */
+  const presunZMapy = (bod: Bod) => {
+    prepniMapu(false);
+    void udelej(() => {
+      zaradPresun({ serie, zavod }, znacka.boje.nazev, {
+        nazev: znacka.boje.nazev,
+        poradi: 0,
+        sirka: bod.sirka,
+        delka: bod.delka,
+        presnostM: null,
+        nahrazujeId: znacka.boje.id,
+        zdroj: 'Mapa',
+        postavenaV: new Date().toISOString(),
+      });
+    });
+  };
 
   const prerovnej = (nahoru: boolean) =>
     udelej(() => {
@@ -189,9 +267,18 @@ export function DetailZnacky({
     });
 
   return (
-    <Modal visible transparent={false} animationType="slide" onRequestClose={onZavri}>
+    <Modal
+      visible
+      transparent={false}
+      animationType="slide"
+      // Zpět z mapy vede do detailu, ne rovnou na trať.
+      onRequestClose={zMapy ? () => prepniMapu(false) : onZavri}>
       <View style={[s.obal, { backgroundColor: t.pozadi }]}>
-        <ScrollView contentContainerStyle={[s.obsah, { paddingTop: okraje.top + 10 }]}>
+        <ScrollView
+          // Pod mapkou detail čtečka obrazovky nečte.
+          importantForAccessibility={zMapy ? 'no-hide-descendants' : 'auto'}
+          accessibilityElementsHidden={zMapy}
+          contentContainerStyle={[s.obsah, { paddingTop: okraje.top + 10 }]}>
           <Pressable
             onPress={onZavri}
             accessibilityRole="button"
@@ -452,6 +539,8 @@ export function DetailZnacky({
             dne nikdy neodrolovala pod hranu displeje. */}
         {akce.includes('presunout') ? (
           <View
+            importantForAccessibility={zMapy ? 'no-hide-descendants' : 'auto'}
+            accessibilityElementsHidden={zMapy}
             style={[
               s.pruh,
               {
@@ -460,29 +549,92 @@ export function DetailZnacky({
                 paddingBottom: Math.max(okraje.bottom, 16) + 10,
               },
             ]}>
-            {posudek.ok ? (
+            {posudek.ok ? null : (
+              <Text style={[s.radek, { color: t.tlumeny, textAlign: 'center' }]}>
+                {posudek.proc}
+              </Text>
+            )}
+            {/* Pořadí jako na hlavní obrazovce: Pípni vlevo a širší, Z mapy
+                vpravo. <b>Obě stojí pořád na svém místě</b> (nezávislá
+                kontrola, 28. 11. 2026): poloha kolísá kolem meze, a kdyby
+                Pípni bez ní mizelo a Z mapy se roztahovalo přes celou šířku,
+                prst mířící na mapu by po návratu polohy trefil Pípni — a
+                přesunul značku na loď, bez potvrzení. Bez polohy je proto
+                Pípni zešedlé a Z mapy plné. */}
+            <View style={s.akcePruhu}>
               <Pressable
-                disabled={pracuje}
+                disabled={pracuje || !posudek.ok}
                 onPress={presun}
                 accessibilityRole="button"
                 accessibilityLabel={`Pípni sem místo ${znacka.boje.nazev}`}
                 style={({ pressed }) => [
                   s.pipni,
-                  { backgroundColor: t.voda, opacity: pressed ? 0.7 : 1 },
+                  { backgroundColor: posudek.ok ? t.voda : t.linka, opacity: pressed ? 0.7 : 1 },
                 ]}>
-                <Text style={[s.pipniText, { color: pismoNaVyplni(t, t.voda) }]}>PÍPNI</Text>
-                <Text style={[s.pipniPodtext, { color: pismoNaVyplni(t, t.voda) }]}>
+                <Text style={[s.pipniText, { color: pismoNaVyplni(t, posudek.ok ? t.voda : t.linka) }]}>
+                  PÍPNI
+                </Text>
+                <Text
+                  style={[s.pipniPodtext, { color: pismoNaVyplni(t, posudek.ok ? t.voda : t.linka) }]}>
                   sem místo {znacka.boje.nazev}
                 </Text>
               </Pressable>
-            ) : (
-              <Text style={[s.radek, { color: t.tlumeny, textAlign: 'center' }]}>
-                {posudek.proc}
-              </Text>
-            )}
+              <Pressable
+                ref={tlacitkoMapy}
+                disabled={pracuje}
+                onPress={() => {
+                  if (!vKlidu()) prepniMapu(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`Přesunout ${znacka.boje.nazev} z mapy`}
+                style={({ pressed }) => [
+                  s.zMapy,
+                  {
+                    borderColor: t.voda,
+                    backgroundColor: posudek.ok ? t.papir : t.voda,
+                    opacity: pressed ? 0.7 : 1,
+                  },
+                ]}>
+                <Text
+                  style={{
+                    color: posudek.ok ? t.voda : pismoNaVyplni(t, t.voda),
+                    fontSize: 18,
+                    fontWeight: '700',
+                  }}>
+                  Z mapy
+                </Text>
+              </Pressable>
+            </View>
             <Text style={[s.pozn, { color: t.tlumeny }]}>
               Přesun není oprava překlepu: starý záznam zůstává platný pro dobu, kdy platil.
             </Text>
+          </View>
+        ) : null}
+
+        {zMapy ? (
+          <View
+            accessibilityViewIsModal
+            onAccessibilityEscape={() => prepniMapu(false)}
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: t.pozadi,
+                paddingTop: okraje.top,
+                paddingBottom: Math.max(12, okraje.bottom),
+              },
+            ]}>
+            <Text ref={nadpisMapy} accessibilityRole="header" style={[s.mapaNadpis, { color: t.text }]}>
+              Přesunout z mapy: {znacka.boje.nazev}
+            </Text>
+            <MapkaVyber
+              stred={stredMapy ?? { sirka: znacka.boje.sirka, delka: znacka.boje.delka }}
+              onPohyb={setStredMapy}
+              body={[znacka.boje]}
+              odstupM={1}
+              procBlizko="Tady značka stojí teď — posuň mapu tam, kam ji přesouváš."
+              vyber={presunZMapy}
+              zrus={() => prepniMapu(false)}
+            />
           </View>
         ) : null}
       </View>
@@ -545,9 +697,21 @@ const styly = (t: Barvy) =>
     smazat: { minHeight: 48, justifyContent: 'center', marginTop: 26 },
     smazatText: { fontSize: 15 },
     pruh: { borderTopWidth: 1, paddingHorizontal: 22, paddingTop: 10 },
-    // Plná plocha 358 x 86 na témž místě jako `Pípni` na hlavní
+    // Plná plocha 86 vysoká na témž místě jako `Pípnout` na hlavní
     // obrazovce — měří polohu tady a teď, takže váhu 1 nese právem.
-    pipni: { height: 86, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+    // Dvě třetiny šířky, třetinu vedle má Z mapy (28. 11. 2026).
+    // `minHeight`, ne `height`: větší písmo by se do pevných 86 nevešlo.
+    pipni: { flex: 2, minHeight: 86, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+    akcePruhu: { flexDirection: 'row', gap: 12 },
+    zMapy: {
+      flex: 1,
+      minHeight: 56,
+      borderRadius: 12,
+      borderWidth: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    mapaNadpis: { fontSize: 18, fontWeight: '700', paddingHorizontal: 16, paddingVertical: 12 },
     pipniText: { fontSize: 26, fontWeight: '800' },
     pipniPodtext: { fontSize: 15, fontWeight: '600', marginTop: 2 },
     pozn: { fontSize: 12, marginTop: 10, textAlign: 'center' },

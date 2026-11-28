@@ -361,6 +361,17 @@ get /dlazdice/15/1/1
 ma "dlaždice podruhé z paměti" test "$cache" = HIT
 get /dlazdice/15/1/1 -H "Cookie: op_token=x"
 ma "…i pro přihlášeného (dlaždice je pro všechny stejná)" test "$cache" = HIT
+# Opakování z appky po náhradním pixelu (28. 11. 2026). Pixel tu leží
+# minutu, takže bez obejití by appka dostala zase jen jeho. Do paměti se
+# ale opakování ukládat nesmí: kdyby web zase vrátil pixel, přepsal by
+# jím dobrou dlaždici pro všechny. Pozná se to číslem vykreslení.
+puvodni=$(vykresleni "$telo")
+get "/dlazdice/15/1/1?znovu=test-1"
+ma "opakování z appky jde k webu i přes platnou položku" test "$cache" = BYPASS
+opakovani=$(vykresleni "$telo")
+ma "…web ho opravdu vykreslil znovu" test "$opakovani" != "$puvodni"
+get /dlazdice/15/1/1
+ma "…a sdílenou položku nepřepsalo" test "$(vykresleni "$telo")" = "$puvodni"
 get /dlazdice/15/1/1?podklad=satelit
 ma "satelit je jiná položka" test "$cache" = MISS
 get /dlazdice/15/99/1 -H "Cookie: op_token=x" -H "Cookie: op_rezim=tmavy"

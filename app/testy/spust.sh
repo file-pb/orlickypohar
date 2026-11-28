@@ -164,6 +164,12 @@ echo
 echo "== Poloha při stavbě trati =="
 "${NODE[@]}" ./poloha.test.ts
 
+# Mapka pro výběr bodu bez GPS. Dlaždice i pixely musí vycházet stejně jako
+# na webu, jinak by bod vzatý z mapy ležel jinde, než kam míří zaměřovač.
+echo
+echo "== Mapka pro výběr bodu =="
+"${NODE[@]}" ./mapa.test.ts
+
 # Fronta prvků drží pořadí stavby a po odmítnutí se nepokračuje dál —
 # pořadí na trati určuje server podle pořadí, v jakém prvky dorazí.
 echo
