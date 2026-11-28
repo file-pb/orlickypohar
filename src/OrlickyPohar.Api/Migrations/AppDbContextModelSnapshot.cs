@@ -511,6 +511,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<DateTimeOffset?>("NaposledyPrihlasenV")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("SmazanV")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset>("ZalozenV")
                         .HasColumnType("timestamp with time zone");
 

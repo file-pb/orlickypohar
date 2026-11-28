@@ -30,6 +30,19 @@ public class Uzivatel
     public DateTimeOffset ZalozenV { get; set; }
 
     public DateTimeOffset? NaposledyPrihlasenV { get; set; }
+
+    /// <summary>
+    /// Kdy si účet člověk sám smazal. Vyplněné znamená <b>náhrobek</b>:
+    /// jméno a e-mail jsou pryč, vazby na přihlášení taky, a řádek zůstal
+    /// jen proto, aby cizí klíče ze závodní historie vedly někam.
+    /// <para>
+    /// <b>Není to příznak „smazáno", podle kterého by se filtrovalo čtení.</b>
+    /// Kdyby byl, musela by ho hlídat každá cesta a jedna by to zapomněla.
+    /// Náhrobek je prázdný, takže se o něj nikdo nemusí starat — a tenhle
+    /// sloupec je tu kvůli jediné otázce: smazat podruhé už nejde.
+    /// </para>
+    /// </summary>
+    public DateTimeOffset? SmazanV { get; set; }
 }
 
 /// <summary>

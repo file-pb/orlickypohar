@@ -82,7 +82,103 @@ public static class IdentitaEndpoints
                 "Majitel, kapitán, posádka, fanoušek. Vazba vzniká shodou e-mailu " +
                 "s kontaktem na přihlášce, kódem od pořadatele, nebo nárokem, " +
                 "který potvrdí kapitán.");
+
+        // Zápis, ne `DELETE /ja`: potvrzení se posílá v těle a tělo u metody
+        // DELETE je sice dovolené, ale proxy i klienti se k němu chovají
+        // různě. Nová cesta je navíc aditivní změna API — starší vydání
+        // appky o ní neví a nerozbije se.
+        app.MapPost("/ja/smazani", SmazaniAsync)
+            .RequireAuthorization()
+            .Produces<SmazaniUctuDto>()
+            .WithTags("Identita")
+            .WithSummary("Smaže účet přihlášeného a zruší mu přihlášení u poskytovatele")
+            .WithDescription(
+                "Nevratné. V těle musí přijít přesně opsané potvrzovací slovo. " +
+                "Zmizí přihlášení, oprávnění, vazby k lodím, nároky, pomocnictví, " +
+                "velení a osobní kontakty; závodní záznamy zůstávají a ukazují na " +
+                "bezejmenný účet. Odpověď je účtenka: čeho kolik ubylo a jestli se " +
+                "povedlo zrušit i přihlášení u poskytovatele identity.");
     }
+
+    // Návratový typ je `IResult`, ne `Results<…>`: chyba se vydává ve tvaru
+    // `{ "error": "…" }` jako všude jinde v tomhle API (viz `KodyEndpoints`)
+    // a anonymní objekt se do typovaného výsledku zapsat nedá. Tvar úspěchu
+    // hlásí `.Produces<SmazaniUctuDto>()` u registrace.
+    private static async Task<IResult>
+        SmazaniAsync(
+            ClaimsPrincipal kdo,
+            HttpContext ctx,
+            SmazaniUctuVstup vstup,
+            Rozsahy rozsahy,
+            SmazaniUctu smazani,
+            Ucty ucty,
+            IConfiguration config,
+            CancellationToken ct)
+    {
+        if (kdo.Ucet() is not { } ucet) return Results.Unauthorized();
+
+        // Potvrzení ověřuje server, ne formulář. Žádost bez opsaného slova
+        // nesmí projít ani z curlu — jinak je to potvrzení jen ozdoba.
+        if (Potvrzeni.ProcNejde(vstup.Potvrzeni) is { } proc)
+            return Results.BadRequest(new { error = proc });
+
+        var uzivatelId = await rozsahy.UzivatelIdAsync(kdo, ct);
+        var smazano = uzivatelId is { } id ? await smazani.SmazAsync(id, ct) : null;
+        var uctenka = smazano ?? Prazdna;
+
+        // <b>Na poskytovatele se sahá jen tehdy, když se právě teď doopravdy
+        // něco smazalo.</b> Bez téhle podmínky je endpoint zesilovač: jeden
+        // ukradený token, jeden požadavek k nám, jeden `DELETE` k poskytovateli
+        // — a to bez konce, protože opakované smazání už u nás nemá co mazat
+        // a nic by ho nezastavilo. Limit na hraně proti tomu nestačí
+        // (`ratelimit-standard` pouští 30 požadavků za sekundu na adresu).
+        // Takhle odejde ven nejvýš jeden požadavek za život účtu.
+        //
+        // Cena je úzký případ: kdo má platný token, ale u nás účet nikdy
+        // nevznikl, si přihlášení zruší u poskytovatele sám — účtenka mu řekne
+        // kde. V praxi to nenastává, protože `/ja` volá web i appka při každém
+        // přihlášení.
+        //
+        // <b>Scanování to neumožňuje:</b> cesta nebere žádný identifikátor,
+        // maže se vždy jen subjekt z tokenu, a odpověď je 200 s účtenkou
+        // v obou případech — z toho, co se vrátí, se o cizím účtu nedá zjistit
+        // nic, protože se k cizímu účtu nelze ani zeptat.
+        if (smazano is null)
+            return Results.Ok(uctenka with
+            {
+                PoskytovatelDuvod = "U nás nebylo co mazat, takže se u poskytovatele nic nerušilo.",
+            });
+
+        // Zrušit účet se smí jen u toho poskytovatele, který token vydal.
+        // Bez téhle kontroly by stačila stará vazba na jiného vydavatele
+        // a jeho subjekt by se poslal na adresu dnešního poskytovatele —
+        // tedy cizí identifikátor na cizí API.
+        var autorita = (config["Identita:Authority"] ?? "").TrimEnd('/');
+        var vydavatel = ucet.Issuer.TrimEnd('/');
+
+        if (!string.Equals(autorita, vydavatel, StringComparison.OrdinalIgnoreCase))
+            return Results.Ok(uctenka with
+            {
+                PoskytovatelDuvod = "Přihlášení je od jiného poskytovatele, než který je nastavený.",
+            });
+
+        // Token se bere z hlavičky, protože poskytovateli se posílá tentýž,
+        // se kterým člověk klepl na tlačítko — maže sám sebe.
+        var token = ctx.Request.Headers.Authorization
+            .ToString()
+            .Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase);
+
+        var duvod = await ucty.ZrusAsync(token, ucet.Subject, ct);
+
+        return Results.Ok(uctenka with
+        {
+            PoskytovatelZrusen = duvod is null,
+            PoskytovatelDuvod = duvod,
+        });
+    }
+
+    /// <summary>Účtenka pro případ, kdy u nás nebylo co mazat.</summary>
+    private static readonly SmazaniUctuDto Prazdna = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     private static async Task<Results<Ok<List<MojeLodDto>>, UnauthorizedHttpResult>> MojeLodeAsync(
         ClaimsPrincipal kdo, Rozsahy rozsahy, Parovani parovani, CancellationToken ct)
@@ -93,7 +189,10 @@ public static class IdentitaEndpoints
         return TypedResults.Ok(await parovani.MojeLodeAsync(uzivatel, ct));
     }
 
-    private static async Task<Results<Ok<JaDto>, UnauthorizedHttpResult>> JaAsync(
+    // Třetí možnost je strop účtů (22. 11. 2026). Je to 503, ne 400: token je
+    // platný, člověk za to nemůže a chyba je na naší straně — buď někdo zkouší
+    // nafouknout tabulku, nebo projekt vyrostl a strop se má zvednout.
+    private static async Task<Results<Ok<JaDto>, UnauthorizedHttpResult, ProblemHttpResult>> JaAsync(
         ClaimsPrincipal kdo,
         HttpContext ctx,
         Uzivatele uzivatele,
@@ -138,10 +237,20 @@ public static class IdentitaEndpoints
             email ??= profil?.Email;
         }
 
-        var uzivatel = await uzivatele.NajdiNeboZalozAsync(
-            // Poslední záchrana je subjekt. Ošklivé, ale pravdivé — lepší
-            // než prázdné jméno v seznamu správců.
-            ucet.Issuer, ucet.Subject, jmeno ?? ucet.Subject, email, cas, ct);
+        Uzivatel uzivatel;
+        try
+        {
+            uzivatel = await uzivatele.NajdiNeboZalozAsync(
+                // Poslední záchrana je subjekt. Ošklivé, ale pravdivé — lepší
+                // než prázdné jméno v seznamu správců.
+                ucet.Issuer, ucet.Subject, jmeno ?? ucet.Subject, email, cas, ct);
+        }
+        catch (UctuJePlno plno)
+        {
+            return TypedResults.Problem(
+                detail: plno.Message, statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "Účtů je plno");
+        }
 
         // Spárování s loděmi podle e-mailu. Tiché a při každém přihlášení:
         // kontakt na přihlášce může přibýt kdykoliv a člověk nemá mít důvod

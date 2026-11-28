@@ -58,6 +58,7 @@ try
     // Správa stojí na identitě, ale registruje se vždycky: integrační testy
     // ji volají přes službu, ne přes HTTP, s vymyšleným poskytovatelem.
     builder.Services.AddScoped<Rozsahy>();
+    builder.Services.AddScoped<SmazaniUctu>();
     builder.Services.AddScoped<OpravneniSprava>();
     builder.Services.AddScoped<ClankySprava>();
     builder.Services.AddScoped<TrasySprava>();
@@ -124,6 +125,10 @@ try
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
     if (builder.Configuration.GetValue<bool>("Kontakty:Uklid"))
         builder.Services.AddHostedService<UklidKontaktu>();
+    // Zaznamenané trasy se drží stejně dlouho jako kontakty. Doteď se
+    // nemazaly vůbec, přestože `Trasa` to má v popisu od začátku.
+    if (builder.Configuration.GetValue<bool>("Trasy:Uklid"))
+        builder.Services.AddHostedService<UklidTras>();
     // Regata, u které se zapomnělo na konec dne, se po dvou dnech zavře
     // sama (Filip, 21. 11. 2026). Zavírá, nepodepisuje — viz `Uzavirani`.
     if (builder.Configuration.GetValue<bool>("Zavody:Uzavirani"))

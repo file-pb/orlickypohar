@@ -3841,6 +3841,72 @@ class H(BaseHTTPRequestHandler):
         token = hlavicka.split(" ", 1)[-1].strip().lower()
         return TOKENY.get(token)
 
+    def smaz_ucet(self):
+        """
+        Samoobslužné smazání účtu — opsané z `Features/Identita/SmazaniUctu.cs`.
+
+        <b>Proč to mock vůbec umí:</b> celá cesta, kterou má člověk projít
+        sám, vede přes web, a web se bez databáze zkouší jenom tady. Bez
+        tohohle endpointu by se dala vyzkoušet jen polovina — formulář ano,
+        účtenka ne.
+
+        <b>Co mock schválně nedělá:</b> nemaže nic ze závodní historie, protože
+        ji nedrží. Náhrobek ale dělá stejně jako API: účet zůstane bez jména
+        a e-mailu a jeho tokeny přestanou platit.
+        """
+        kdo = self.prihlaseny()
+        if not kdo:
+            return self.send_error(401)
+
+        telo = self.telo_zadosti() or {}
+        if (telo.get("potvrzeni") or "").strip() != "SMAZAT":
+            return self.chyba(400, "Pro smazání účtu opiš do pole slovo SMAZAT.")
+
+        id_uctu = kdo["id"]
+
+        def vyhod(seznam, klic="uzivatelId"):
+            kolik = len([x for x in seznam if x.get(klic) == id_uctu])
+            seznam[:] = [x for x in seznam if x.get(klic) != id_uctu]
+            return kolik
+
+        vazeb = vyhod(VAZBY)
+        zmen = vyhod(ZMENY_ROLI)
+        naroku = vyhod(NAROKY)
+        opravneni = vyhod(OPRAVNENI) + vyhod(OPRAVNENI_WEBU)
+
+        velitelstvi = 0
+        for slug, radky in list(VELITELE.items()):
+            pred = len(radky)
+            VELITELE[slug] = [r for r in radky if r.get("uzivatelId") != id_uctu]
+            velitelstvi += pred - len(VELITELE[slug])
+
+        # Náhrobek: řádek zůstane, jméno a e-mail ne.
+        kdo["zobrazovane"] = "Smazaný účet"
+        kdo["email"] = None
+
+        # Bez tokenu se tím účtem nedá přihlásit — v API to zařídí smazání
+        # vazby (vydavatel, subjekt), tady zmizení z tabulky tokenů.
+        for jmeno in [j for j, u in TOKENY.items() if u.get("id") == id_uctu]:
+            del TOKENY[jmeno]
+
+        return self.odpoved({
+            "prihlaseni": 1,
+            "opravneni": opravneni,
+            "vazebKLodim": vazeb,
+            "zmenRoli": zmen,
+            "naroku": naroku,
+            "pomocniku": 0,
+            "velitelstvi": velitelstvi,
+            "osobOdpojeno": 0,
+            "kontaktu": 0,
+            "prihlasekSKontaktem": 0,
+            # V nasazení se ruší i přihlášení u poskytovatele, tokenem toho
+            # člověka. Mock poskytovatele nemá, takže hlásí, co by se stalo
+            # s vyplněným `Identita__ZruseniUctu`.
+            "poskytovatelZrusen": True,
+            "poskytovatelDuvod": None,
+        })
+
     def telo_zadosti(self):
         delka = int(self.headers.get("Content-Length", "0") or 0)
         return json.loads(self.rfile.read(delka) or b"{}")
@@ -4926,6 +4992,8 @@ class H(BaseHTTPRequestHandler):
         # Osobní cesty. Stojí první, protože nepatří pod ročník.
         if not self.headers.get("authorization") and cesta.startswith("/ja"):
             return self.send_error(401)
+        if cesta == "/ja/smazani":
+            return self.smaz_ucet()
         if cesta == "/klice/sledovani":
             k = klic_pro_sebe(self)
             if not k:

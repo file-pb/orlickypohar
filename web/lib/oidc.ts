@@ -37,6 +37,23 @@ export const prihlasovaniJde = Boolean(AUTORITA && KLIENT && VEREJNA_ADRESA);
  */
 export const ucetUPoskytovatele = process.env.IDENTITA_UCET_URL ?? "";
 
+/**
+ * O co se při přihlášení žádá.
+ *
+ * <b>Z prostředí, ne z kódu</b> — ze stejného důvodu jako
+ * <c>IDENTITA_UCET_URL</c>. `openid profile email` je jméno a e-mail do
+ * hlavičky a nic víc; samoobslužné smazání účtu ale potřebuje, aby vydaný
+ * token platil i pro API poskytovatele, a **ten rozsah se jmenuje u každého
+ * poskytovatele jinak**. Kdyby jeho jméno stálo tady, byl by to první řádek
+ * webu, který ví, kdo za přihlášením je.
+ *
+ * <b>Publikum tokenu se nedá rozšířit dodatečně.</b> Buď se o to řekne při
+ * přihlášení, nebo se účet u poskytovatele zrušit nedá a účtenka to přizná.
+ * Kdo nastaví jen výchozí hodnotu, má web, který maže naši stranu a na
+ * přihlášení u poskytovatele pošle člověka odkazem.
+ */
+const ROZSAHY = (process.env.IDENTITA_SCOPE ?? "").trim() || "openid profile email";
+
 export const COOKIE_TOKEN = "op_token";
 export const COOKIE_TOK = "op_tok";
 
@@ -171,8 +188,7 @@ export async function zacniPrihlaseni(kam: string) {
     client_id: KLIENT,
     redirect_uri: navratovaAdresa(),
     response_type: "code",
-    // `openid` je povinné, zbytek je jméno a e-mail do hlavičky webu.
-    scope: "openid profile email",
+    scope: ROZSAHY,
     state,
     code_challenge: challenge,
     code_challenge_method: "S256",

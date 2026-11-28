@@ -76,6 +76,38 @@ services:
       Prevzate__Fotky: "true"
       # Kontakty kapitánů se jednou denně mažou po konci následující sezóny.
       Kontakty__Uklid: "true"
+      # Zaznamenané trasy se drží stejně dlouho jako kontakty a do 22. 11. 2026
+      # se nemazaly vůbec, přestože `Trasa` to má v popisu od začátku. Mez je
+      # konec následující sezóny: podklad k protestu má přežít do dalšího
+      # ročníku.
+      Trasy__Uklid: "true"
+      # Cesta, kterou se u poskytovatele ruší účet. <b>Tvar cesty je jeho
+      # věc, ne naše</b> — proto je tady a ne v kódu, stejně jako autorita
+      # a publikum; aplikace se tím pořád nedozví, kdo za přihlášením stojí.
+      # `{subjekt}` se nahradí `sub` z tokenu toho člověka.
+      #
+      # <b>Ruší se tokenem uživatele, ne servisním účtem</b> (Filip,
+      # 22. 11. 2026): poskytovatel umí smazání sebe sama, takže na serveru
+      # nemusí ležet tajemství, kterým by se po úniku dal smazat kdokoliv
+      # včetně správce. Cenou je rozsah navíc v `IDENTITA_SCOPE` u webu —
+      # bez něj token na API poskytovatele nedosáhne.
+      #
+      # Prázdná hodnota funkci vypíná: smazání naší strany proběhne a účtenka
+      # přizná, že přihlášení u poskytovatele trvá.
+      Identita__ZruseniUctu: "/v2/users/{subjekt}"
+      # Strop zakládání účtů. Účet vzniká prvním přihlášením na `/ja`, takže
+      # držitel jednoho platného tokenu umí vyrábět řádky — a limit na hraně
+      # proti tomu nestačí, `ratelimit-standard` pouští 30 požadavků za
+      # sekundu na adresu. Stovku účtů Orlický pohár nepřekročí (Filip,
+      # 22. 11. 2026), takže pětistovka je pětinásobná rezerva a zároveň
+      # hranice, za kterou už něco není v pořádku.
+      #
+      # Denní rozpočet je proti kolotoči „přihlas se — smaž — přihlas se":
+      # smazaný účet zůstává jako náhrobek a další přihlášení založí nový
+      # řádek, takže jeden účet u poskytovatele by tabulku nafukoval bez
+      # konce. Překročení se loguje jako chyba, ne jako varování.
+      Identita__NejvicUctu: "500"
+      Identita__NejvicUctuZaDen: "20"
       # Regata, u které se zapomnělo na konec dne, se po dvou dnech zavře
       # sama (Filip, 21. 11. 2026). Zavírá, nepodepisuje, a regatu, ve které
       # se nic nejelo, nechá stát.
@@ -217,6 +249,12 @@ services:
       # poskytovatele: heslo, e-mail, druhý faktor. Adresa je tady, a ne
       # v kódu, aby výměna poskytovatele neznamenala změnu webu.
       IDENTITA_UCET_URL: "https://ucty.${PLATFORM_DOMAIN:?}/ui/console/users/me"
+      # O co se žádá při přihlášení. Prvních tři jsou jméno a e-mail do
+      # hlavičky; ten čtvrtý přidá do publika tokenu API poskytovatele, a bez
+      # něj si člověk nemůže sám zrušit přihlášení — publikum tokenu se
+      # dodatečně rozšířit nedá. Jméno toho rozsahu je věc poskytovatele,
+      # proto je tady a ne v kódu webu.
+      IDENTITA_SCOPE: "openid profile email urn:zitadel:iam:org:project:id:zitadel:aud"
       # Adresa pro žádosti o osobní údaje (výpis, oprava, výmaz). Ukáže se
       # na stránce /osobni-udaje. Prázdná znamená, že stránka o adrese mlčí
       # a pošle čtenáře za pořadatelem regaty — mlčet je lepší než napsat
