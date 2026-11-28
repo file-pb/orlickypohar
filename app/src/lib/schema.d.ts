@@ -151,7 +151,7 @@ export interface paths {
         get?: never;
         /**
          * Zapíše zařízení k odběru upozornění
-         * @description Bez přihlášení. Appka volá při každém spuštění, protože Expo token po přeinstalaci mění; druhý zápis téhož tokenu jen přepíše odběry. Odběr má tvar `serie:{slug}` nebo `zavod:{slug}`.
+         * @description Bez přihlášení. Appka volá, když se změní token nebo odběry, a jednou po každé nové verzi appky (kvůli hlavičce X-Appka-Verze); druhý zápis téhož tokenu jen přepíše odběry. Odběr má tvar `serie:{slug}` nebo `zavod:{slug}`.
          */
         put: {
             parameters: {
@@ -9838,6 +9838,7 @@ export interface components {
             napovedaDrahy?: null | string;
             /** Format: time */
             napovedaPoslednihoStartu?: null | string;
+            procNejdeZpet?: null | string;
         };
         ZastavkaVolbaDto: {
             slug: string;

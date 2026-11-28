@@ -282,4 +282,211 @@ public class KalendarSpravaTests(PostgresFixture fixture)
 
         Assert.NotNull(chyba);
     }
+
+    // --- Odjetá regata a pohár (konzilium 27. 11. 2026, bod 3) -------------
+
+    private static readonly System.Text.Json.JsonSerializerOptions Json =
+        new(System.Text.Json.JsonSerializerDefaults.Web)
+        {
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() },
+        };
+
+    /// <summary>
+    /// Ročník s jednou odjetou regatou o dvou rozjížďkách: první se počítá
+    /// do poháru, druhá je zábavná, mimo něj.
+    /// </summary>
+    private async Task NahrajOdjetouAsync(string slug)
+    {
+        static Api.Features.Import.VysledekVstup Dojel(string lod, int poradi) =>
+            new(lod, PoradiVCili: poradi);
+
+        var vstup = new Api.Features.Import.SerieVstup(
+            Slug: slug,
+            Nazev: $"Pohár {slug}",
+            Rok: 2026,
+            Kategorie: [new("Race", 1)],
+            Osoby: [new("novak", "Jan", "Novák")],
+            Lode: [new("a", $"Alfa {slug}", null, null, "novak"), new("b", $"Beta {slug}", null, null, "novak")],
+            Prihlasky: [new("a", "Race"), new("b", "Race")],
+            Zavody:
+            [
+                new(
+                    Slug: "jarni",
+                    Nazev: "Jarní vítr",
+                    Datum: new DateOnly(2026, 4, 25),
+                    Poradi: 1,
+                    Ucasti: [new("a", null, null), new("b", null, null)],
+                    Rozjizdky:
+                    [
+                        new(1, null, StavRozjizdky.Dokoncena, [Dojel("a", 1), Dojel("b", 2)]),
+                        new(2, null, StavRozjizdky.Dokoncena, [Dojel("b", 1), Dojel("a", 2)], DoSerie: false),
+                    ]),
+            ]);
+
+        var klient = fixture.CreateClient();
+        klient.DefaultRequestHeaders.Add("X-Import-Token", PostgresFixture.Token);
+        var odpoved = await System.Net.Http.Json.HttpClientJsonExtensions.PostAsJsonAsync(
+            klient, "/import/serie", vstup, Json);
+        Assert.Equal(System.Net.HttpStatusCode.OK, odpoved.StatusCode);
+    }
+
+    /// <summary>Slugy regat, které průběžné pořadí právě počítá.</summary>
+    private async Task<List<string>> VPoradiAsync(string slug)
+    {
+        var poradi = await System.Net.Http.Json.HttpClientJsonExtensions
+            .GetFromJsonAsync<Api.Features.Bodovani.PoradiSerieDto>(
+                fixture.CreateClient(), $"/serie/{slug}/poradi", Json);
+        return [.. poradi!.Zastavky.Select(z => z.Slug)];
+    }
+
+    private Task<string?> VratMeziVypsaneAsync(string slug) =>
+        VeSluzbeAsync(async sp =>
+        {
+            var db = sp.GetRequiredService<AppDbContext>();
+            var sprava = sp.GetRequiredService<KalendarSprava>();
+            var serieId = await db.Serie.Where(x => x.Slug == slug).Select(x => x.Id).SingleAsync();
+            var zastavka = await sprava.NajdiAsync(serieId, "jarni", default);
+
+            return await sprava.PrepniStavAsync(zastavka!, StavZavodu.Vypsany, default);
+        });
+
+    private Task<Zavod> JarniAsync(string slug) =>
+        VeSluzbeAsync(sp => sp.GetRequiredService<AppDbContext>().Zavody.AsNoTracking()
+            .SingleAsync(z => z.Serie!.Slug == slug && z.Slug == "jarni"));
+
+    [Fact]
+    public async Task Odjeta_regata_s_vysledky_v_poharu_se_mezi_vypsane_nevrati()
+    {
+        const string slug = "kal-zpet-plna";
+        await NahrajOdjetouAsync(slug);
+
+        var chyba = await VratMeziVypsaneAsync(slug);
+
+        // Počítá se jen první rozjížďka — druhá je mimo pohár.
+        Assert.NotNull(chyba);
+        Assert.Contains("1 rozjížďka", chyba);
+        Assert.Equal(StavZavodu.Odjety, (await JarniAsync(slug)).Stav);
+        // A pohár ji počítá dál: kvůli tomu to pravidlo je.
+        Assert.Contains("jarni", await VPoradiAsync(slug));
+    }
+
+    [Fact]
+    public async Task Regata_kterou_pravidlo_drzi_je_v_poradi_a_ta_kterou_pusti_tam_neni_co_brat()
+    {
+        // Podmínka „počítá se do poháru" je opsaná z dotazu na pořadí.
+        // Tenhle test oba opisy drží u sebe: co pravidlo považuje za
+        // prázdné, z toho pořadí opravdu žádné body nebere.
+        const string slug = "kal-zpet-opis";
+        await NahrajOdjetouAsync(slug);
+
+        var zavodId = (await JarniAsync(slug)).Id;
+        var vPoharu = await SpravaAsync(s => s.VPoharuAsync(zavodId, default));
+        Assert.Equal(1, vPoharu);
+        // Dokud se rozjížďka počítá, dělí lodě: první má bod, druhá dva.
+        Assert.Equal(2, (await BodyZJarniAsync(slug)).Distinct().Count());
+
+        // Vyndat z poháru jedinou rozjížďku, která se počítala.
+        await VeSluzbeAsync(async sp =>
+        {
+            var db = sp.GetRequiredService<AppDbContext>();
+            var prvni = await db.Rozjizdky.SingleAsync(r => r.ZavodId == zavodId && r.Cislo == 1);
+            prvni.DoSerie = false;
+            return await db.SaveChangesAsync();
+        });
+
+        Assert.Equal(0, await SpravaAsync(s => s.VPoharuAsync(zavodId, default)));
+
+        // Regata v pořadí zůstává jako sloupec — je pořád odjetá — ale
+        // žádný výsledek z ní pořadí nebere: všechny lodě mají stejné body
+        // za neúčast. Vrátit ji mezi vypsané proto pořadí lodí nerozhází.
+        Assert.Single((await BodyZJarniAsync(slug)).Distinct());
+    }
+
+    /// <summary>
+    /// Body, které má každá loď v průběžném pořadí z jediné regaty ročníku.
+    /// Prázdný seznam, když pořadí regatu nevede vůbec.
+    /// </summary>
+    private async Task<List<int?>> BodyZJarniAsync(string slug)
+    {
+        var poradi = await System.Net.Http.Json.HttpClientJsonExtensions
+            .GetFromJsonAsync<Api.Features.Bodovani.PoradiSerieDto>(
+                fixture.CreateClient(), $"/serie/{slug}/poradi", Json);
+        return [.. poradi!.Kategorie.SelectMany(k => k.Lode).SelectMany(l => l.Zastavky)];
+    }
+
+    [Theory]
+    [InlineData("nezverejnena")]
+    [InlineData("eliminovana")]
+    [InlineData("regata-skryta")]
+    [InlineData("bez-vysledku")]
+    public async Task Co_poradi_nepocita_to_pravidlo_nedrzi(string pripad)
+    {
+        // Každá podmínka z dotazu na pořadí zvlášť. Kdyby pravidlo některou
+        // nemělo, drželo by regatu kvůli rozjížďce, kterou pohár nevidí —
+        // a člověk by neměl jak ji vrátit.
+        var slug = $"kal-zpet-{pripad}";
+        await NahrajOdjetouAsync(slug);
+        var zavodId = (await JarniAsync(slug)).Id;
+
+        await VeSluzbeAsync(async sp =>
+        {
+            var db = sp.GetRequiredService<AppDbContext>();
+            var prvni = await db.Rozjizdky.SingleAsync(r => r.ZavodId == zavodId && r.Cislo == 1);
+
+            switch (pripad)
+            {
+                case "nezverejnena": prvni.Publikovano = false; break;
+                case "eliminovana": prvni.StavVysledku = StavVysledku.Eliminovano; break;
+                case "regata-skryta":
+                    (await db.Zavody.SingleAsync(z => z.Id == zavodId)).Publikovano = false;
+                    break;
+                case "bez-vysledku":
+                    db.Vysledky.RemoveRange(db.Vysledky.Where(v => v.RozjizdkaId == prvni.Id));
+                    break;
+            }
+
+            return await db.SaveChangesAsync();
+        });
+
+        Assert.Equal(0, await SpravaAsync(s => s.VPoharuAsync(zavodId, default)));
+        // Pořadí z ní výsledek nebere: buď ji nevede, nebo mají všichni stejně.
+        Assert.True((await BodyZJarniAsync(slug)).Distinct().Count() <= 1);
+        Assert.Null(await VratMeziVypsaneAsync(slug));
+    }
+
+    [Fact]
+    public async Task Prazdnou_odjetou_regatu_jde_vratit_a_automat_ji_hned_nezavre()
+    {
+        const string slug = "kal-zpet-prazdna";
+        await NahrajOdjetouAsync(slug);
+
+        var zavodId = (await JarniAsync(slug)).Id;
+        await VeSluzbeAsync(async sp =>
+        {
+            var db = sp.GetRequiredService<AppDbContext>();
+            var prvni = await db.Rozjizdky.SingleAsync(r => r.ZavodId == zavodId && r.Cislo == 1);
+            prvni.DoSerie = false;
+            // Jako by ji předtím zavřel robot: štítek po něm nesmí přežít.
+            (await db.Zavody.SingleAsync(z => z.Id == zavodId)).UzavrenoAutomatemV =
+                new DateTimeOffset(2026, 4, 28, 3, 0, 0, TimeSpan.Zero);
+            return await db.SaveChangesAsync();
+        });
+
+        var pred = DateTimeOffset.UtcNow;
+        Assert.Null(await VratMeziVypsaneAsync(slug));
+
+        var vracena = await JarniAsync(slug);
+        Assert.Equal(StavZavodu.Vypsany, vracena.Stav);
+        Assert.Null(vracena.UzavrenoAutomatemV);
+        Assert.NotNull(vracena.VracenoMeziVypsaneV);
+        Assert.InRange(vracena.VracenoMeziVypsaneV.Value, pred.AddSeconds(-1), DateTimeOffset.UtcNow.AddSeconds(1));
+
+        // Dubnová regata s dojetou rozjížďkou: přesně tu robot zavírá. Teď
+        // ji ale vrátil člověk a lhůta jde znovu od vrácení.
+        var zavrene = await VeSluzbeAsync(sp => UzavreniRegat.UzavriAsync(
+            sp.GetRequiredService<AppDbContext>(), DateTimeOffset.UtcNow, default));
+
+        Assert.DoesNotContain("jarni", zavrene);
+        Assert.Equal(StavZavodu.Vypsany, (await JarniAsync(slug)).Stav);
+    }
 }

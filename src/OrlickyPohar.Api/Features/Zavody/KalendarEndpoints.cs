@@ -217,9 +217,15 @@ public static class KalendarEndpoints
             var z = zaznam.Zavod;
             var organizator = OrganizatorRocniku || Zavody.Contains(zaznam.Id);
 
-            var mozne = Kalendar.MozneZ(z.Stav)
+            var mozne = Kalendar.MozneZ(z.Stav, zaznam.VPoharu)
                 .Where(na => Kalendar.KdoSmi(na) == Role.Rozhodci ? SmiKalendar : organizator)
                 .ToList();
+
+            // Větu dostane jen ten, kdo by ten krok jinak směl — komu se
+            // tlačítko nenabízí kvůli právům, tomu není co vysvětlovat.
+            var procNejdeZpet = organizator
+                ? Kalendar.ProcNejdeZpetZOdjete(z.Stav, StavZavodu.Vypsany, zaznam.VPoharu)
+                : null;
 
             return new ZastavkaRadek(
                 z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Poradi,
@@ -236,7 +242,8 @@ public static class KalendarEndpoints
                 z.PoradatelZapisujeVysledky,
                 z.UzavrenoAutomatemV,
                 z.Draha, z.PosledniStartV, z.MistoKonani,
-                napoveda.Misto, napoveda.Draha, napoveda.PosledniStart);
+                napoveda.Misto, napoveda.Draha, napoveda.PosledniStart,
+                procNejdeZpet);
         }
     }
 
@@ -265,7 +272,7 @@ public static class KalendarEndpoints
                      ?? new Pohled(false, false, false, []);
 
         return pohled.Radek(
-            new KalendarSprava.Zaznam(zastavka.Id, zastavka),
+            await sprava.ZaznamAsync(zastavka, ct),
             await sprava.NapovedyAsync(zastavka.SerieId, ct));
     }
 }

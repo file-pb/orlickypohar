@@ -47,7 +47,7 @@ public static class Kalendar
     /// <summary>
     /// Proč zastávka takhle posunout nejde — nebo <c>null</c>, když jde.
     /// <para>
-    /// Platí tři pravidla a nic víc:
+    /// Platí čtyři pravidla a nic víc:
     /// </para>
     /// <list type="number">
     /// <item>
@@ -65,11 +65,39 @@ public static class Kalendar
     /// <b>Zrušená zastávka se vrací jako plánovaná.</b> Ne rovnou jako
     /// vypsaná: když se termín obnoví, musí ho někdo znovu potvrdit.
     /// </item>
+    /// <item>
+    /// <b>Odjetá regata se mezi vypsané nevrací, dokud se z ní něco počítá
+    /// do poháru.</b> Průběžné pořadí bere jen odjeté regaty
+    /// (<c>PoradiEndpoints</c>), takže krok zpět by z něj regatu vyndal
+    /// i s body a všem lodím přepočítal škrty — jedním klepnutím, které
+    /// smí i pořadatel té jediné regaty, a aniž by se kdokoliv dotkl
+    /// výsledků. Co má z poháru ven, jde po rozjížďkách („Vrátit k revizi“,
+    /// „Vyndat z poháru“); teprve prázdná regata se vrátí.
+    /// <para>
+    /// <b>Prázdná odjetá regata v pořadí přitom nechybí</b>: stojí tam jako
+    /// sloupec, ve kterém mají všechny lodě stejné body za neúčast, a bere
+    /// jim jeden škrt. Vrátit ji mezi vypsané je tedy oprava chybného
+    /// „odjeto“, ne zásah do výsledků — a proto to pravidlo pouští.
+    /// </para>
+    /// <para>
+    /// Rozhodnuto konziliem 27. 11. 2026 (bod 3 závěru revize webu, hlasy
+    /// 3 : 2 proti výjimce pro rozhodčího): výjimka by nechala otevřenou
+    /// přesně tu cestu, kterou má pravidlo zavřít.
+    /// </para>
+    /// </item>
     /// </list>
+    /// <para>
+    /// <paramref name="vPoharu"/> je počet rozjížděk regaty, které se právě
+    /// počítají do poháru (<c>KalendarSprava.VPoharuAsync</c>). <b>Nemá
+    /// výchozí hodnotu schválně</b>: kdo by ji zapomněl předat, dostal by
+    /// pravidlo, které pouští všechno.
+    /// </para>
     /// </summary>
-    public static string? ProcNejde(StavZavodu ze, StavZavodu na)
+    public static string? ProcNejde(StavZavodu ze, StavZavodu na, int vPoharu)
     {
         if (ze == na) return null;
+
+        if (ProcNejdeZpetZOdjete(ze, na, vPoharu) is { } vPoharuJe) return vPoharuJe;
 
         if (na == StavZavodu.Zruseny)
             return ze == StavZavodu.Odjety
@@ -95,8 +123,29 @@ public static class Kalendar
     /// aby nabídla jen to, co zápis pustí — dvě různá pravidla na dvou
     /// stranách drátu se rozejdou při první změně.
     /// </summary>
-    public static IEnumerable<StavZavodu> MozneZ(StavZavodu ze) =>
-        Enum.GetValues<StavZavodu>().Where(na => na != ze && ProcNejde(ze, na) is null);
+    public static IEnumerable<StavZavodu> MozneZ(StavZavodu ze, int vPoharu) =>
+        Enum.GetValues<StavZavodu>().Where(na => na != ze && ProcNejde(ze, na, vPoharu) is null);
+
+    /// <summary>
+    /// Čtvrté pravidlo z <see cref="ProcNejde"/> zvlášť, protože ho
+    /// potřebuje i obrazovka: krok, který zápis odmítne, se nenabízí, a
+    /// tlačítko, které zmizelo beze slova, si člověk vyloží jako vlastní
+    /// chybu. Řádek kalendáře proto tu větu nese (<c>ZastavkaRadek.ProcNejdeZpet</c>).
+    /// </summary>
+    public static string? ProcNejdeZpetZOdjete(StavZavodu ze, StavZavodu na, int vPoharu) =>
+        ze == StavZavodu.Odjety && na == StavZavodu.Vypsany && vPoharu > 0
+            ? $"Mezi vypsané ji vrátit nejde — {Rozjizdek(vPoharu)} do poháru a průběžné pořadí "
+              + "by se přepočítalo bez ní. Co do poháru nepatří, vrať k revizi nebo vyndej "
+              + "z poháru ve Výsledcích; prázdná regata se pak vrátit dá."
+            : null;
+
+    /// <summary>„1 rozjížďka se počítá“, „3 rozjížďky se počítají“, „5 rozjížděk se počítá“.</summary>
+    private static string Rozjizdek(int pocet) => pocet switch
+    {
+        1 => "1 rozjížďka se z ní počítá",
+        >= 2 and <= 4 => $"{pocet} rozjížďky se z ní počítají",
+        _ => $"{pocet} rozjížděk se z ní počítá",
+    };
 
     /// <summary>
     /// Proč na zastávce nejde nic z toho, co patří poháru — rozjížďky,

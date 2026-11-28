@@ -15,7 +15,7 @@ public class KalendarTests
     [InlineData(StavZavodu.Vypsany, StavZavodu.Odjety)]
     public void Radou_se_jde_dopredu_po_jednom_kroku(StavZavodu ze, StavZavodu na)
     {
-        Assert.Null(Kalendar.ProcNejde(ze, na));
+        Assert.Null(Kalendar.ProcNejde(ze, na, vPoharu: 0));
     }
 
     [Theory]
@@ -24,9 +24,9 @@ public class KalendarTests
     [InlineData(StavZavodu.Odjety, StavZavodu.Vypsany)]
     public void Krok_zpatky_jde_taky(StavZavodu ze, StavZavodu na)
     {
-        // Překlep se musí dát vzít zpět. Výsledky u toho nikam nemizí —
-        // stav zastávky je o kalendáři, ne o datech v ní.
-        Assert.Null(Kalendar.ProcNejde(ze, na));
+        // Překlep se musí dát vzít zpět. Z odjeté ale jen tehdy, když se
+        // z ní nic nepočítá do poháru — viz testy níž.
+        Assert.Null(Kalendar.ProcNejde(ze, na, vPoharu: 0));
     }
 
     [Theory]
@@ -37,7 +37,7 @@ public class KalendarTests
     {
         // Vypsat závod na termín, který rozhodčí nepotvrdil, by znamenalo,
         // že si organizátor odsouhlasil termín sám.
-        Assert.NotNull(Kalendar.ProcNejde(ze, na));
+        Assert.NotNull(Kalendar.ProcNejde(ze, na, vPoharu: 0));
     }
 
     [Theory]
@@ -46,7 +46,7 @@ public class KalendarTests
     [InlineData(StavZavodu.Vypsany)]
     public void Zrusit_jde_vsechno_co_se_jeste_nejelo(StavZavodu ze)
     {
-        Assert.Null(Kalendar.ProcNejde(ze, StavZavodu.Zruseny));
+        Assert.Null(Kalendar.ProcNejde(ze, StavZavodu.Zruseny, vPoharu: 0));
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class KalendarTests
     {
         // Jsou v něm výsledky a ty se počítají do poháru — zmizely by, aniž
         // by je kdo smazal.
-        var chyba = Kalendar.ProcNejde(StavZavodu.Odjety, StavZavodu.Zruseny);
+        var chyba = Kalendar.ProcNejde(StavZavodu.Odjety, StavZavodu.Zruseny, vPoharu: 0);
 
         Assert.NotNull(chyba);
         Assert.Contains("výsledky", chyba);
@@ -63,11 +63,11 @@ public class KalendarTests
     [Fact]
     public void Zrusena_zastavka_se_vraci_jako_planovana()
     {
-        Assert.Null(Kalendar.ProcNejde(StavZavodu.Zruseny, StavZavodu.Planovany));
+        Assert.Null(Kalendar.ProcNejde(StavZavodu.Zruseny, StavZavodu.Planovany, vPoharu: 0));
 
         // Ne rovnou jako vypsaná: obnovený termín musí někdo znovu potvrdit.
-        Assert.NotNull(Kalendar.ProcNejde(StavZavodu.Zruseny, StavZavodu.Vypsany));
-        Assert.NotNull(Kalendar.ProcNejde(StavZavodu.Zruseny, StavZavodu.Odjety));
+        Assert.NotNull(Kalendar.ProcNejde(StavZavodu.Zruseny, StavZavodu.Vypsany, vPoharu: 0));
+        Assert.NotNull(Kalendar.ProcNejde(StavZavodu.Zruseny, StavZavodu.Odjety, vPoharu: 0));
     }
 
     [Fact]
@@ -75,8 +75,8 @@ public class KalendarTests
     {
         // Dvě kliknutí na totéž tlačítko nemají skončit hláškou; nabídnout
         // se to ale nemá.
-        Assert.Null(Kalendar.ProcNejde(StavZavodu.Vypsany, StavZavodu.Vypsany));
-        Assert.DoesNotContain(StavZavodu.Vypsany, Kalendar.MozneZ(StavZavodu.Vypsany));
+        Assert.Null(Kalendar.ProcNejde(StavZavodu.Vypsany, StavZavodu.Vypsany, vPoharu: 0));
+        Assert.DoesNotContain(StavZavodu.Vypsany, Kalendar.MozneZ(StavZavodu.Vypsany, vPoharu: 0));
     }
 
     [Fact]
@@ -84,15 +84,54 @@ public class KalendarTests
     {
         // Obrazovka nabízí přesně to, co endpoint dovolí. Kdyby si nabídku
         // počítala sama, rozejde se to při první změně pravidla.
+        // I s rozjížďkami v poháru: tam se nabídka liší o krok zpět z odjeté.
+        foreach (var vPoharu in new[] { 0, 3 })
         foreach (var ze in Enum.GetValues<StavZavodu>())
         {
-            var nabidka = Kalendar.MozneZ(ze).ToList();
+            var nabidka = Kalendar.MozneZ(ze, vPoharu).ToList();
 
-            Assert.All(nabidka, na => Assert.Null(Kalendar.ProcNejde(ze, na)));
+            Assert.All(nabidka, na => Assert.Null(Kalendar.ProcNejde(ze, na, vPoharu)));
             Assert.All(
                 Enum.GetValues<StavZavodu>().Where(na => na != ze && !nabidka.Contains(na)),
-                na => Assert.NotNull(Kalendar.ProcNejde(ze, na)));
+                na => Assert.NotNull(Kalendar.ProcNejde(ze, na, vPoharu)));
         }
+    }
+
+    [Theory]
+    [InlineData(1, "1 rozjížďka se z ní počítá")]
+    [InlineData(3, "3 rozjížďky se z ní počítají")]
+    [InlineData(8, "8 rozjížděk se z ní počítá")]
+    public void Odjeta_regata_s_vysledky_v_poharu_se_mezi_vypsane_nevraci(int vPoharu, string cast)
+    {
+        // Konzilium 27. 11. 2026, bod 3: krok zpět by regatu vyndal
+        // z průběžného pořadí i s body, a smí ho i pořadatel jediné regaty.
+        var chyba = Kalendar.ProcNejde(StavZavodu.Odjety, StavZavodu.Vypsany, vPoharu);
+
+        Assert.NotNull(chyba);
+        Assert.Contains(cast, chyba);
+        // Hláška musí říct, kudy ven — jinak je to jen zeď.
+        Assert.Contains("vyndej z poháru", chyba);
+        Assert.DoesNotContain(StavZavodu.Vypsany, Kalendar.MozneZ(StavZavodu.Odjety, vPoharu));
+    }
+
+    [Fact]
+    public void Prazdna_odjeta_regata_se_mezi_vypsane_vratit_da()
+    {
+        // Chybné „odjeto" u regaty, ze které v poháru nic není, se musí dát
+        // vzít zpět — pravidlo hlídá pohár, ne tlačítko.
+        Assert.Null(Kalendar.ProcNejde(StavZavodu.Odjety, StavZavodu.Vypsany, vPoharu: 0));
+        Assert.Contains(StavZavodu.Vypsany, Kalendar.MozneZ(StavZavodu.Odjety, vPoharu: 0));
+    }
+
+    [Theory]
+    [InlineData(StavZavodu.Planovany, StavZavodu.Potvrzeny)]
+    [InlineData(StavZavodu.Vypsany, StavZavodu.Potvrzeny)]
+    [InlineData(StavZavodu.Vypsany, StavZavodu.Odjety)]
+    public void Vysledky_v_poharu_jiny_krok_nezastavi(StavZavodu ze, StavZavodu na)
+    {
+        // Pravidlo je o jediném kroku. Kdyby se rozlilo dál, nešla by
+        // regata s průběžně zveřejňovanými rozjížďkami ani zavřít.
+        Assert.Null(Kalendar.ProcNejde(ze, na, vPoharu: 5));
     }
 
     [Theory]

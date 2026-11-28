@@ -484,6 +484,29 @@ public class Zavod
     public DateTimeOffset? UzavrenoAutomatemV { get; set; }
 
     /// <summary>
+    /// Kdy odjetou regatu člověk vrátil mezi vypsané — <c>null</c>, když se
+    /// to nestalo.
+    ///
+    /// <para>
+    /// <b>Proč se to vede</b> (konzilium 27. 11. 2026, podmínka oborů 1, 7
+    /// a 9 k bodu 3): automat zavírá každou vypsanou regatu s dojetou
+    /// rozjížďkou starší dvou dnů a běží denně. Vrácení srpnové regaty by
+    /// tedy žilo nejvýš den — úkon, který za člověka vrátí robot, není
+    /// nástroj, ale past. Lhůta automatu se proto po vrácení měří znovu
+    /// od tohohle okamžiku (<see cref="Uzavirani.Zacatek"/>).
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Proč ne „už nikdy sama"</b>: regata vrácená kvůli druhému dni,
+    /// na jejíž zavření se pak zapomene, by zůstala vypsaná napořád a do
+    /// poháru by se nepočítala — tiše, bez jediné chyby na obrazovce.
+    /// Původní zadání („pokud na to zapomeneme, udělej ho za dva dny sám")
+    /// platí dál, jen hodiny jdou od posledního lidského rozhodnutí.
+    /// </para>
+    /// </summary>
+    public DateTimeOffset? VracenoMeziVypsaneV { get; set; }
+
+    /// <summary>
     /// <b>Popis dráhy do vypsání</b> — J1.3(4). Volný text, jak ho dnes
     /// Miloš píše do plachetní směrnice: *„start a cíl u koupacího mola
     /// Mariny Orlík … obeplout točnou bóji levobokem a zpět do cíle."*

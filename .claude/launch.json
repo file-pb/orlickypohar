@@ -55,6 +55,15 @@
         "cd web && API_URL=http://localhost:8099 IDENTITA_AUTHORITY=http://localhost:9999 IDENTITA_CLIENT_ID=zkouska WEB_URL=http://localhost:3099 npx next dev -p 3099"
       ],
       "port": 3099
+    },
+    {
+      "name": "api-pro-typy",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "ConnectionStrings__Postgres='Host=localhost;Port=55432;Database=op;Username=postgres;Password=typy' Identita__Authority=https://localhost:9999 Identita__Audience=typy Fotky__Endpoint=http://localhost:9998 Fotky__Bucket=typy Fotky__VerejnaAdresa=http://localhost:9998 PORT=8085 ASPNETCORE_URLS=http://localhost:8085 dotnet run --project src/OrlickyPohar.Api --no-launch-profile"
+      ],
+      "port": 8085
     }
   ]
 }

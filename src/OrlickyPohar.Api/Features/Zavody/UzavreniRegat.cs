@@ -78,7 +78,7 @@ public class UzavreniRegat(IServiceScopeFactory sluzby, TimeProvider cas, ILogge
         {
             if (!Uzavirani.MaSeUzavrit(
                     k.Zavod.Stav, k.MaOdjetou, k.KonecDne,
-                    k.Zavod.Datum, k.Zavod.DatumKonce, ted)) continue;
+                    k.Zavod.Datum, k.Zavod.DatumKonce, k.Zavod.VracenoMeziVypsaneV, ted)) continue;
 
             k.Zavod.Stav = StavZavodu.Odjety;
             k.Zavod.UzavrenoAutomatemV = ted;

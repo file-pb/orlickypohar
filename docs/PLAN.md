@@ -10763,6 +10763,20 @@ jinak u závodu, který se nekonal a nikdo ho nezrušil, tvrdil něco, co se
 nestalo. Lhůta se měří od konce posledního závodního dne, ne od data —
 u 24hodinovky by se to rozešlo o celý den.
 
+**Odjetá regata se mezi vypsané nevrací, dokud se z ní něco počítá do
+poháru** (27. 11. 2026, bod 3 konzilia nad revizí webu, 3 : 2 proti výjimce
+pro rozhodčího). Krok zpět by ji z průběžného pořadí vyndal i s body
+a smí ho i pořadatel jediné regaty; co má z poháru ven, jde po
+rozjížďkách. „Počítá se" je tatáž podmínka jako v dotazu na pořadí —
+rozjížďka s výsledky, venku, neeliminovaná, nevyndaná, u zveřejněné
+regaty — a test je drží u sebe. Prázdná odjetá regata se vrátit dá:
+v pořadí stojí jen jako sloupec stejných bodů za neúčast, takže je to
+oprava chybného „odjeto". **Automat s tím počítá**: po vrácení si lhůtu
+měří znovu od vrácení (`VracenoMeziVypsaneV`), jinak by regatu do dne
+zavřel zpátky a po lidském rozhodnutí by zbyl jen štítek „uzavřeno samo".
+Ne „už nikdy sama" — vrácená a zapomenutá regata by zůstala vypsaná a do
+poháru by se tiše nepočítala.
+
 **Zápis dojezdů pořadatelem je přepínač u regaty**, výchozí ne. Spor dvou
 zadání (Milošovo *„pouze rozhodčí"* proti Filipovu ze 16. 10. *„pořadatel,
 dokud je zápis otevřený"*) se tím nezavírá rozhodnutím za někoho, ale

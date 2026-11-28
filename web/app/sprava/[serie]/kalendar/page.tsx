@@ -499,6 +499,20 @@ function Zastavka({
           </form>
         ))}
 
+        {/* Krok, který server odmítne, se nenabízí — a tlačítko, které
+            zmizelo beze slova, vypadá jako chyba. Stojí proto na místě,
+            kde bývalo, a po rozbalení řekne proč. Sbalené schválně: věta
+            na každé odjeté regatě by byla šum pro toho, kdo nic vracet
+            nechce. Posílá ji server (`Kalendar.ProcNejdeZpetZOdjete`),
+            a jen tomu, kdo by krok jinak směl. Konzilium 27. 11. 2026,
+            bod 3. */}
+        {zastavka.procNejdeZpet && (
+          <details className="s-duvodem">
+            <summary>Vrátit mezi vypsané nejde</summary>
+            <p className="poznamka">{zastavka.procNejdeZpet}</p>
+          </details>
+        )}
+
         {zastavka.smiPublikovat && (
           <form action={publikaceAkce}>
             <input type="hidden" name="serie" value={serie} />

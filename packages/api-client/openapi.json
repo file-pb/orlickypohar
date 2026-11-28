@@ -131,7 +131,7 @@
                     "Upozorn\u011bn\u00ed"
                 ],
                 "summary": "Zap\u00ed\u0161e za\u0159\u00edzen\u00ed k odb\u011bru upozorn\u011bn\u00ed",
-                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Appka vol\u00e1 p\u0159i ka\u017ed\u00e9m spu\u0161t\u011bn\u00ed, proto\u017ee Expo token po p\u0159einstalaci m\u011bn\u00ed; druh\u00fd z\u00e1pis t\u00e9ho\u017e tokenu jen p\u0159ep\u00ed\u0161e odb\u011bry. Odb\u011br m\u00e1 tvar `serie:{slug}` nebo `zavod:{slug}`.",
+                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Appka vol\u00e1, kdy\u017e se zm\u011bn\u00ed token nebo odb\u011bry, a jednou po ka\u017ed\u00e9 nov\u00e9 verzi appky (kv\u016fli hlavi\u010dce X-Appka-Verze); druh\u00fd z\u00e1pis t\u00e9ho\u017e tokenu jen p\u0159ep\u00ed\u0161e odb\u011bry. Odb\u011br m\u00e1 tvar `serie:{slug}` nebo `zavod:{slug}`.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -15817,6 +15817,12 @@
                             "string"
                         ],
                         "format": "time"
+                    },
+                    "procNejdeZpet": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },

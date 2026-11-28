@@ -347,6 +347,16 @@ K nim, bez námitky kteréhokoliv oboru:
 > `tools/kontrola-tokenu.py` hlídá stupnici i páry s barvou zapsanou
 > natvrdo. **Zbývá:** 56 velikostí písma, které se převodem pohnou o víc
 > než pixel (jdou po obrazovkách), a pravidlo „stav nikdy modrý".
+>
+> Krok 3 je hotový **na serveru**: `Kalendar.ProcNejde` odmítne Odjetá →
+> Vypsaná, dokud se z regaty počítá do poháru aspoň jedna rozjížďka
+> (`KalendarSprava.VPoharuAsync` — tatáž podmínka jako dotaz na pořadí).
+> Krok se pak nenabízí a kalendář místo něj nese sbalené „Vrátit mezi
+> vypsané nejde" s větou ze serveru (`procNejdeZpet`). **Automat** si po
+> vrácení měří dva dny znovu, od vrácení (`Zavod.VracenoMeziVypsaneV`) —
+> ne „už nikdy sama", protože vrácená a zapomenutá regata by se do poháru
+> tiše nepočítala. **Zbývá** obrazovka: oddíl „Stav regaty" v patě okna
+> (bod 2) a karta kalendáře (bod 1).
 
 1. **Mock dostane regatu ve stavu „den regaty"** — nepotvrzenou loď,
    otevřenou rozjížďku, cíl v běhu. Bez ní se řádek přihlášky a cíl staví

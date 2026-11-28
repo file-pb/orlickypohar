@@ -2864,10 +2864,38 @@ NAZVY_STAVU = {"Planovany": "Plánovaný", "Potvrzeny": "Potvrzený", "Vypsany":
                "Odjety": "Odjetý", "Zruseny": "Zrušený"}
 
 
-def proc_nejde(ze, na):
+def v_poharu(z):
+    """
+    Kolik rozjížděk regaty se právě počítá do poháru — opsané
+    z `KalendarSprava.VPoharu`, tedy z dotazu na průběžné pořadí.
+    """
+    if not z.get("publikovano", True) or z.get("druh", "Pohar") != "Pohar":
+        return 0
+    return sum(1 for r in z.get("rozjizdky", [])
+               if r.get("doSerie", True) and plati(r) and r.get("vysledky"))
+
+
+def proc_nejde_zpet_z_odjete(ze, na, pocet):
+    """
+    Odjetá regata se mezi vypsané nevrací, dokud se z ní něco počítá do
+    poháru (`Kalendar.ProcNejdeZpetZOdjete`, konzilium 27. 11. 2026).
+    """
+    if ze != "Odjety" or na != "Vypsany" or pocet <= 0:
+        return None
+    kolik = ("1 rozjížďka se z ní počítá" if pocet == 1
+             else f"{pocet} rozjížďky se z ní počítají" if pocet <= 4
+             else f"{pocet} rozjížděk se z ní počítá")
+    return (f"Mezi vypsané ji vrátit nejde — {kolik} do poháru a průběžné pořadí "
+            "by se přepočítalo bez ní. Co do poháru nepatří, vrať k revizi nebo vyndej "
+            "z poháru ve Výsledcích; prázdná regata se pak vrátit dá.")
+
+
+def proc_nejde(ze, na, pocet_v_poharu):
     """Proč zastávku takhle posunout nejde, nebo None."""
     if ze == na:
         return None
+    if (zpet := proc_nejde_zpet_z_odjete(ze, na, pocet_v_poharu)):
+        return zpet
     if na == "Zruseny":
         return ("Odjetý závod zrušit nejde — jsou v něm výsledky, "
                 "které se počítají do poháru.") if ze == "Odjety" else None
@@ -2919,8 +2947,11 @@ def zastavka_radek(z):
             # Vypsat a odjet patří pořadateli, zbytek řady rozhodčímu
             # (`Kalendar.KdoSmi`).
             "mozneStavy": [s for s in VSECHNY_STAVY
-                           if s != z["stav"] and not proc_nejde(z["stav"], s)
-                           and (organizator if s in ("Vypsany", "Odjety") else rozhodci)]}
+                           if s != z["stav"] and not proc_nejde(z["stav"], s, v_poharu(z))
+                           and (organizator if s in ("Vypsany", "Odjety") else rozhodci)],
+            # Věta jen pro toho, kdo by krok jinak směl (`Pohled.Radek`).
+            "procNejdeZpet": proc_nejde_zpet_z_odjete(z["stav"], "Vypsany", v_poharu(z))
+                             if organizator else None}
 
 
 # Pořadatelé jako záznam — v API `Features/Poradatele`. Páruje se podle
@@ -6007,7 +6038,7 @@ class H(BaseHTTPRequestHandler):
             return None
 
         na = self.telo_zadosti().get("stav")
-        if (chyba := proc_nejde(z["stav"], na)):
+        if (chyba := proc_nejde(z["stav"], na, v_poharu(z))):
             return self.chyba(400, chyba)
 
         # <b>Vypsat a odjet patří pořadateli té regaty</b>, zbytek řady

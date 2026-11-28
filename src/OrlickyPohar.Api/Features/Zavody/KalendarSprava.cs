@@ -65,7 +65,12 @@ public record ZastavkaRadek(
     string? MistoKonani = null,
     string? NapovedaMista = null,
     string? NapovedaDrahy = null,
-    TimeOnly? NapovedaPoslednihoStartu = null);
+    TimeOnly? NapovedaPoslednihoStartu = null,
+    // Proč odjetou regatu nejde vrátit mezi vypsané — věta pro toho, kdo by
+    // ten krok jinak směl. Krok, který zápis odmítne, se nenabízí
+    // (`MozneStavy`), a tlačítko, které zmizelo beze slova, vypadá jako
+    // chyba. Aditivně, na konci. Viz `Kalendar.ProcNejdeZpetZOdjete`.
+    string? ProcNejdeZpet = null);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -188,10 +193,49 @@ public record PublikaceVstup(bool Publikovano);
 /// i tady.
 /// </para>
 /// </summary>
-public class KalendarSprava(AppDbContext db)
+public class KalendarSprava(AppDbContext db, TimeProvider cas)
 {
-    /// <summary>Zastávka i s identifikátorem — ten se ven neposílá, ale rozsah se ptá na něj.</summary>
-    public record Zaznam(int Id, Zavod Zavod);
+    /// <summary>
+    /// Zastávka i s identifikátorem — ten se ven neposílá, ale rozsah se ptá
+    /// na něj — a s počtem rozjížděk, které se z ní počítají do poháru
+    /// (<see cref="VPoharuAsync(int, CancellationToken)"/>). <b>Počet nemá
+    /// výchozí hodnotu</b> ze stejného důvodu jako v
+    /// <see cref="Kalendar.ProcNejde"/>: zapomenutý by znamenal „nic v poháru“.
+    /// </summary>
+    public record Zaznam(int Id, Zavod Zavod, int VPoharu);
+
+    /// <summary>
+    /// Rozjížďky, které se <b>právě teď</b> počítají do průběžného pořadí.
+    /// <para>
+    /// Podmínka je opsaná z <c>PoradiEndpoints</c> (dotaz na <c>radky</c>)
+    /// až na stav regaty, na který se tu teprve ptáme: rozjížďka se počítá,
+    /// má-li výsledky, je venku, není eliminovaná a nikdo ji z poháru
+    /// nevyndal — a regata sama je venku a je kolem poháru. Že se oba opisy
+    /// nerozešly, hlídá <c>KalendarSpravaTests</c> proti skutečnému pořadí.
+    /// </para>
+    /// </summary>
+    private IQueryable<Rozjizdka> VPoharu() =>
+        db.Rozjizdky.Where(r => r.DoSerie
+                                && r.Publikovano
+                                && r.StavVysledku != StavVysledku.Eliminovano
+                                && db.Vysledky.Any(v => v.RozjizdkaId == r.Id)
+                                && r.Zavod!.Publikovano
+                                && r.Zavod.Druh == DruhZastavky.Pohar);
+
+    /// <summary>Kolik rozjížděk téhle regaty se počítá do poháru.</summary>
+    public Task<int> VPoharuAsync(int zavodId, CancellationToken ct) =>
+        VPoharu().CountAsync(r => r.ZavodId == zavodId, ct);
+
+    /// <summary>Totéž pro celý ročník jedním dotazem: regata → počet.</summary>
+    private Task<Dictionary<int, int>> VPoharuRocnikuAsync(int serieId, CancellationToken ct) =>
+        VPoharu().Where(r => r.Zavod!.SerieId == serieId)
+            .GroupBy(r => r.ZavodId)
+            .Select(g => new { ZavodId = g.Key, Pocet = g.Count() })
+            .ToDictionaryAsync(x => x.ZavodId, x => x.Pocet, ct);
+
+    /// <summary>Jedna zastávka jako záznam — pro řádek po zápisu.</summary>
+    public async Task<Zaznam> ZaznamAsync(Zavod zastavka, CancellationToken ct) =>
+        new(zastavka.Id, zastavka, await VPoharuAsync(zastavka.Id, ct));
 
     /// <summary>
     /// Co napovědět formuláři u dvou bodů vypsání, které vydává pořadatel
@@ -227,13 +271,19 @@ public class KalendarSprava(AppDbContext db)
     /// říká každý řádek sám.
     /// </para>
     /// </summary>
-    public Task<List<Zaznam>> VypisAsync(int serieId, CancellationToken ct) =>
-        db.Zavody
+    public async Task<List<Zaznam>> VypisAsync(int serieId, CancellationToken ct)
+    {
+        var zastavky = await db.Zavody
             .Include(z => z.PoradatelZaznam)
             .Where(z => z.SerieId == serieId)
             .OrderBy(z => z.Poradi).ThenBy(z => z.Datum)
-            .Select(z => new Zaznam(z.Id, z))
             .ToListAsync(ct);
+
+        // Jeden dotaz na celý ročník, ne jeden na každou z devíti zastávek.
+        var vPoharu = await VPoharuRocnikuAsync(serieId, ct);
+
+        return [.. zastavky.Select(z => new Zaznam(z.Id, z, vPoharu.GetValueOrDefault(z.Id)))];
+    }
 
     public Task<Zavod?> NajdiAsync(int serieId, string slug, CancellationToken ct) =>
         db.Zavody
@@ -414,9 +464,30 @@ public class KalendarSprava(AppDbContext db)
         return null;
     }
 
+    /// <summary>
+    /// Posune zastávku do jiného stavu. Pravidla jsou v
+    /// <see cref="Kalendar.ProcNejde"/>; tady je k nim jen to, co potřebuje
+    /// databázi.
+    /// <para>
+    /// <b>Vrácení odjeté regaty mezi vypsané zanechá dvě stopy.</b> Čas
+    /// vrácení, od kterého si automat měří lhůtu znovu
+    /// (<see cref="Zavod.VracenoMeziVypsaneV"/>) — jinak by regatu do dne
+    /// zavřel zpátky. A smaže se „uzavřeno samo“: po vrácení ji příště
+    /// zavře, kdo ji zavře, a štítek po minulém automatu by o tom lhal.
+    /// </para>
+    /// </summary>
     public async Task<string?> PrepniStavAsync(Zavod zastavka, StavZavodu na, CancellationToken ct)
     {
-        if (Kalendar.ProcNejde(zastavka.Stav, na) is { } chyba) return chyba;
+        var ze = zastavka.Stav;
+        var vPoharu = await VPoharuAsync(zastavka.Id, ct);
+
+        if (Kalendar.ProcNejde(ze, na, vPoharu) is { } chyba) return chyba;
+
+        if (ze == StavZavodu.Odjety && na == StavZavodu.Vypsany)
+        {
+            zastavka.VracenoMeziVypsaneV = cas.GetUtcNow();
+            zastavka.UzavrenoAutomatemV = null;
+        }
 
         zastavka.Stav = na;
         await db.SaveChangesAsync(ct);

@@ -16,7 +16,13 @@
 # vyjde o 127 cest kratší a generovaný klient tiše ztratí celou správu.
 # Ověřeno 22. 11. 2026: 18 cest místo 145. Lokální API proto potřebuje
 # `Identita__Authority`, `Identita__Audience` (adresa nemusí být dostupná,
-# jen neprázdná) a `Fotky__Endpoint`, `Fotky__Bucket`, `Fotky__VerejnaAdresa`.
+# ale **musí být https** — s http vrací každá cesta včetně /health 500,
+# `RequireHttpsMetadata`) a `Fotky__Endpoint`, `Fotky__Bucket`,
+# `Fotky__VerejnaAdresa`. Hotové je to v `.claude/launch.json` jako
+# `api-pro-typy` na portu 8085; databázi k tomu dá
+# `docker run -d --rm --name op-typy -e POSTGRES_PASSWORD=typy -e POSTGRES_DB=op -p 55432:5432 postgres:17-alpine`.
+# Po vygenerování vrať ve snímku `servers[0].url` na `http://localhost/` —
+# lokální zdroj tam zapíše svůj port a diff by tvrdil změnu, která není.
 # Dřív tu stálo, že na pracovním stroji nejede databáze a Docker Hub je
 # nedostupný — ani jedno neplatí (viz oddíl o pastech v AGENTS.md).
 set -euo pipefail

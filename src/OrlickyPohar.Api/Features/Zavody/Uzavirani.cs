@@ -52,12 +52,22 @@ public static class Uzavirani
     /// závodní den, který přeteče do druhého kalendářního; její okno končí
     /// až za vypsaným dnem a tehdy rozhoduje ono.
     /// </para>
+    ///
+    /// <para>
+    /// <b>A třetí konec: kdy regatu člověk vrátil mezi vypsané.</b> Kdo
+    /// odjetou regatu otevřel znovu, udělal to kvůli něčemu — a robot,
+    /// který ji do dne zavře zpátky, by jeho rozhodnutí přepsal dřív, než
+    /// to něco stihne udělat. Hodiny proto jdou od posledního lidského
+    /// rozhodnutí; viz <see cref="Zavod.VracenoMeziVypsaneV"/>.
+    /// </para>
     /// </summary>
     public static DateTimeOffset Zacatek(
-        DateTimeOffset? konecPoslednihoOkna, DateOnly datum, DateOnly? datumKonce)
+        DateTimeOffset? konecPoslednihoOkna, DateOnly datum, DateOnly? datumKonce,
+        DateTimeOffset? vracenoMeziVypsaneV)
     {
         var vypsany = KonecVypsanehoDne(datumKonce ?? datum);
-        return konecPoslednihoOkna is { } okno && okno > vypsany ? okno : vypsany;
+        var konec = konecPoslednihoOkna is { } okno && okno > vypsany ? okno : vypsany;
+        return vracenoMeziVypsaneV is { } vraceno && vraceno > konec ? vraceno : konec;
     }
 
     /// <summary>
@@ -77,8 +87,8 @@ public static class Uzavirani
 
     /// <summary>
     /// Má se tahle regata zavřít sama? <c>true</c> jen pro vypsanou regatu,
-    /// ve které se aspoň jedna rozjížďka dojela a od konce uplynula
-    /// <see cref="Lhuta"/>.
+    /// ve které se aspoň jedna rozjížďka dojela a od konce — nebo od
+    /// chvíle, kdy ji člověk vrátil mezi vypsané — uplynula <see cref="Lhuta"/>.
     /// </summary>
     public static bool MaSeUzavrit(
         StavZavodu stav,
@@ -86,8 +96,9 @@ public static class Uzavirani
         DateTimeOffset? konecPoslednihoOkna,
         DateOnly datum,
         DateOnly? datumKonce,
+        DateTimeOffset? vracenoMeziVypsaneV,
         DateTimeOffset ted) =>
         stav == StavZavodu.Vypsany
         && maOdjetouRozjizdku
-        && ted >= Zacatek(konecPoslednihoOkna, datum, datumKonce) + Lhuta;
+        && ted >= Zacatek(konecPoslednihoOkna, datum, datumKonce, vracenoMeziVypsaneV) + Lhuta;
 }
